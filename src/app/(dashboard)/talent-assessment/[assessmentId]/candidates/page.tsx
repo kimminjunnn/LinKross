@@ -250,7 +250,6 @@ export default function CandidateComparisonDashboard() {
                 <th className="p-3.5">지원자</th>
                 <th className="p-3.5 text-center">평판</th>
                 <th className="p-3.5 text-center">요구사항 이해</th>
-                <th className="p-3.5 text-center">확인 질문</th>
                 <th className="p-3.5 text-center">작업 계획</th>
                 <th className="p-3.5 text-center">리스크 대응</th>
                 <th className="p-3.5 text-center">참고사항</th>
@@ -296,14 +295,11 @@ export default function CandidateComparisonDashboard() {
                       </div>
                     </td>
 
-                    {/* 4가지 제출 현황 */}
+                    {/* 3가지 제출 현황 */}
                     <td className="p-3.5 text-center">
                       <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 text-[11px]">
                         <Check className="h-3 w-3 stroke-[3]" /> 작성 완료
                       </span>
-                    </td>
-                    <td className="p-3.5 text-center font-semibold text-slate-700">
-                      {c.scores.questions > 80 ? "3개 질문 작성" : "2개 질문 작성"}
                     </td>
                     <td className="p-3.5 text-center font-semibold text-slate-700">
                       7단계 수립
@@ -547,41 +543,22 @@ export default function CandidateComparisonDashboard() {
 
             {/* Modal Content Scroll Area (Matching Image 2 Box Style 100%) */}
             <div className="flex-1 overflow-y-auto space-y-5 text-xs pr-1">
-              {/* 01. 제출된 확인 질문 */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
-                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 text-amber-500 font-black border border-amber-200 text-xs">
-                    ?
-                  </div>
-                  <span>01. 제출된 확인 질문</span>
-                </div>
-
-                <div className="space-y-3 font-semibold text-slate-800">
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 leading-relaxed shadow-2xs">
-                    <strong>Q1.</strong> 인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 leading-relaxed shadow-2xs">
-                    <strong>Q2.</strong> PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
-                  </div>
-                </div>
-              </div>
-
-              {/* 02. 요구사항 이해 요약 */}
+              {/* 01. 요구사항 이해 요약 */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                   <FileText className="h-5 w-5 text-amber-500" />
-                  <span>02. 요구사항 이해 요약</span>
+                  <span>01. 요구사항 이해 요약</span>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4 text-slate-800 font-medium leading-relaxed shadow-2xs">
                   본 프로젝트는 쇼핑몰 MVP 서비스 구축을 목적으로 하며, 핵심 사용자 흐름인 회원가입/로그인, 상품 목록/상세, 장바구니, 주문 결제 및 관리자 관리 페이지를 8주 이내에 구축하는 것을 목표로 합니다.
                 </div>
               </div>
 
-              {/* 03. 실행 계획 */}
+              {/* 02. 실행 계획 */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                   <Briefcase className="h-5 w-5 text-amber-500" />
-                  <span>03. 실행 계획</span>
+                  <span>02. 실행 계획</span>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4 font-mono text-slate-800 font-medium space-y-1.5 shadow-2xs">
                   <p>→ 환경 구성: Next.js 및 TypeScript 개발 환경 초기화</p>
@@ -590,11 +567,11 @@ export default function CandidateComparisonDashboard() {
                 </div>
               </div>
 
-              {/* 04. 예상 리스크 및 대응방안 */}
+              {/* 03. 예상 리스크 및 대응방안 */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                   <ShieldAlert className="h-5 w-5 text-amber-500" />
-                  <span>04. 예상 리스크 및 대응방안</span>
+                  <span>03. 예상 리스크 및 대응방안</span>
                 </div>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left text-xs border-collapse">

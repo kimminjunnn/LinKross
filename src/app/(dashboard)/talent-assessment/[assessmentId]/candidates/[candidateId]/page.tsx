@@ -9,8 +9,7 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  HelpCircle,
-  FileCheck,
+  FileText,
   Briefcase,
   ShieldAlert,
   UserCheck,
@@ -136,13 +135,6 @@ export default function CandidateDetailedEvaluationPage() {
           </div>
 
           <div>
-            <span className="text-app-muted block">제출 소요시간</span>
-            <span className="mt-1 font-mono font-bold text-sm text-app-foreground block">
-              {candidate.submissionTime}
-            </span>
-          </div>
-
-          <div>
             <span className="text-app-muted block">제출 상태</span>
             <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700 text-xs">
               <Check className="h-3 w-3 stroke-[3]" /> 작성 완료
@@ -151,13 +143,13 @@ export default function CandidateDetailedEvaluationPage() {
         </div>
       </section>
 
-      {/* Submission Status Overview (Score Numbers Removed) */}
+      {/* Submission Status Overview (3 Sections Summary) */}
       <section className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
         <h3 className="text-base font-bold text-app-foreground border-b border-app-border pb-3">
           지원자 제출 내역 구조 요약
         </h3>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
           <div className="rounded-xl border border-app-border bg-slate-50 p-4">
             <span className="text-xs text-app-muted font-medium block mb-1">01. 요구사항 이해</span>
             <span className="text-xs font-bold text-emerald-700 inline-flex items-center gap-1">
@@ -165,19 +157,13 @@ export default function CandidateDetailedEvaluationPage() {
             </span>
           </div>
           <div className="rounded-xl border border-app-border bg-slate-50 p-4">
-            <span className="text-xs text-app-muted font-medium block mb-1">02. 확인 질문</span>
-            <span className="text-xs font-bold text-slate-900">
-              2개 항목 작성
-            </span>
-          </div>
-          <div className="rounded-xl border border-app-border bg-slate-50 p-4">
-            <span className="text-xs text-app-muted font-medium block mb-1">03. 작업 계획</span>
+            <span className="text-xs text-app-muted font-medium block mb-1">02. 작업 계획</span>
             <span className="text-xs font-bold text-slate-900">
               3단계 수립
             </span>
           </div>
           <div className="rounded-xl border border-app-border bg-slate-50 p-4">
-            <span className="text-xs text-app-muted font-medium block mb-1">04. 리스크 대응</span>
+            <span className="text-xs text-app-muted font-medium block mb-1">03. 리스크 대응</span>
             <span className="text-xs font-bold text-slate-900">
               2건 식별
             </span>
@@ -187,37 +173,22 @@ export default function CandidateDetailedEvaluationPage() {
 
       {/* Candidate Raw Response Evidence Sections */}
       <section className="space-y-6">
+        {/* 01. 요구사항 이해 요약 */}
         <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-app-foreground flex items-center gap-2 border-b border-app-border pb-3">
-            <HelpCircle className="h-5 w-5 text-amber-500" />
-            01. 제출된 확인 질문
-          </h3>
-          <ul className="space-y-3 text-xs">
-            <li className="bg-app-surface-subtle p-4 rounded-xl border border-app-border text-app-foreground font-medium">
-              <strong className="text-brand-600 block mb-1">Q1. JWT 인증 토큰 관리</strong>
-              인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?
-            </li>
-            <li className="bg-app-surface-subtle p-4 rounded-xl border border-app-border text-app-foreground font-medium">
-              <strong className="text-brand-600 block mb-1">Q2. DB 마이그레이션 도구</strong>
-              PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
-            </li>
-          </ul>
-        </div>
-
-        <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-app-foreground flex items-center gap-2 border-b border-app-border pb-3">
-            <FileCheck className="h-5 w-5 text-amber-500" />
-            02. 요구사항 이해 요약
+            <FileText className="h-5 w-5 text-amber-500" />
+            01. 요구사항 이해 요약
           </h3>
           <p className="text-xs text-app-foreground leading-relaxed font-medium bg-app-surface-subtle p-4 rounded-xl border border-app-border">
             본 프로젝트는 쇼핑몰 MVP 서비스 구축을 목적으로 하며, 핵심 사용자 흐름인 회원가입/로그인, 상품 목록/상세, 장바구니, 주문 결제 및 관리자 관리 페이지를 8주 이내에 구축하는 것을 목표로 합니다.
           </p>
         </div>
 
+        {/* 02. 실행 계획 */}
         <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-app-foreground flex items-center gap-2 border-b border-app-border pb-3">
             <Briefcase className="h-5 w-5 text-amber-500" />
-            03. 실행 계획
+            02. 실행 계획
           </h3>
           <div className="text-xs text-app-foreground font-mono leading-relaxed bg-app-surface-subtle p-4 rounded-xl border border-app-border space-y-1">
             <p>→ 환경 구성: Next.js 및 TypeScript 개발 환경 초기화</p>
@@ -226,10 +197,11 @@ export default function CandidateDetailedEvaluationPage() {
           </div>
         </div>
 
+        {/* 03. 예상 리스크 및 대응방안 */}
         <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-app-foreground flex items-center gap-2 border-b border-app-border pb-3">
             <ShieldAlert className="h-5 w-5 text-amber-500" />
-            04. 예상 리스크 및 대응방안
+            03. 예상 리스크 및 대응방안
           </h3>
           <div className="overflow-x-auto rounded-xl border border-app-border">
             <table className="w-full text-left text-xs border-collapse">
