@@ -11,7 +11,7 @@ export const primaryNavigation = [
     icon: FolderKanban,
   },
   {
-    label: "지원자 검증",
+    label: "지원자 역량검증",
     href: "/assessments",
     icon: BadgeCheck,
   },
