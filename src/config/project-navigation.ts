@@ -1,5 +1,6 @@
 export const projectTabs = [
   { label: "업무 명세서", segment: "sow" },
+  { label: "승인", segment: "approval" },
   { label: "마일스톤 · 검수", segment: "verification" },
   { label: "지급 · 증빙", segment: "evidence" },
 ] as const;

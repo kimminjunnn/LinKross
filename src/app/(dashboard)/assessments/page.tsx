@@ -19,6 +19,8 @@ import {
   FileText,
   Briefcase,
   ShieldAlert,
+  FileCheck,
+  Check,
 } from "lucide-react";
 import { StatusBadge } from "@/components/project/status-badge";
 import { INITIAL_CANDIDATES, CandidateComparisonItem } from "@/lib/comparison";
@@ -40,20 +42,20 @@ const mockProjectAssessments: ProjectAssessmentItem[] = [
     id: "ast_sample_01",
     projectName: "프로젝트 A (고객 포털 MVP 개발자 검증)",
     subTitle: "고객 포털 MVP 개발",
-    status: "응답 검토 중",
+    status: "발주자 직접 검토 중",
     tone: "accent",
-    candidatesCount: 12,
+    candidatesCount: 3,
     due: "2026.08.18",
-    evidence: "질문 · 계획 · 리스크",
+    evidence: "요약 · 계획 · 리스크",
     candidates: INITIAL_CANDIDATES,
   },
   {
     id: "admin-automation",
     projectName: "프로젝트 B (정산 백오피스 개발자 검증)",
     subTitle: "정산 백오피스 개발",
-    status: "제출 중",
+    status: "발주자 직접 검토 중",
     tone: "brand",
-    candidatesCount: 6,
+    candidatesCount: 2,
     due: "2026.08.23",
     evidence: "요구사항 이해 · 설계 판단",
     candidates: INITIAL_CANDIDATES.slice(1),
@@ -62,9 +64,9 @@ const mockProjectAssessments: ProjectAssessmentItem[] = [
     id: "brand-site",
     projectName: "프로젝트 C (브랜드 사이트 개발자 검증)",
     subTitle: "브랜드 사이트 개발",
-    status: "선정 완료",
-    tone: "success",
-    candidatesCount: 8,
+    status: "발주자 직접 검토 중",
+    tone: "brand",
+    candidatesCount: 1,
     due: "2026.07.31",
     evidence: "비교 결과 보관",
     candidates: [INITIAL_CANDIDATES[0]],
@@ -85,10 +87,10 @@ export default function AssessmentsPage() {
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-app-border pb-6">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-app-foreground sm:text-3xl">
-            지원자 역량검증
+            진행 전 프로젝트
           </h1>
           <p className="mt-1.5 text-sm text-app-muted">
-            이력보다 요구사항을 이해하고 실행 계획과 위험을 설명하는 능력을 동일한 기준으로 비교합니다.
+            본 개발 착수 전 요구사항 이해도와 실무 대응력을 기준으로 지원자를 비교하고 선정합니다.
           </p>
         </div>
 
@@ -157,7 +159,7 @@ export default function AssessmentsPage() {
         ))}
       </div>
 
-      {/* Candidate Submission Detail Modal (Design Matched 100% to Image Wireframe) */}
+      {/* Candidate Submission Detail Modal (Submitted Questions Removed, Renumbered 01..03) */}
       {selectedModalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-3xl rounded-3xl border border-app-border bg-white p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] flex flex-col">
@@ -181,90 +183,92 @@ export default function AssessmentsPage() {
               </button>
             </div>
 
-            {/* Candidate Selector Tabs (If multiple candidates) */}
+            {/* Candidate Selector Tabs */}
             {selectedModalProject.candidates.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {selectedModalProject.candidates.map((cand) => (
-                  <button
-                    key={cand.id}
-                    type="button"
-                    onClick={() => setSelectedCandidate(cand)}
-                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                      cand.id === activeCandidate.id
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }`}
-                  >
-                    {cand.name} ({cand.finalScore}점)
-                  </button>
-                ))}
+              <div className="rounded-2xl border border-app-border bg-slate-50/80 p-3 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                  <span className="flex items-center gap-1.5 text-brand-600">
+                    <Users className="h-3.5 w-3.5" /> 지원자 선택 (클릭 시 해당 지원자 제출 내역으로 전환):
+                  </span>
+                  <span className="text-slate-400 font-normal">지원자별 실무 응답을 직접 검토하세요</span>
+                </div>
+
+                <div className="flex items-center gap-2.5 overflow-x-auto pb-0.5">
+                  {selectedModalProject.candidates.map((cand) => {
+                    const isTabActive = cand.id === activeCandidate.id;
+                    return (
+                      <button
+                        key={cand.id}
+                        type="button"
+                        onClick={() => setSelectedCandidate(cand)}
+                        className={`rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                          isTabActive
+                            ? "bg-brand-500 text-white shadow-md ring-2 ring-brand-500/30 scale-[1.02]"
+                            : "bg-white border border-slate-200 text-slate-700 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 shadow-2xs"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-extrabold ${
+                            isTabActive ? "bg-white text-brand-600" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {isTabActive ? "✓" : cand.avatar}
+                        </span>
+                        <span>{cand.name}</span>
+                        <span
+                          className={`font-mono text-[11px] px-2 py-0.5 rounded-md ${
+                            isTabActive ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          제출 완료
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             {/* Modal Content Scroll Area */}
             <div className="flex-1 overflow-y-auto space-y-5 text-xs pr-1">
-              {/* Score Overview Box (Sky blue background) */}
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-100/70 p-5 grid grid-cols-4 text-center divide-x divide-slate-200">
+              {/* Submission Overview Status Box (3 Sections Summary) */}
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-100/70 p-4 grid grid-cols-3 text-center divide-x divide-slate-200">
                 <div>
-                  <span className="text-slate-500 font-medium block text-[11px] mb-1">요구사항 이해</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.requirements}점
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">01. 요구사항 이해</span>
+                  <span className="text-xs font-bold text-emerald-700 inline-flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 stroke-[3]" /> 작성 완료
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 font-medium block text-[11px] mb-1">질문</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.questions}점
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">02. 작업 계획</span>
+                  <span className="text-xs font-bold text-slate-900">
+                    3단계 수립
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 font-medium block text-[11px] mb-1">작업 계획</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.workPlan}점
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 font-medium block text-[11px] mb-1">리스크 대응</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.risk}점
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">03. 리스크 대응</span>
+                  <span className="text-xs font-bold text-slate-900">
+                    2건 식별
                   </span>
                 </div>
               </div>
 
-              {/* 01. 제출된 확인 질문 */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
-                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 text-amber-500 font-black border border-amber-200 text-xs">
-                    ?
-                  </div>
-                  <span>01. 제출된 확인 질문</span>
-                </div>
-                <ol className="space-y-2 text-slate-700 font-medium leading-relaxed pl-1">
-                  <li>
-                    1. 인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?
-                  </li>
-                  <li>
-                    2. PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
-                  </li>
-                </ol>
-              </div>
-
-              {/* 02. 요구사항 이해 요약 */}
+              {/* 01. 요구사항 이해 요약 (Formerly 02) */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                   <FileText className="h-5 w-5 text-amber-500" />
-                  <span>02. 요구사항 이해 요약</span>
+                  <span>01. 요구사항 이해 요약</span>
                 </div>
                 <p className="text-slate-700 font-medium leading-relaxed">
                   본 프로젝트는 쇼핑몰 MVP 서비스 구축을 목적으로 하며, 핵심 사용자 흐름인 회원가입/로그인, 상품 목록/상세, 장바구니, 주문 결제 및 관리자 관리 페이지를 8주 이내에 구축하는 것을 목표로 합니다.
                 </p>
               </div>
 
-              {/* 03. 실행 계획 */}
+              {/* 02. 실행 계획 (Formerly 03) */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                   <Briefcase className="h-5 w-5 text-amber-500" />
-                  <span>03. 실행 계획</span>
+                  <span>02. 실행 계획</span>
                 </div>
                 <div className="space-y-1.5 font-mono text-slate-700 font-medium">
                   <p>→ 환경 구성: Next.js 및 TypeScript 개발 환경 초기화</p>
@@ -273,11 +277,11 @@ export default function AssessmentsPage() {
                 </div>
               </div>
 
-              {/* 04. 예상 리스크 및 대응방안 */}
+              {/* 03. 예상 리스크 및 대응방안 (Formerly 04) */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
                 <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                   <ShieldAlert className="h-5 w-5 text-amber-500" />
-                  <span>04. 예상 리스크 및 대응방안</span>
+                  <span>03. 예상 리스크 및 대응방안</span>
                 </div>
                 <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left text-xs border-collapse">

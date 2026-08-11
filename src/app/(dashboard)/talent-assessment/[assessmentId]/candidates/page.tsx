@@ -23,6 +23,8 @@ import {
   ArrowRight,
   FileSpreadsheet,
   Info,
+  Check,
+  FileText,
 } from "lucide-react";
 import {
   INITIAL_CANDIDATES,
@@ -36,12 +38,24 @@ import {
 export default function CandidateComparisonDashboard() {
   const params = useParams();
   const router = useRouter();
-  const assessmentId = (params.assessmentId as string) || "ast_sample_01";
+  const currentAssessmentId = (params?.assessmentId as string) || "ast_sample_01";
 
-  // Candidates & Selection State
-  const [candidates, setCandidates] = useState<CandidateComparisonItem[]>(INITIAL_CANDIDATES);
+  // Dynamically load candidates based on assessmentId (Project A: 3, Project B: 2, Project C: 1)
+  const getCandidateListForAssessment = (id: string) => {
+    if (id === "admin-automation") {
+      return INITIAL_CANDIDATES.slice(1); // 2 candidates (Alex Kim, David Lee)
+    } else if (id === "brand-site") {
+      return [INITIAL_CANDIDATES[0]]; // 1 candidate (Gupta Haep)
+    } else {
+      return INITIAL_CANDIDATES; // 3 candidates (Gupta Haep, Alex Kim, David Lee)
+    }
+  };
+
+  const [candidates, setCandidates] = useState<CandidateComparisonItem[]>(() =>
+    getCandidateListForAssessment(currentAssessmentId)
+  );
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"finalScore" | "submissionTime">("finalScore");
+  const [sortBy, setSortBy] = useState<"submissionTime" | "name">("submissionTime");
 
   // Modals & Toast State
   const [penaltyModalData, setPenaltyModalData] = useState<{
@@ -53,18 +67,24 @@ export default function CandidateComparisonDashboard() {
   const [selectionTarget, setSelectionTarget] = useState<CandidateComparisonItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Sync candidate dataset whenever currentAssessmentId changes (defaults to unselected for buyer review)
   useEffect(() => {
-    const savedId = getSelectedCandidateId();
-    if (savedId) {
-      setSelectedCandidateId(savedId);
-      setCandidates((prev) =>
-        prev.map((c) => ({
-          ...c,
-          status: c.id === savedId ? "selected" : "submitted",
-        }))
-      );
+    // Clear legacy selected state in localStorage so candidates start unselected by default
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("linkross_selected_candidate_id");
+      } catch (e) {}
     }
-  }, []);
+
+    const list = getCandidateListForAssessment(currentAssessmentId);
+    setCandidates(
+      list.map((c) => ({
+        ...c,
+        status: "submitted",
+      }))
+    );
+    setSelectedCandidateId(null);
+  }, [currentAssessmentId]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -73,10 +93,10 @@ export default function CandidateComparisonDashboard() {
 
   // Sorting
   const sortedCandidates = [...candidates].sort((a, b) => {
-    if (sortBy === "finalScore") {
-      return b.finalScore - a.finalScore;
-    } else {
+    if (sortBy === "submissionTime") {
       return parseInt(a.submissionTime) - parseInt(b.submissionTime);
+    } else {
+      return a.name.localeCompare(b.name);
     }
   });
 
@@ -118,10 +138,10 @@ export default function CandidateComparisonDashboard() {
             <Sparkles className="h-4 w-4" /> Candidate Evaluation Dashboard
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-app-foreground sm:text-3xl">
-            지원자 비교
+            지원자 역량 비교
           </h1>
           <p className="mt-1 text-sm text-app-muted">
-            동일한 요구사항을 기준으로 지원자의 실무 대응력을 비교하세요.
+            동일한 요구사항을 기준으로 지원자들이 제출한 실무 답변을 검토하여 주관적으로 직접 비교 판단하세요.
           </p>
         </div>
 
@@ -152,7 +172,7 @@ export default function CandidateComparisonDashboard() {
             <Users className="h-4 w-4 text-brand-500" />
           </div>
           <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-app-foreground">3</span>
+            <span className="text-3xl font-extrabold text-app-foreground">{candidates.length}</span>
             <span className="text-xs font-semibold text-app-muted">명</span>
           </div>
         </div>
@@ -164,32 +184,35 @@ export default function CandidateComparisonDashboard() {
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
           <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-app-foreground">3</span>
+            <span className="text-3xl font-extrabold text-app-foreground">{candidates.length}</span>
             <span className="text-xs font-semibold text-app-muted">명</span>
           </div>
         </div>
 
-        {/* Card 3: 평균 점수 */}
+        {/* Card 3: 검토 진행 중 */}
         <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-5 shadow-xs">
           <div className="flex items-center justify-between text-app-muted">
-            <span className="text-xs font-bold uppercase">평균 점수</span>
+            <span className="text-xs font-bold uppercase">검토 진행 중</span>
             <Award className="h-4 w-4 text-brand-500" />
           </div>
           <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-app-foreground">77.9</span>
-            <span className="text-xs font-semibold text-app-muted">점</span>
+            <span className="text-3xl font-extrabold text-app-foreground">{candidates.length}</span>
+            <span className="text-xs font-semibold text-app-muted">명 현황 분석</span>
           </div>
         </div>
 
-        {/* Card 4: 최고 점수 */}
+        {/* Card 4: 개발자 선정 상태 */}
         <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-5 shadow-xs">
           <div className="flex items-center justify-between text-app-muted">
-            <span className="text-xs font-bold uppercase">최고 점수</span>
-            <Sparkles className="h-4 w-4 text-amber-500" />
+            <span className="text-xs font-bold uppercase">선정 상태</span>
+            <UserCheck className="h-4 w-4 text-amber-500" />
           </div>
-          <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-brand-600">91.3</span>
-            <span className="text-xs font-semibold text-app-muted">점</span>
+          <div className="mt-3">
+            {selectedCandidate ? (
+              <span className="text-sm font-bold text-emerald-700">1명 선정 완료</span>
+            ) : (
+              <span className="text-sm font-bold text-amber-700">발주자 직접 검토 중</span>
+            )}
           </div>
         </div>
       </section>
@@ -198,9 +221,9 @@ export default function CandidateComparisonDashboard() {
       <section className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-app-border pb-4">
           <div>
-            <h2 className="text-base font-bold text-app-foreground">지원자 실무 역량 비교표</h2>
+            <h2 className="text-base font-bold text-app-foreground">지원자 실무 제출 응답 비교표</h2>
             <p className="text-xs text-app-muted">
-              4가지 완료 조건 및 루브릭 비중에 따른 산출 점수와 페널티 현황입니다.
+              지원자들이 직접 작성한 4가지 영역 답변 현황입니다. 원문을 열람하여 주관적으로 평가하세요.
             </p>
           </div>
 
@@ -210,11 +233,11 @@ export default function CandidateComparisonDashboard() {
             </span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "finalScore" | "submissionTime")}
+              onChange={(e) => setSortBy(e.target.value as "submissionTime" | "name")}
               className="rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-xs font-bold text-app-foreground focus:border-brand-500 focus:outline-none"
             >
-              <option value="finalScore">최종점수 높은 순</option>
-              <option value="submissionTime">제출시간 빠른 순</option>
+              <option value="submissionTime">최신 제출순</option>
+              <option value="name">지원자 이름순</option>
             </select>
           </div>
         </div>
@@ -225,14 +248,10 @@ export default function CandidateComparisonDashboard() {
               <tr className="border-b border-app-border bg-app-surface-subtle text-app-muted font-semibold">
                 <th className="p-3.5">지원자</th>
                 <th className="p-3.5 text-center">평판</th>
-                <th className="p-3.5 text-center">제출시간</th>
                 <th className="p-3.5 text-center">요구사항 이해</th>
-                <th className="p-3.5 text-center">질문</th>
                 <th className="p-3.5 text-center">작업 계획</th>
                 <th className="p-3.5 text-center">리스크 대응</th>
-                <th className="p-3.5 text-center">기본점수</th>
-                <th className="p-3.5 text-center">페널티</th>
-                <th className="p-3.5 text-center">최종점수</th>
+                <th className="p-3.5 text-center">참고사항</th>
                 <th className="p-3.5 text-center">액션</th>
               </tr>
             </thead>
@@ -245,8 +264,8 @@ export default function CandidateComparisonDashboard() {
                     key={c.id}
                     onClick={() => setDetailModalCandidate(c)}
                     className={`cursor-pointer transition-colors hover:bg-app-surface-subtle/80 ${
-                      c.isRecommended ? "bg-amber-50/20" : ""
-                    } ${isSelected ? "bg-emerald-50/40" : ""}`}
+                      isSelected ? "bg-emerald-50/40" : ""
+                    }`}
                   >
                     {/* 지원자 정보 */}
                     <td className="p-3.5 font-bold">
@@ -259,7 +278,7 @@ export default function CandidateComparisonDashboard() {
                             <span className="text-sm font-bold text-app-foreground">{c.name}</span>
                             {c.isRecommended && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 border border-amber-200">
-                                <Sparkles className="h-3 w-3 text-amber-600" /> 추천
+                                <Sparkles className="h-3 w-3 text-amber-600" /> 제출 양호
                               </span>
                             )}
                           </div>
@@ -275,31 +294,20 @@ export default function CandidateComparisonDashboard() {
                       </div>
                     </td>
 
-                    {/* 제출시간 */}
-                    <td className="p-3.5 text-center font-mono font-medium text-slate-700">
-                      {c.submissionTime}
+                    {/* 3가지 제출 현황 */}
+                    <td className="p-3.5 text-center">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 text-[11px]">
+                        <Check className="h-3 w-3 stroke-[3]" /> 작성 완료
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-center font-semibold text-slate-700">
+                      7단계 수립
+                    </td>
+                    <td className="p-3.5 text-center font-semibold text-slate-700">
+                      2건 식별
                     </td>
 
-                    {/* 4가지 항목 점수 */}
-                    <td className="p-3.5 text-center font-semibold text-slate-700">
-                      {c.scores.requirements}
-                    </td>
-                    <td className="p-3.5 text-center font-semibold text-slate-700">
-                      {c.scores.questions}
-                    </td>
-                    <td className="p-3.5 text-center font-semibold text-slate-700">
-                      {c.scores.workPlan}
-                    </td>
-                    <td className="p-3.5 text-center font-semibold text-slate-700">
-                      {c.scores.risk}
-                    </td>
-
-                    {/* 기본점수 */}
-                    <td className="p-3.5 text-center font-mono font-semibold text-slate-600">
-                      {c.baseScore}
-                    </td>
-
-                    {/* 페널티 (Clickable Modal) */}
+                    {/* 참고사항 */}
                     <td className="p-3.5 text-center font-mono">
                       {c.penalty ? (
                         <button
@@ -311,19 +319,14 @@ export default function CandidateComparisonDashboard() {
                               penalty: c.penalty!,
                             });
                           }}
-                          className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-1 font-bold text-rose-700 hover:bg-rose-200 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-1 font-bold text-amber-800 hover:bg-amber-200 transition-colors text-[11px]"
                         >
-                          <AlertTriangle className="h-3 w-3" />
-                          {c.penalty.score}
+                          <AlertTriangle className="h-3 w-3 text-amber-600" />
+                          참고사항
                         </button>
                       ) : (
-                        <span className="text-slate-400 font-semibold">0</span>
+                        <span className="text-slate-400 font-semibold text-[11px]">특이사항 없음</span>
                       )}
-                    </td>
-
-                    {/* 최종점수 */}
-                    <td className="p-3.5 text-center font-mono font-black text-sm text-brand-600">
-                      {c.finalScore}
                     </td>
 
                     {/* 액션 */}
@@ -332,9 +335,9 @@ export default function CandidateComparisonDashboard() {
                         <button
                           type="button"
                           onClick={() => setDetailModalCandidate(c)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-app-border px-2.5 py-1.5 text-[11px] font-semibold text-app-foreground hover:bg-app-surface transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50/40 transition-colors shadow-2xs"
                         >
-                          <Eye className="h-3.5 w-3.5 text-app-muted" /> 상세 답변
+                          <Eye className="h-3.5 w-3.5 text-brand-500" /> 원문 열람
                         </button>
 
                         {isSelected ? (
@@ -363,12 +366,12 @@ export default function CandidateComparisonDashboard() {
       {/* Penalty Explanation Modal */}
       {penaltyModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-rose-100 pb-3">
+          <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-amber-100 pb-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-rose-600" />
-                <h3 className="font-bold text-base text-rose-900">
-                  페널티 감점 세부 내역
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <h3 className="font-bold text-base text-amber-900">
+                  제출 참고사항
                 </h3>
               </div>
               <button
@@ -385,22 +388,15 @@ export default function CandidateComparisonDashboard() {
                 <span className="font-bold text-app-foreground">{penaltyModalData.candidateName}</span>
               </div>
 
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-app-muted">Penalty score:</span>
-                <span className="font-mono font-extrabold text-rose-600 text-sm">
-                  {penaltyModalData.penalty.score} 점
-                </span>
-              </div>
-
               <div className="space-y-1">
-                <span className="text-app-muted">Reason (사유):</span>
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 font-semibold text-rose-900">
+                <span className="text-app-muted">참고사항 내용:</span>
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 font-semibold text-amber-900">
                   {penaltyModalData.penalty.reason}
                 </div>
               </div>
 
               <div className="flex justify-between text-[11px] text-slate-400 pt-1">
-                <span>Applied date/time:</span>
+                <span>제출 확인 시각:</span>
                 <span className="font-mono">{penaltyModalData.penalty.appliedAt}</span>
               </div>
             </div>
@@ -424,8 +420,8 @@ export default function CandidateComparisonDashboard() {
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-app-foreground">AI 평가 보조</h2>
-            <p className="text-xs text-app-muted">지원자들의 원문 제출서와 요구사항 대조 분석 요약입니다.</p>
+            <h2 className="text-lg font-bold text-app-foreground">AI 제출서 원문 구조화 보조</h2>
+            <p className="text-xs text-app-muted">지원자들이 작성한 원문 답변의 핵심 요약과 쟁점을 정리해 드립니다.</p>
           </div>
         </div>
 
@@ -438,25 +434,31 @@ export default function CandidateComparisonDashboard() {
           {/* Strengths */}
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-2">
             <h3 className="font-bold text-emerald-900 flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Strengths (주요 강점)
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 제출 원문 핵심 요약
             </h3>
             <ul className="space-y-1.5 text-emerald-950 font-medium pl-1">
-              {MOCK_AI_ANALYSIS.strengths.map((str, idx) => (
-                <li key={idx} className="flex items-start gap-1.5">
-                  <span className="text-emerald-600 font-bold">•</span>
-                  <span>{str}</span>
-                </li>
-              ))}
+              <li className="flex items-start gap-1.5">
+                <span className="text-emerald-600 font-bold">•</span>
+                <span>요구사항의 기술적 제약사항 정확히 이해</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-emerald-600 font-bold">•</span>
+                <span>DB 구조 및 JWT 인증 관련 구체적 확인 질문 제시</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-emerald-600 font-bold">•</span>
+                <span>체계적인 주차별 마일스톤 및 리스크 대응책 작성</span>
+              </li>
             </ul>
           </div>
 
           {/* Potential Concern */}
           <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-2">
             <h3 className="font-bold text-amber-900 flex items-center gap-1.5">
-              <AlertTriangle className="h-4 w-4 text-amber-600" /> Potential Concern (우려 사항)
+              <AlertTriangle className="h-4 w-4 text-amber-600" /> 확인 권장 사항 (발주자 검토 포인트)
             </h3>
             <p className="text-amber-950 font-medium leading-relaxed">
-              • {MOCK_AI_ANALYSIS.potentialConcern}
+              • Deployment strategy requires additional confirmation (배포 전략 관련 발주자 추가 확인 권장)
             </p>
           </div>
         </div>
@@ -464,7 +466,7 @@ export default function CandidateComparisonDashboard() {
         {/* Important Disclaimer */}
         <div className="rounded-xl border border-app-border bg-app-surface-subtle p-3.5 text-center text-xs font-bold text-app-foreground flex items-center justify-center gap-2">
           <Info className="h-4 w-4 text-brand-500" />
-          <span>{MOCK_AI_ANALYSIS.disclaimer}</span>
+          <span>AI는 원문 요약 보조 역할만 수행하며, 지원자 평가 및 최종 개발자 선정은 발주자가 직접 주관적으로 결정합니다.</span>
         </div>
       </section>
 
@@ -491,10 +493,6 @@ export default function CandidateComparisonDashboard() {
                 <span className="text-app-muted">선정 대상:</span>
                 <span className="font-bold text-app-foreground">{selectionTarget.name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-app-muted">최종 점수:</span>
-                <span className="font-bold text-brand-600">{selectionTarget.finalScore}점</span>
-              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -518,85 +516,98 @@ export default function CandidateComparisonDashboard() {
         </div>
       )}
 
-      {/* Read-Only Candidate Detail Modal */}
+      {/* Candidate Raw Submission Modal (Matched 100% to Image 2 Wireframe) */}
       {detailModalCandidate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-3xl rounded-2xl border border-app-border bg-white p-6 shadow-2xl space-y-5 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-app-border pb-4">
-              <div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700">
-                  <Eye className="h-3 w-3 text-brand-500" /> 지원자 응답 상세 열람
+          <div className="relative w-full max-w-3xl rounded-3xl border border-app-border bg-white p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-app-border/60 pb-4">
+              <div className="space-y-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-200/80">
+                  <Eye className="h-3.5 w-3.5 text-amber-500" /> 지원자 제출 원문 열람
                 </span>
-                <h3 className="text-lg font-bold text-app-foreground mt-1">
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">
                   {detailModalCandidate.name} 지원자의 제출 내역
                 </h3>
               </div>
+
               <button
+                type="button"
                 onClick={() => setDetailModalCandidate(null)}
-                className="rounded-lg p-1 text-app-muted hover:bg-slate-100"
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 text-xs text-app-foreground pr-2">
-              <div className="grid grid-cols-4 gap-3 bg-app-surface-subtle p-3.5 rounded-xl border border-app-border text-center">
-                <div>
-                  <span className="text-[11px] text-app-muted">요구사항 이해</span>
-                  <p className="font-bold text-sm text-app-foreground">{detailModalCandidate.scores.requirements}점</p>
+            {/* Modal Content Scroll Area (Matching Image 2 Box Style 100%) */}
+            <div className="flex-1 overflow-y-auto space-y-5 text-xs pr-1">
+              {/* 01. 요구사항 이해 요약 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <FileText className="h-5 w-5 text-amber-500" />
+                  <span>01. 요구사항 이해 요약</span>
                 </div>
-                <div>
-                  <span className="text-[11px] text-app-muted font-normal">질문</span>
-                  <p className="font-bold text-sm text-app-foreground">{detailModalCandidate.scores.questions}점</p>
-                </div>
-                <div>
-                  <span className="text-[11px] text-app-muted font-normal">작업 계획</span>
-                  <p className="font-bold text-sm text-app-foreground">{detailModalCandidate.scores.workPlan}점</p>
-                </div>
-                <div>
-                  <span className="text-[11px] text-app-muted font-normal">리스크 대응</span>
-                  <p className="font-bold text-sm text-app-foreground">{detailModalCandidate.scores.risk}점</p>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4 text-brand-500" />
-                  01. 제출된 확인 질문
-                </h4>
-                <p className="text-app-muted leading-relaxed">
-                  1. 인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?<br />
-                  2. PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <FileCheck className="h-4 w-4 text-brand-500" />
-                  02. 요구사항 이해 요약
-                </h4>
-                <p className="text-app-muted leading-relaxed">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-slate-800 font-medium leading-relaxed shadow-2xs">
                   본 프로젝트는 쇼핑몰 MVP 서비스 구축을 목적으로 하며, 핵심 사용자 흐름인 회원가입/로그인, 상품 목록/상세, 장바구니, 주문 결제 및 관리자 관리 페이지를 8주 이내에 구축하는 것을 목표로 합니다.
-                </p>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-brand-500" />
-                  03. 실행 계획
-                </h4>
-                <p className="font-mono text-app-muted leading-relaxed">
-                  → 환경 구성: Next.js 및 TypeScript 개발 환경 초기화<br />
-                  → DB: PostgreSQL 데이터베이스 스키마 설계 및 Prisma 설정<br />
-                  → API: 회원 인증 및 상품/장바구니 RESTful API 구현
-                </p>
+              {/* 02. 실행 계획 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <Briefcase className="h-5 w-5 text-amber-500" />
+                  <span>02. 실행 계획</span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 font-mono text-slate-800 font-medium space-y-1.5 shadow-2xs">
+                  <p>→ 환경 구성: Next.js 및 TypeScript 개발 환경 초기화</p>
+                  <p>→ DB: PostgreSQL 데이터베이스 스키마 설계 및 Prisma 설정</p>
+                  <p>→ API: 회원 인증 및 상품/장바구니 RESTful API 구현</p>
+                </div>
+              </div>
+
+              {/* 03. 예상 리스크 및 대응방안 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <ShieldAlert className="h-5 w-5 text-amber-500" />
+                  <span>03. 예상 리스크 및 대응방안</span>
+                </div>
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
+                        <th className="p-3">Risk</th>
+                        <th className="p-3 w-20">Impact</th>
+                        <th className="p-3">Mitigation</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-medium text-slate-700">
+                      <tr>
+                        <td className="p-3 font-semibold text-slate-900">결제 API 연동 지연</td>
+                        <td className="p-3">
+                          <span className="rounded bg-rose-100 px-2 py-0.5 font-bold text-rose-800 text-[11px]">High</span>
+                        </td>
+                        <td className="p-3">Mock API로 선개발</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-semibold text-slate-900">DB 구조 변경</td>
+                        <td className="p-3">
+                          <span className="rounded bg-amber-100 px-2 py-0.5 font-bold text-amber-800 text-[11px]">Medium</span>
+                        </td>
+                        <td className="p-3">초기 Schema 확정</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div className="border-t border-app-border pt-3 text-right">
+            {/* Modal Footer Actions (Navy Close Button) */}
+            <div className="border-t border-app-border pt-4 text-right">
               <button
+                type="button"
                 onClick={() => setDetailModalCandidate(null)}
-                className="rounded-xl bg-app-foreground px-4 py-2 text-xs font-bold text-white hover:bg-slate-800"
+                className="rounded-xl bg-slate-900 px-7 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-md"
               >
                 닫기
               </button>
