@@ -145,7 +145,7 @@ export default function CandidateComparisonDashboard() {
         )}
       </header>
 
-      {/* Summary Cards (Score Numbers Removed) */}
+      {/* Summary Cards */}
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {/* Card 1: 지원자 */}
         <div className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-5 shadow-xs">
@@ -199,7 +199,7 @@ export default function CandidateComparisonDashboard() {
         </div>
       </section>
 
-      {/* Candidate Comparison Table (Score Numbers Removed) */}
+      {/* Candidate Comparison Table */}
       <section className="rounded-[var(--radius-card)] border border-app-border bg-app-surface p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-app-border pb-4">
           <div>
@@ -283,7 +283,7 @@ export default function CandidateComparisonDashboard() {
                       {c.submissionTime}
                     </td>
 
-                    {/* 4가지 제출 현황 (Score Numbers Removed) */}
+                    {/* 4가지 제출 현황 */}
                     <td className="p-3.5 text-center">
                       <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 text-[11px]">
                         <Check className="h-3 w-3 stroke-[3]" /> 작성 완료
@@ -299,7 +299,7 @@ export default function CandidateComparisonDashboard() {
                       2건 식별
                     </td>
 
-                    {/* 참고사항 (Clickable Penalty Modal) */}
+                    {/* 참고사항 */}
                     <td className="p-3.5 text-center font-mono">
                       {c.penalty ? (
                         <button
@@ -327,9 +327,9 @@ export default function CandidateComparisonDashboard() {
                         <button
                           type="button"
                           onClick={() => setDetailModalCandidate(c)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-app-border px-2.5 py-1.5 text-[11px] font-semibold text-app-foreground hover:bg-app-surface transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50/40 transition-colors shadow-2xs"
                         >
-                          <Eye className="h-3.5 w-3.5 text-app-muted" /> 원문 열람
+                          <Eye className="h-3.5 w-3.5 text-brand-500" /> 원문 열람
                         </button>
 
                         {isSelected ? (
@@ -405,7 +405,7 @@ export default function CandidateComparisonDashboard() {
         </div>
       )}
 
-      {/* AI Evaluation Assistant Panel (Score Numbers Removed, Raw Focus) */}
+      {/* AI Evaluation Assistant Panel */}
       <section className="rounded-[var(--radius-card)] border border-brand-200 bg-gradient-to-br from-brand-50/40 via-white to-amber-50/30 p-6 sm:p-7 shadow-sm space-y-6">
         <div className="flex items-center gap-3 border-b border-brand-100 pb-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white shadow-md shadow-brand-500/20">
@@ -508,101 +508,104 @@ export default function CandidateComparisonDashboard() {
         </div>
       )}
 
-      {/* Read-Only Candidate Detail Modal */}
+      {/* Candidate Raw Submission Modal (Matched 100% to Image 2 Wireframe) */}
       {detailModalCandidate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-3xl rounded-2xl border border-app-border bg-white p-6 shadow-2xl space-y-6 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-app-border pb-4">
-              <div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700">
-                  <Eye className="h-3 w-3 text-brand-500" /> 지원자 제출 원문 열람
+          <div className="relative w-full max-w-3xl rounded-3xl border border-app-border bg-white p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-app-border/60 pb-4">
+              <div className="space-y-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-200/80">
+                  <Eye className="h-3.5 w-3.5 text-amber-500" /> 지원자 제출 원문 열람
                 </span>
-                <h3 className="text-lg font-bold text-app-foreground mt-1">
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">
                   {detailModalCandidate.name} 지원자의 제출 내역
                 </h3>
               </div>
+
               <button
+                type="button"
                 onClick={() => setDetailModalCandidate(null)}
-                className="rounded-lg p-1 text-app-muted hover:bg-slate-100"
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-6 text-xs text-app-foreground pr-2">
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4 text-brand-500" />
-                  01. 제출된 확인 질문
-                </h4>
-                <ul className="space-y-2 text-app-muted">
-                  {detailModalCandidate.scores.questions > 80 ? (
-                    <>
-                      <li className="bg-white p-3 rounded-lg border border-app-border text-app-foreground font-medium">
-                        <strong>Q1.</strong> 인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?
-                      </li>
-                      <li className="bg-white p-3 rounded-lg border border-app-border text-app-foreground font-medium">
-                        <strong>Q2.</strong> PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
-                      </li>
-                    </>
-                  ) : (
-                    <li className="bg-white p-3 rounded-lg border border-app-border text-app-foreground font-medium">
-                      <strong>Q1.</strong> 서비스 배포 환경이 Vercel 기반인가요?
-                    </li>
-                  )}
-                </ul>
+            {/* Modal Content Scroll Area (Matching Image 2 Box Style 100%) */}
+            <div className="flex-1 overflow-y-auto space-y-5 text-xs pr-1">
+              {/* 01. 제출된 확인 질문 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 text-amber-500 font-black border border-amber-200 text-xs">
+                    ?
+                  </div>
+                  <span>01. 제출된 확인 질문</span>
+                </div>
+
+                <div className="space-y-3 font-semibold text-slate-800">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 leading-relaxed shadow-2xs">
+                    <strong>Q1.</strong> 인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 leading-relaxed shadow-2xs">
+                    <strong>Q2.</strong> PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
+                  </div>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <FileCheck className="h-4 w-4 text-brand-500" />
-                  02. 요구사항 이해 요약
-                </h4>
-                <div className="bg-white p-4 rounded-lg border border-app-border text-app-foreground leading-relaxed whitespace-pre-wrap font-medium">
+              {/* 02. 요구사항 이해 요약 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <FileText className="h-5 w-5 text-amber-500" />
+                  <span>02. 요구사항 이해 요약</span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-slate-800 font-medium leading-relaxed shadow-2xs">
                   본 프로젝트는 쇼핑몰 MVP 서비스 구축을 목적으로 하며, 핵심 사용자 흐름인 회원가입/로그인, 상품 목록/상세, 장바구니, 주문 결제 및 관리자 관리 페이지를 8주 이내에 구축하는 것을 목표로 합니다.
                 </div>
               </div>
 
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-brand-500" />
-                  03. 실행 계획
-                </h4>
-                <div className="bg-white p-4 rounded-lg border border-app-border text-app-foreground font-mono leading-relaxed whitespace-pre-wrap">
-                  → 환경 구성: Next.js 및 TypeScript 개발 환경 초기화<br />
-                  → DB: PostgreSQL 데이터베이스 스키마 설계 및 Prisma 설정<br />
-                  → API: 회원 인증 및 상품/장바구니 RESTful API 구현
+              {/* 03. 실행 계획 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <Briefcase className="h-5 w-5 text-amber-500" />
+                  <span>03. 실행 계획</span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 font-mono text-slate-800 font-medium space-y-1.5 shadow-2xs">
+                  <p>→ 환경 구성: Next.js 및 TypeScript 개발 환경 초기화</p>
+                  <p>→ DB: PostgreSQL 데이터베이스 스키마 설계 및 Prisma 설정</p>
+                  <p>→ API: 회원 인증 및 상품/장바구니 RESTful API 구현</p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-app-border p-4 space-y-2">
-                <h4 className="font-bold text-sm text-app-foreground flex items-center gap-2">
-                  <ShieldAlert className="h-4 w-4 text-brand-500" />
-                  04. 예상 리스크 및 대응방안
-                </h4>
-                <div className="overflow-x-auto bg-white rounded-lg border border-app-border">
+              {/* 04. 예상 리스크 및 대응방안 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <ShieldAlert className="h-5 w-5 text-amber-500" />
+                  <span>04. 예상 리스크 및 대응방안</span>
+                </div>
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-app-border bg-slate-50 text-app-muted font-semibold">
+                      <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
                         <th className="p-3">Risk</th>
                         <th className="p-3 w-20">Impact</th>
                         <th className="p-3">Mitigation</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-app-border">
+                    <tbody className="divide-y divide-slate-200 font-medium text-slate-700">
                       <tr>
                         <td className="p-3 font-semibold text-slate-900">결제 API 연동 지연</td>
                         <td className="p-3">
                           <span className="rounded bg-rose-100 px-2 py-0.5 font-bold text-rose-800 text-[11px]">High</span>
                         </td>
-                        <td className="p-3 text-slate-700">Mock API로 선개발</td>
+                        <td className="p-3">Mock API로 선개발</td>
                       </tr>
                       <tr>
                         <td className="p-3 font-semibold text-slate-900">DB 구조 변경</td>
                         <td className="p-3">
                           <span className="rounded bg-amber-100 px-2 py-0.5 font-bold text-amber-800 text-[11px]">Medium</span>
                         </td>
-                        <td className="p-3 text-slate-700">초기 Schema 확정</td>
+                        <td className="p-3">초기 Schema 확정</td>
                       </tr>
                     </tbody>
                   </table>
@@ -610,10 +613,12 @@ export default function CandidateComparisonDashboard() {
               </div>
             </div>
 
-            <div className="border-t border-app-border pt-3 text-right">
+            {/* Modal Footer Actions (Navy Close Button) */}
+            <div className="border-t border-app-border pt-4 text-right">
               <button
+                type="button"
                 onClick={() => setDetailModalCandidate(null)}
-                className="rounded-xl bg-app-foreground px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
+                className="rounded-xl bg-slate-900 px-7 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-md"
               >
                 닫기
               </button>
