@@ -239,3 +239,13 @@ MVP에 포함하지 않는다.
 - 비개발 창업자 및 PO의 핵심 흐름 유용성: 평균 4.0/5 이상
 
 제품의 최종 목적은 자동 판정 자체가 아니라 비개발 발주자가 비교, 합의, 검수와 승인에 필요한 기준과 증거를 확보하게 하는 것이다.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
