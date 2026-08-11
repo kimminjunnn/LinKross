@@ -2,7 +2,6 @@ import { CheckCircle2, Clock3, FileArchive, FileText, ReceiptText } from "lucide
 
 import { StatusBadge } from "@/components/project/status-badge";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
-import { DEMO_FREELANCER_ADDRESS } from "@/config/testnet";
 
 const evidenceItems = [
   { icon: FileText, title: "승인된 업무 명세서", description: "양측 승인 · v1.2", ready: true },
@@ -27,7 +26,7 @@ export default function EvidencePage() {
               </div>
               <p className="mt-2 text-sm text-app-muted">승인 금액 1,000 USDC · 인보이스 확인 완료</p>
             </div>
-            <WalletTransferPanel freelancerAddress={DEMO_FREELANCER_ADDRESS} amountUsdc="1" />
+            <WalletTransferPanel milestoneId="M1" />
           </article>
           <article className="rounded-control border border-app-border bg-app-surface-subtle p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
             <div>
