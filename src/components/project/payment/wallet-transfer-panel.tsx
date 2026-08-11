@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { BrowserProvider, Contract, type Eip1193Provider, parseUnits } from "ethers";
 import { AlertTriangle, ExternalLink, Loader2, Wallet } from "lucide-react";
 
@@ -74,6 +75,7 @@ async function verifyPayment(milestoneId: string, txHash: string): Promise<Verif
 }
 
 export function WalletTransferPanel({ milestoneId }: { milestoneId: string }) {
+  const router = useRouter();
   const [state, setState] = useState<TransferState>({ step: "idle" });
   const isBusy = state.step === "connecting" || state.step === "confirming" || state.step === "verifying";
 
@@ -111,6 +113,9 @@ export function WalletTransferPanel({ milestoneId }: { milestoneId: string }) {
       } else {
         setState({ step: "mismatch", txHash: tx.hash, reason: result.reason ?? "지급 검증에 실패했습니다." });
       }
+
+      // 검증 결과가 DB에 반영됐으므로, 서버에서 지급 기록을 읽어오는 우측 증빙 패널도 새로 고친다.
+      router.refresh();
     } catch (error) {
       setState({
         step: "error",

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { BASE_SEPOLIA_RPC_URL, USDC_CONTRACT_ADDRESS, USDC_DECIMALS } from "@/config/testnet";
 import { getMilestonePayment } from "@/lib/milestones";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 const TRANSFER_EVENT_ABI = ["event Transfer(address indexed from, address indexed to, uint256 value)"];
@@ -102,15 +103,60 @@ export async function POST(request: Request) {
     });
   }
 
+  const amountUsdc = formatUnits(matchedTransfer.value, USDC_DECIMALS);
+  await recordVerifiedPayment({
+    milestoneId,
+    txHash,
+    to: matchedTransfer.to,
+    amountUsdc,
+    blockNumber: receipt.blockNumber,
+  });
+
   return respond({
     verified: true,
     txHash,
     blockNumber: receipt.blockNumber,
     to: matchedTransfer.to,
-    amountUsdc: formatUnits(matchedTransfer.value, USDC_DECIMALS),
+    amountUsdc,
   });
 }
 
 function respond(result: VerifyResult) {
   return NextResponse.json(result, { status: 200 });
+}
+
+async function recordVerifiedPayment(payment: {
+  milestoneId: string;
+  txHash: string;
+  to: string;
+  amountUsdc: string;
+  blockNumber: number;
+}) {
+  // Supabase 미설정 환경에서도 검증 자체는 계속 동작해야 하므로 저장만 건너뛴다.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  const { error } = await supabase.from("payments").insert({
+    milestone_id: payment.milestoneId,
+    tx_hash: payment.txHash,
+    to_address: payment.to,
+    amount_usdc: payment.amountUsdc,
+    block_number: payment.blockNumber,
+    verified_by: user.id,
+  });
+
+  // 23505 = unique_violation. 같은 tx를 다시 검증한 경우로, 정상적인 재요청이라 무시한다.
+  if (error && error.code !== "23505") {
+    console.error("[api/payments/record] payments insert 실패", error);
+  }
 }
