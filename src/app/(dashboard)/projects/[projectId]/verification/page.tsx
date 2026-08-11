@@ -1,4 +1,5 @@
-import { CheckCircle2, Circle, ExternalLink, GitCommitHorizontal } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Circle, ExternalLink, GitCommitHorizontal, HandCoins } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 
@@ -13,6 +14,7 @@ const milestones = [
     payment: "지급 대기",
     paymentTone: "warning" as const,
     commit: "a84f0c2",
+    canPay: true,
   },
   {
     code: "M2",
@@ -24,6 +26,7 @@ const milestones = [
     payment: "미도래",
     paymentTone: "neutral" as const,
     commit: "c17bd91",
+    canPay: false,
   },
   {
     code: "M3",
@@ -35,10 +38,17 @@ const milestones = [
     payment: "미도래",
     paymentTone: "neutral" as const,
     commit: null,
+    canPay: false,
   },
 ];
 
-export default function VerificationPage() {
+export default async function VerificationPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+
   return (
     <div className="space-y-5">
       <section className="grid gap-4 rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:grid-cols-2 lg:grid-cols-4 sm:p-6">
@@ -98,14 +108,29 @@ export default function VerificationPage() {
                 <StatusBadge tone={milestone.paymentTone}>{milestone.payment}</StatusBadge>
               </div>
 
-              <button
-                type="button"
-                disabled={!milestone.commit}
-                className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm font-bold text-app-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                검증 결과 보기
-                <ExternalLink aria-hidden="true" className="size-4" />
-              </button>
+              <div className="mt-auto grid gap-2 pt-4">
+                <button
+                  type="button"
+                  disabled={!milestone.commit}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm font-bold text-app-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  검증 결과 보기
+                  <ExternalLink aria-hidden="true" className="size-4" />
+                </button>
+
+                {milestone.canPay ? (
+                  <Link
+                    href={{
+                      pathname: `/projects/${projectId}/evidence`,
+                      query: { milestone: milestone.code, action: "payment" },
+                    }}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-500 px-3 text-sm font-bold text-white hover:bg-brand-600"
+                  >
+                    <HandCoins aria-hidden="true" className="size-4" />
+                    임시 지급하기
+                  </Link>
+                ) : null}
+              </div>
             </article>
           ))}
         </div>
