@@ -69,6 +69,39 @@ function sanitizeKoreanEnding(text: string): string {
   return sanitized.trim();
 }
 
+function distributeDates(startDateStr: string, endDateStr: string, ratios: number[]): string[] {
+  const start = new Date(startDateStr.replace(/\./g, '-'));
+  const end = new Date(endDateStr.replace(/\./g, '-'));
+  
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+    return ratios.map(() => `${startDateStr.slice(5)} - ${endDateStr.slice(5)}`);
+  }
+
+  const totalDiffTime = end.getTime() - start.getTime();
+  const periods: string[] = [];
+  let currentStart = new Date(start.getTime());
+
+  for (let i = 0; i < ratios.length; i++) {
+    const isLast = i === ratios.length - 1;
+    let currentEnd: Date;
+    
+    if (isLast) {
+      currentEnd = new Date(end.getTime());
+    } else {
+      const msToAdd = totalDiffTime * ratios[i];
+      currentEnd = new Date(currentStart.getTime() + msToAdd);
+    }
+
+    const sStr = `${String(currentStart.getMonth() + 1).padStart(2, '0')}.${String(currentStart.getDate()).padStart(2, '0')}`;
+    const eStr = `${String(currentEnd.getMonth() + 1).padStart(2, '0')}.${String(currentEnd.getDate()).padStart(2, '0')}`;
+    periods.push(`${sStr} - ${eStr}`);
+
+    currentStart = new Date(currentEnd.getTime() + (1000 * 60 * 60 * 24));
+  }
+
+  return periods;
+}
+
 export type AIAnalysisResult = {
   milestones: MilestoneInput[];
   extractedStartDate?: string;
@@ -127,22 +160,24 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
   }
   
   if (numMilestones === 1) {
+    const periods = distributeDates(sDate, eDate, [1]);
     result.milestones.push({
       id: `m-1`,
       code: `M1`,
       title: "단일 프로젝트 완수",
-      period: `${sDate.slice(5)} - ${eDate.slice(5)}`, 
+      period: periods[0], 
       amount: `${totalBudgetRaw.toLocaleString()} ${currency}`,
       dods: [sanitizeKoreanEnding(sentences[0]) || "요구사항 분석 및 개발 구현 완료"]
     });
   } else if (numMilestones === 2) {
+    const periods = distributeDates(sDate, eDate, [0.4, 0.6]);
     const amt1 = Math.floor(totalBudgetRaw * 0.4);
     const amt2 = totalBudgetRaw - amt1;
     result.milestones.push({
       id: `m-1`,
       code: `M1`,
       title: "설계 및 1차 기능 개발",
-      period: `${sDate.slice(5)} - ${eDate.slice(5)}`,
+      period: periods[0],
       amount: `${amt1.toLocaleString()} ${currency}`,
       dods: [sanitizeKoreanEnding(sentences[0]) || "요구사항 분석 및 1차 기능 구현"]
     });
@@ -150,12 +185,13 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-2`,
       code: `M2`,
       title: "최종 기능 개발 및 검수",
-      period: `${sDate.slice(5)} - ${eDate.slice(5)}`, 
+      period: periods[1], 
       amount: `${amt2.toLocaleString()} ${currency}`,
       dods: [sanitizeKoreanEnding(sentences[1]) || "기능 최적화 및 오류 수정 완료"]
     });
   } else {
     // 3 milestones
+    const periods = distributeDates(sDate, eDate, [0.2, 0.5, 0.3]);
     const amt1 = Math.floor(totalBudgetRaw * 0.2);
     const amt3 = Math.floor(totalBudgetRaw * 0.3);
     const amt2 = totalBudgetRaw - amt1 - amt3;
@@ -164,7 +200,7 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-1`,
       code: `M1`,
       title: "설계 및 시스템 기초 셋업",
-      period: `${sDate.slice(5)} - ${sDate.slice(5).replace(/(\d+)/, (m) => String(parseInt(m)+5))}`, 
+      period: periods[0], 
       amount: `${amt1.toLocaleString()} ${currency}`,
       dods: ["프로젝트 개발 환경 및 레포지토리 세팅", "데이터베이스 스키마 및 기본 아키텍처 설계"]
     });
@@ -193,7 +229,7 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-2`,
       code: `M2`,
       title: m2Title,
-      period: "08.15 - 09.05",
+      period: periods[1],
       amount: `${amt2.toLocaleString()} ${currency}`,
       dods: m2Dods
     });
@@ -202,7 +238,7 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-3`,
       code: `M3`,
       title: "QA 테스트 및 배포",
-      period: `09.06 - ${eDate.slice(5)}`,
+      period: periods[2],
       amount: `${amt3.toLocaleString()} ${currency}`,
       dods: ["전체 통합 테스트(E2E) 및 버그 픽스", "클라이언트 최종 검수 및 산출물 인수인계"]
     });
