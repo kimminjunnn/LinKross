@@ -3,13 +3,19 @@
 import React, { useState, useRef } from "react";
 import { Check, ChevronDown, ChevronUp, Download, Send, Edit3, BookOpen } from "lucide-react";
 import { EnglishSOWResult } from "@/lib/rag-translator";
+import {
+  ApprovalSowSnapshot,
+  createApprovalSowSnapshot,
+} from "@/lib/sow-approval";
 
 type SowEnglishPreviewProps = {
+  projectId: string;
   sow: EnglishSOWResult | null;
-  onRequestApproval: () => void;
+  onRequestApproval: (snapshot: ApprovalSowSnapshot) => void;
 };
 
 export function SowEnglishPreview({
+  projectId,
   sow,
   onRequestApproval,
 }: SowEnglishPreviewProps) {
@@ -20,6 +26,35 @@ export function SowEnglishPreview({
 
   const handleDownloadPdf = () => {
     window.print();
+  };
+
+  const waitForPrintDialog = () =>
+    new Promise<void>((resolve) => {
+      let isResolved = false;
+      const resolveOnce = () => {
+        if (isResolved) return;
+
+        isResolved = true;
+        window.removeEventListener("afterprint", resolveOnce);
+        resolve();
+      };
+
+      window.addEventListener("afterprint", resolveOnce, { once: true });
+      window.print();
+      window.setTimeout(resolveOnce, 800);
+    });
+
+  const handleRequestApprovalClick = async () => {
+    if (!sow || !isPmVerified) return;
+
+    const snapshot = createApprovalSowSnapshot({
+      projectId,
+      sow,
+      printText: sowContentRef.current?.innerText ?? "",
+    });
+
+    await waitForPrintDialog();
+    onRequestApproval(snapshot);
   };
 
   if (!sow) {
@@ -286,7 +321,7 @@ export function SowEnglishPreview({
           <button
             type="button"
             disabled={!isPmVerified}
-            onClick={onRequestApproval}
+            onClick={handleRequestApprovalClick}
             className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
           >
             <Send className="size-4" />
@@ -303,7 +338,7 @@ export function SowEnglishPreview({
           </button>
         </div>
         <p className="mt-2 text-[0.7rem] text-app-muted">
-          승인 요청 시 프리랜서에게 알림 전송 · 양측 승인 완료 시 프로젝트 시작 및 마일스톤 확정 (FR-8)
+          승인 요청 시 PDF 저장 창이 열리고, 같은 SOW 원본 스냅샷이 승인 탭으로 전달됩니다.
         </p>
       </div>
     </section>
