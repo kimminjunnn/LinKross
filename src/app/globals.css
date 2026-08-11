@@ -129,3 +129,16 @@ button:not(:disabled) {
     animation-iteration-count: 1 !important;
   }
 }
+
+@media print {
+  header,
+  aside,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  @page {
+    margin: 15mm;
+  }
+}

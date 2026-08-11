@@ -6,7 +6,7 @@ async function signOutAndRedirect(request: Request) {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
 
-  return NextResponse.redirect(new URL("/login", new URL(request.url).origin));
+  return NextResponse.redirect(new URL("/onboarding", new URL(request.url).origin));
 }
 
 export const POST = signOutAndRedirect;
