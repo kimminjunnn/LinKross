@@ -40,8 +40,20 @@ export default function CandidateComparisonDashboard() {
   const router = useRouter();
   const assessmentId = (params.assessmentId as string) || "ast_sample_01";
 
-  // Candidates & Selection State
-  const [candidates, setCandidates] = useState<CandidateComparisonItem[]>(INITIAL_CANDIDATES);
+  // Dynamically load candidates based on assessmentId (Project A: 3, Project B: 2, Project C: 1)
+  const getCandidateListForAssessment = (id: string) => {
+    if (id === "admin-automation") {
+      return INITIAL_CANDIDATES.slice(1); // 2 candidates (Alex Kim, David Lee)
+    } else if (id === "brand-site") {
+      return [INITIAL_CANDIDATES[0]]; // 1 candidate (Gupta Haep)
+    } else {
+      return INITIAL_CANDIDATES; // 3 candidates (Gupta Haep, Alex Kim, David Lee)
+    }
+  };
+
+  const [candidates, setCandidates] = useState<CandidateComparisonItem[]>(() =>
+    getCandidateListForAssessment(assessmentId)
+  );
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"submissionTime" | "name">("submissionTime");
 
@@ -56,17 +68,23 @@ export default function CandidateComparisonDashboard() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    const list = getCandidateListForAssessment(assessmentId);
     const savedId = getSelectedCandidateId();
-    if (savedId) {
+    const isSavedCandidateInList = savedId && list.some((c) => c.id === savedId);
+
+    setCandidates(
+      list.map((c) => ({
+        ...c,
+        status: isSavedCandidateInList && c.id === savedId ? "selected" : "submitted",
+      }))
+    );
+
+    if (isSavedCandidateInList) {
       setSelectedCandidateId(savedId);
-      setCandidates((prev) =>
-        prev.map((c) => ({
-          ...c,
-          status: c.id === savedId ? "selected" : "submitted",
-        }))
-      );
+    } else {
+      setSelectedCandidateId(null);
     }
-  }, []);
+  }, [assessmentId]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -154,7 +172,7 @@ export default function CandidateComparisonDashboard() {
             <Users className="h-4 w-4 text-brand-500" />
           </div>
           <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-app-foreground">3</span>
+            <span className="text-3xl font-extrabold text-app-foreground">{candidates.length}</span>
             <span className="text-xs font-semibold text-app-muted">명</span>
           </div>
         </div>
@@ -166,7 +184,7 @@ export default function CandidateComparisonDashboard() {
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
           <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-app-foreground">3</span>
+            <span className="text-3xl font-extrabold text-app-foreground">{candidates.length}</span>
             <span className="text-xs font-semibold text-app-muted">명</span>
           </div>
         </div>
@@ -178,7 +196,7 @@ export default function CandidateComparisonDashboard() {
             <Award className="h-4 w-4 text-brand-500" />
           </div>
           <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold text-app-foreground">3</span>
+            <span className="text-3xl font-extrabold text-app-foreground">{candidates.length}</span>
             <span className="text-xs font-semibold text-app-muted">명 현황 분석</span>
           </div>
         </div>

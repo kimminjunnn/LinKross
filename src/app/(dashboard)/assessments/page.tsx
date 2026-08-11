@@ -55,10 +55,10 @@ const mockProjectAssessments: ProjectAssessmentItem[] = [
     subTitle: "정산 백오피스 개발",
     status: "제출 중",
     tone: "brand",
-    candidatesCount: 3,
+    candidatesCount: 2,
     due: "2026.08.23",
     evidence: "요구사항 이해 · 설계 판단",
-    candidates: INITIAL_CANDIDATES,
+    candidates: INITIAL_CANDIDATES.slice(1),
   },
   {
     id: "brand-site",
@@ -66,10 +66,10 @@ const mockProjectAssessments: ProjectAssessmentItem[] = [
     subTitle: "브랜드 사이트 개발",
     status: "선정 완료",
     tone: "success",
-    candidatesCount: 3,
+    candidatesCount: 1,
     due: "2026.07.31",
     evidence: "비교 결과 보관",
-    candidates: INITIAL_CANDIDATES,
+    candidates: [INITIAL_CANDIDATES[0]],
   },
 ];
 
