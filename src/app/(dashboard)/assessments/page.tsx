@@ -181,23 +181,49 @@ export default function AssessmentsPage() {
               </button>
             </div>
 
-            {/* Candidate Selector Tabs (If multiple candidates) */}
+            {/* Candidate Selector Tabs (Prominent Clickable Tab Bar) */}
             {selectedModalProject.candidates.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {selectedModalProject.candidates.map((cand) => (
-                  <button
-                    key={cand.id}
-                    type="button"
-                    onClick={() => setSelectedCandidate(cand)}
-                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                      cand.id === activeCandidate.id
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }`}
-                  >
-                    {cand.name} ({cand.finalScore}점)
-                  </button>
-                ))}
+              <div className="rounded-2xl border border-app-border bg-slate-50/80 p-3 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                  <span className="flex items-center gap-1.5 text-brand-600">
+                    <Users className="h-3.5 w-3.5" /> 지원자 선택 (클릭 시 해당 지원자 제출 내역으로 전환):
+                  </span>
+                  <span className="text-slate-400 font-normal">버튼을 클릭하여 답변을 비교하세요</span>
+                </div>
+
+                <div className="flex items-center gap-2.5 overflow-x-auto pb-0.5">
+                  {selectedModalProject.candidates.map((cand) => {
+                    const isTabActive = cand.id === activeCandidate.id;
+                    return (
+                      <button
+                        key={cand.id}
+                        type="button"
+                        onClick={() => setSelectedCandidate(cand)}
+                        className={`rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                          isTabActive
+                            ? "bg-brand-500 text-white shadow-md ring-2 ring-brand-500/30 scale-[1.02]"
+                            : "bg-white border border-slate-200 text-slate-700 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 shadow-2xs"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-extrabold ${
+                            isTabActive ? "bg-white text-brand-600" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {isTabActive ? "✓" : cand.avatar}
+                        </span>
+                        <span>{cand.name}</span>
+                        <span
+                          className={`font-mono text-[11px] px-1.5 py-0.5 rounded-md ${
+                            isTabActive ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {cand.finalScore}점
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
