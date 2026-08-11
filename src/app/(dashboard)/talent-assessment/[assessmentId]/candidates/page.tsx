@@ -237,7 +237,7 @@ export default function CandidateComparisonDashboard() {
               onChange={(e) => setSortBy(e.target.value as "submissionTime" | "name")}
               className="rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-xs font-bold text-app-foreground focus:border-brand-500 focus:outline-none"
             >
-              <option value="submissionTime">제출시간 빠른 순</option>
+              <option value="submissionTime">최신 제출순</option>
               <option value="name">지원자 이름순</option>
             </select>
           </div>
@@ -249,7 +249,6 @@ export default function CandidateComparisonDashboard() {
               <tr className="border-b border-app-border bg-app-surface-subtle text-app-muted font-semibold">
                 <th className="p-3.5">지원자</th>
                 <th className="p-3.5 text-center">평판</th>
-                <th className="p-3.5 text-center">제출시간</th>
                 <th className="p-3.5 text-center">요구사항 이해</th>
                 <th className="p-3.5 text-center">확인 질문</th>
                 <th className="p-3.5 text-center">작업 계획</th>
@@ -295,11 +294,6 @@ export default function CandidateComparisonDashboard() {
                         <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-500" />
                         <span>{c.rating.toFixed(1)}</span>
                       </div>
-                    </td>
-
-                    {/* 제출시간 */}
-                    <td className="p-3.5 text-center font-mono font-medium text-slate-700">
-                      {c.submissionTime}
                     </td>
 
                     {/* 4가지 제출 현황 */}
