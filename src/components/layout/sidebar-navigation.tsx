@@ -59,13 +59,6 @@ function NavigationLink({
 }
 
 function matchesPath(pathname: string, href: string) {
-  if (href === "/sow") {
-    return pathname === "/sow" || pathname.includes("/sow");
-  }
-  if (href === "/projects") {
-    if (pathname.includes("/sow")) return false;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
   return href === "/"
     ? pathname === href
     : pathname === href || pathname.startsWith(`${href}/`);
