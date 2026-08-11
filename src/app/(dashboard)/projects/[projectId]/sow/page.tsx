@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { ArrowLeftRight, CheckCircle2, ChevronRight } from "lucide-react";
 
 import { SowKoreanForm } from "@/components/sow/sow-korean-form";
 import { SowEnglishPreview } from "@/components/sow/sow-english-preview";
 import {
   EnglishSOWResult,
-  generateSOWWithRAG,
   generateSOWWithRAGAsync,
   analyzeWorkDetail,
   MilestoneInput,
@@ -17,35 +16,10 @@ const INITIAL_MILESTONES: MilestoneInput[] = [
   {
     id: "m-1",
     code: "M1",
-    title: "초기 시스템 구현",
-    period: "08.10 – 08.20",
-    amount: "1,000 USDC",
-    dods: [
-      "스켈레톤 API 및 인증 데이터베이스 스키마 생성",
-      "단위 테스트 통과 및 CI 연동 완료",
-    ],
-  },
-  {
-    id: "m-2",
-    code: "M2",
-    title: "핵심 기능 · 결과물",
-    period: "08.21 – 09.01",
-    amount: "1,200 USDC",
-    dods: [
-      "PG 샌드박스 연동 검증 · CI 통과",
-      "사용자 로그인 후 대시보드 리다이렉트",
-    ],
-  },
-  {
-    id: "m-3",
-    code: "M3",
-    title: "문서화 · 결과물",
-    period: "09.02 – 09.14",
-    amount: "800 USDC",
-    dods: [
-      "문서 갱신 · PR 머지 완료",
-      "기술 인수인계 가이드 작성",
-    ],
+    title: "",
+    period: "",
+    amount: "",
+    dods: [""],
   },
 ];
 
@@ -57,29 +31,13 @@ export default function SowPage() {
   const projectId = params.projectId as string;
   const project = PROJECTS.find((p) => p.id === projectId) || PROJECTS[0];
 
-  const [workDetail, setWorkDetail] = useState(
-    "작업자가 프롬프트 작성하듯 자유롭게 작성\n프로젝트 목적: 결제 모듈 API 개발 및 해외 연동\nIn-Scope: PG 샌드박스 연동, 스켈레톤 API 구축, CI 통과 및 단위 테스트 완료\n세부 작업: 결제 웹훅 처리, 사용자 대시보드 이동, 인수인계 문서화"
-  );
-  const [startDate, setStartDate] = useState("2026.08.10");
-  const [endDate, setEndDate] = useState("2026.09.14");
+  const [workDetail, setWorkDetail] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [milestones, setMilestones] = useState<MilestoneInput[]>(INITIAL_MILESTONES);
   const [englishSow, setEnglishSow] = useState<EnglishSOWResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  // 초기 렌더링 시 비동기 RAG 엔진 동작
-  React.useEffect(() => {
-    setIsGenerating(true);
-    setStatusMessage("초기 영문 명세서를 불러오는 중입니다...");
-    generateSOWWithRAGAsync(workDetail, startDate, endDate, INITIAL_MILESTONES)
-      .then(setEnglishSow)
-      .catch((e) => console.error("Initial SOW generation failed:", e))
-      .finally(() => {
-        setIsGenerating(false);
-        setStatusMessage(null);
-      });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // AI 분석 실행 (한국어 폼 자동 정돈)
   const handleAnalyzeAI = () => {
