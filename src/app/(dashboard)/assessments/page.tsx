@@ -19,6 +19,8 @@ import {
   FileText,
   Briefcase,
   ShieldAlert,
+  FileCheck,
+  Check,
 } from "lucide-react";
 import { StatusBadge } from "@/components/project/status-badge";
 import { INITIAL_CANDIDATES, CandidateComparisonItem } from "@/lib/comparison";
@@ -88,7 +90,7 @@ export default function AssessmentsPage() {
             지원자 역량검증
           </h1>
           <p className="mt-1.5 text-sm text-app-muted">
-            이력보다 요구사항을 이해하고 실행 계획과 위험을 설명하는 능력을 동일한 기준으로 비교합니다.
+            이력보다 요구사항을 이해하고 실행 계획과 위험을 설명하는 능력을 동일한 기준으로 직접 비교 및 판단합니다.
           </p>
         </div>
 
@@ -157,7 +159,7 @@ export default function AssessmentsPage() {
         ))}
       </div>
 
-      {/* Candidate Submission Detail Modal (Design Matched 100% to Image Wireframe) */}
+      {/* Candidate Submission Detail Modal (Score Numbers Removed for Buyer Subjective Decision) */}
       {selectedModalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-3xl rounded-3xl border border-app-border bg-white p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] flex flex-col">
@@ -181,14 +183,14 @@ export default function AssessmentsPage() {
               </button>
             </div>
 
-            {/* Candidate Selector Tabs (Prominent Clickable Tab Bar) */}
+            {/* Candidate Selector Tabs (Score Numbers Removed, Focused on Submission Status) */}
             {selectedModalProject.candidates.length > 1 && (
               <div className="rounded-2xl border border-app-border bg-slate-50/80 p-3 space-y-2">
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
                   <span className="flex items-center gap-1.5 text-brand-600">
                     <Users className="h-3.5 w-3.5" /> 지원자 선택 (클릭 시 해당 지원자 제출 내역으로 전환):
                   </span>
-                  <span className="text-slate-400 font-normal">버튼을 클릭하여 답변을 비교하세요</span>
+                  <span className="text-slate-400 font-normal">지원자별 실무 응답을 직접 검토하세요</span>
                 </div>
 
                 <div className="flex items-center gap-2.5 overflow-x-auto pb-0.5">
@@ -214,11 +216,11 @@ export default function AssessmentsPage() {
                         </span>
                         <span>{cand.name}</span>
                         <span
-                          className={`font-mono text-[11px] px-1.5 py-0.5 rounded-md ${
+                          className={`font-mono text-[11px] px-2 py-0.5 rounded-md ${
                             isTabActive ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
                           }`}
                         >
-                          {cand.finalScore}점
+                          제출 완료
                         </span>
                       </button>
                     );
@@ -229,30 +231,30 @@ export default function AssessmentsPage() {
 
             {/* Modal Content Scroll Area */}
             <div className="flex-1 overflow-y-auto space-y-5 text-xs pr-1">
-              {/* Score Overview Box (Sky blue background) */}
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-100/70 p-5 grid grid-cols-4 text-center divide-x divide-slate-200">
+              {/* Submission Overview Status Box (Replaced Score Numbers with Submission Features) */}
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-100/70 p-4 grid grid-cols-4 text-center divide-x divide-slate-200">
                 <div>
                   <span className="text-slate-500 font-medium block text-[11px] mb-1">요구사항 이해</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.requirements}점
+                  <span className="text-xs font-bold text-emerald-700 inline-flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 stroke-[3]" /> 작성 완료
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 font-medium block text-[11px] mb-1">질문</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.questions}점
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">확인 질문</span>
+                  <span className="text-xs font-bold text-slate-900">
+                    2개 항목 작성
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-500 font-medium block text-[11px] mb-1">작업 계획</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.workPlan}점
+                  <span className="text-xs font-bold text-slate-900">
+                    3단계 수립
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-500 font-medium block text-[11px] mb-1">리스크 대응</span>
-                  <span className="text-lg font-black text-slate-900 font-mono">
-                    {activeCandidate.scores.risk}점
+                  <span className="text-xs font-bold text-slate-900">
+                    2건 식별
                   </span>
                 </div>
               </div>
