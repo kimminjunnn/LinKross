@@ -15,6 +15,17 @@
 
 LinKross는 외주 개발의 `인재 선정 → 업무 정의 → 결과물 검수 → 승인 및 증빙` 과정을 하나의 흐름으로 연결합니다.
 
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+로컬 개발 서버는 기본적으로 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
+
+페이지별 병렬 작업을 시작하기 전 [팀 라우트 가이드](./docs/TEAM_ROUTE_GUIDE.md)를 확인합니다. 공통 레이아웃과 라우트 계약, 페이지별 작업 경계를 정리해 두었습니다.
+
 ## Target Users
 
 - CTO나 자체 개발팀이 없는 초기 스타트업 및 예비 창업팀
