@@ -17,9 +17,9 @@ export default function AssessmentsPage() {
         title="지원자 검증"
         description="이력보다 요구사항을 이해하고 실행 계획과 위험을 설명하는 능력을 동일한 기준으로 비교합니다."
         actions={
-          <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white">
+          <Link href="/talent-assessment/create" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 transition-colors">
             <ClipboardPlus className="size-4" />새 검증 과제
-          </button>
+          </Link>
         }
       />
 
