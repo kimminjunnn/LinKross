@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
@@ -37,6 +37,16 @@ export function AppHeader() {
                 <p className="mt-0.5 text-xs text-app-muted">PO</p>
               </div>
             </div>
+
+            <form action="/auth/signout" method="post">
+              <button
+                type="submit"
+                aria-label="로그아웃"
+                className="grid size-10 place-items-center rounded-control text-app-muted hover:bg-app-surface-subtle hover:text-app-foreground"
+              >
+                <LogOut aria-hidden="true" className="size-5" />
+              </button>
+            </form>
           </div>
         </div>
       </div>
