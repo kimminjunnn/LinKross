@@ -147,6 +147,7 @@ export function SowKoreanForm({
             type="text"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            placeholder="YYYY.MM.DD"
             className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
           />
         </div>
@@ -159,6 +160,7 @@ export function SowKoreanForm({
             type="text"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+            placeholder="YYYY.MM.DD"
             className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
           />
         </div>

@@ -27,37 +27,79 @@ import { useParams } from "next/navigation";
 import { PROJECTS } from "@/data/projects";
 
 export default function SowPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
+  const { projectId } = useParams<{ projectId: string }>();
   const project = PROJECTS.find((p) => p.id === projectId) || PROJECTS[0];
 
   const [workDetail, setWorkDetail] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [milestones, setMilestones] = useState<MilestoneInput[]>(INITIAL_MILESTONES);
+  const [milestones, setMilestones] =
+    useState<MilestoneInput[]>(INITIAL_MILESTONES);
   const [englishSow, setEnglishSow] = useState<EnglishSOWResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   // AI 분석 실행 (한국어 폼 자동 정돈)
   const handleAnalyzeAI = () => {
+    if (!workDetail.trim()) {
+      setStatusMessage("업무 상세를 먼저 입력해 주세요.");
+      return;
+    }
+
     const analysis = analyzeWorkDetail(workDetail, startDate, endDate);
     if (analysis.extractedStartDate) setStartDate(analysis.extractedStartDate);
     if (analysis.extractedEndDate) setEndDate(analysis.extractedEndDate);
     setMilestones(analysis.milestones);
-    setStatusMessage("✨ AI가 날짜, 예산을 분석하여 마일스톤 초안을 생성했습니다.");
+    const hasUnscheduledMilestone = analysis.milestones.some(
+      (milestone) => !milestone.period,
+    );
+    setStatusMessage(
+      hasUnscheduledMilestone
+        ? "마일스톤 초안을 생성했습니다. 일정 분배를 위해 올바른 시작일과 종료일을 입력해 주세요."
+        : "✨ AI가 날짜, 예산을 분석하여 마일스톤 초안을 생성했습니다.",
+    );
     setTimeout(() => setStatusMessage(null), 4000);
   };
 
   // RAG 기반 영문 명세 생성 (비동기 변환)
   const handleGenerateEnglishSOW = async () => {
+    if (!workDetail.trim()) {
+      setStatusMessage("업무 상세를 먼저 입력해 주세요.");
+      return;
+    }
+
+    const hasIncompleteMilestone =
+      milestones.length === 0 ||
+      milestones.some(
+        (milestone) =>
+          !milestone.title.trim() ||
+          !milestone.period.trim() ||
+          !milestone.amount.trim() ||
+          !milestone.dods.some((dod) => dod.trim()),
+      );
+    if (hasIncompleteMilestone) {
+      setStatusMessage(
+        "마일스톤의 제목, 기간, 금액과 완료 조건을 모두 확인해 주세요.",
+      );
+      return;
+    }
+
     setIsGenerating(true);
-    setStatusMessage("🔍 AI 번역 엔진이 문맥을 분석하여 영문 SOW를 실시간 생성 중입니다...");
+    setStatusMessage(
+      "🔍 AI 번역 엔진이 문맥을 분석하여 영문 SOW를 실시간 생성 중입니다...",
+    );
 
     try {
-      const result = await generateSOWWithRAGAsync(workDetail, startDate, endDate, milestones);
+      const result = await generateSOWWithRAGAsync(
+        workDetail,
+        startDate,
+        endDate,
+        milestones,
+      );
       setEnglishSow(result);
-      setStatusMessage("✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!");
+      setStatusMessage(
+        "✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!",
+      );
     } catch (e) {
       console.error(e);
       setStatusMessage("❌ 번역 API 호출에 실패했습니다.");
@@ -90,13 +132,17 @@ export default function SowPage() {
                 명세 작성 중
               </span>
             </div>
-            <nav aria-label="Breadcrumb" className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-app-muted">
+            <nav
+              aria-label="Breadcrumb"
+              className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-app-muted"
+            >
               <span>대시보드</span>
               <ChevronRight className="size-3" />
               <span>진행 중인 프로젝트</span>
               <ChevronRight className="size-3" />
               <span className="font-semibold text-app-foreground">
-                {project.name} · 프리랜서 {project.assignee} · 기간 {project.period} · 총예산 {project.amount}
+                {project.name} · 프리랜서 {project.assignee} · 기간{" "}
+                {project.period} · 총예산 {project.amount}
               </span>
             </nav>
           </div>

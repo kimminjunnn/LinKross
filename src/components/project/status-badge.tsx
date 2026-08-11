@@ -1,4 +1,10 @@
-type StatusTone = "neutral" | "brand" | "accent" | "success" | "warning";
+type StatusTone =
+  | "neutral"
+  | "brand"
+  | "accent"
+  | "success"
+  | "warning"
+  | "danger";
 
 const toneClasses: Record<StatusTone, string> = {
   neutral: "border-app-border bg-app-surface-subtle text-app-muted",
@@ -6,6 +12,7 @@ const toneClasses: Record<StatusTone, string> = {
   accent: "border-accent-200 bg-accent-50 text-accent-800",
   success: "border-emerald-200 bg-emerald-50 text-success",
   warning: "border-amber-200 bg-amber-50 text-warning",
+  danger: "border-red-200 bg-red-50 text-danger",
 };
 
 export function StatusBadge({
