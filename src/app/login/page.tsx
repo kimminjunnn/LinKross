@@ -6,7 +6,8 @@ import { Building2, UserRound } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { userRoles, type UserRole } from "@/config/roles";
+import { getSafeInternalPath } from "@/lib/auth-redirect";
+import { isUserRole, userRoles, type UserRole } from "@/config/roles";
 
 const ERROR_MESSAGES: Record<string, string> = {
   auth_failed: "로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
@@ -38,6 +39,15 @@ export default function LoginPage() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const errorCode = searchParams.get("error");
+  const requestedRoleParam = searchParams.get("role");
+  const requestedRole =
+    requestedRoleParam && isUserRole(requestedRoleParam)
+      ? requestedRoleParam
+      : null;
+  const nextPath = getSafeInternalPath(searchParams.get("next"));
+  const availableRoles = requestedRole
+    ? userRoles.filter((role) => role.value === requestedRole)
+    : userRoles;
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(
     errorCode ? (ERROR_MESSAGES[errorCode] ?? "로그인 중 문제가 발생했습니다.") : null,
@@ -53,11 +63,13 @@ function LoginForm() {
     setPendingRole(role);
 
     const supabase = createSupabaseBrowserClient();
-    const redirectTo = `${window.location.origin}/auth/callback?role=${role}`;
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("role", role);
+    callbackUrl.searchParams.set("next", nextPath);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo },
+      options: { redirectTo: callbackUrl.toString() },
     });
 
     if (error) {
@@ -75,7 +87,7 @@ function LoginForm() {
         <p className="mt-3 text-center text-sm leading-6 text-app-muted">사람을 고르고, 일을 합의하고, 결과물을 검증합니다.</p>
 
         <div className="mt-8 space-y-3">
-          {userRoles.map((role) => {
+          {availableRoles.map((role) => {
             const Icon = roleIcons[role.value];
             const isPending = pendingRole === role.value;
             return (
