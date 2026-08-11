@@ -1,0 +1,34 @@
+[
+  { "pattern": "스켈레톤\\s*(API|웹|코드)?", "english": "Skeleton API & Boilerplate Setup", "category": "architecture" },
+  { "pattern": "초기\\s*시스템\\s*구현", "english": "Initial System Setup & Architecture", "category": "architecture" },
+  { "pattern": "데이터베이스|DB\\s*설계|스키마", "english": "Database Schema Design & Migration", "category": "architecture" },
+  { "pattern": "인프라\\s*구축|서버\\s*세팅", "english": "Infrastructure Setup & Server Configuration", "category": "architecture" },
+  { "pattern": "마이크로서비스|MSA", "english": "Microservices Architecture Implementation", "category": "architecture" },
+
+  { "pattern": "인증|로그인|회원가입|OAuth|JWT", "english": "Authentication System (OAuth/JWT Login & Signup)", "category": "feature" },
+  { "pattern": "결제|PG|샌드박스", "english": "Payment Gateway Sandbox Integration & Webhook", "category": "feature" },
+  { "pattern": "핵심\\s*기능|결과물", "english": "Core Features & Deliverables Implementation", "category": "feature" },
+  { "pattern": "관리자\\s*페이지|어드민", "english": "Admin Dashboard & Management Portal", "category": "feature" },
+  { "pattern": "검색|필터링", "english": "Advanced Search & Filtering Functionality", "category": "feature" },
+  { "pattern": "푸시\\s*알림|알림", "english": "Real-time Push Notifications System", "category": "feature" },
+  { "pattern": "다국어|번역", "english": "Internationalization (i18n) & Localization Support", "category": "feature" },
+  { "pattern": "웹훅|Webhook", "english": "Webhook Endpoint Implementation & Integration", "category": "feature" },
+
+  { "pattern": "단위\\s*테스트|유닛\\s*테스트", "english": "Unit Test Pass & Coverage", "category": "testing" },
+  { "pattern": "통합\\s*테스트|E2E", "english": "End-to-End Integration Test Pass", "category": "testing" },
+  { "pattern": "CI\\s*(통과|연동|빌드)?", "english": "CI Build & Test Pipeline Pass", "category": "testing" },
+  { "pattern": "오류|에러\\s*표시|차단", "english": "Error Handling & User Feedback Validation", "category": "testing" },
+  { "pattern": "대시보드\\s*이동|페이지\\s*리다이렉트", "english": "Post-authentication Redirect & State Management", "category": "testing" },
+  { "pattern": "QA|품질\\s*보증", "english": "Quality Assurance & Final Verification", "category": "testing" },
+  { "pattern": "부하\\s*테스트|스트레스\\s*테스트", "english": "Load & Stress Testing Verification", "category": "testing" },
+
+  { "pattern": "문서화|인수인계|가이드", "english": "Documentation & Technical Handover", "category": "documentation" },
+  { "pattern": "PR\\s*머지|GitHub\\s*연동", "english": "GitHub Pull Request Review & Merge", "category": "documentation" },
+  { "pattern": "운영|배포", "english": "Deployment Readiness & Environment Configuration", "category": "documentation" },
+  { "pattern": "API\\s*명세서|스웨거|Swagger", "english": "API Specification & Swagger Documentation", "category": "documentation" },
+  { "pattern": "사용자\\s*매뉴얼", "english": "End-User Operational Manual", "category": "documentation" },
+  
+  { "pattern": "디자인|UI|UX|피그마|Figma", "english": "UI/UX Design Implementation (Figma to Code)", "category": "design" },
+  { "pattern": "반응형|모바일", "english": "Responsive Web Design for Mobile & Desktop", "category": "design" },
+  { "pattern": "접근성|A11y", "english": "Web Accessibility (A11y) Standards Compliance", "category": "design" }
+]
