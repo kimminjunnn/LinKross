@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  FileText,
   FolderKanban,
   Settings,
 } from "lucide-react";
@@ -11,7 +12,12 @@ export const primaryNavigation = [
     icon: FolderKanban,
   },
   {
-    label: "진행 전 프로젝트",
+    label: "AI 명세서",
+    href: "/sow",
+    icon: FileText,
+  },
+  {
+    label: "지원자 검증",
     href: "/assessments",
     icon: BadgeCheck,
   },
