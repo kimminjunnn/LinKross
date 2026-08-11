@@ -33,7 +33,7 @@ export default function AssessmentsPage() {
               <div><dt className="text-xs text-app-muted">마감일</dt><dd className="mt-1 font-black text-app-foreground">{assessment.due}</dd></div>
             </dl>
             <p className="mt-4 text-sm text-app-muted">비교 근거 · {assessment.evidence}</p>
-            <Link href={`/assessments/${assessment.id}`} className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-app-border-strong font-bold text-app-foreground hover:border-brand-300 hover:text-brand-700">
+            <Link href="/talent-assessment/ast_sample_01/candidates" className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-app-border-strong font-bold text-app-foreground hover:border-brand-300 hover:text-brand-700">
               응답 비교하기<ArrowRight className="size-4" />
             </Link>
           </article>
