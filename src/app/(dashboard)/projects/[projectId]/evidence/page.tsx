@@ -37,7 +37,7 @@ export default function EvidencePage() {
               </div>
               <p className="mt-2 text-sm text-app-muted">검수 완료 후 승인할 수 있습니다.</p>
             </div>
-            <button type="button" disabled className="mt-4 min-h-10 rounded-control border border-app-border bg-app-surface px-4 text-sm font-bold text-app-muted opacity-60 sm:mt-0">승인 대기</button>
+            <button type="button" disabled className="mt-4 min-h-10 rounded-control border border-app-border bg-app-surface px-4 text-sm font-bold text-app-muted opacity-60 sm:mt-0">승인 대기중</button>
           </article>
         </div>
       </section>
