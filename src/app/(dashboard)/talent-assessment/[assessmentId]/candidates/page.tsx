@@ -69,6 +69,13 @@ export default function CandidateComparisonDashboard() {
 
   // Sync candidate dataset whenever currentAssessmentId changes (defaults to unselected for buyer review)
   useEffect(() => {
+    // Clear legacy selected state in localStorage so candidates start unselected by default
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("linkross_selected_candidate_id");
+      } catch (e) {}
+    }
+
     const list = getCandidateListForAssessment(currentAssessmentId);
     setCandidates(
       list.map((c) => ({
