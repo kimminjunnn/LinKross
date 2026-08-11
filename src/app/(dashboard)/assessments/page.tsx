@@ -68,15 +68,6 @@ export default function AssessmentsPage() {
             </select>
             <ArrowUpDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-app-muted" />
           </div>
-
-          {/* 새 검증 과제 등록 */}
-          <Link
-            href="/talent-assessment/create"
-            className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] bg-brand-500 px-5 text-sm font-bold text-white hover:bg-brand-600 active:scale-[0.98] transition-all shadow-md"
-          >
-            <ClipboardPlus className="size-4" />
-            새 검증 과제 등록
-          </Link>
         </div>
       </header>
 
