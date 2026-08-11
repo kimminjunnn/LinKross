@@ -1,10 +1,4 @@
-type StatusTone =
-  | "neutral"
-  | "brand"
-  | "accent"
-  | "success"
-  | "warning"
-  | "danger";
+type StatusTone = "neutral" | "brand" | "accent" | "success" | "warning" | "danger";
 
 const toneClasses: Record<StatusTone, string> = {
   neutral: "border-app-border bg-app-surface-subtle text-app-muted",

@@ -1,76 +1,79 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CheckCircle2, FileText, LockKeyhole, UserCheck } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
+import {
+  ApprovalSowSnapshot,
+  readApprovalSowSnapshot,
+} from "@/lib/sow-approval";
 
-const summaryItems = [
-  { label: "문서 버전", value: "v1.2" },
-  { label: "승인 상태", value: "1/2 승인 완료", approvedValue: "2/2 승인 완료" },
-  { label: "다음 행동", value: "PO 승인 대기", approvedValue: "다음 단계 진행" },
-  { label: "완료조건", value: "4개" },
-];
-
-const documentSections = [
+const fallbackDocumentSections = [
   {
-    title: "목표",
-    body: "고객이 로그인 후 계약 및 진행 현황을 확인할 수 있는 포털 MVP를 구현합니다.",
-  },
-  {
-    title: "범위",
-    body: "로그인, 대시보드 이동, 오류 메시지, 기본 계약 목록 화면을 포함합니다.",
-  },
-  {
-    title: "제외사항",
-    body: "실제 결제 처리, 운영 고객 데이터 연동, 복잡한 권한 시스템은 제외합니다.",
-  },
-  {
-    title: "결과물",
-    body: "로그인 화면, 대시보드 진입 화면, 기본 계약 목록 UI, 검수 가능한 테스트 흐름",
-  },
-  {
-    title: "일정",
-    body: "2026.08.10 - 2026.08.31",
-  },
-  {
-    title: "금액",
-    body: "3,000 USDC",
+    title: "업무 명세서",
+    body: "아직 승인 요청된 원본 문서가 없습니다. 업무 명세서 탭에서 영문 SOW를 생성한 뒤 승인 요청을 진행하면 이곳에 원본 문서가 표시됩니다.",
   },
 ];
 
 const acceptanceCriteria = [
-  "이메일과 비밀번호를 입력할 수 있다.",
-  "정상 로그인 후 `/dashboard`로 이동한다.",
-  "잘못된 비밀번호 입력 시 오류가 표시된다.",
-  "이메일 미입력 시 로그인이 차단된다.",
+  "업무 명세서 탭에서 승인 요청된 원본 문서를 기준으로 표시됩니다.",
 ];
 
 const definitionOfDone = [
-  "승인된 완료조건이 충족되어야 한다.",
-  "Commit SHA 기준 검수 요청이 가능해야 한다.",
-  "Preview에서 핵심 로그인 흐름을 확인할 수 있어야 한다.",
+  "승인 요청이 완료되면 해당 업무 명세서 버전이 승인 기준으로 고정됩니다.",
 ];
+
+const fallbackSummary = {
+  coreScope: "승인 요청된 업무 명세서 없음",
+  keyAcceptance: "업무 명세서 탭에서 영문 SOW 승인 요청 필요",
+  needsReview: "PDF 인쇄/저장 후 승인 탭에서 원본 문서를 확인",
+};
+
+const getEmptySowSnapshot = () => null;
 
 export default function ApprovalPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
+  const projectId = params.projectId;
   const [isPoApproved, setIsPoApproved] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
+  const subscribeSowSnapshot = useCallback((onStoreChange: () => void) => {
+    window.addEventListener("storage", onStoreChange);
+    return () => window.removeEventListener("storage", onStoreChange);
+  }, []);
+
+  const getSowSnapshot = useCallback((): ApprovalSowSnapshot | null => {
+    return readApprovalSowSnapshot(projectId);
+  }, [projectId]);
+
+  const sowSnapshot = useSyncExternalStore(
+    subscribeSowSnapshot,
+    getSowSnapshot,
+    getEmptySowSnapshot,
+  );
+
+  const documentVersion = sowSnapshot?.version ?? "v1.2";
+  const activeDocumentSections = sowSnapshot?.documentSections ?? fallbackDocumentSections;
+  const activeAcceptanceCriteria = sowSnapshot?.acceptanceCriteria ?? acceptanceCriteria;
+  const activeDefinitionOfDone = sowSnapshot?.definitionOfDone ?? definitionOfDone;
+  const activeSummary = sowSnapshot?.summary ?? fallbackSummary;
+
   const currentSummaryItems = useMemo(
-    () =>
-      summaryItems.map((item) => ({
-        ...item,
-        value: isPoApproved && item.approvedValue ? item.approvedValue : item.value,
-      })),
-    [isPoApproved],
+    () => [
+      { label: "문서 버전", value: documentVersion },
+      { label: "승인 상태", value: isPoApproved ? "2/2 승인 완료" : "1/2 승인 완료" },
+      { label: "다음 행동", value: isPoApproved ? "다음 단계 진행" : "PO 승인 대기" },
+      { label: "완료조건", value: `${activeAcceptanceCriteria.length}개` },
+    ],
+    [activeAcceptanceCriteria.length, documentVersion, isPoApproved],
   );
 
   const handleFinalApproval = () => {
     setIsPoApproved(true);
-    router.push(`/projects/${params.projectId}/verification`);
+    router.push(`/projects/${projectId}/verification`);
   };
 
   const handleCancelApproval = () => {
@@ -126,18 +129,26 @@ export default function ApprovalPage() {
                 승인 대상 업무 명세서 원본
               </h2>
               <p className="mt-2 text-sm leading-6 text-app-muted">
-                아래 상세 문서가 실제 승인 기준입니다. 요약 정보는 빠른 이해를 돕는 보조 정보로만 사용합니다.
+                아래 상세 문서가 실제 승인 기준입니다. SOW 탭에서 PDF 인쇄 요청한 원본 스냅샷을 우선 표시합니다.
               </p>
             </div>
-            <StatusBadge tone="brand">원본 확인 필요</StatusBadge>
+            <StatusBadge tone="brand">
+              {sowSnapshot ? "PDF 원본 저장됨" : "승인 요청 대기"}
+            </StatusBadge>
           </div>
+
+          {sowSnapshot ? (
+            <div className="mt-4 rounded-control border border-brand-200 bg-brand-50 p-4 text-sm leading-6 text-brand-700">
+              <strong>{sowSnapshot.pdfFileName}</strong> 파일명으로 PDF 저장을 요청한 SOW 원본입니다.
+            </div>
+          ) : null}
 
           <div className="mt-6 rounded-control border border-app-border bg-app-surface-subtle p-5">
             <div className="grid gap-4 lg:grid-cols-2">
-              {documentSections.map((section) => (
+              {activeDocumentSections.map((section) => (
                 <section key={section.title}>
                   <h3 className="text-sm font-black text-app-foreground">{section.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-app-muted">{section.body}</p>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-6 text-app-muted">{section.body}</p>
                 </section>
               ))}
             </div>
@@ -145,7 +156,7 @@ export default function ApprovalPage() {
             <div className="mt-6 border-t border-app-border pt-5">
               <h3 className="text-sm font-black text-app-foreground">Acceptance Criteria</h3>
               <ul className="mt-3 space-y-2">
-                {acceptanceCriteria.map((item) => (
+                {activeAcceptanceCriteria.map((item) => (
                   <li key={item} className="flex gap-2 text-sm leading-6 text-app-muted">
                     <CheckCircle2 aria-hidden="true" className="mt-1 size-4 shrink-0 text-success" />
                     <span>{item}</span>
@@ -157,7 +168,7 @@ export default function ApprovalPage() {
             <div className="mt-6 border-t border-app-border pt-5">
               <h3 className="text-sm font-black text-app-foreground">Definition of Done</h3>
               <ul className="mt-3 space-y-2">
-                {definitionOfDone.map((item) => (
+                {activeDefinitionOfDone.map((item) => (
                   <li key={item} className="flex gap-2 text-sm leading-6 text-app-muted">
                     <LockKeyhole aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
                     <span>{item}</span>
@@ -165,11 +176,20 @@ export default function ApprovalPage() {
                 ))}
               </ul>
             </div>
+
+            {sowSnapshot?.printText ? (
+              <div className="mt-6 border-t border-app-border pt-5">
+                <h3 className="text-sm font-black text-app-foreground">PDF 인쇄 원본 텍스트</h3>
+                <div className="mt-3 max-h-80 overflow-y-auto rounded-control border border-app-border bg-app-surface p-4 text-sm leading-6 text-app-muted">
+                  <p className="whitespace-pre-line">{sowSnapshot.printText}</p>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-5 rounded-control border border-brand-200 bg-brand-50 p-4">
             <p className="text-sm font-bold leading-6 text-brand-700">
-              이 업무 명세서 v1.2 원본을 확인했고, 해당 버전을 승인합니다.
+              이 업무 명세서 {documentVersion} 원본을 확인했고, 해당 버전을 승인합니다.
             </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <button
@@ -178,7 +198,7 @@ export default function ApprovalPage() {
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
               >
                 <UserCheck aria-hidden="true" className="size-4" />
-                v1.2 승인
+                {documentVersion} 승인
               </button>
             </div>
           </div>
@@ -194,19 +214,19 @@ export default function ApprovalPage() {
               <div>
                 <dt className="text-xs font-semibold text-app-muted">핵심 범위</dt>
                 <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                  로그인, 대시보드 이동, 오류 메시지, 기본 계약 목록
+                  {activeSummary.coreScope}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold text-app-muted">주요 완료조건</dt>
                 <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                  로그인 흐름 4개 조건을 이후 검수 기준으로 사용
+                  {activeSummary.keyAcceptance}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold text-app-muted">확인 필요</dt>
                 <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                  PO가 같은 v1.2 원본을 확인하고 승인해야 함
+                  {activeSummary.needsReview}
                 </dd>
               </div>
             </dl>
@@ -274,7 +294,7 @@ export default function ApprovalPage() {
                   최종 승인을 완료 하시겠습니까
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-app-muted">
-                  예를 누르면 업무 명세서 v1.2 승인 단계가 완료되고 다음 단계로 이동합니다.
+                  예를 누르면 업무 명세서 {documentVersion} 승인 단계가 완료되고 다음 단계로 이동합니다.
                 </p>
               </div>
             </div>
