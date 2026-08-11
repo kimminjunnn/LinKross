@@ -1,15 +1,24 @@
-import { CheckCircle2, Clock3, FileArchive, FileText, ReceiptText } from "lucide-react";
+import { CheckCircle2, Clock3, ExternalLink, FileArchive, FileText, ReceiptText } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
+import { PrintEvidenceButton } from "@/components/project/payment/print-evidence-button";
+import { BASE_SEPOLIA_EXPLORER_URL } from "@/config/testnet";
+import { getMilestonePayment, listMilestoneIds, type MilestonePayment } from "@/lib/milestones";
+import { getVerifiedPayment, type VerifiedPayment } from "@/lib/payments";
 
-const evidenceItems = [
-  { icon: FileText, title: "승인된 업무 명세서", description: "양측 승인 · v1.2", ready: true },
-  { icon: CheckCircle2, title: "검수 결과", description: "Commit SHA 및 테스트 로그", ready: true },
-  { icon: ReceiptText, title: "인보이스와 지급 기록", description: "M1 지급 대기", ready: false },
-];
+export default async function EvidencePage() {
+  const milestoneIds = listMilestoneIds();
+  const paymentEntries = await Promise.all(
+    milestoneIds.map(async (milestoneId) => ({
+      milestoneId,
+      milestone: getMilestonePayment(milestoneId)!,
+      payment: await getVerifiedPayment(milestoneId),
+    })),
+  );
 
-export default function EvidencePage() {
+  const hasAnyPayment = paymentEntries.some((entry) => entry.payment);
+
   return (
     <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
@@ -45,30 +54,111 @@ export default function EvidencePage() {
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-control bg-brand-50 text-brand-700"><FileArchive className="size-5" /></span>
           <div>
-            <h2 className="text-lg font-black text-app-foreground">통합 증빙</h2>
-            <p className="mt-1 text-xs text-app-muted">프로젝트별 단일 증빙 묶음</p>
+            <h2 className="text-lg font-black text-app-foreground">지급 증빙</h2>
+            <p className="mt-1 text-xs text-app-muted">마일스톤별 지급 명세서</p>
           </div>
         </div>
 
         <ul className="mt-5 space-y-3">
-          {evidenceItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.title} className="flex gap-3 rounded-control border border-app-border p-3">
-                <Icon className={`mt-0.5 size-4 shrink-0 ${item.ready ? "text-success" : "text-app-muted"}`} />
-                <div>
-                  <p className="text-sm font-bold text-app-foreground">{item.title}</p>
-                  <p className="mt-1 text-xs text-app-muted">{item.description}</p>
-                </div>
-                {item.ready ? <CheckCircle2 className="ml-auto size-4 shrink-0 text-success" /> : <Clock3 className="ml-auto size-4 shrink-0 text-warning" />}
-              </li>
-            );
-          })}
+          <li className="flex gap-3 rounded-control border border-app-border p-3">
+            <FileText className="mt-0.5 size-4 shrink-0 text-success" />
+            <div>
+              <p className="text-sm font-bold text-app-foreground">승인된 업무 명세서</p>
+              <p className="mt-1 text-xs text-app-muted">양측 승인 · v1.2</p>
+            </div>
+            <CheckCircle2 className="ml-auto size-4 shrink-0 text-success" />
+          </li>
+          <li className="flex gap-3 rounded-control border border-app-border p-3">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
+            <div>
+              <p className="text-sm font-bold text-app-foreground">검수 결과</p>
+              <p className="mt-1 text-xs text-app-muted">Commit SHA 및 테스트 로그</p>
+            </div>
+            <CheckCircle2 className="ml-auto size-4 shrink-0 text-success" />
+          </li>
         </ul>
 
-        <button type="button" disabled className="mt-5 min-h-11 w-full rounded-control bg-app-foreground px-4 text-sm font-bold text-white opacity-45">통합 증빙 PDF 생성</button>
-        <p className="mt-2 text-center text-xs text-app-muted">모든 지급 기록이 완료되면 활성화됩니다.</p>
+        <div className="mt-3 space-y-3">
+          {paymentEntries.map((entry) => (
+            <PaymentEvidenceCard key={entry.milestoneId} {...entry} />
+          ))}
+        </div>
+
+        <PrintEvidenceButton disabled={!hasAnyPayment} />
+        <p className="mt-2 text-center text-xs text-app-muted">
+          {hasAnyPayment ? "인쇄 대화상자에서 PDF로 저장할 수 있습니다." : "마일스톤 지급이 검증되면 활성화됩니다."}
+        </p>
       </section>
+    </div>
+  );
+}
+
+function PaymentEvidenceCard({
+  milestoneId,
+  milestone,
+  payment,
+}: {
+  milestoneId: string;
+  milestone: MilestonePayment;
+  payment: VerifiedPayment | null;
+}) {
+  if (!payment) {
+    return (
+      <div className="flex gap-3 rounded-control border border-app-border p-3">
+        <ReceiptText className="mt-0.5 size-4 shrink-0 text-app-muted" />
+        <div>
+          <p className="text-sm font-bold text-app-foreground">지급 명세서</p>
+          <p className="mt-1 text-xs text-app-muted">{milestoneId} 지급 대기</p>
+        </div>
+        <Clock3 className="ml-auto size-4 shrink-0 text-warning" />
+      </div>
+    );
+  }
+
+  const matchesAgreedAmount = Number(payment.amountUsdc) >= Number(milestone.amountUsdc);
+
+  return (
+    <article className="rounded-control border border-app-border p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold text-app-foreground">{milestoneId} 지급 명세서</p>
+        <StatusBadge tone="success">지급 완료</StatusBadge>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+        <EvidenceField label="합의 금액" value={`${milestone.amountUsdc} USDC`} />
+        <EvidenceField label="실제 전송 금액" value={`${payment.amountUsdc} USDC`} />
+        <EvidenceField label="대조 결과" value={matchesAgreedAmount ? "일치" : "⚠️ 차액 발생"} />
+        <EvidenceField
+          label="확정 시각"
+          value={new Date(payment.verifiedAt).toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" })}
+        />
+        <div className="col-span-2">
+          <dt className="text-xs font-bold text-app-muted">트랜잭션 해시</dt>
+          <dd className="mt-1 break-all font-mono text-xs text-app-foreground">{payment.txHash}</dd>
+        </div>
+      </dl>
+
+      <a
+        href={`${BASE_SEPOLIA_EXPLORER_URL}/tx/${payment.txHash}`}
+        target="_blank"
+        rel="noreferrer"
+        className="no-print mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:underline"
+      >
+        Basescan에서 보기
+        <ExternalLink className="size-3.5" />
+      </a>
+      <span className="hidden text-xs text-app-foreground print:inline">
+        {BASE_SEPOLIA_EXPLORER_URL}/tx/{payment.txHash}
+      </span>
+    </article>
+  );
+}
+
+function EvidenceField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-bold text-app-muted">{label}</dt>
+      <dd className="mt-1 break-all text-xs text-app-foreground">{value}</dd>
     </div>
   );
 }

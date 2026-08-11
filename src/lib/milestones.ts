@@ -18,3 +18,7 @@ const MILESTONE_PAYMENTS: Record<string, MilestonePayment> = {
 export function getMilestonePayment(milestoneId: string): MilestonePayment | undefined {
   return MILESTONE_PAYMENTS[milestoneId];
 }
+
+export function listMilestoneIds(): string[] {
+  return Object.keys(MILESTONE_PAYMENTS);
+}
