@@ -33,10 +33,7 @@ export function SowKoreanForm({
   isGenerating,
   onSaveDraft,
 }: SowKoreanFormProps) {
-  const [links, setLinks] = useState<string[]>([
-    "https://github.com/kimminjunnn/LinKross",
-    "https://figma.com/file/sample-linkross",
-  ]);
+  const [links, setLinks] = useState<string[]>([]);
   const [newLinkInput, setNewLinkInput] = useState("");
 
   const handleAddMilestone = () => {
@@ -44,10 +41,10 @@ export function SowKoreanForm({
     const newM: MilestoneInput = {
       id: `m-${Date.now()}`,
       code: `M${nextNum}`,
-      title: `마일스톤 ${nextNum} 신규 기능`,
-      period: "09.15 - 09.30",
-      amount: "500 USDC",
-      dods: ["예) 단위 테스트 통과 및 PR 머지"],
+      title: "",
+      period: "",
+      amount: "",
+      dods: [""],
     };
     setMilestones([...milestones, newM]);
   };
@@ -60,7 +57,7 @@ export function SowKoreanForm({
   const handleAddDoD = (mId: string) => {
     setMilestones((prev) =>
       prev.map((m) =>
-        m.id === mId ? { ...m, dods: [...m.dods, "예) 신규 검수 조건 입력"] } : m
+        m.id === mId ? { ...m, dods: [...m.dods, ""] } : m
       )
     );
   };
@@ -150,6 +147,7 @@ export function SowKoreanForm({
             type="text"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            placeholder="YYYY.MM.DD"
             className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
           />
         </div>
@@ -162,6 +160,7 @@ export function SowKoreanForm({
             type="text"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+            placeholder="YYYY.MM.DD"
             className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
           />
         </div>
@@ -195,6 +194,7 @@ export function SowKoreanForm({
                   <input
                     type="text"
                     value={m.title}
+                    placeholder="마일스톤 제목"
                     onChange={(e) => {
                       const val = e.target.value;
                       setMilestones((prev) =>
@@ -208,6 +208,7 @@ export function SowKoreanForm({
                   <input
                     type="text"
                     value={m.period}
+                    placeholder="기간"
                     onChange={(e) => {
                       const val = e.target.value;
                       setMilestones((prev) =>
@@ -219,6 +220,7 @@ export function SowKoreanForm({
                   <input
                     type="text"
                     value={m.amount}
+                    placeholder="금액"
                     onChange={(e) => {
                       const val = e.target.value;
                       setMilestones((prev) =>
@@ -248,6 +250,7 @@ export function SowKoreanForm({
                     <input
                       type="text"
                       value={dod}
+                      placeholder="완료 조건 입력"
                       onChange={(e) => handleUpdateDoD(m.id, dIdx, e.target.value)}
                       className="min-h-9 flex-1 rounded-control border border-app-border bg-app-surface px-3 text-xs text-app-foreground outline-none focus:border-brand-500"
                     />

@@ -69,39 +69,89 @@ function sanitizeKoreanEnding(text: string): string {
   return sanitized.trim();
 }
 
-function distributeDates(startDateStr: string, endDateStr: string, ratios: number[]): string[] {
-  const start = new Date(startDateStr.replace(/\./g, '-'));
-  const end = new Date(endDateStr.replace(/\./g, '-'));
-  
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
-    return ratios.map(() => `${startDateStr.slice(5)} - ${endDateStr.slice(5)}`);
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+function parseProjectDate(value: string): number | null {
+  const match = value.trim().match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const timestamp = Date.UTC(year, month - 1, day);
+  const parsed = new Date(timestamp);
+
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return null;
   }
 
-  const totalDiffTime = end.getTime() - start.getTime();
+  return timestamp;
+}
+
+function formatProjectDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${month}.${day}`;
+}
+
+function distributeDates(
+  startDateStr: string,
+  endDateStr: string,
+  ratios: number[],
+): string[] {
+  const emptyPeriods = ratios.map(() => "");
+  const start = parseProjectDate(startDateStr);
+  const end = parseProjectDate(endDateStr);
+  const ratioSum = ratios.reduce((sum, ratio) => sum + ratio, 0);
+
+  if (
+    start === null ||
+    end === null ||
+    start > end ||
+    ratios.length === 0 ||
+    ratioSum <= 0 ||
+    ratios.some((ratio) => ratio <= 0)
+  ) {
+    return emptyPeriods;
+  }
+
+  const totalDays = Math.floor((end - start) / DAY_IN_MS) + 1;
+  if (totalDays < ratios.length) return emptyPeriods;
+
   const periods: string[] = [];
-  let currentStart = new Date(start.getTime());
+  let periodStartOffset = 0;
+  let cumulativeRatio = 0;
 
-  for (let i = 0; i < ratios.length; i++) {
-    const isLast = i === ratios.length - 1;
-    let currentEnd: Date;
-    
-    if (isLast) {
-      currentEnd = new Date(end.getTime());
-    } else {
-      const msToAdd = totalDiffTime * ratios[i];
-      currentEnd = new Date(currentStart.getTime() + msToAdd);
-    }
+  ratios.forEach((ratio, index) => {
+    cumulativeRatio += ratio / ratioSum;
+    const isLast = index === ratios.length - 1;
+    const remainingSegments = ratios.length - index - 1;
+    const latestAllowedEndOffset = totalDays - remainingSegments - 1;
+    const periodEndOffset = isLast
+      ? totalDays - 1
+      : Math.max(
+          periodStartOffset,
+          Math.min(
+            latestAllowedEndOffset,
+            Math.round(totalDays * cumulativeRatio) - 1,
+          ),
+        );
+    const periodStart = start + periodStartOffset * DAY_IN_MS;
+    const periodEnd = start + periodEndOffset * DAY_IN_MS;
 
-    const sStr = `${String(currentStart.getMonth() + 1).padStart(2, '0')}.${String(currentStart.getDate()).padStart(2, '0')}`;
-    const eStr = `${String(currentEnd.getMonth() + 1).padStart(2, '0')}.${String(currentEnd.getDate()).padStart(2, '0')}`;
-    periods.push(`${sStr} - ${eStr}`);
-
-    currentStart = new Date(currentEnd.getTime() + (1000 * 60 * 60 * 24));
-  }
+    periods.push(
+      `${formatProjectDate(periodStart)} - ${formatProjectDate(periodEnd)}`,
+    );
+    periodStartOffset = periodEndOffset + 1;
+  });
 
   return periods;
 }
-
 export type AIAnalysisResult = {
   milestones: MilestoneInput[];
   extractedStartDate?: string;
@@ -165,7 +215,7 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-1`,
       code: `M1`,
       title: "단일 프로젝트 완수",
-      period: periods[0], 
+      period: periods[0],
       amount: `${totalBudgetRaw.toLocaleString()} ${currency}`,
       dods: [sanitizeKoreanEnding(sentences[0]) || "요구사항 분석 및 개발 구현 완료"]
     });
@@ -185,7 +235,7 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-2`,
       code: `M2`,
       title: "최종 기능 개발 및 검수",
-      period: periods[1], 
+      period: periods[1],
       amount: `${amt2.toLocaleString()} ${currency}`,
       dods: [sanitizeKoreanEnding(sentences[1]) || "기능 최적화 및 오류 수정 완료"]
     });
@@ -200,7 +250,7 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
       id: `m-1`,
       code: `M1`,
       title: "설계 및 시스템 기초 셋업",
-      period: periods[0], 
+      period: periods[0],
       amount: `${amt1.toLocaleString()} ${currency}`,
       dods: ["프로젝트 개발 환경 및 레포지토리 세팅", "데이터베이스 스키마 및 기본 아키텍처 설계"]
     });
@@ -457,7 +507,7 @@ export async function generateSOWWithRAGAsync(
   };
 
   // API를 태워 Background와 Objective도 번역
-  let bg = "This project is initiated to build a reliable and scalable software solution leveraging LinKross standard escrow and milestone verification systems.";
+  const bg = "This project is initiated to build a reliable and scalable software solution leveraging LinKross standard escrow and milestone verification systems.";
   let obj = "Achieve business goals through MVP deployment and API integration.";
   
   const sentences = workDetail.split(/(?<=[.?!])\s+/).filter(s => s.trim().length > 0);

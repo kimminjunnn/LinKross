@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isUserRole } from "@/config/roles";
+import { getSafeInternalPath } from "@/lib/auth-redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -8,6 +9,7 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const roleParam = url.searchParams.get("role");
   const role = roleParam && isUserRole(roleParam) ? roleParam : null;
+  const nextPath = getSafeInternalPath(url.searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=missing_code", url.origin));
@@ -45,5 +47,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(new URL("/", url.origin));
+  return NextResponse.redirect(new URL(nextPath, url.origin));
 }
