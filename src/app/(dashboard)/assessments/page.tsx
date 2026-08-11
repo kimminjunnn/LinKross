@@ -78,7 +78,7 @@ export default function AssessmentsPage() {
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-app-border pb-6">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-app-foreground sm:text-3xl">
-            지원자 검증
+            지원자 역량검증
           </h1>
           <p className="mt-1.5 text-sm text-app-muted">
             이력보다 요구사항을 이해하고 실행 계획과 위험을 설명하는 능력을 동일한 기준으로 비교합니다.
