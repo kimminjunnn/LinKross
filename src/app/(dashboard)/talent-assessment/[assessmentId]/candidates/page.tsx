@@ -67,24 +67,16 @@ export default function CandidateComparisonDashboard() {
   const [selectionTarget, setSelectionTarget] = useState<CandidateComparisonItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync candidate dataset whenever currentAssessmentId changes
+  // Sync candidate dataset whenever currentAssessmentId changes (defaults to unselected for buyer review)
   useEffect(() => {
     const list = getCandidateListForAssessment(currentAssessmentId);
-    const savedId = getSelectedCandidateId();
-    const isSavedCandidateInList = savedId && list.some((c) => c.id === savedId);
-
     setCandidates(
       list.map((c) => ({
         ...c,
-        status: isSavedCandidateInList && c.id === savedId ? "selected" : "submitted",
+        status: "submitted",
       }))
     );
-
-    if (isSavedCandidateInList) {
-      setSelectedCandidateId(savedId);
-    } else {
-      setSelectedCandidateId(null);
-    }
+    setSelectedCandidateId(null);
   }, [currentAssessmentId]);
 
   const showToast = (msg: string) => {
