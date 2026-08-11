@@ -1,8 +1,4 @@
-import {
-  BadgeCheck,
-  FolderKanban,
-  Settings,
-} from "lucide-react";
+import { BadgeCheck, FolderKanban, Settings } from "lucide-react";
 
 export const primaryNavigation = [
   {
@@ -11,7 +7,7 @@ export const primaryNavigation = [
     icon: FolderKanban,
   },
   {
-    label: "지원자 검증",
+    label: "진행 전 프로젝트",
     href: "/assessments",
     icon: BadgeCheck,
   },
