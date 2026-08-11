@@ -311,8 +311,6 @@ export default function AssessmentsPage() {
                   </table>
                 </div>
               </div>
-              </div>
-
               {selectedModalProject.candidates.map((candidate) => (
                 <div
                   key={candidate.id}
@@ -361,15 +359,12 @@ export default function AssessmentsPage() {
                   </div>
                 </div>
               ))}
->>>>>>> 4fc3728 (feat: implement horizontal project assessment cards and candidate status modal)
             </div>
 
             {/* Modal Footer Actions */}
             <div className="border-t border-app-border pt-4 flex items-center justify-between">
               <button
                 type="button"
-<<<<<<< HEAD
-=======
                 onClick={() => setSelectedModalProject(null)}
                 className="rounded-xl border border-app-border bg-app-surface px-4 py-2.5 text-xs font-semibold text-app-foreground hover:bg-app-surface-subtle transition-colors"
               >
@@ -378,7 +373,6 @@ export default function AssessmentsPage() {
 
               <button
                 type="button"
->>>>>>> 4fc3728 (feat: implement horizontal project assessment cards and candidate status modal)
                 onClick={() => {
                   const targetId = selectedModalProject.id;
                   setSelectedModalProject(null);
@@ -389,17 +383,6 @@ export default function AssessmentsPage() {
                 전체 지원자 비교 대시보드로 이동
                 <ArrowRight className="h-4 w-4" />
               </button>
-<<<<<<< HEAD
-
-              <button
-                type="button"
-                onClick={() => setSelectedModalProject(null)}
-                className="rounded-xl bg-slate-900 px-7 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-md"
-              >
-                닫기
-              </button>
-=======
->>>>>>> 4fc3728 (feat: implement horizontal project assessment cards and candidate status modal)
             </div>
           </div>
         </div>
