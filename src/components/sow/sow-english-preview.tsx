@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Check, ChevronDown, ChevronUp, Download, Send, Edit3, BookOpen } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Download, Send, Edit3, BookOpen, X } from "lucide-react";
 import { EnglishSOWResult } from "@/lib/rag-translator";
 import {
   ApprovalSowSnapshot,
@@ -22,30 +22,24 @@ export function SowEnglishPreview({
   const [showOriginalContrast, setShowOriginalContrast] = useState(true);
   const [isPmVerified, setIsPmVerified] = useState(false);
   const [isEditingSection, setIsEditingSection] = useState(false);
+  const [isApprovalConfirmOpen, setIsApprovalConfirmOpen] = useState(false);
   const sowContentRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPdf = () => {
     window.print();
   };
 
-  const waitForPrintDialog = () =>
-    new Promise<void>((resolve) => {
-      let isResolved = false;
-      const resolveOnce = () => {
-        if (isResolved) return;
-
-        isResolved = true;
-        window.removeEventListener("afterprint", resolveOnce);
-        resolve();
-      };
-
-      window.addEventListener("afterprint", resolveOnce, { once: true });
-      window.print();
-      window.setTimeout(resolveOnce, 800);
-    });
-
-  const handleRequestApprovalClick = async () => {
+  const handleRequestApprovalClick = () => {
     if (!sow || !isPmVerified) return;
+
+    setIsApprovalConfirmOpen(true);
+  };
+
+  const handleConfirmApprovalRequest = () => {
+    if (!sow || !isPmVerified) {
+      setIsApprovalConfirmOpen(false);
+      return;
+    }
 
     const snapshot = createApprovalSowSnapshot({
       projectId,
@@ -53,7 +47,7 @@ export function SowEnglishPreview({
       printText: sowContentRef.current?.innerText ?? "",
     });
 
-    await waitForPrintDialog();
+    setIsApprovalConfirmOpen(false);
     onRequestApproval(snapshot);
   };
 
@@ -338,9 +332,60 @@ export function SowEnglishPreview({
           </button>
         </div>
         <p className="mt-2 text-[0.7rem] text-app-muted">
-          승인 요청 시 PDF 저장 창이 열리고, 같은 SOW 원본 스냅샷이 승인 탭으로 전달됩니다.
+          승인 요청 시 PDF 저장 없이 같은 SOW 원본 스냅샷이 승인 탭으로 전달됩니다. PDF 저장은 오른쪽 버튼에서 별도로 진행합니다.
         </p>
       </div>
+
+      {isApprovalConfirmOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 no-print"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="approval-request-title"
+          aria-describedby="approval-request-description"
+        >
+          <div className="w-full max-w-md rounded-card border border-app-border bg-app-surface p-5 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+                <Send className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase text-app-muted">해외 프리랜서 승인 요청</p>
+                <h3 id="approval-request-title" className="mt-1 text-lg font-black text-app-foreground">
+                  승인 요청을 하시겠습니까?
+                </h3>
+                <p id="approval-request-description" className="mt-2 text-sm leading-6 text-app-muted">
+                  현재 화면의 SOW 원본 스냅샷이 승인 탭으로 전달됩니다. PDF 인쇄나 저장 창은 열리지 않으며,
+                  별도 저장은 PDF 버튼에서 진행할 수 있습니다.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-3 text-xs leading-5 text-app-muted">
+              승인 요청 후에는 승인 탭에서 같은 버전의 업무 명세서를 기준으로 양측 승인 상태를 확인합니다.
+            </div>
+
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={handleConfirmApprovalRequest}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90"
+              >
+                <Check className="size-4" />
+                예
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsApprovalConfirmOpen(false)}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle"
+              >
+                <X className="size-4" />
+                아니오
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

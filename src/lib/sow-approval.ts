@@ -22,6 +22,13 @@ export type ApprovalSowSnapshot = {
 };
 
 const STORAGE_PREFIX = "linkross_sow_approval_snapshot:";
+const snapshotCache = new Map<
+  string,
+  {
+    raw: string | null;
+    value: ApprovalSowSnapshot | null;
+  }
+>();
 
 export function getApprovalSowStorageKey(projectId: string) {
   return `${STORAGE_PREFIX}${projectId}`;
@@ -113,17 +120,31 @@ export function createApprovalSowSnapshot({
 export function saveApprovalSowSnapshot(projectId: string, snapshot: ApprovalSowSnapshot) {
   if (typeof window === "undefined") return;
 
-  window.localStorage.setItem(getApprovalSowStorageKey(projectId), JSON.stringify(snapshot));
+  const storageKey = getApprovalSowStorageKey(projectId);
+  const raw = JSON.stringify(snapshot);
+
+  snapshotCache.set(storageKey, { raw, value: snapshot });
+  window.localStorage.setItem(storageKey, raw);
 }
 
 export function readApprovalSowSnapshot(projectId: string) {
   if (typeof window === "undefined") return null;
 
+  const storageKey = getApprovalSowStorageKey(projectId);
+  const raw = window.localStorage.getItem(storageKey);
+  const cached = snapshotCache.get(storageKey);
+
+  if (cached?.raw === raw) {
+    return cached.value;
+  }
+
   try {
-    const raw = window.localStorage.getItem(getApprovalSowStorageKey(projectId));
-    return raw ? (JSON.parse(raw) as ApprovalSowSnapshot) : null;
+    const value = raw ? (JSON.parse(raw) as ApprovalSowSnapshot) : null;
+    snapshotCache.set(storageKey, { raw, value });
+    return value;
   } catch (error) {
     console.error("Failed to read approval SOW snapshot:", error);
+    snapshotCache.set(storageKey, { raw, value: null });
     return null;
   }
 }
