@@ -311,12 +311,74 @@ export default function AssessmentsPage() {
                   </table>
                 </div>
               </div>
+              </div>
+
+              {selectedModalProject.candidates.map((candidate) => (
+                <div
+                  key={candidate.id}
+                  onClick={() => {
+                    setSelectedModalProject(null);
+                    router.push(`/talent-assessment/${selectedModalProject.id}/candidates/${candidate.id}`);
+                  }}
+                  className="cursor-pointer rounded-xl border border-app-border bg-app-surface-subtle p-4 hover:border-brand-300 hover:bg-brand-50/20 transition-all flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-white font-extrabold text-xs">
+                      {candidate.avatar}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-app-foreground">{candidate.name}</span>
+                        {candidate.isRecommended && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 border border-amber-200">
+                            <Sparkles className="h-3 w-3 text-amber-600" /> 추천
+                          </span>
+                        )}
+                        {candidate.status === "selected" && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" /> 선정됨
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-app-muted mt-0.5 flex items-center gap-2">
+                        <span className="flex items-center gap-1 text-amber-600 font-semibold">
+                          <Star className="h-3 w-3 fill-amber-400 stroke-amber-500" />
+                          {candidate.rating}
+                        </span>
+                        • <span>소요시간: {candidate.submissionTime}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="text-right">
+                      <span className="text-[10px] text-app-muted">최종 점수</span>
+                      <p className="text-base font-black text-brand-600 font-mono">
+                        {candidate.finalScore}점
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-app-muted" />
+                  </div>
+                </div>
+              ))}
+>>>>>>> 4fc3728 (feat: implement horizontal project assessment cards and candidate status modal)
             </div>
 
             {/* Modal Footer Actions */}
             <div className="border-t border-app-border pt-4 flex items-center justify-between">
               <button
                 type="button"
+<<<<<<< HEAD
+=======
+                onClick={() => setSelectedModalProject(null)}
+                className="rounded-xl border border-app-border bg-app-surface px-4 py-2.5 text-xs font-semibold text-app-foreground hover:bg-app-surface-subtle transition-colors"
+              >
+                닫기
+              </button>
+
+              <button
+                type="button"
+>>>>>>> 4fc3728 (feat: implement horizontal project assessment cards and candidate status modal)
                 onClick={() => {
                   const targetId = selectedModalProject.id;
                   setSelectedModalProject(null);
@@ -327,6 +389,7 @@ export default function AssessmentsPage() {
                 전체 지원자 비교 대시보드로 이동
                 <ArrowRight className="h-4 w-4" />
               </button>
+<<<<<<< HEAD
 
               <button
                 type="button"
@@ -335,6 +398,8 @@ export default function AssessmentsPage() {
               >
                 닫기
               </button>
+=======
+>>>>>>> 4fc3728 (feat: implement horizontal project assessment cards and candidate status modal)
             </div>
           </div>
         </div>
