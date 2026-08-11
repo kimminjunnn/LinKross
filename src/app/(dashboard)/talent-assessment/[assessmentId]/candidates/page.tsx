@@ -38,7 +38,7 @@ import {
 export default function CandidateComparisonDashboard() {
   const params = useParams();
   const router = useRouter();
-  const assessmentId = (params.assessmentId as string) || "ast_sample_01";
+  const currentAssessmentId = (params?.assessmentId as string) || "ast_sample_01";
 
   // Dynamically load candidates based on assessmentId (Project A: 3, Project B: 2, Project C: 1)
   const getCandidateListForAssessment = (id: string) => {
@@ -52,7 +52,7 @@ export default function CandidateComparisonDashboard() {
   };
 
   const [candidates, setCandidates] = useState<CandidateComparisonItem[]>(() =>
-    getCandidateListForAssessment(assessmentId)
+    getCandidateListForAssessment(currentAssessmentId)
   );
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"submissionTime" | "name">("submissionTime");
@@ -67,8 +67,9 @@ export default function CandidateComparisonDashboard() {
   const [selectionTarget, setSelectionTarget] = useState<CandidateComparisonItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Sync candidate dataset whenever currentAssessmentId changes
   useEffect(() => {
-    const list = getCandidateListForAssessment(assessmentId);
+    const list = getCandidateListForAssessment(currentAssessmentId);
     const savedId = getSelectedCandidateId();
     const isSavedCandidateInList = savedId && list.some((c) => c.id === savedId);
 
@@ -84,7 +85,7 @@ export default function CandidateComparisonDashboard() {
     } else {
       setSelectedCandidateId(null);
     }
-  }, [assessmentId]);
+  }, [currentAssessmentId]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
