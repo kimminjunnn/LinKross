@@ -15,6 +15,10 @@ import {
   Clock,
   Award,
   ChevronRight,
+  HelpCircle,
+  FileText,
+  Briefcase,
+  ShieldAlert,
 } from "lucide-react";
 import { StatusBadge } from "@/components/project/status-badge";
 import { INITIAL_CANDIDATES, CandidateComparisonItem } from "@/lib/comparison";
@@ -71,6 +75,9 @@ export default function AssessmentsPage() {
   const router = useRouter();
   const [sortOrder, setSortOrder] = useState<"latest" | "oldest">("latest");
   const [selectedModalProject, setSelectedModalProject] = useState<ProjectAssessmentItem | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<CandidateComparisonItem | null>(null);
+
+  const activeCandidate = selectedCandidate || (selectedModalProject?.candidates[0] ?? INITIAL_CANDIDATES[0]);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pb-16">
@@ -85,7 +92,7 @@ export default function AssessmentsPage() {
           </p>
         </div>
 
-        {/* Top Actions: Right side filter (Orange creation button REMOVED as requested) */}
+        {/* Top Actions: Right side filter */}
         <div className="flex items-center gap-3">
           <div className="relative">
             <select
@@ -101,7 +108,7 @@ export default function AssessmentsPage() {
         </div>
       </header>
 
-      {/* Horizontal Full-Width Cards (1-Column Layout as in Design 2) */}
+      {/* Horizontal Full-Width Cards */}
       <div className="space-y-4">
         {mockProjectAssessments.map((item) => (
           <article
@@ -136,7 +143,10 @@ export default function AssessmentsPage() {
             <div className="shrink-0 flex items-center gap-3 border-t md:border-t-0 border-app-border pt-4 md:pt-0">
               <button
                 type="button"
-                onClick={() => setSelectedModalProject(item)}
+                onClick={() => {
+                  setSelectedModalProject(item);
+                  setSelectedCandidate(item.candidates[0] || INITIAL_CANDIDATES[0]);
+                }}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] border border-slate-900 bg-slate-900 px-6 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-xs"
               >
                 <Eye className="h-4 w-4" />
@@ -147,96 +157,160 @@ export default function AssessmentsPage() {
         ))}
       </div>
 
-      {/* Candidate Status Modal (지원자 현황 상세 모달) */}
+      {/* Candidate Submission Detail Modal (Design Matched 100% to Image Wireframe) */}
       {selectedModalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-3xl rounded-2xl border border-app-border bg-white p-6 shadow-2xl space-y-5 max-h-[85vh] flex flex-col">
+          <div className="relative w-full max-w-3xl rounded-3xl border border-app-border bg-white p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-app-border pb-4">
-              <div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700">
-                  <Users className="h-3.5 w-3.5 text-brand-500" /> 프로젝트 지원 현황
+            <div className="flex items-start justify-between border-b border-app-border/60 pb-4">
+              <div className="space-y-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-200/80">
+                  <Eye className="h-3.5 w-3.5 text-amber-500" /> 지원자 응답 상세 열람
                 </span>
-                <h3 className="text-lg font-bold text-app-foreground mt-1">
-                  {selectedModalProject.projectName}
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">
+                  {activeCandidate.name} 지원자의 제출 내역
                 </h3>
               </div>
+
               <button
                 type="button"
                 onClick={() => setSelectedModalProject(null)}
-                className="rounded-lg p-1.5 text-app-muted hover:bg-slate-100 hover:text-app-foreground transition-colors"
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Candidate List Body */}
-            <div className="flex-1 overflow-y-auto space-y-3 text-xs pr-2">
-              <div className="flex items-center justify-between text-app-muted px-1 font-medium">
-                <span>지원 제출 개발자 목록 ({selectedModalProject.candidates.length}명)</span>
-                <span>실무 역량 평가 점수 기준</span>
+            {/* Candidate Selector Tabs (If multiple candidates) */}
+            {selectedModalProject.candidates.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {selectedModalProject.candidates.map((cand) => (
+                  <button
+                    key={cand.id}
+                    type="button"
+                    onClick={() => setSelectedCandidate(cand)}
+                    className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                      cand.id === activeCandidate.id
+                        ? "bg-slate-900 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {cand.name} ({cand.finalScore}점)
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Modal Content Scroll Area */}
+            <div className="flex-1 overflow-y-auto space-y-5 text-xs pr-1">
+              {/* Score Overview Box (Sky blue background) */}
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-100/70 p-5 grid grid-cols-4 text-center divide-x divide-slate-200">
+                <div>
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">요구사항 이해</span>
+                  <span className="text-lg font-black text-slate-900 font-mono">
+                    {activeCandidate.scores.requirements}점
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">질문</span>
+                  <span className="text-lg font-black text-slate-900 font-mono">
+                    {activeCandidate.scores.questions}점
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">작업 계획</span>
+                  <span className="text-lg font-black text-slate-900 font-mono">
+                    {activeCandidate.scores.workPlan}점
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-medium block text-[11px] mb-1">리스크 대응</span>
+                  <span className="text-lg font-black text-slate-900 font-mono">
+                    {activeCandidate.scores.risk}점
+                  </span>
+                </div>
               </div>
 
-              {selectedModalProject.candidates.map((candidate) => (
-                <div
-                  key={candidate.id}
-                  onClick={() => {
-                    setSelectedModalProject(null);
-                    router.push(`/talent-assessment/${selectedModalProject.id}/candidates/${candidate.id}`);
-                  }}
-                  className="cursor-pointer rounded-xl border border-app-border bg-app-surface-subtle p-4 hover:border-brand-300 hover:bg-brand-50/20 transition-all flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-white font-extrabold text-xs">
-                      {candidate.avatar}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-app-foreground">{candidate.name}</span>
-                        {candidate.isRecommended && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 border border-amber-200">
-                            <Sparkles className="h-3 w-3 text-amber-600" /> 추천
-                          </span>
-                        )}
-                        {candidate.status === "selected" && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-600" /> 선정됨
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-app-muted mt-0.5 flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-amber-600 font-semibold">
-                          <Star className="h-3 w-3 fill-amber-400 stroke-amber-500" />
-                          {candidate.rating}
-                        </span>
-                        • <span>소요시간: {candidate.submissionTime}</span>
-                      </p>
-                    </div>
+              {/* 01. 제출된 확인 질문 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 text-amber-500 font-black border border-amber-200 text-xs">
+                    ?
                   </div>
-
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right">
-                      <span className="text-[10px] text-app-muted">최종 점수</span>
-                      <p className="text-base font-black text-brand-600 font-mono">
-                        {candidate.finalScore}점
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-app-muted" />
-                  </div>
+                  <span>01. 제출된 확인 질문</span>
                 </div>
-              ))}
+                <ol className="space-y-2 text-slate-700 font-medium leading-relaxed pl-1">
+                  <li>
+                    1. 인증 처리 방식에서 JWT 토큰의 만료 시간 및 Refresh 토큰 보관 위치에 대한 기준이 선호되시는 방식이 있으신가요?
+                  </li>
+                  <li>
+                    2. PostgreSQL 데이터베이스의 초동 스키마 마이그레이션 도구로 Prisma ORM을 사용하는 것에 동의하시나요?
+                  </li>
+                </ol>
+              </div>
+
+              {/* 02. 요구사항 이해 요약 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <FileText className="h-5 w-5 text-amber-500" />
+                  <span>02. 요구사항 이해 요약</span>
+                </div>
+                <p className="text-slate-700 font-medium leading-relaxed">
+                  본 프로젝트는 쇼핑몰 MVP 서비스 구축을 목적으로 하며, 핵심 사용자 흐름인 회원가입/로그인, 상품 목록/상세, 장바구니, 주문 결제 및 관리자 관리 페이지를 8주 이내에 구축하는 것을 목표로 합니다.
+                </p>
+              </div>
+
+              {/* 03. 실행 계획 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <Briefcase className="h-5 w-5 text-amber-500" />
+                  <span>03. 실행 계획</span>
+                </div>
+                <div className="space-y-1.5 font-mono text-slate-700 font-medium">
+                  <p>→ 환경 구성: Next.js 및 TypeScript 개발 환경 초기화</p>
+                  <p>→ DB: PostgreSQL 데이터베이스 스키마 설계 및 Prisma 설정</p>
+                  <p>→ API: 회원 인증 및 상품/장바구니 RESTful API 구현</p>
+                </div>
+              </div>
+
+              {/* 04. 예상 리스크 및 대응방안 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                  <ShieldAlert className="h-5 w-5 text-amber-500" />
+                  <span>04. 예상 리스크 및 대응방안</span>
+                </div>
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
+                        <th className="p-3">Risk</th>
+                        <th className="p-3 w-20">Impact</th>
+                        <th className="p-3">Mitigation</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-medium text-slate-700">
+                      <tr>
+                        <td className="p-3 font-semibold text-slate-900">결제 API 연동 지연</td>
+                        <td className="p-3">
+                          <span className="rounded bg-rose-100 px-2 py-0.5 font-bold text-rose-800 text-[11px]">High</span>
+                        </td>
+                        <td className="p-3">Mock API로 선개발</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-semibold text-slate-900">DB 구조 변경</td>
+                        <td className="p-3">
+                          <span className="rounded bg-amber-100 px-2 py-0.5 font-bold text-amber-800 text-[11px]">Medium</span>
+                        </td>
+                        <td className="p-3">초기 Schema 확정</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             {/* Modal Footer Actions */}
             <div className="border-t border-app-border pt-4 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setSelectedModalProject(null)}
-                className="rounded-xl border border-app-border bg-app-surface px-4 py-2.5 text-xs font-semibold text-app-foreground hover:bg-app-surface-subtle transition-colors"
-              >
-                닫기
-              </button>
-
               <button
                 type="button"
                 onClick={() => {
@@ -248,6 +322,14 @@ export default function AssessmentsPage() {
               >
                 전체 지원자 비교 대시보드로 이동
                 <ArrowRight className="h-4 w-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedModalProject(null)}
+                className="rounded-xl bg-slate-900 px-7 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-md"
+              >
+                닫기
               </button>
             </div>
           </div>
