@@ -6,7 +6,6 @@ import { CheckCircle2, FileText, LockKeyhole, UserCheck } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 import {
-  ApprovalDocumentSection,
   ApprovalSowSnapshot,
   readApprovalSowSnapshot,
 } from "@/lib/sow-approval";
@@ -33,19 +32,6 @@ const fallbackSummary = {
 };
 
 const getEmptySowSnapshot = () => null;
-
-function getSectionBody(sections: ApprovalDocumentSection[], title: string) {
-  return sections.find((section) => section.title === title)?.body ?? "";
-}
-
-function truncateSummary(value: string, fallback: string) {
-  const lines = value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  return lines.slice(0, 3).join(" ") || fallback;
-}
 
 export default function ApprovalPage() {
   const params = useParams<{ projectId: string }>();
@@ -75,27 +61,6 @@ export default function ApprovalPage() {
   const activeAcceptanceCriteria = sowSnapshot?.acceptanceCriteria ?? acceptanceCriteria;
   const activeDefinitionOfDone = sowSnapshot?.definitionOfDone ?? definitionOfDone;
   const activeSummary = sowSnapshot?.summary ?? fallbackSummary;
-  const scopeSectionBody = getSectionBody(activeDocumentSections, "Scope of Work");
-  const rolesSectionBody = getSectionBody(activeDocumentSections, "Roles & Responsibilities");
-  const [scopeBody, outOfScopeBody = ""] = scopeSectionBody.split("Out-of-Scope:");
-  const approvalCriteriaSummary = sowSnapshot?.approvalCriteriaSummary ?? {
-    scope: truncateSummary(
-      scopeBody.replace("In-Scope:", ""),
-      "Scope will be confirmed from the approved SOW.",
-    ),
-    outOfScope: truncateSummary(outOfScopeBody, "No explicit out-of-scope items were provided in this version."),
-    completionCriteria: `${activeAcceptanceCriteria.length} Acceptance Criteria and ${activeDefinitionOfDone.length} Definition of Done items will be used as approval and verification criteria.`,
-    responsibilities: truncateSummary(
-      rolesSectionBody,
-      "Client and vendor responsibilities are defined in the approved SOW.",
-    ),
-  };
-  const approvalCriteriaSummaryItems = [
-    { label: "Scope", value: approvalCriteriaSummary.scope },
-    { label: "Out of Scope", value: approvalCriteriaSummary.outOfScope },
-    { label: "Completion Criteria", value: approvalCriteriaSummary.completionCriteria },
-    { label: "Responsibilities", value: approvalCriteriaSummary.responsibilities },
-  ];
   const translatedSummary = {
     coreScope: sowSnapshot
       ? "영문 SOW 원본의 Scope of Work 항목을 기준으로 이번 개발 범위를 확인합니다."
@@ -177,27 +142,6 @@ export default function ApprovalPage() {
           {sowSnapshot ? (
             <div className="mt-4 rounded-control border border-brand-200 bg-brand-50 p-4 text-sm leading-6 text-brand-700">
               <strong>{sowSnapshot.pdfFileName}</strong> 승인 기준으로 사용할 업무 명세서 원본입니다.
-            </div>
-          ) : null}
-
-          {sowSnapshot ? (
-            <div className="mt-4 rounded-control border border-app-border bg-app-surface-subtle p-4">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-sm font-black text-app-foreground">Approval Criteria Summary</h3>
-                <p className="text-xs font-semibold text-app-muted">
-                  Scope · Out of Scope · Completion Criteria · Responsibilities
-                </p>
-              </div>
-              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-                {approvalCriteriaSummaryItems.map((item) => (
-                  <div key={item.label}>
-                    <dt className="text-xs font-semibold text-app-muted">{item.label}</dt>
-                    <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                      {item.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           ) : null}
 
