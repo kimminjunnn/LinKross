@@ -13,6 +13,11 @@ const MILESTONE_PAYMENTS: Record<string, MilestonePayment> = {
     freelancerAddress: DEMO_FREELANCER_ADDRESS,
     amountUsdc: "1",
   },
+  M2: {
+    milestoneId: "M2",
+    freelancerAddress: DEMO_FREELANCER_ADDRESS,
+    amountUsdc: "1",
+  },
 };
 
 export function getMilestonePayment(milestoneId: string): MilestonePayment | undefined {

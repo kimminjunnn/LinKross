@@ -9,7 +9,9 @@ import {
   BriefcaseBusiness,
   Check,
   Code2,
+  Plus,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
@@ -49,6 +51,7 @@ export function OnboardingFlow() {
   const selectedOption = intentOptions.find((option) => option.id === intent);
   const SelectedIcon = selectedOption?.icon;
   const stepNumber = step === "purpose" ? 1 : 2;
+  const isApplicantProfile = step === "profile" && intent === "apply";
 
   function continueToProfile() {
     if (intent) {
@@ -74,7 +77,7 @@ export function OnboardingFlow() {
     <div className="relative min-h-screen overflow-hidden bg-app-canvas">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(circle_at_top_left,rgba(249,88,3,0.13),transparent_38%),radial-gradient(circle_at_top_right,rgba(22,155,161,0.12),transparent_34%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.13),transparent_38%),radial-gradient(circle_at_top_right,rgba(22,155,161,0.12),transparent_34%)]"
       />
 
       <header className="relative z-10 border-b border-app-border/80 bg-app-surface/80 backdrop-blur-xl">
@@ -84,7 +87,7 @@ export function OnboardingFlow() {
             href="/projects"
             className="rounded-control px-3 py-2 text-sm font-bold text-app-muted transition-colors hover:bg-app-surface-subtle hover:text-app-foreground"
           >
-            나중에 하기
+            {isApplicantProfile ? "Skip for now" : "나중에 하기"}
           </Link>
         </div>
       </header>
@@ -94,15 +97,19 @@ export function OnboardingFlow() {
           <div className="mb-8 flex items-center justify-between gap-4 sm:mb-10">
             <div>
               <p className="text-xs font-black tracking-[0.16em] text-brand-700 uppercase">
-                시작하기
+                {isApplicantProfile ? "Getting started" : "시작하기"}
               </p>
               <p className="mt-1 text-sm font-bold text-app-foreground">
-                {stepNumber}/2 단계
+                {isApplicantProfile ? `Step ${stepNumber} of 2` : `${stepNumber}/2 단계`}
               </p>
             </div>
             <div
               className="flex w-28 gap-2 sm:w-40"
-              aria-label={`온보딩 ${stepNumber}/2 단계`}
+              aria-label={
+                isApplicantProfile
+                  ? `Onboarding step ${stepNumber} of 2`
+                  : `온보딩 ${stepNumber}/2 단계`
+              }
             >
               {[1, 2].map((item) => (
                 <span
@@ -223,7 +230,7 @@ export function OnboardingFlow() {
                 className="mb-5 inline-flex items-center gap-2 rounded-control text-sm font-bold text-app-muted transition-colors hover:text-app-foreground"
               >
                 <ArrowLeft aria-hidden="true" className="size-4" />
-                이용 목적 다시 선택
+                {intent === "apply" ? "Back to role selection" : "이용 목적 다시 선택"}
               </button>
 
               <div className="grid overflow-hidden rounded-card border border-app-border bg-app-surface shadow-floating lg:grid-cols-[0.8fr_1.2fr]">
@@ -240,8 +247,9 @@ export function OnboardingFlow() {
                         {selectedOption.title}
                       </h2>
                       <p className="mt-4 text-sm leading-6 text-white/70">
-                        지금은 시작에 필요한 정보만 받습니다. 세부 정보는 프로젝트를
-                        진행하며 언제든 보완할 수 있어요.
+                        {intent === "apply"
+                          ? "We only need a few details to get you started. You can update your profile anytime as you work on projects."
+                          : "지금은 시작에 필요한 정보만 받습니다. 세부 정보는 프로젝트를 진행하며 언제든 보완할 수 있어요."}
                       </p>
                     </>
                   )}
@@ -249,14 +257,16 @@ export function OnboardingFlow() {
 
                 <form onSubmit={finishOnboarding} className="p-7 sm:p-9">
                   <div>
-                    <p className="text-sm font-black text-brand-700">기본 정보</p>
+                    <p className="text-sm font-black text-brand-700">
+                      {intent === "apply" ? "Basic information" : "기본 정보"}
+                    </p>
                     <h1
                       id="onboarding-profile-title"
                       className="mt-2 text-2xl font-black tracking-tight text-app-foreground sm:text-3xl"
                     >
                       {intent === "recruit"
                         ? "프로젝트를 등록할 팀을 알려주세요"
-                        : "지원에 필요한 정보를 알려주세요"}
+                        : "Tell us what we need to know about you"}
                     </h1>
                   </div>
 
@@ -268,7 +278,9 @@ export function OnboardingFlow() {
 
                   <div className="mt-8 flex flex-col-reverse gap-3 border-t border-app-border pt-6 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs leading-5 text-app-muted">
-                      입력한 정보는 설정에서 변경할 수 있습니다.
+                      {intent === "apply"
+                        ? "You can update this information in Settings."
+                        : "입력한 정보는 설정에서 변경할 수 있습니다."}
                     </p>
                     <button
                       type="submit"
@@ -276,7 +288,7 @@ export function OnboardingFlow() {
                     >
                       {intent === "recruit"
                         ? "프로젝트 등록하기"
-                        : "프로젝트 둘러보기"}
+                        : "Browse projects"}
                       <ArrowRight aria-hidden="true" className="size-4" />
                     </button>
                   </div>
@@ -352,57 +364,104 @@ function RecruiterFields() {
 }
 
 function ApplicantFields() {
+  const [portfolioLinkIds, setPortfolioLinkIds] = useState([0]);
+
+  function addPortfolioLink() {
+    setPortfolioLinkIds((currentIds) => [
+      ...currentIds,
+      Math.max(...currentIds, -1) + 1,
+    ]);
+  }
+
+  function removePortfolioLink(linkId: number) {
+    setPortfolioLinkIds((currentIds) => {
+      if (currentIds.length === 1) {
+        return currentIds;
+      }
+
+      return currentIds.filter((currentId) => currentId !== linkId);
+    });
+  }
+
   return (
     <div className="mt-7 grid gap-5 sm:grid-cols-2">
       <label className="text-sm font-bold text-app-foreground">
-        표시 이름
+        Display name
         <input
           required
           name="displayName"
           autoComplete="name"
-          placeholder="이름을 입력해주세요"
+          placeholder="Enter your name"
           className={fieldClassName}
         />
       </label>
       <label className="text-sm font-bold text-app-foreground">
-        활동 시간대
+        Time zone
         <select required name="timezone" defaultValue="Asia/Seoul" className={fieldClassName}>
-          <option value="Asia/Seoul">서울 (UTC+9)</option>
-          <option value="Asia/Tokyo">도쿄 (UTC+9)</option>
-          <option value="America/Los_Angeles">로스앤젤레스 (UTC-8)</option>
-          <option value="Europe/London">런던 (UTC+0)</option>
-          <option value="other">기타</option>
+          <option value="Asia/Seoul">Seoul (UTC+9)</option>
+          <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+          <option value="America/Los_Angeles">Los Angeles (UTC-8)</option>
+          <option value="Europe/London">London (UTC+0)</option>
+          <option value="other">Other</option>
         </select>
       </label>
       <label className="text-sm font-bold text-app-foreground sm:col-span-2">
-        한 줄 소개
+        Professional headline
         <input
           required
           name="headline"
-          placeholder="예: Next.js 기반 MVP를 빠르게 구현하는 풀스택 개발자"
+          placeholder="e.g. Full-stack developer building fast MVPs with Next.js"
           className={fieldClassName}
         />
       </label>
       <label className="text-sm font-bold text-app-foreground sm:col-span-2">
-        주요 기술 또는 전문 분야
+        Key skills or areas of expertise
         <input
           required
           name="skills"
-          placeholder="예: Next.js, Node.js, PostgreSQL"
+          placeholder="e.g. Next.js, Node.js, PostgreSQL"
           className={fieldClassName}
         />
       </label>
-      <label className="text-sm font-bold text-app-foreground sm:col-span-2">
-        GitHub 또는 포트폴리오 링크{" "}
-        <span className="font-medium text-app-muted">(선택)</span>
-        <input
-          name="portfolioUrl"
-          type="url"
-          autoComplete="url"
-          placeholder="https://"
-          className={fieldClassName}
-        />
-      </label>
+      <fieldset className="sm:col-span-2">
+        <legend className="text-sm font-bold text-app-foreground">
+          GitHub or portfolio links{" "}
+          <span className="font-medium text-app-muted">(optional)</span>
+        </legend>
+
+        <div className="space-y-2">
+          {portfolioLinkIds.map((linkId, index) => (
+            <div key={linkId} className="flex items-center gap-2">
+              <input
+                name="portfolioUrls"
+                type="url"
+                autoComplete="url"
+                aria-label={`GitHub or portfolio link ${index + 1}`}
+                placeholder="https://"
+                className={`${fieldClassName} min-w-0 flex-1`}
+              />
+              <button
+                type="button"
+                onClick={() => removePortfolioLink(linkId)}
+                disabled={portfolioLinkIds.length === 1}
+                aria-label={`Remove portfolio link ${index + 1}`}
+                className="mt-2 grid size-12 shrink-0 place-items-center rounded-control border border-app-border-strong text-app-muted transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:border-app-border disabled:bg-app-surface-subtle disabled:text-app-border-strong"
+              >
+                <Trash2 aria-hidden="true" className="size-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={addPortfolioLink}
+          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-control border border-app-border-strong px-3.5 text-sm font-bold text-app-foreground transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+        >
+          <Plus aria-hidden="true" className="size-4" />
+          Add link
+        </button>
+      </fieldset>
     </div>
   );
 }

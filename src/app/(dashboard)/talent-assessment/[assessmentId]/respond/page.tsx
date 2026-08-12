@@ -25,6 +25,7 @@ import {
   Database,
   Lock,
 } from "lucide-react";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { getAssessmentById, TalentAssessment } from "@/lib/assessments";
 import {
   getDraftSubmission,
@@ -234,12 +235,7 @@ export default function CandidateRespondPage() {
       {/* Top Header */}
       <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-app-border bg-white/95 px-6 py-4 shadow-sm backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg text-app-foreground">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white font-extrabold text-xs tracking-tighter">
-              LK
-            </span>
-            LinKross
-          </Link>
+          <BrandLogo />
           <div className="h-4 w-px bg-app-border" />
           <div className="flex items-center gap-2">
             <span className="text-xs text-app-muted">과제:</span>

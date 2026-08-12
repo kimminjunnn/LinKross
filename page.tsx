@@ -1,24 +1,9 @@
+'use client';
+
+import React from 'react';
 import Link from 'next/link';
-import { redirect } from "next/navigation";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-export default async function HomePage() {
-  const isAuthConfigured =
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (isAuthConfigured) {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      redirect("/projects");
-    }
-  }
-
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       {/* 1. Header (Clean White Header with Transparent Orange/Navy Logo) */}

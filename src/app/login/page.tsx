@@ -82,7 +82,7 @@ function LoginForm() {
     <div className="grid min-h-screen place-items-center bg-app-canvas px-4">
       <div className="w-full max-w-sm rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8">
         <div className="flex justify-center">
-          <BrandLogo />
+          <BrandLogo size="large" />
         </div>
         <p className="mt-3 text-center text-sm leading-6 text-app-muted">사람을 고르고, 일을 합의하고, 결과물을 검증합니다.</p>
 

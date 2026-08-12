@@ -1,7 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/onboarding"];
+const PUBLIC_PATHS = ["/", "/login", "/onboarding"];
+
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
 
 export async function proxy(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,9 +37,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublicPath = PUBLIC_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
-
-  if (!user && !isPublicPath) {
+  if (!user && !isPublicPath(request.nextUrl.pathname)) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
@@ -42,5 +46,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|auth).*)"],
+  // 인증이 필요 없는 Next.js 내부 경로와 공개 브랜드 자산만 프록시를 건너뛴다.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|brand/|api|auth).*)"],
 };
