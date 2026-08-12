@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Sparkles, Trash2, UploadCloud, X } from "lucide-react";
+import { Plus, Sparkles, Trash2, UploadCloud, X, ToggleLeft, ToggleRight } from "lucide-react";
 import { MilestoneInput } from "@/lib/rag-translator";
+import { parseDocumentAction } from "@/app/actions/parse-document";
 
 type SowKoreanFormProps = {
   workDetail: string;
@@ -11,10 +12,12 @@ type SowKoreanFormProps = {
   setStartDate: (val: string) => void;
   endDate: string;
   setEndDate: (val: string) => void;
+  budget: string;
+  setBudget: (val: string) => void;
   milestones: MilestoneInput[];
   setMilestones: React.Dispatch<React.SetStateAction<MilestoneInput[]>>;
-  onAnalyzeAI: () => void;
-  onGenerateEnglishSOW: () => void;
+  onAnalyzeAI: (fileContent?: string) => void;
+  onGenerateEnglishSOW: (hiddenContent?: string) => void;
   isGenerating: boolean;
   onSaveDraft: () => void;
 };
@@ -26,6 +29,8 @@ export function SowKoreanForm({
   setStartDate,
   endDate,
   setEndDate,
+  budget,
+  setBudget,
   milestones,
   setMilestones,
   onAnalyzeAI,
@@ -33,8 +38,18 @@ export function SowKoreanForm({
   isGenerating,
   onSaveDraft,
 }: SowKoreanFormProps) {
-  const [links, setLinks] = useState<string[]>([]);
-  const [newLinkInput, setNewLinkInput] = useState("");
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [isAutoAppend, setIsAutoAppend] = useState(true);
+  const [hiddenFileContent, setHiddenFileContent] = useState("");
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAnalyzeClick = () => {
+    onAnalyzeAI(hiddenFileContent || undefined);
+  };
 
   const handleAddMilestone = () => {
     const nextNum = milestones.length + 1;
@@ -83,15 +98,6 @@ export function SowKoreanForm({
     );
   };
 
-  const handleAddLink = () => {
-    if (!newLinkInput.trim()) return;
-    setLinks([...links, newLinkInput.trim()]);
-    setNewLinkInput("");
-  };
-
-  const handleRemoveLink = (idx: number) => {
-    setLinks(links.filter((_, i) => i !== idx));
-  };
 
   // 총예산 산출
   const totalAmount = (milestones || []).reduce((sum, m) => {
@@ -109,6 +115,31 @@ export function SowKoreanForm({
         </p>
       </div>
 
+      {/* 예산 입력 */}
+      <div className="mt-5">
+        <label htmlFor="budget-input" className="block text-sm font-bold text-app-foreground">
+          예산 (USDC)
+        </label>
+        <div className="relative mt-2 flex items-center w-full sm:w-1/3">
+          <input
+            id="budget-input"
+            type="text"
+            value={budget}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[^0-9]/g, "");
+              if (raw) {
+                setBudget(parseInt(raw, 10).toLocaleString());
+              } else {
+                setBudget("");
+              }
+            }}
+            placeholder="예: 50,000"
+            className="min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3.5 pr-14 text-sm text-app-foreground outline-none focus:border-brand-500 focus:bg-app-surface"
+          />
+          <span className="absolute right-3.5 text-sm font-bold text-app-muted">USDC</span>
+        </div>
+      </div>
+
       {/* 업무 상세 작성 */}
       <div className="mt-5">
         <label htmlFor="work-detail-input" className="block text-sm font-bold text-app-foreground">
@@ -121,17 +152,105 @@ export function SowKoreanForm({
           placeholder="작업자가 프롬프트 작성하듯 자유롭게 작성&#10;프로젝트 목적 · 업무 범위(In-Scope) · 세부 작업 · 결과물 등"
           className="mt-2 min-h-36 w-full resize-y rounded-control border border-app-border bg-app-surface-subtle p-3.5 text-sm leading-6 outline-none focus:border-brand-500 focus:bg-app-surface"
         />
-        <div className="mt-2.5 flex items-center justify-between gap-3">
+
+        {/* File Upload Bar under Task Details */}
+        <div className="mt-3">
+          <label className="block text-[0.75rem] font-bold text-app-foreground mb-1.5">
+            문서 기반 AI 마일스톤 생성 (선택 사항)
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".pdf,.doc,.docx,.txt,.md,.csv"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setSelectedFile(file);
+                  setParseError(null);
+                  setIsParsing(true);
+                  try {
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    const result = await parseDocumentAction(formData);
+                    if (result.error) {
+                      setParseError(result.error);
+                    } else if (result.text) {
+                      if (isAutoAppend) {
+                        const newText = workDetail.trim() 
+                          ? `${workDetail}\n\n[첨부 파일 내용: ${file.name}]\n${result.text}` 
+                          : `[첨부 파일 내용: ${file.name}]\n${result.text}`;
+                        setWorkDetail(newText);
+                        setHiddenFileContent("");
+                        setSelectedFile(null);
+                      } else {
+                        setHiddenFileContent(result.text);
+                      }
+                    }
+                  } catch (err: any) {
+                    setParseError(err.message || "파일 분석 중 오류가 발생했습니다.");
+                  } finally {
+                    setIsParsing(false);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }
+                }
+              }}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-3 py-1.5 text-xs font-semibold text-app-foreground hover:bg-app-border transition-colors"
+            >
+              <UploadCloud className="size-3.5" />
+              {isParsing ? '분석 중...' : (isAutoAppend ? '파일 내용 삽입' : '파일 업로드')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAutoAppend(!isAutoAppend)}
+              className="ml-2 flex items-center gap-1.5 text-xs font-semibold text-app-muted hover:text-app-foreground transition-colors"
+              title="켜두면 파일 업로드 즉시 상세 폼에 내용이 추가됩니다."
+            >
+              {isAutoAppend ? (
+                <ToggleRight className="size-5 text-brand-500" />
+              ) : (
+                <ToggleLeft className="size-5" />
+              )}
+              자동 삽입
+            </button>
+            {selectedFile && (
+              <div className="flex items-center gap-2 rounded bg-brand-50 px-2 py-1 text-xs text-brand-700">
+                <span className="truncate max-w-[200px]">{selectedFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFile(null)}
+                  className="hover:text-brand-900"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            )}
+            <span className="text-[0.65rem] text-app-muted">지원 포맷: PDF, DOCX, TXT, MD 등 문서 파일 전반</span>
+          </div>
+          {parseError && (
+            <p className="mt-1.5 text-[0.7rem] text-danger">{parseError}</p>
+          )}
+        </div>
+
+        <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-app-border pt-3.5">
           <button
             type="button"
-            onClick={onAnalyzeAI}
-            className="inline-flex min-h-10 items-center gap-2 rounded-control bg-app-foreground px-4 text-xs font-bold text-white transition-opacity hover:opacity-90"
+            onClick={handleAnalyzeClick}
+            disabled={isParsing}
+            className="inline-flex min-h-10 items-center gap-2 rounded-control bg-app-foreground px-4 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            <Sparkles aria-hidden="true" className="size-3.5 text-brand-400" />
-            AI 분석
+            <Sparkles aria-hidden="true" className={`size-3.5 text-brand-400 ${isParsing ? 'animate-spin' : ''}`} />
+            {isParsing ? "파일 분석 중..." : "AI 분석"}
           </button>
           <span className="text-[0.75rem] text-app-muted">
-            업무 상세를 분석해 마일스톤 개수 · 일정 · 금액 · DoD 초안을 자동 설정합니다.
+            업무 상세와 첨부 문서를 분석해 마일스톤 개수 · 일정 · 금액 · DoD 초안을 자동 설정합니다.
           </span>
         </div>
       </div>
@@ -288,50 +407,12 @@ export function SowKoreanForm({
         </button>
       </div>
 
-      {/* 참고자료 파일 업로드 영역 */}
-      <div className="mt-6 border-t border-app-border pt-5">
-        <label className="block text-xs font-bold text-app-foreground">
-          참고자료 파일 업로드 — 드래그 또는 클릭
-        </label>
-        <div className="mt-2 flex flex-col items-center justify-center rounded-control border border-dashed border-app-border bg-app-surface-subtle p-4 text-center">
-          <UploadCloud className="size-6 text-app-muted" />
-          <p className="mt-1 text-xs text-app-muted">GitHub / Figma / Notion 링크 첨부 가능</p>
-        </div>
-
-        {/* 링크 목록 */}
-        <div className="mt-3 space-y-1.5">
-          {links.map((link, lIdx) => (
-            <div key={lIdx} className="flex items-center justify-between rounded bg-app-surface-subtle px-3 py-1.5 text-xs text-app-muted">
-              <span className="truncate">{link}</span>
-              <button type="button" onClick={() => handleRemoveLink(lIdx)} className="text-app-muted hover:text-danger">
-                <X className="size-3" />
-              </button>
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="https://..."
-              value={newLinkInput}
-              onChange={(e) => setNewLinkInput(e.target.value)}
-              className="min-h-8 flex-1 rounded border border-app-border px-2 text-xs outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleAddLink}
-              className="rounded bg-app-foreground px-3 text-xs font-bold text-white"
-            >
-              추가
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* 하단 실행 버튼 */}
       <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
         <button
           type="button"
-          onClick={onGenerateEnglishSOW}
+          onClick={() => onGenerateEnglishSOW(hiddenFileContent || undefined)}
           disabled={isGenerating}
           className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
