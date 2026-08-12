@@ -20,6 +20,7 @@ type SowKoreanFormProps = {
   onGenerateEnglishSOW: (hiddenContent?: string) => void;
   isGenerating: boolean;
   onSaveDraft: () => void;
+  dateError?: boolean;
 };
 
 export function SowKoreanForm({
@@ -37,6 +38,7 @@ export function SowKoreanForm({
   onGenerateEnglishSOW,
   isGenerating,
   onSaveDraft,
+  dateError,
 }: SowKoreanFormProps) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -46,6 +48,13 @@ export function SowKoreanForm({
   const [hiddenFileContent, setHiddenFileContent] = useState("");
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const dateContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (dateError && dateContainerRef.current) {
+      dateContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [dateError]);
 
   const handleAnalyzeClick = () => {
     onAnalyzeAI(hiddenFileContent || undefined);
@@ -256,9 +265,10 @@ export function SowKoreanForm({
       </div>
 
       {/* 시작일 / 종료일 */}
-      <div className="mt-6 grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="start-date-input" className="block text-xs font-bold text-app-foreground">
+      <div className="mt-6" ref={dateContainerRef}>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="start-date-input" className="block text-xs font-bold text-app-foreground">
             시작일
           </label>
           <input
@@ -283,6 +293,12 @@ export function SowKoreanForm({
             className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
           />
         </div>
+        </div>
+        {dateError && (
+          <p className="mt-2 text-xs font-bold text-danger animate-fade-in">
+            날짜를 입력하지 않았습니다.
+          </p>
+        )}
       </div>
 
       {/* 마일스톤 설정 */}

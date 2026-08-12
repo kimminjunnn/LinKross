@@ -16,6 +16,8 @@ export default async function ProjectDetailLayout({
   const { projectId } = await params;
   const project = PROJECTS.find((p) => p.id === projectId);
   
+  console.log("=== layout.tsx params ===", { projectId, foundProject: project });
+
   if (!project) {
     notFound();
   }

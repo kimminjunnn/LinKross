@@ -46,6 +46,7 @@ export default function SowPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(
     "초기 영문 명세서를 불러오는 중입니다...",
   );
+  const [dateError, setDateError] = useState(false);
 
   const applyProjectContext = (result: EnglishSOWResult): EnglishSOWResult => ({
     ...result,
@@ -118,6 +119,13 @@ export default function SowPage() {
     if (!textToAnalyze.trim() && milestones.length === 0) {
       setStatusMessage("업무 상세를 먼저 입력하거나 AI 분석을 진행해 주세요.");
       return;
+    }
+
+    if (!startDate.trim() || !endDate.trim()) {
+      setDateError(true);
+      return;
+    } else {
+      setDateError(false);
     }
 
     const hasIncompleteMilestone =
@@ -196,6 +204,7 @@ export default function SowPage() {
             onGenerateEnglishSOW={handleGenerateEnglishSOW}
             isGenerating={isGenerating}
             onSaveDraft={handleSaveDraft}
+            dateError={dateError}
           />
         </div>
 

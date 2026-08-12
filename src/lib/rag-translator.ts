@@ -94,9 +94,10 @@ function parseProjectDate(value: string): number | null {
 
 function formatProjectDate(timestamp: number): string {
   const date = new Date(timestamp);
+  const year = String(date.getUTCFullYear()).slice(-2);
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${month}.${day}`;
+  return `${year}.${month}.${day}`;
 }
 
 function distributeDates(
@@ -258,13 +259,15 @@ export function analyzeWorkDetail(workDetail: string, currentStartDate: string, 
     let m2Title = "주요 기능 개발";
     const m2Dods: string[] = [];
     
-    if (coreTaskStr.includes("결제") || coreTaskStr.includes("장바구니")) {
+    const positiveTaskStr = sentences.filter(s => !s.includes("제외") && !s.includes("않")).join(" ");
+    
+    if (positiveTaskStr.includes("결제") || positiveTaskStr.includes("장바구니")) {
       m2Title = "이커머스 결제 및 핵심 로직 구현";
       m2Dods.push("장바구니 및 상품 관리 시스템 개발", "PG사 연동 및 결제 테스트 통과");
-    } else if (coreTaskStr.includes("대시보드") || coreTaskStr.includes("관리자")) {
+    } else if (positiveTaskStr.includes("대시보드") || positiveTaskStr.includes("관리자")) {
       m2Title = "어드민 대시보드 및 통계 개발";
       m2Dods.push("관리자 권한 및 통계 차트 구현", "데이터 필터링 및 검색 로직 검증");
-    } else if (coreTaskStr.includes("푸시") || coreTaskStr.includes("알림")) {
+    } else if (positiveTaskStr.includes("푸시") || positiveTaskStr.includes("알림")) {
       m2Title = "알림 시스템 및 백엔드 고도화";
       m2Dods.push("푸시 알림 서버 아키텍처 연동", "앱 클라이언트 수신 테스트 완료");
     } else {
@@ -514,8 +517,10 @@ export async function generateSOWWithRAGAsync(
   const unmappedContent: string[] = [];
   
   if (workDetail.trim()) {
-    const translatedWorkDetail = await translateSentenceWithRAGAsync(sentences[0] || workDetail.trim());
-    obj = `Develop and deliver: ${translatedWorkDetail}`;
+    let firstSentence = sentences[0] || workDetail.trim();
+    firstSentence = firstSentence.replace(/(구축하고 싶습니다|개발해 주세요|원합니다|입니다)\.?$/g, " 구축");
+    const translatedWorkDetail = await translateSentenceWithRAGAsync(firstSentence);
+    obj = `Develop and deliver: ${translatedWorkDetail.replace(/^I want to build a /i, "A ").replace(/^I want to establish a /i, "A ")}`;
   }
 
   // Find unmapped sentences (sentences that don't match our typical templates or glossaries)
