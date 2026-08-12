@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
+import {
+  ONBOARDING_PROFILE_STORAGE_KEY,
+  type PendingOnboardingProfile,
+} from "@/lib/onboarding-storage";
 
 type OnboardingIntent = "recruit" | "apply";
 type OnboardingStep = "purpose" | "profile";
@@ -63,8 +67,36 @@ export function OnboardingFlow() {
   function finishOnboarding(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const formData = new FormData(event.currentTarget);
     const isRecruiter = intent === "recruit";
     const role = isRecruiter ? "company" : "freelancer";
+
+    const pendingProfile: PendingOnboardingProfile = isRecruiter
+      ? {
+          role: "company",
+          data: {
+            organization_name: String(formData.get("organizationName") ?? ""),
+            contact_name: String(formData.get("contactName") ?? ""),
+            contact_role: String(formData.get("role") ?? ""),
+            team_size: String(formData.get("teamSize") ?? ""),
+            website: (formData.get("website") as string) || null,
+          },
+        }
+      : {
+          role: "freelancer",
+          data: {
+            display_name: String(formData.get("displayName") ?? ""),
+            timezone: String(formData.get("timezone") ?? ""),
+            headline: String(formData.get("headline") ?? ""),
+            skills: String(formData.get("skills") ?? ""),
+            portfolio_url: (formData.get("portfolioUrl") as string) || null,
+          },
+        };
+
+    // 아직 로그인 전이라 Supabase에 바로 못 쓴다. 로그인 완료 후 첫 화면에서
+    // OnboardingProfileSync가 이 값을 읽어 company_profiles/freelancer_profiles에 저장한다.
+    sessionStorage.setItem(ONBOARDING_PROFILE_STORAGE_KEY, JSON.stringify(pendingProfile));
+
     const nextPath = isRecruiter
       ? "/projects?onboarding=recruit"
       : "/projects?onboarding=apply";
