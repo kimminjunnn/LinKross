@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CheckCircle2, FileText, LockKeyhole, UserCheck } from "lucide-react";
+import { FileText, LockKeyhole, UserCheck } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 import {
@@ -60,6 +60,33 @@ export default function ApprovalPage() {
   const activeDocumentSections = sowSnapshot?.documentSections ?? fallbackDocumentSections;
   const activeAcceptanceCriteria = sowSnapshot?.acceptanceCriteria ?? acceptanceCriteria;
   const activeDefinitionOfDone = sowSnapshot?.definitionOfDone ?? definitionOfDone;
+  const milestoneSummaries =
+    activeDocumentSections
+      .find((section) => section.title === "Milestones")
+      ?.body.split("\n")
+      .reduce<Array<{ code: string; title: string }>>((rows, line) => {
+        const match = line.match(/^(M\d+)\.\s*(.+)$/);
+
+        if (match?.[1] && match?.[2]) {
+          rows.push({ code: match[1], title: match[2] });
+        }
+
+        return rows;
+      }, []) ?? [];
+  const milestoneCriteriaRows = (
+    milestoneSummaries.length
+      ? milestoneSummaries
+      : [{ code: "M1", title: "Default verification" }]
+  ).map((milestone) => ({
+    ...milestone,
+    acceptanceCriteria: activeAcceptanceCriteria,
+    definitionOfDone: activeDefinitionOfDone,
+    verificationMethods: [
+      "Playwright sandbox run",
+      "Immutable Commit SHA",
+      "PO preview sign-off",
+    ],
+  }));
   const activeSummary = sowSnapshot?.summary ?? fallbackSummary;
   const translatedSummary = {
     coreScope: sowSnapshot
@@ -156,27 +183,64 @@ export default function ApprovalPage() {
             </div>
 
             <div className="mt-6 border-t border-app-border pt-5">
-              <h3 className="text-sm font-black text-app-foreground">Acceptance Criteria</h3>
-              <ul className="mt-3 space-y-2">
-                {activeAcceptanceCriteria.map((item) => (
-                  <li key={item} className="flex gap-2 text-sm leading-6 text-app-muted">
-                    <CheckCircle2 aria-hidden="true" className="mt-1 size-4 shrink-0 text-success" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-6 border-t border-app-border pt-5">
-              <h3 className="text-sm font-black text-app-foreground">Definition of Done</h3>
-              <ul className="mt-3 space-y-2">
-                {activeDefinitionOfDone.map((item) => (
-                  <li key={item} className="flex gap-2 text-sm leading-6 text-app-muted">
-                    <LockKeyhole aria-hidden="true" className="mt-1 size-4 shrink-0 text-brand-700" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+              <h3 className="text-sm font-black text-app-foreground">
+                Milestone Verification Criteria
+              </h3>
+              <div className="mt-3 overflow-hidden rounded-control border border-app-border bg-app-surface">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-app-border text-left text-sm">
+                    <thead className="bg-app-surface-subtle text-xs font-bold text-app-muted">
+                      <tr>
+                        <th scope="col" className="w-[18%] px-4 py-3">
+                          Milestone
+                        </th>
+                        <th scope="col" className="w-[32%] px-4 py-3">
+                          Acceptance Criteria
+                        </th>
+                        <th scope="col" className="w-[32%] px-4 py-3">
+                          Definition of Done
+                        </th>
+                        <th scope="col" className="w-[18%] px-4 py-3">
+                          Verification
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-app-border">
+                      {milestoneCriteriaRows.map((row) => (
+                        <tr key={`${row.code}-${row.title}`} className="align-top">
+                          <td className="px-4 py-4 font-bold text-app-foreground">
+                            <span>{row.code}</span>
+                            <span className="mt-1 block font-semibold text-app-muted">
+                              {row.title}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-app-muted">
+                            <ul className="list-disc space-y-2 pl-4">
+                              {row.acceptanceCriteria.map((item, index) => (
+                                <li key={`${row.code}-acceptance-${index}`}>{item}</li>
+                              ))}
+                            </ul>
+                          </td>
+                          <td className="px-4 py-4 text-app-muted">
+                            <ul className="list-disc space-y-2 pl-4">
+                              {row.definitionOfDone.map((item, index) => (
+                                <li key={`${row.code}-done-${index}`}>{item}</li>
+                              ))}
+                            </ul>
+                          </td>
+                          <td className="px-4 py-4 text-app-muted">
+                            <ul className="list-disc space-y-2 pl-4">
+                              {row.verificationMethods.map((item) => (
+                                <li key={`${row.code}-${item}`}>{item}</li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
           </div>
