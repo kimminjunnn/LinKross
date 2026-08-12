@@ -349,12 +349,6 @@ export default function AssessmentsPage() {
                   </div>
 
                   <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right">
-                      <span className="text-[10px] text-app-muted">최종 점수</span>
-                      <p className="text-base font-black text-brand-600 font-mono">
-                        {candidate.finalScore}점
-                      </p>
-                    </div>
                     <ChevronRight className="h-4 w-4 text-app-muted" />
                   </div>
                 </div>
