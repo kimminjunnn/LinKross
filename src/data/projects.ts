@@ -1,16 +1,41 @@
-export type Project = {
+type ProjectBase = {
   id: string;
   name: string;
-  status: string;
-  tone: "brand" | "accent" | "success" | "neutral" | "danger" | "warning";
   assignee: string;
   period: string;
   amount: string;
+};
+
+export type ProjectStatus = "준비 중" | "진행 중" | "완료";
+
+export type PreparationStep = {
+  id: string;
+  label: string;
+  status: "complete" | "current" | "pending";
+};
+
+type PreparingProject = ProjectBase & {
+  status: "준비 중";
+  tone: "brand";
+  preparation: {
+    steps: PreparationStep[];
+    action: {
+      label: string;
+      href: string;
+    };
+  };
+};
+
+type MilestoneProject = ProjectBase & {
+  status: "진행 중" | "완료";
+  tone: "accent" | "success";
   current: string;
   next: string;
   progress: number;
   total: number;
 };
+
+export type Project = PreparingProject | MilestoneProject;
 
 export const PROJECTS: Project[] = [
   {
@@ -21,10 +46,26 @@ export const PROJECTS: Project[] = [
     assignee: "김해피",
     period: "2026.08.10 – 10.31",
     amount: "$12,000",
-    current: "업무 명세서 작성",
-    next: "영문 명세서 검토",
-    progress: 1,
-    total: 4,
+    preparation: {
+      steps: [
+        {
+          id: "freelancer-selected",
+          label: "프리랜서 선정",
+          status: "complete",
+        },
+        { id: "sow-drafting", label: "업무 명세서 작성", status: "current" },
+        { id: "client-approved", label: "발주자 승인", status: "pending" },
+        {
+          id: "developer-approved",
+          label: "개발자 승인",
+          status: "pending",
+        },
+      ],
+      action: {
+        label: "업무 명세서 작성",
+        href: "/projects/project-a/sow",
+      },
+    },
   },
   {
     id: "project-b",
