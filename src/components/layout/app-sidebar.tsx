@@ -4,7 +4,7 @@ import { SidebarNavigation } from "@/components/layout/sidebar-navigation";
 
 export function AppSidebar() {
   return (
-    <aside className="hidden w-[var(--app-sidebar-width)] shrink-0 border-r border-app-border bg-app-surface lg:flex lg:flex-col">
+    <aside className="hidden w-[var(--app-sidebar-width)] shrink-0 border-r border-app-border bg-app-surface lg:flex lg:flex-col print:hidden">
       <div className="sticky top-[var(--app-header-height)] flex max-h-[calc(100vh-var(--app-header-height))] min-h-[calc(100vh-var(--app-header-height))] flex-col overflow-y-auto px-3 py-5">
         <SidebarNavigation />
 

@@ -9,9 +9,9 @@ import { SowEnglishPreview } from "@/components/sow/sow-english-preview";
 import {
   EnglishSOWResult,
   generateSOWWithRAGAsync,
-  analyzeWorkDetail,
   MilestoneInput,
 } from "@/lib/rag-translator";
+import { analyzeWorkDetailWithLLM } from "@/app/actions/analyze";
 import {
   ApprovalSowSnapshot,
   saveApprovalSowSnapshot,
@@ -47,6 +47,7 @@ export default function SowPage() {
     "초기 영문 명세서를 불러오는 중입니다...",
   );
   const [dateError, setDateError] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const applyProjectContext = (result: EnglishSOWResult): EnglishSOWResult => ({
     ...result,
@@ -71,8 +72,8 @@ export default function SowPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // AI 분석 실행 (한국어 폼 자동 정돈)
-  const handleAnalyzeAI = (fileContent?: string) => {
+  // AI 분석 실행 (LLM 기반)
+  const handleAnalyzeAI = async (fileContent?: string) => {
     let textToAnalyze = workDetail;
     if (budget.trim()) {
       textToAnalyze = `예산: ${budget} USDC\n\n${textToAnalyze}`;
@@ -84,26 +85,29 @@ export default function SowPage() {
       return;
     }
 
-    const analysis = analyzeWorkDetail(combinedDetail, startDate, endDate);
-    if (analysis.extractedStartDate) setStartDate(analysis.extractedStartDate);
-    if (analysis.extractedEndDate) setEndDate(analysis.extractedEndDate);
-    
-    // 예산이 AI 분석에서 추출되었고, 현재 예산 입력칸이 비어있다면 자동 채우기
-    if (analysis.extractedBudget && !budget) {
-      const budgetNumStr = analysis.extractedBudget.replace(/[^0-9]/g, "");
-      setBudget(budgetNumStr);
-    }
+    setIsAnalyzing(true);
+    setStatusMessage("✨ AI(LLM)가 문맥을 분석하여 최적의 마일스톤을 설계하고 있습니다...");
 
-    setMilestones(analysis.milestones);
-    const hasUnscheduledMilestone = analysis.milestones.some(
-      (milestone) => !milestone.period,
-    );
-    setStatusMessage(
-      hasUnscheduledMilestone
-        ? "마일스톤 초안을 생성했습니다. 일정 분배를 위해 올바른 시작일과 종료일을 입력해 주세요."
-        : "✨ AI가 날짜, 예산을 분석하여 마일스톤 초안을 생성했습니다.",
-    );
-    setTimeout(() => setStatusMessage(null), 4000);
+    try {
+      const analysis = await analyzeWorkDetailWithLLM(combinedDetail, startDate, endDate);
+      
+      if (analysis.extractedStartDate) setStartDate(analysis.extractedStartDate);
+      if (analysis.extractedEndDate) setEndDate(analysis.extractedEndDate);
+      
+      if (analysis.extractedBudget && !budget) {
+        const budgetNumStr = analysis.extractedBudget.replace(/[^0-9]/g, "");
+        setBudget(budgetNumStr);
+      }
+
+      setMilestones(analysis.milestones);
+      setStatusMessage("✅ AI 마일스톤 분석 및 자동 할당이 완료되었습니다.");
+    } catch (err: any) {
+      console.error(err);
+      setStatusMessage(`❌ 분석 실패: ${err.message}`);
+    } finally {
+      setIsAnalyzing(false);
+      setTimeout(() => setStatusMessage(null), 4000);
+    }
   };
 
   // RAG 기반 영문 명세 생성 (비동기 변환)
@@ -205,6 +209,7 @@ export default function SowPage() {
             isGenerating={isGenerating}
             onSaveDraft={handleSaveDraft}
             dateError={dateError}
+            isAnalyzing={isAnalyzing}
           />
         </div>
 

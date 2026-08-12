@@ -9,7 +9,7 @@ export async function AppHeader() {
   const currentUser = await getCurrentUserDisplay();
 
   return (
-    <header className="sticky top-0 z-40 h-[var(--app-header-height)] border-b border-app-border bg-app-surface">
+    <header className="sticky top-0 z-40 h-[var(--app-header-height)] border-b border-app-border bg-app-surface print:hidden">
       <div className="mx-auto flex h-full w-full max-w-[var(--app-max-width)]">
         <div className="flex items-center gap-2 px-3 sm:px-4 lg:w-[var(--app-sidebar-width)] lg:border-r lg:border-app-border lg:px-5">
           <MobileNavigation />
