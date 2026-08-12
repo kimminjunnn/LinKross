@@ -1,13 +1,14 @@
+import Link from "next/link";
 import { CheckCircle2, Clock3, ExternalLink, FileArchive, FileText, ReceiptText } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
-import { PrintEvidenceButton } from "@/components/project/payment/print-evidence-button";
 import { BASE_SEPOLIA_EXPLORER_URL } from "@/config/testnet";
 import { getMilestonePayment, listMilestoneIds, type MilestonePayment } from "@/lib/milestones";
 import { getVerifiedPayment, type VerifiedPayment } from "@/lib/payments";
 
-export default async function EvidencePage() {
+export default async function EvidencePage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = await params;
   const milestoneIds = listMilestoneIds();
   const paymentEntries = await Promise.all(
     milestoneIds.map(async (milestoneId) => ({
@@ -16,8 +17,6 @@ export default async function EvidencePage() {
       payment: await getVerifiedPayment(milestoneId),
     })),
   );
-
-  const hasAnyPayment = paymentEntries.some((entry) => entry.payment);
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
@@ -80,24 +79,21 @@ export default async function EvidencePage() {
 
         <div className="mt-3 space-y-3">
           {paymentEntries.map((entry) => (
-            <PaymentEvidenceCard key={entry.milestoneId} {...entry} />
+            <PaymentEvidenceCard key={entry.milestoneId} projectId={projectId} {...entry} />
           ))}
         </div>
-
-        <PrintEvidenceButton disabled={!hasAnyPayment} />
-        <p className="mt-2 text-center text-xs text-app-muted">
-          {hasAnyPayment ? "인쇄 대화상자에서 PDF로 저장할 수 있습니다." : "마일스톤 지급이 검증되면 활성화됩니다."}
-        </p>
       </section>
     </div>
   );
 }
 
 function PaymentEvidenceCard({
+  projectId,
   milestoneId,
   milestone,
   payment,
 }: {
+  projectId: string;
   milestoneId: string;
   milestone: MilestonePayment;
   payment: VerifiedPayment | null;
@@ -138,18 +134,25 @@ function PaymentEvidenceCard({
         </div>
       </dl>
 
-      <a
-        href={`${BASE_SEPOLIA_EXPLORER_URL}/tx/${payment.txHash}`}
-        target="_blank"
-        rel="noreferrer"
-        className="no-print mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:underline"
-      >
-        Basescan에서 보기
-        <ExternalLink className="size-3.5" />
-      </a>
-      <span className="hidden text-xs text-app-foreground print:inline">
-        {BASE_SEPOLIA_EXPLORER_URL}/tx/{payment.txHash}
-      </span>
+      <div className="mt-2 flex items-center gap-3">
+        <a
+          href={`${BASE_SEPOLIA_EXPLORER_URL}/tx/${payment.txHash}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:underline"
+        >
+          Basescan에서 보기
+          <ExternalLink className="size-3.5" />
+        </a>
+        <Link
+          href={`/projects/${projectId}/evidence/${milestoneId}/receipt`}
+          target="_blank"
+          className="inline-flex items-center gap-1 text-xs font-bold text-app-foreground hover:underline"
+        >
+          <FileText className="size-3.5" />
+          영수증 보기
+        </Link>
+      </div>
     </article>
   );
 }
