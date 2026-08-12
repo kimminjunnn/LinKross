@@ -6,7 +6,10 @@ import { Building2, UserRound } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getSafeInternalPath } from "@/lib/auth-redirect";
+import {
+  getDefaultPathForRole,
+  getSafeInternalPath,
+} from "@/lib/auth-redirect";
 import { isUserRole, userRoles, type UserRole } from "@/config/roles";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -16,6 +19,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   not_configured: "로그인 기능이 아직 준비되지 않았습니다.",
   profile_lookup_failed: "계정 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.",
   profile_create_failed: "계정 생성에 실패했습니다. 잠시 후 다시 시도해주세요.",
+  role_setup_failed:
+    "역할을 설정하지 못했습니다. 다중 역할 데이터 마이그레이션을 확인한 뒤 다시 시도해주세요.",
 };
 
 const roleIcons: Record<UserRole, typeof Building2> = {
@@ -44,7 +49,10 @@ function LoginForm() {
     requestedRoleParam && isUserRole(requestedRoleParam)
       ? requestedRoleParam
       : null;
-  const nextPath = getSafeInternalPath(searchParams.get("next"));
+  const nextPath = getSafeInternalPath(
+    searchParams.get("next"),
+    requestedRole ? getDefaultPathForRole(requestedRole) : "/",
+  );
   const availableRoles = requestedRole
     ? userRoles.filter((role) => role.value === requestedRole)
     : userRoles;

@@ -1,6 +1,10 @@
 "use server";
 
+import { assertActionRole } from "@/lib/auth/workspace-access";
+
 export async function translateTextWithMyMemory(text: string): Promise<string> {
+  await assertActionRole("company");
+
   if (!text || !text.trim()) return "";
   
   try {

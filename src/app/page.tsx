@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from "next/navigation";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAuthContext, getWorkspaceHome } from "@/lib/auth/workspace-access";
 
 export default async function HomePage() {
   const isAuthConfigured =
@@ -9,13 +9,14 @@ export default async function HomePage() {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (isAuthConfigured) {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const context = await getAuthContext();
 
-    if (user) {
-      redirect("/projects");
+    if (context.userId && context.activeRole) {
+      redirect(getWorkspaceHome(context.activeRole));
+    }
+
+    if (context.userId) {
+      redirect("/onboarding");
     }
   }
 

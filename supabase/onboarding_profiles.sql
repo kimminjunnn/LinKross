@@ -1,6 +1,6 @@
 -- Supabase SQL Editor에서 실행 (schema.sql 이후 아무 때나).
 -- 온보딩 폼에서 입력한 역할별 상세 프로필을 저장한다.
--- profiles.role과 분리된 테이블이라 update 정책을 열어도 role 위조 위험이 없다.
+-- user_roles와 분리된 테이블이라 update 정책을 열어도 역할 위조 위험이 없다.
 
 create table public.company_profiles (
   id uuid primary key references public.profiles(id) on delete cascade,

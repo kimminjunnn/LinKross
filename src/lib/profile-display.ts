@@ -1,9 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { WorkspaceRole } from "@/config/navigation";
 import { CONTACT_ROLE_LABELS, type CurrentUserDisplay } from "@/lib/onboarding-storage";
 
 export type { CurrentUserDisplay };
 
-export async function getCurrentUserDisplay(): Promise<CurrentUserDisplay | null> {
+export async function getCurrentUserDisplay(
+  workspace: WorkspaceRole,
+): Promise<CurrentUserDisplay | null> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
     return null;
   }
@@ -17,9 +20,7 @@ export async function getCurrentUserDisplay(): Promise<CurrentUserDisplay | null
     return null;
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-
-  if (profile?.role === "company") {
+  if (workspace === "company") {
     const { data: companyProfile } = await supabase
       .from("company_profiles")
       .select("contact_name, contact_role")
@@ -35,7 +36,7 @@ export async function getCurrentUserDisplay(): Promise<CurrentUserDisplay | null
     }
   }
 
-  if (profile?.role === "freelancer") {
+  if (workspace === "freelancer") {
     const { data: freelancerProfile } = await supabase
       .from("freelancer_profiles")
       .select("display_name")
@@ -55,7 +56,7 @@ export async function getCurrentUserDisplay(): Promise<CurrentUserDisplay | null
   const fallbackName = user.email ?? "사용자";
   return {
     name: fallbackName,
-    roleLabel: profile?.role === "freelancer" ? "프리랜서" : "기업 담당자",
+    roleLabel: workspace === "freelancer" ? "Freelancer" : "기업 담당자",
     initial: fallbackName.charAt(0).toUpperCase(),
   };
 }

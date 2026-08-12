@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isUserRole } from "@/config/roles";
-import { getSafeInternalPath } from "@/lib/auth-redirect";
+import { getSafePathForRole } from "@/lib/auth-redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const roleParam = url.searchParams.get("role");
   const role = roleParam && isUserRole(roleParam) ? roleParam : null;
-  const nextPath = getSafeInternalPath(url.searchParams.get("next"));
+  const requestedNextPath = url.searchParams.get("next");
 
   if (!code) {
     return NextResponse.redirect(new URL("/onboarding?error=missing_code", url.origin));
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   const { data: existingProfile, error: selectError } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, active_role")
     .eq("id", data.user.id)
     .maybeSingle();
 
@@ -33,13 +33,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/onboarding?error=profile_lookup_failed", url.origin));
   }
 
-  // 이미 프로필이 있으면 role 쿼리 파라미터는 무시한다 — 기존 사용자의 역할을 URL 조작으로 바꿀 수 없게 한다.
   if (!existingProfile) {
     if (!role) {
       return NextResponse.redirect(new URL("/onboarding?error=missing_role", url.origin));
     }
 
-    const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role });
+    const { error: insertError } = await supabase
+      .from("profiles")
+      .insert({ id: data.user.id, active_role: role });
 
     if (insertError) {
       console.error("[auth/callback] profiles 생성 실패", insertError);
@@ -47,5 +48,59 @@ export async function GET(request: Request) {
     }
   }
 
+  if (role) {
+    const { error: roleInsertError } = await supabase
+      .from("user_roles")
+      .insert({ user_id: data.user.id, role });
+
+    if (roleInsertError && roleInsertError.code !== "23505") {
+      console.error("[auth/callback] 사용자 역할 추가 실패", roleInsertError);
+      return NextResponse.redirect(
+        new URL("/login?error=role_setup_failed", url.origin),
+      );
+    }
+
+    const { error: activeRoleError } = await supabase
+      .from("profiles")
+      .update({ active_role: role })
+      .eq("id", data.user.id);
+
+    if (activeRoleError) {
+      console.error("[auth/callback] 활성 역할 변경 실패", activeRoleError);
+      return NextResponse.redirect(
+        new URL("/login?error=role_setup_failed", url.origin),
+      );
+    }
+  }
+
+  const { data: roleRows, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id);
+
+  if (rolesError) {
+    console.error("[auth/callback] 사용자 역할 조회 실패", rolesError);
+    return NextResponse.redirect(
+      new URL("/login?error=role_setup_failed", url.origin),
+    );
+  }
+
+  const roles = (roleRows ?? [])
+    .map(({ role: storedRole }) => storedRole)
+    .filter((storedRole) => isUserRole(storedRole));
+  const storedActiveRole = existingProfile?.active_role;
+  const effectiveRole =
+    role ??
+    (storedActiveRole &&
+    isUserRole(storedActiveRole) &&
+    roles.includes(storedActiveRole)
+      ? storedActiveRole
+      : roles[0]);
+
+  if (!effectiveRole) {
+    return NextResponse.redirect(new URL("/onboarding?error=missing_role", url.origin));
+  }
+
+  const nextPath = getSafePathForRole(requestedNextPath, effectiveRole);
   return NextResponse.redirect(new URL(nextPath, url.origin));
 }

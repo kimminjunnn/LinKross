@@ -1,16 +1,35 @@
 "use client";
 
+import {
+  BadgeCheck,
+  BriefcaseBusiness,
+  FolderKanban,
+  House,
+  Search,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import {
-  primaryNavigation,
-  secondaryNavigation,
+import type {
+  NavigationIconName,
+  NavigationItem,
+  NavigationSection,
 } from "@/config/navigation";
 
-type NavigationItem = (typeof primaryNavigation)[number] | (typeof secondaryNavigation)[number];
+const navigationIcons: Record<NavigationIconName, LucideIcon> = {
+  "badge-check": BadgeCheck,
+  "briefcase-business": BriefcaseBusiness,
+  "folder-kanban": FolderKanban,
+  house: House,
+  search: Search,
+  settings: Settings,
+};
 
 type SidebarNavigationProps = {
+  sections: readonly NavigationSection[];
+  ariaLabel: string;
   onNavigate?: () => void;
 };
 
@@ -25,7 +44,7 @@ function NavigationLink({
   isActive,
   onNavigate,
 }: NavigationLinkProps) {
-  const Icon = item.icon;
+  const Icon = navigationIcons[item.icon];
 
   return (
     <Link
@@ -59,56 +78,40 @@ function NavigationLink({
 }
 
 function matchesPath(pathname: string, href: string) {
-  if (href === "/sow") {
-    return pathname === "/sow" || pathname.includes("/sow");
+  if (pathname === "/company/projects/new") {
+    return href === "/company/assessments";
   }
-  if (href === "/projects") {
-    if (pathname.includes("/sow")) return false;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-  return href === "/"
-    ? pathname === href
-    : pathname === href || pathname.startsWith(`${href}/`);
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SidebarNavigation({ onNavigate }: SidebarNavigationProps) {
+export function SidebarNavigation({
+  sections,
+  ariaLabel,
+  onNavigate,
+}: SidebarNavigationProps) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="주요 메뉴" className="flex flex-col gap-6">
-      <div>
-        <p className="px-3 text-[0.6875rem] font-bold tracking-[0.14em] text-app-muted uppercase">
-          Workspace
-        </p>
-        <ul className="mt-2 space-y-1">
-          {primaryNavigation.map((item) => (
-            <li key={item.href}>
-              <NavigationLink
-                item={item}
-                isActive={matchesPath(pathname, item.href)}
-                onNavigate={onNavigate}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <p className="px-3 text-[0.6875rem] font-bold tracking-[0.14em] text-app-muted uppercase">
-          관리
-        </p>
-        <ul className="mt-2 space-y-1">
-          {secondaryNavigation.map((item) => (
-            <li key={item.href}>
-              <NavigationLink
-                item={item}
-                isActive={matchesPath(pathname, item.href)}
-                onNavigate={onNavigate}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+    <nav aria-label={ariaLabel} className="flex flex-col gap-6">
+      {sections.map((section) => (
+        <div key={section.label}>
+          <p className="px-3 text-[0.6875rem] font-bold tracking-[0.14em] text-app-muted uppercase">
+            {section.label}
+          </p>
+          <ul className="mt-2 space-y-1">
+            {section.items.map((item) => (
+              <li key={item.href}>
+                <NavigationLink
+                  item={item}
+                  isActive={matchesPath(pathname, item.href)}
+                  onNavigate={onNavigate}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </nav>
   );
 }

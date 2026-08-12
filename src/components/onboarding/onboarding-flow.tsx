@@ -101,8 +101,8 @@ export function OnboardingFlow() {
     sessionStorage.setItem(ONBOARDING_PROFILE_STORAGE_KEY, JSON.stringify(pendingProfile));
 
     const nextPath = isRecruiter
-      ? "/projects?onboarding=recruit"
-      : "/projects?onboarding=apply";
+      ? "/company/projects?onboarding=recruit"
+      : "/freelancer/applications?onboarding=apply";
     const loginParams = new URLSearchParams({ role, next: nextPath });
 
     router.push(`/login?${loginParams.toString()}`);
@@ -119,7 +119,13 @@ export function OnboardingFlow() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <BrandLogo />
           <Link
-            href="/projects"
+            href={
+              intent === "apply"
+                ? "/opportunities"
+                : intent === "recruit"
+                  ? "/login?role=company&next=/company"
+                  : "/"
+            }
             className="rounded-control px-3 py-2 text-sm font-bold text-app-muted transition-colors hover:bg-app-surface-subtle hover:text-app-foreground"
           >
             {isApplicantProfile ? "Skip for now" : "나중에 하기"}

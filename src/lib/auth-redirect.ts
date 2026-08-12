@@ -1,4 +1,10 @@
-export const DEFAULT_AUTHENTICATED_PATH = "/projects";
+import type { UserRole } from "@/config/roles";
+
+export const DEFAULT_AUTHENTICATED_PATH = "/";
+
+export function getDefaultPathForRole(role: UserRole) {
+  return role === "company" ? "/company" : "/freelancer";
+}
 
 export function getSafeInternalPath(
   value: string | null,
@@ -20,4 +26,21 @@ export function getSafeInternalPath(
   } catch {
     return fallback;
   }
+}
+
+export function getSafePathForRole(value: string | null, role: UserRole) {
+  const fallback = getDefaultPathForRole(role);
+  const path = getSafeInternalPath(value, fallback);
+  const rolePrefix = role === "company" ? "/company" : "/freelancer";
+
+  if (
+    path === rolePrefix ||
+    path.startsWith(`${rolePrefix}/`) ||
+    path === "/opportunities" ||
+    path.startsWith("/opportunities/")
+  ) {
+    return path;
+  }
+
+  return fallback;
 }

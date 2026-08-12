@@ -1,22 +1,74 @@
-import { BadgeCheck, FolderKanban, Settings } from "lucide-react";
+export type WorkspaceRole = "company" | "freelancer";
 
-export const primaryNavigation = [
-  {
-    label: "프로젝트",
-    href: "/projects",
-    icon: FolderKanban,
-  },
-  {
-    label: "진행 전 프로젝트",
-    href: "/assessments",
-    icon: BadgeCheck,
-  },
-] as const;
+export type NavigationIconName =
+  | "badge-check"
+  | "briefcase-business"
+  | "folder-kanban"
+  | "house"
+  | "search"
+  | "settings";
 
-export const secondaryNavigation = [
-  {
-    label: "설정",
-    href: "/settings",
-    icon: Settings,
-  },
-] as const;
+export type NavigationItem = {
+  label: string;
+  href: string;
+  icon: NavigationIconName;
+};
+
+export type NavigationSection = {
+  label: string;
+  items: readonly NavigationItem[];
+};
+
+export const workspaceNavigation: Record<
+  WorkspaceRole,
+  readonly NavigationSection[]
+> = {
+  company: [
+    {
+      label: "Workspace",
+      items: [
+        {
+          label: "프로젝트",
+          href: "/company/projects",
+          icon: "folder-kanban",
+        },
+        {
+          label: "진행 전 프로젝트",
+          href: "/company/assessments",
+          icon: "badge-check",
+        },
+      ],
+    },
+    {
+      label: "관리",
+      items: [
+        { label: "설정", href: "/company/settings", icon: "settings" },
+      ],
+    },
+  ],
+  freelancer: [
+    {
+      label: "Workspace",
+      items: [
+        { label: "Home", href: "/freelancer", icon: "house" },
+        { label: "Find projects", href: "/opportunities", icon: "search" },
+        {
+          label: "My applications",
+          href: "/freelancer/applications",
+          icon: "briefcase-business",
+        },
+        {
+          label: "My projects",
+          href: "/freelancer/projects",
+          icon: "folder-kanban",
+        },
+      ],
+    },
+    {
+      label: "Account",
+      items: [
+        { label: "Settings", href: "/freelancer/settings", icon: "settings" },
+      ],
+    },
+  ],
+};

@@ -5,8 +5,27 @@ import { Menu, X } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { SidebarNavigation } from "@/components/layout/sidebar-navigation";
+import {
+  workspaceNavigation,
+  type WorkspaceRole,
+} from "@/config/navigation";
 
-export function MobileNavigation() {
+const mobileCopy = {
+  company: {
+    open: "메뉴 열기",
+    close: "메뉴 닫기",
+    dialog: "모바일 메뉴",
+    footer: "사람을 고르고, 일을 합의하고, 결과물을 검증합니다.",
+  },
+  freelancer: {
+    open: "Open menu",
+    close: "Close menu",
+    dialog: "Mobile navigation",
+    footer: "Choose the work. Agree on the scope. Prove the result.",
+  },
+} as const;
+
+export function MobileNavigation({ workspace }: { workspace: WorkspaceRole }) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -65,12 +84,14 @@ export function MobileNavigation() {
     setIsOpen(false);
   }
 
+  const copy = mobileCopy[workspace];
+
   return (
     <>
       <button
         type="button"
         className="grid size-10 place-items-center rounded-control text-app-muted hover:bg-app-surface-subtle hover:text-app-foreground lg:hidden"
-        aria-label="메뉴 열기"
+        aria-label={copy.open}
         aria-controls="mobile-navigation-panel"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(true)}
@@ -82,7 +103,7 @@ export function MobileNavigation() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            aria-label="메뉴 닫기"
+            aria-label={copy.close}
             className="absolute inset-0 cursor-default bg-slate-950/45 backdrop-blur-[2px]"
             onClick={closeMenu}
           />
@@ -91,26 +112,37 @@ export function MobileNavigation() {
             id="mobile-navigation-panel"
             role="dialog"
             aria-modal="true"
-            aria-label="모바일 메뉴"
+            aria-label={copy.dialog}
             className="relative flex h-full w-[min(86vw,20rem)] flex-col bg-app-surface shadow-floating"
           >
             <div className="flex h-[var(--app-header-height)] items-center justify-between border-b border-app-border px-4">
-              <BrandLogo />
+              <BrandLogo
+                ariaLabel={
+                  workspace === "freelancer"
+                    ? "Go to freelancer home"
+                    : "기업 홈으로 이동"
+                }
+                href={workspace === "freelancer" ? "/freelancer" : "/company"}
+              />
               <button
                 ref={closeButtonRef}
                 type="button"
                 className="grid size-10 place-items-center rounded-control text-app-muted hover:bg-app-surface-subtle hover:text-app-foreground"
-                aria-label="메뉴 닫기"
+                aria-label={copy.close}
                 onClick={closeMenu}
               >
                 <X aria-hidden="true" className="size-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-3 py-5">
-              <SidebarNavigation onNavigate={closeMenu} />
+              <SidebarNavigation
+                sections={workspaceNavigation[workspace]}
+                ariaLabel={copy.dialog}
+                onNavigate={closeMenu}
+              />
             </div>
             <div className="border-t border-app-border p-4 text-xs leading-5 text-app-muted">
-              사람을 고르고, 일을 합의하고, 결과물을 검증합니다.
+              {copy.footer}
             </div>
           </aside>
         </div>

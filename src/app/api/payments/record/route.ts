@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { BASE_SEPOLIA_RPC_URL, USDC_CONTRACT_ADDRESS, USDC_DECIMALS } from "@/config/testnet";
 import { getMilestonePayment } from "@/lib/milestones";
+import { getAuthContext } from "@/lib/auth/workspace-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
@@ -19,6 +20,20 @@ type VerifyResult = {
 };
 
 export async function POST(request: Request) {
+  const authContext = await getAuthContext();
+  if (authContext.configured && !authContext.userId) {
+    return NextResponse.json(
+      { verified: false, reason: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+  if (authContext.configured && !authContext.roles.includes("company")) {
+    return NextResponse.json(
+      { verified: false, reason: "지급 기록 권한이 없습니다." },
+      { status: 403 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();

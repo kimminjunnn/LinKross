@@ -198,8 +198,12 @@ export function SowKoreanForm({
                         setHiddenFileContent(result.text);
                       }
                     }
-                  } catch (err: any) {
-                    setParseError(err.message || "파일 분석 중 오류가 발생했습니다.");
+                  } catch (error: unknown) {
+                    setParseError(
+                      error instanceof Error
+                        ? error.message
+                        : "파일 분석 중 오류가 발생했습니다.",
+                    );
                   } finally {
                     setIsParsing(false);
                     if (fileInputRef.current) {

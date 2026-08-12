@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { WorkspaceRole } from "@/config/navigation";
 import {
   ONBOARDING_PROFILE_STORAGE_KEY,
   buildDisplayFromPendingProfile,
@@ -15,7 +16,13 @@ import {
 // 아무 동작도 안 하고 경고만 띄우므로, 서버 렌더 시점엔 빈 함수로 대체한다.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : () => {};
 
-export function UserProfileBadge({ initialDisplay }: { initialDisplay: CurrentUserDisplay | null }) {
+export function UserProfileBadge({
+  initialDisplay,
+  workspace,
+}: {
+  initialDisplay: CurrentUserDisplay | null;
+  workspace: WorkspaceRole;
+}) {
   const [display, setDisplay] = useState(initialDisplay);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -34,6 +41,11 @@ export function UserProfileBadge({ initialDisplay }: { initialDisplay: CurrentUs
       pending = JSON.parse(raw) as PendingOnboardingProfile;
     } catch {
       sessionStorage.removeItem(ONBOARDING_PROFILE_STORAGE_KEY);
+      setIsSyncing(false);
+      return;
+    }
+
+    if (pending.role !== workspace) {
       setIsSyncing(false);
       return;
     }
@@ -61,7 +73,7 @@ export function UserProfileBadge({ initialDisplay }: { initialDisplay: CurrentUs
 
       setIsSyncing(false);
     })();
-  }, []);
+  }, [workspace]);
 
   if (isSyncing) {
     return (
@@ -70,8 +82,12 @@ export function UserProfileBadge({ initialDisplay }: { initialDisplay: CurrentUs
           <Loader2 aria-hidden="true" className="size-4 animate-spin" />
         </span>
         <div className="hidden leading-tight md:block">
-          <p className="text-sm font-bold text-app-foreground">정보 불러오는 중</p>
-          <p className="mt-0.5 text-xs text-app-muted">잠시만요</p>
+          <p className="text-sm font-bold text-app-foreground">
+            {workspace === "freelancer" ? "Loading profile" : "정보 불러오는 중"}
+          </p>
+          <p className="mt-0.5 text-xs text-app-muted">
+            {workspace === "freelancer" ? "Please wait" : "잠시만요"}
+          </p>
         </div>
       </div>
     );
@@ -86,8 +102,12 @@ export function UserProfileBadge({ initialDisplay }: { initialDisplay: CurrentUs
         {display?.initial ?? "?"}
       </span>
       <div className="hidden leading-tight md:block">
-        <p className="text-sm font-bold text-app-foreground">{display?.name ?? "게스트"}</p>
-        <p className="mt-0.5 text-xs text-app-muted">{display?.roleLabel ?? ""}</p>
+        <p className="text-sm font-bold text-app-foreground">
+          {display?.name ?? (workspace === "freelancer" ? "Guest" : "게스트")}
+        </p>
+        <p className="mt-0.5 text-xs text-app-muted">
+          {workspace === "freelancer" ? "Freelancer" : (display?.roleLabel ?? "")}
+        </p>
       </div>
     </div>
   );

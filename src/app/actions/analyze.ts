@@ -2,6 +2,8 @@
 
 import OpenAI from "openai";
 
+import { assertActionRole } from "@/lib/auth/workspace-access";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -27,6 +29,8 @@ export async function analyzeWorkDetailWithLLM(
   currentStartDate: string,
   currentEndDate: string
 ): Promise<AIAnalysisResult> {
+  await assertActionRole("company");
+
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY가 설정되지 않았습니다. .env.local 파일에 키를 추가해주세요.");
   }
@@ -108,8 +112,12 @@ ${workDetail}
     }
 
     return parsed as AIAnalysisResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("LLM Analysis Error:", error);
-    throw new Error(error?.message || "LLM 연동 분석 중 오류가 발생했습니다.");
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "LLM 연동 분석 중 오류가 발생했습니다.",
+    );
   }
 }

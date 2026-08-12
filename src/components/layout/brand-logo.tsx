@@ -6,12 +6,20 @@ const logoSizeClassNames = {
   large: "h-10 w-auto",
 } as const;
 
-export function BrandLogo({ size = "default" }: { size?: keyof typeof logoSizeClassNames }) {
+export function BrandLogo({
+  size = "default",
+  ariaLabel = "Go to LinKross home",
+  href = "/",
+}: {
+  size?: keyof typeof logoSizeClassNames;
+  ariaLabel?: string;
+  href?: string;
+}) {
   return (
     <Link
-      href="/"
+      href={href}
       className="inline-flex shrink-0 items-center rounded-control"
-      aria-label="LinKross 홈으로 이동"
+      aria-label={ariaLabel}
     >
       <Image
         src="/brand/linkross-lockup-on-light.svg"

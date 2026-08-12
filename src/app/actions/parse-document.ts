@@ -2,8 +2,12 @@
 
 import * as mammoth from "mammoth";
 
+import { assertActionRole } from "@/lib/auth/workspace-access";
+
 
 export async function parseDocumentAction(formData: FormData): Promise<{ text?: string; error?: string }> {
+  await assertActionRole("company");
+
   try {
     const file = formData.get("file") as File;
     if (!file) {
@@ -11,13 +15,15 @@ export async function parseDocumentAction(formData: FormData): Promise<{ text?: 
     }
 
     // Polyfill DOMMatrix for pdf-parse in Node.js / Next.js server environments
-    if (typeof (globalThis as any).DOMMatrix === "undefined") {
-      (globalThis as any).DOMMatrix = class DOMMatrix {
-        constructor() {}
-      };
+    if (typeof globalThis.DOMMatrix === "undefined") {
+      Object.defineProperty(globalThis, "DOMMatrix", {
+        configurable: true,
+        value: class DOMMatrixPolyfill {},
+        writable: true,
+      });
     }
 
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+    const { default: pdfParse } = await import("pdf-parse/lib/pdf-parse.js");
 
 
     const arrayBuffer = await file.arrayBuffer();
@@ -39,8 +45,11 @@ export async function parseDocumentAction(formData: FormData): Promise<{ text?: 
     }
 
     return { text: extractedText.trim() };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Document parsing error:", error);
-    return { error: error.message || "Failed to parse the document" };
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to parse the document",
+    };
   }
 }

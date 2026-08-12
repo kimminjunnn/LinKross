@@ -2,8 +2,17 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { analyzeWorkDetail, generateSOWWithRAGAsync } from '@/lib/rag-translator';
+import { getAuthContext } from '@/lib/auth/workspace-access';
 
 export async function GET() {
+  const authContext = await getAuthContext();
+  if (authContext.configured && !authContext.userId) {
+    return NextResponse.json({ success: false, error: '로그인이 필요합니다.' }, { status: 401 });
+  }
+  if (authContext.configured && !authContext.roles.includes('company')) {
+    return NextResponse.json({ success: false, error: '접근 권한이 없습니다.' }, { status: 403 });
+  }
+
   try {
     const filePath = path.join(process.cwd(), 'EXP_5_Example_Scenario.txt');
     const content = fs.readFileSync(filePath, 'utf-8');
@@ -30,7 +39,13 @@ export async function GET() {
     }
     
     return NextResponse.json({ success: true, results });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "실험 실행에 실패했습니다.",
+      },
+      { status: 500 },
+    );
   }
 }

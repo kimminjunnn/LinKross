@@ -1,3 +1,7 @@
+import { projectStatuses } from "@/config/project-lifecycle";
+
+export type { ProjectStatus } from "@/config/project-lifecycle";
+
 type ProjectBase = {
   id: string;
   name: string;
@@ -6,8 +10,6 @@ type ProjectBase = {
   amount: string;
 };
 
-export type ProjectStatus = "준비 중" | "진행 중" | "완료";
-
 export type PreparationStep = {
   id: string;
   label: string;
@@ -15,7 +17,7 @@ export type PreparationStep = {
 };
 
 type PreparingProject = ProjectBase & {
-  status: "준비 중";
+  status: typeof projectStatuses.preparing;
   tone: "brand";
   preparation: {
     steps: PreparationStep[];
@@ -27,8 +29,11 @@ type PreparingProject = ProjectBase & {
 };
 
 type MilestoneProject = ProjectBase & {
-  status: "진행 중" | "완료";
-  tone: "accent" | "success";
+  status:
+    | typeof projectStatuses.inProgress
+    | typeof projectStatuses.completed
+    | typeof projectStatuses.cancelled;
+  tone: "accent" | "success" | "danger";
   current: string;
   next: string;
   progress: number;
@@ -41,7 +46,7 @@ export const PROJECTS: Project[] = [
   {
     id: "project-a",
     name: "고객 포털 MVP",
-    status: "준비 중",
+    status: projectStatuses.preparing,
     tone: "brand",
     assignee: "김해피",
     period: "2026.08.10 – 10.31",
@@ -63,14 +68,14 @@ export const PROJECTS: Project[] = [
       ],
       action: {
         label: "업무 명세서 작성",
-        href: "/projects/project-a/sow",
+        href: "/company/projects/project-a/sow",
       },
     },
   },
   {
     id: "project-b",
     name: "정산 자동화 백오피스",
-    status: "진행 중",
+    status: projectStatuses.inProgress,
     tone: "accent",
     assignee: "Sarah Lee",
     period: "2026.07.15 – 10.20",
@@ -83,7 +88,7 @@ export const PROJECTS: Project[] = [
   {
     id: "project-c",
     name: "브랜드 사이트 리뉴얼",
-    status: "완료",
+    status: projectStatuses.completed,
     tone: "success",
     assignee: "박프리",
     period: "2026.05.01 – 07.31",
