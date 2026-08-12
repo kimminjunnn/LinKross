@@ -5,13 +5,6 @@ export type ApprovalDocumentSection = {
   body: string;
 };
 
-export type ApprovalCriteriaSummary = {
-  scope: string;
-  outOfScope: string;
-  completionCriteria: string;
-  responsibilities: string;
-};
-
 export type ApprovalSowSnapshot = {
   projectId: string;
   version: string;
@@ -21,7 +14,6 @@ export type ApprovalSowSnapshot = {
   documentSections: ApprovalDocumentSection[];
   acceptanceCriteria: string[];
   definitionOfDone: string[];
-  approvalCriteriaSummary?: ApprovalCriteriaSummary;
   summary: {
     coreScope: string;
     keyAcceptance: string;
@@ -115,18 +107,6 @@ export function createApprovalSowSnapshot({
     ],
     acceptanceCriteria: sow.acceptanceCriteria ?? ["TBD"],
     definitionOfDone: sow.definitionOfDone ?? ["TBD"],
-    approvalCriteriaSummary: {
-      scope: inScope.slice(0, 3).join("; ") || "Scope will be confirmed from the approved SOW.",
-      outOfScope:
-        outOfScope.slice(0, 3).join("; ") || "No explicit out-of-scope items were provided in this version.",
-      completionCriteria: `${sow.acceptanceCriteria?.length ?? 0} Acceptance Criteria and ${
-        sow.definitionOfDone?.length ?? 0
-      } Definition of Done items will be used as approval and verification criteria.`,
-      responsibilities: [
-        `Client: ${sow.rolesAndResponsibilities?.client ?? "TBD"}`,
-        `Vendor: ${sow.rolesAndResponsibilities?.vendor ?? "TBD"}`,
-      ].join(" / "),
-    },
     summary: {
       coreScope: inScope.slice(0, 3).join(", ") || "SOW 원본 범위 확인 필요",
       keyAcceptance: `${sow.acceptanceCriteria?.length ?? 0}개 Acceptance Criteria와 ${

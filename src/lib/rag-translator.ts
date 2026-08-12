@@ -467,7 +467,8 @@ export function generateSOWWithRAG(
   const definitionOfDone = [
     "All code is committed and pushed to the designated GitHub repository branch with clean PR reviews.",
     "Automated build and test pipelines execute cleanly without build-breaking errors.",
-    "Client PM successfully verifies feature preview and grants explicit sign-off in LinKross.",
+    "A preview URL and execution instructions are provided so the Client PM can verify the agreed user-facing flows.",
+    "Client PM successfully verifies the agreed Acceptance Criteria in LinKross and grants explicit sign-off.",
   ];
 
   return {
@@ -581,17 +582,18 @@ export async function generateSOWWithRAGAsync(
     })
   );
 
-  const acceptanceCriteria = workDetail.includes("통과 기준") || workDetail.includes("수용 기준") || workDetail.includes("검수") ? [
+  const acceptanceCriteria = [
     "All specified Definition of Done (DoD) checklist items must achieve automated 'PASS' status in Playwright/isolated sandbox runs.",
     "Every verification milestone must be tied to an immutable GitHub Commit SHA.",
     "No critical blocking security vulnerabilities or uncaught errors during primary user flows.",
     "Both Client PM and Developer must explicitly approve the final evidence package before fund release.",
-  ] : ["TBD"];
+  ];
 
   const definitionOfDone = [
     "All code is committed and pushed to the designated GitHub repository branch with clean PR reviews.",
     "Automated build and test pipelines execute cleanly without build-breaking errors.",
-    "Client PM successfully verifies feature preview and grants explicit sign-off in LinKross.",
+    "A preview URL and execution instructions are provided so the Client PM can verify the agreed user-facing flows.",
+    "Client PM successfully verifies the agreed Acceptance Criteria in LinKross and grants explicit sign-off.",
   ];
 
   return {
