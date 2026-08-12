@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface VerifiedPayment {
+  id: string;
   milestoneId: string;
   txHash: string;
   toAddress: string;
@@ -17,7 +18,7 @@ export async function getVerifiedPayment(milestoneId: string): Promise<VerifiedP
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("payments")
-    .select("milestone_id, tx_hash, to_address, amount_usdc, block_number, verified_at")
+    .select("id, milestone_id, tx_hash, to_address, amount_usdc, block_number, verified_at")
     .eq("milestone_id", milestoneId)
     .order("verified_at", { ascending: false })
     .limit(1)
@@ -28,6 +29,7 @@ export async function getVerifiedPayment(milestoneId: string): Promise<VerifiedP
   }
 
   return {
+    id: data.id,
     milestoneId: data.milestone_id,
     txHash: data.tx_hash,
     toAddress: data.to_address,
