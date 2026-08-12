@@ -6,6 +6,7 @@ import { BASE_SEPOLIA_EXPLORER_URL } from "@/config/testnet";
 import { PROJECTS } from "@/data/projects";
 import { getMilestonePayment } from "@/lib/milestones";
 import { getVerifiedPayment } from "@/lib/payments";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function PaymentReceiptPage({
   params,
@@ -33,6 +34,13 @@ export default async function PaymentReceiptPage({
   const matchesAgreedAmount = Number(payment.amountUsdc) >= Number(milestone.amountUsdc);
   const issuedAt = new Date().toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" });
   const confirmedAt = new Date(payment.verifiedAt).toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" });
+  const receiptNumber = `LK-${payment.id.slice(0, 8).toUpperCase()}`;
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const recipientEmail = user?.email ?? "-";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
@@ -49,10 +57,16 @@ export default async function PaymentReceiptPage({
           <div className="text-right">
             <p className="text-lg font-black text-app-foreground">지급 증빙</p>
             <p className="text-xs text-app-muted">Payment Receipt</p>
+            <p className="mt-1 text-xs text-app-muted">No. {receiptNumber}</p>
           </div>
         </div>
 
-        <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 border-b border-app-border pb-6 text-sm">
+        <div className="mt-4">
+          <p className="text-sm font-bold text-app-foreground">박피오 귀하</p>
+          <p className="mt-0.5 text-xs text-app-muted">{recipientEmail}</p>
+        </div>
+
+        <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 border-b border-app-border pb-6 text-sm">
           <ReceiptRow label="프로젝트" value={project?.name ?? projectId} />
           <ReceiptRow label="담당 개발자" value={project?.assignee ?? "-"} />
           <ReceiptRow label="마일스톤" value={milestoneId} />
