@@ -89,7 +89,10 @@ export function OnboardingFlow() {
             timezone: String(formData.get("timezone") ?? ""),
             headline: String(formData.get("headline") ?? ""),
             skills: String(formData.get("skills") ?? ""),
-            portfolio_url: (formData.get("portfolioUrl") as string) || null,
+            portfolio_urls: formData
+              .getAll("portfolioUrls")
+              .map((value) => String(value).trim())
+              .filter((value) => value.length > 0),
           },
         };
 

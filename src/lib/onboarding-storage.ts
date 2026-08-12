@@ -18,7 +18,7 @@ export interface PendingFreelancerProfile {
     timezone: string;
     headline: string;
     skills: string;
-    portfolio_url: string | null;
+    portfolio_urls: string[];
   };
 }
 

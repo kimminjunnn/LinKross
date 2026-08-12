@@ -29,7 +29,7 @@ create table public.freelancer_profiles (
   timezone text not null,
   headline text not null,
   skills text not null,
-  portfolio_url text,
+  portfolio_urls text[] not null default '{}',
   created_at timestamptz not null default now()
 );
 
