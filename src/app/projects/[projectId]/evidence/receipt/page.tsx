@@ -3,22 +3,27 @@ import Link from "next/link";
 import { ReceiptDocument } from "@/components/project/payment/receipt-document";
 import { ReceiptPrintButton } from "@/components/project/payment/receipt-print-button";
 import { PROJECTS } from "@/data/projects";
-import { getMilestonePayment } from "@/lib/milestones";
+import { getMilestonePayment, listMilestoneIds } from "@/lib/milestones";
 import { getVerifiedPayment } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default async function PaymentReceiptPage({
-  params,
-}: {
-  params: Promise<{ projectId: string; milestoneId: string }>;
-}) {
-  const { projectId, milestoneId } = await params;
-
+export default async function AllPaymentReceiptsPage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = await params;
   const project = PROJECTS.find((item) => item.id === projectId);
-  const milestone = getMilestonePayment(milestoneId);
-  const payment = await getVerifiedPayment(milestoneId);
 
-  if (!milestone || !payment) {
+  const milestoneIds = listMilestoneIds();
+  const entries = await Promise.all(
+    milestoneIds.map(async (milestoneId) => ({
+      milestoneId,
+      milestone: getMilestonePayment(milestoneId)!,
+      payment: await getVerifiedPayment(milestoneId),
+    })),
+  );
+  const verifiedEntries = entries.filter(
+    (entry): entry is typeof entry & { payment: NonNullable<typeof entry.payment> } => entry.payment !== null,
+  );
+
+  if (verifiedEntries.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-sm font-bold text-app-foreground">아직 검증된 지급 기록이 없습니다.</p>
@@ -47,15 +52,21 @@ export default async function PaymentReceiptPage({
         <ReceiptPrintButton />
       </div>
 
-      <ReceiptDocument
-        projectName={project?.name ?? projectId}
-        assignee={project?.assignee ?? "-"}
-        milestoneId={milestoneId}
-        milestone={milestone}
-        payment={payment}
-        recipientEmail={recipientEmail}
-        issuedAt={issuedAt}
-      />
+      <div className="space-y-8">
+        {verifiedEntries.map((entry, index) => (
+          <div key={entry.milestoneId} className={index < verifiedEntries.length - 1 ? "break-after-page" : undefined}>
+            <ReceiptDocument
+              projectName={project?.name ?? projectId}
+              assignee={project?.assignee ?? "-"}
+              milestoneId={entry.milestoneId}
+              milestone={entry.milestone}
+              payment={entry.payment}
+              recipientEmail={recipientEmail}
+              issuedAt={issuedAt}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

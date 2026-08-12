@@ -74,9 +74,17 @@ async function verifyPayment(milestoneId: string, txHash: string): Promise<Verif
   return data;
 }
 
-export function WalletTransferPanel({ milestoneId }: { milestoneId: string }) {
+export function WalletTransferPanel({
+  milestoneId,
+  initialPayment,
+}: {
+  milestoneId: string;
+  initialPayment?: { txHash: string; amountUsdc: string } | null;
+}) {
   const router = useRouter();
-  const [state, setState] = useState<TransferState>({ step: "idle" });
+  const [state, setState] = useState<TransferState>(
+    initialPayment ? { step: "success", txHash: initialPayment.txHash, amountUsdc: initialPayment.amountUsdc } : { step: "idle" },
+  );
   const isBusy = state.step === "connecting" || state.step === "confirming" || state.step === "verifying";
 
   const milestone = getMilestonePayment(milestoneId);
