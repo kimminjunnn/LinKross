@@ -1,21 +1,27 @@
+import Image from "next/image";
 import Link from "next/link";
 
-export function BrandLogo() {
+const logoSizeClassNames = {
+  default: "h-7 w-auto",
+  large: "h-10 w-auto",
+} as const;
+
+export function BrandLogo({ size = "default" }: { size?: keyof typeof logoSizeClassNames }) {
   return (
     <Link
       href="/"
-      className="inline-flex items-center gap-2.5 rounded-control"
-      aria-label="LinKross 대시보드로 이동"
+      className="inline-flex shrink-0 items-center rounded-control"
+      aria-label="LinKross 홈으로 이동"
     >
-      <span
-        aria-hidden="true"
-        className="grid size-8 place-items-center rounded-[0.55rem] bg-brand-500 text-sm font-black text-white shadow-sm"
-      >
-        LK
-      </span>
-      <span className="text-lg font-black tracking-[-0.035em] text-app-foreground">
-        LinKross
-      </span>
+      <Image
+        src="/brand/linkross-lockup-on-light.svg"
+        alt=""
+        width={312}
+        height={70}
+        className={logoSizeClassNames[size]}
+        loading="eager"
+        unoptimized
+      />
     </Link>
   );
 }

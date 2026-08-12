@@ -42,5 +42,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|auth).*)"],
+  // 인증이 필요 없는 Next.js 내부 경로와 공개 브랜드 자산만 프록시를 건너뛴다.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|brand/|api|auth).*)"],
 };

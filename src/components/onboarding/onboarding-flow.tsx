@@ -77,7 +77,7 @@ export function OnboardingFlow() {
     <div className="relative min-h-screen overflow-hidden bg-app-canvas">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(circle_at_top_left,rgba(249,88,3,0.13),transparent_38%),radial-gradient(circle_at_top_right,rgba(22,155,161,0.12),transparent_34%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.13),transparent_38%),radial-gradient(circle_at_top_right,rgba(22,155,161,0.12),transparent_34%)]"
       />
 
       <header className="relative z-10 border-b border-app-border/80 bg-app-surface/80 backdrop-blur-xl">
