@@ -94,13 +94,7 @@ function BrandLogo({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TechLogo({
-  name,
-  file,
-}: {
-  name: string;
-  file: string;
-}) {
+function TechLogo({ name, file }: { name: string; file: string }) {
   return (
     <div className={styles.logoItem}>
       <Image
@@ -133,7 +127,9 @@ function FlowNode({
   accent?: boolean;
 }) {
   return (
-    <div className={`${styles.flowNode} ${accent ? styles.flowNodeAccent : ""}`}>
+    <div
+      className={`${styles.flowNode} ${accent ? styles.flowNodeAccent : ""}`}
+    >
       <span className={styles.flowNodeIcon}>{icon}</span>
       <strong>{title}</strong>
       {detail ? <span>{detail}</span> : null}
@@ -141,7 +137,13 @@ function FlowNode({
   );
 }
 
-function QuestionNumber({ number, children }: { number: string; children: ReactNode }) {
+function QuestionNumber({
+  number,
+  children,
+}: {
+  number: string;
+  children: ReactNode;
+}) {
   return (
     <div className={styles.questionItem}>
       <span>{number}</span>
@@ -161,7 +163,10 @@ export const slides = [
       <div className={styles.coverBody}>
         <p className={styles.coverKicker}>LinKross 팀을 위한 백엔드 입문</p>
         <h1 className={styles.coverTitle}>화면 뒤에서는 무슨 일이 일어날까?</h1>
-        <div className={styles.coverFlow} aria-label="화면에서 데이터베이스까지 이어지는 흐름">
+        <div
+          className={styles.coverFlow}
+          aria-label="화면에서 데이터베이스까지 이어지는 흐름"
+        >
           <MonitorSmartphone aria-hidden="true" />
           <ArrowRight aria-hidden="true" />
           <Server aria-hidden="true" />
@@ -214,12 +219,14 @@ export const slides = [
           className={styles.presenterFrame}
         />
         <div className={styles.profileCopy}>
-          <p className={styles.storyLead}>고려대학교 컴퓨터 동아리 KUCC</p>
+          <p className={styles.storyLead}>컴퓨터 동아리 - 첫 프로젝트</p>
           <div className={styles.storyMilestone}>
             <Code2 aria-hidden="true" />
             <div>
               <strong>15인 프로젝트 · ASKu</strong>
-              <span>교내 정보를 제공하는 나무위키형 서비스 · 프론트엔드 개발 참여</span>
+              <span>
+                교내 정보를 제공하는 나무위키형 서비스 · 프론트엔드 개발 참여
+              </span>
             </div>
           </div>
           <AssetImage
@@ -354,7 +361,11 @@ export const slides = [
     body: (
       <div className={styles.sectionStatement}>
         <Server aria-hidden="true" />
-        <p>사용자에게 보이지 않는 곳에서<br />서비스를 실제로 움직이는 일</p>
+        <p>
+          사용자에게 보이지 않는 곳에서
+          <br />
+          서비스를 실제로 움직이는 일
+        </p>
       </div>
     ),
     notes:
@@ -367,14 +378,25 @@ export const slides = [
     title: "프론트엔드는 사용자가 보고, 누르는 화면입니다",
     body: (
       <div className={styles.frontendDefinition}>
-        <div className={styles.actionWord}><Eye aria-hidden="true" /><span>보고</span></div>
-        <div className={styles.actionWord}><PencilLine aria-hidden="true" /><span>누르고</span></div>
-        <div className={styles.actionWord}><RefreshCw aria-hidden="true" /><span>반응한다</span></div>
+        <div className={styles.actionWord}>
+          <Eye aria-hidden="true" />
+          <span>보고</span>
+        </div>
+        <div className={styles.actionWord}>
+          <PencilLine aria-hidden="true" />
+          <span>누르고</span>
+        </div>
+        <div className={styles.actionWord}>
+          <RefreshCw aria-hidden="true" />
+          <span>반응한다</span>
+        </div>
         <div className={styles.languagePair}>
           <TechLogo name="JavaScript" file="javascript" />
           <ArrowRight aria-hidden="true" />
           <TechLogo name="TypeScript" file="typescript" />
-          <p>JavaScript에 <strong>타입이라는 안전장치</strong>를 더한 언어</p>
+          <p>
+            JavaScript에 <strong>타입이라는 안전장치</strong>를 더한 언어
+          </p>
         </div>
       </div>
     ),
@@ -397,8 +419,12 @@ export const slides = [
         />
         <div className={styles.deadButtonMoment}>
           <span>이름 · 이메일 · 비밀번호</span>
-          <button type="button" tabIndex={-1}>회원가입</button>
-          <div className={styles.silenceLine}>클릭 → <strong>아무 일도 없음</strong></div>
+          <button type="button" tabIndex={-1}>
+            회원가입
+          </button>
+          <div className={styles.silenceLine}>
+            클릭 → <strong>아무 일도 없음</strong>
+          </div>
         </div>
       </div>
     ),
@@ -420,9 +446,18 @@ export const slides = [
           className={styles.restaurantImage}
         />
         <div className={styles.restaurantLegend}>
-          <span><MonitorSmartphone aria-hidden="true" /><strong>홀·메뉴판</strong> 프론트엔드</span>
-          <span><UtensilsCrossed aria-hidden="true" /><strong>주방</strong> 백엔드</span>
-          <span><Database aria-hidden="true" /><strong>냉장고·창고</strong> DB</span>
+          <span>
+            <MonitorSmartphone aria-hidden="true" />
+            <strong>홀·메뉴판</strong> 프론트엔드
+          </span>
+          <span>
+            <UtensilsCrossed aria-hidden="true" />
+            <strong>주방</strong> 백엔드
+          </span>
+          <span>
+            <Database aria-hidden="true" />
+            <strong>냉장고·창고</strong> DB
+          </span>
         </div>
       </div>
     ),
@@ -488,7 +523,11 @@ export const slides = [
       <div className={styles.apiMetaphor}>
         <div className={styles.apiSpeaker}>
           <MonitorSmartphone aria-hidden="true" />
-          <p>“로그인해줘.”<br />“이 글을 저장해줘.”</p>
+          <p>
+            “로그인해줘.”
+            <br />
+            “이 글을 저장해줘.”
+          </p>
         </div>
         <div className={styles.apiChannel}>
           <MessageSquareText aria-hidden="true" />
@@ -497,7 +536,11 @@ export const slides = [
         </div>
         <div className={styles.apiSpeaker}>
           <Server aria-hidden="true" />
-          <p>요청을 확인하고<br />결과를 돌려준다</p>
+          <p>
+            요청을 확인하고
+            <br />
+            결과를 돌려준다
+          </p>
         </div>
       </div>
     ),
@@ -513,21 +556,41 @@ export const slides = [
       <div className={styles.roundTrip}>
         <div className={styles.roundTripTrack}>
           <span className={styles.trackLabel}>요청</span>
-          <FlowNode icon={<MonitorSmartphone aria-hidden="true" />} title="프론트" />
+          <FlowNode
+            icon={<MonitorSmartphone aria-hidden="true" />}
+            title="프론트"
+          />
           <FlowArrow />
-          <FlowNode icon={<MessageSquareText aria-hidden="true" />} title="API" />
+          <FlowNode
+            icon={<MessageSquareText aria-hidden="true" />}
+            title="API"
+          />
           <FlowArrow />
-          <FlowNode icon={<Server aria-hidden="true" />} title="백엔드" accent />
+          <FlowNode
+            icon={<Server aria-hidden="true" />}
+            title="백엔드"
+            accent
+          />
           <FlowArrow />
           <FlowNode icon={<Database aria-hidden="true" />} title="DB" />
         </div>
         <div className={`${styles.roundTripTrack} ${styles.returnTrack}`}>
           <span className={styles.trackLabel}>결과</span>
-          <FlowNode icon={<MonitorSmartphone aria-hidden="true" />} title="프론트" />
+          <FlowNode
+            icon={<MonitorSmartphone aria-hidden="true" />}
+            title="프론트"
+          />
           <FlowArrow />
-          <FlowNode icon={<MessageSquareText aria-hidden="true" />} title="API" />
+          <FlowNode
+            icon={<MessageSquareText aria-hidden="true" />}
+            title="API"
+          />
           <FlowArrow />
-          <FlowNode icon={<Server aria-hidden="true" />} title="백엔드" accent />
+          <FlowNode
+            icon={<Server aria-hidden="true" />}
+            title="백엔드"
+            accent
+          />
           <FlowArrow />
           <FlowNode icon={<Database aria-hidden="true" />} title="DB" />
         </div>
@@ -547,27 +610,42 @@ export const slides = [
           <div className={styles.languageToolRow}>
             <TechLogo name="TypeScript / JavaScript" file="typescript" />
             <ArrowRight aria-hidden="true" />
-            <p><strong>Node.js</strong><span>Express · NestJS</span></p>
+            <p>
+              <strong>Node.js</strong>
+              <span>Express · NestJS</span>
+            </p>
           </div>
           <div className={styles.languageToolRow}>
             <TechLogo name="Python" file="python" />
             <ArrowRight aria-hidden="true" />
-            <p><strong>FastAPI · Django</strong><span>Python 서버 프레임워크</span></p>
+            <p>
+              <strong>FastAPI · Django</strong>
+              <span>Python 서버 프레임워크</span>
+            </p>
           </div>
           <div className={styles.languageToolRow}>
             <TechLogo name="Java" file="java" />
             <ArrowRight aria-hidden="true" />
-            <p><strong>Spring Boot</strong><span>Java 서버 프레임워크</span></p>
+            <p>
+              <strong>Spring Boot</strong>
+              <span>Java 서버 프레임워크</span>
+            </p>
           </div>
           <div className={styles.languageToolRow}>
             <TechLogo name="Go" file="go" />
             <ArrowRight aria-hidden="true" />
-            <p><strong>Gin · Fiber</strong><span>Go 웹 프레임워크</span></p>
+            <p>
+              <strong>Gin · Fiber</strong>
+              <span>Go 웹 프레임워크</span>
+            </p>
           </div>
           <div className={styles.languageToolRow}>
             <TechLogo name="C#" file="dotnet" />
             <ArrowRight aria-hidden="true" />
-            <p><strong>.NET · ASP.NET Core</strong><span>C# 서버 플랫폼·프레임워크</span></p>
+            <p>
+              <strong>.NET · ASP.NET Core</strong>
+              <span>C# 서버 플랫폼·프레임워크</span>
+            </p>
           </div>
         </div>
         <div className={styles.languageConclusion}>
@@ -593,7 +671,11 @@ export const slides = [
         <ArrowRight aria-hidden="true" className={styles.promptArrow} />
         <div className={styles.specificPrompt}>
           <MessageSquareText aria-hidden="true" />
-          <p>“회원가입 요청을 검증하고,<br />DB에 저장한 뒤 성공 여부를 반환해줘.”</p>
+          <p>
+            “회원가입 요청을 검증하고,
+            <br />
+            DB에 저장한 뒤 성공 여부를 반환해줘.”
+          </p>
         </div>
       </div>
     ),
@@ -632,15 +714,23 @@ export const slides = [
           <span className={styles.comparisonEyebrow}>TODO</span>
           <h3>할 일과 완료 상태</h3>
           <ul className={styles.cleanList}>
-            <li><Check aria-hidden="true" />발표 자료 만들기 · 미완료</li>
-            <li><Check aria-hidden="true" />회의하기 · 완료</li>
+            <li>
+              <Check aria-hidden="true" />
+              발표 자료 만들기 · 미완료
+            </li>
+            <li>
+              <Check aria-hidden="true" />
+              회의하기 · 완료
+            </li>
           </ul>
         </div>
         <div className={styles.comparisonDivider} />
         <div className={styles.dataColumn}>
           <span className={styles.comparisonEyebrow}>LINKROSS</span>
           <h3>프로젝트와 합의·검수 기록</h3>
-          <p className={styles.fieldLine}>프로젝트 이름 · 만든 사람 · 예산 · 일정</p>
+          <p className={styles.fieldLine}>
+            프로젝트 이름 · 만든 사람 · 예산 · 일정
+          </p>
           <p className={styles.fieldLine}>수행 제안서 · SOW · 검수 결과</p>
         </div>
       </div>
@@ -660,11 +750,20 @@ export const slides = [
           <Plus aria-hidden="true" />
         </div>
         <div className={styles.messageSequence}>
-          <div><Send aria-hidden="true" />“이 할 일을 저장해줘.”</div>
+          <div>
+            <Send aria-hidden="true" />
+            “이 할 일을 저장해줘.”
+          </div>
           <FlowArrow down />
-          <div className={styles.backendReply}><Server aria-hidden="true" />내용 확인 → DB 저장</div>
+          <div className={styles.backendReply}>
+            <Server aria-hidden="true" />
+            내용 확인 → DB 저장
+          </div>
           <FlowArrow down />
-          <div><CheckCircle2 aria-hidden="true" />“저장했어.”</div>
+          <div>
+            <CheckCircle2 aria-hidden="true" />
+            “저장했어.”
+          </div>
         </div>
       </div>
     ),
@@ -679,17 +778,41 @@ export const slides = [
     body: (
       <div className={styles.crudOverview}>
         <div className={styles.crudStrip}>
-          <div className={styles.crudItem}><Plus aria-hidden="true" /><strong>Create</strong><span>새 데이터 만들기</span><em>“새 Todo를 저장해줘”</em></div>
-          <div className={styles.crudItem}><Eye aria-hidden="true" /><strong>Read</strong><span>저장된 데이터 찾기</span><em>“내 Todo를 보여줘”</em></div>
-          <div className={styles.crudItem}><PencilLine aria-hidden="true" /><strong>Update</strong><span>기존 데이터 바꾸기</span><em>“완료로 바꿔줘”</em></div>
-          <div className={styles.crudItem}><Trash2 aria-hidden="true" /><strong>Delete</strong><span>데이터 없애기</span><em>“이 Todo를 삭제해줘”</em></div>
+          <div className={styles.crudItem}>
+            <Plus aria-hidden="true" />
+            <strong>Create</strong>
+            <span>새 데이터 만들기</span>
+            <em>“새 Todo를 저장해줘”</em>
+          </div>
+          <div className={styles.crudItem}>
+            <Eye aria-hidden="true" />
+            <strong>Read</strong>
+            <span>저장된 데이터 찾기</span>
+            <em>“내 Todo를 보여줘”</em>
+          </div>
+          <div className={styles.crudItem}>
+            <PencilLine aria-hidden="true" />
+            <strong>Update</strong>
+            <span>기존 데이터 바꾸기</span>
+            <em>“완료로 바꿔줘”</em>
+          </div>
+          <div className={styles.crudItem}>
+            <Trash2 aria-hidden="true" />
+            <strong>Delete</strong>
+            <span>데이터 없애기</span>
+            <em>“이 Todo를 삭제해줘”</em>
+          </div>
         </div>
         <div className={styles.crudCommonFlow}>
           <strong>모든 CRUD의 공통 흐름</strong>
-          <span>버튼 클릭</span><ArrowRight aria-hidden="true" />
-          <span>API 요청</span><ArrowRight aria-hidden="true" />
-          <span>권한·규칙 확인</span><ArrowRight aria-hidden="true" />
-          <span>DB 처리</span><ArrowRight aria-hidden="true" />
+          <span>버튼 클릭</span>
+          <ArrowRight aria-hidden="true" />
+          <span>API 요청</span>
+          <ArrowRight aria-hidden="true" />
+          <span>권한·규칙 확인</span>
+          <ArrowRight aria-hidden="true" />
+          <span>DB 처리</span>
+          <ArrowRight aria-hidden="true" />
           <span>성공·실패 반환</span>
         </div>
       </div>
@@ -704,13 +827,30 @@ export const slides = [
     title: "Create — 입력을 확인하고, 만든 사람과 함께 저장합니다",
     body: (
       <div className={styles.crudFlow}>
-        <FlowNode icon={<Plus aria-hidden="true" />} title="① 입력" detail="발표 자료 만들기" />
+        <FlowNode
+          icon={<Plus aria-hidden="true" />}
+          title="① 입력"
+          detail="발표 자료 만들기"
+        />
         <FlowArrow />
-        <FlowNode icon={<ShieldCheck aria-hidden="true" />} title="② 규칙 확인" detail="로그인 · 빈 값 검사" accent />
+        <FlowNode
+          icon={<ShieldCheck aria-hidden="true" />}
+          title="② 규칙 확인"
+          detail="로그인 · 빈 값 검사"
+          accent
+        />
         <FlowArrow />
-        <FlowNode icon={<Database aria-hidden="true" />} title="③ DB 생성" detail="내용 · 작성자 · 미완료" />
+        <FlowNode
+          icon={<Database aria-hidden="true" />}
+          title="③ DB 생성"
+          detail="내용 · 작성자 · 미완료"
+        />
         <FlowArrow />
-        <FlowNode icon={<CheckCircle2 aria-hidden="true" />} title="④ 결과 반환" detail="새 Todo 화면 표시" />
+        <FlowNode
+          icon={<CheckCircle2 aria-hidden="true" />}
+          title="④ 결과 반환"
+          detail="새 Todo 화면 표시"
+        />
       </div>
     ),
     notes:
@@ -723,13 +863,30 @@ export const slides = [
     title: "Read — 지금 이 사용자에게 보여줄 데이터만 찾습니다",
     body: (
       <div className={styles.crudFlow}>
-        <FlowNode icon={<Eye aria-hidden="true" />} title="① 목록 요청" detail="내 Todo 보여줘" />
+        <FlowNode
+          icon={<Eye aria-hidden="true" />}
+          title="① 목록 요청"
+          detail="내 Todo 보여줘"
+        />
         <FlowArrow />
-        <FlowNode icon={<UserCheck aria-hidden="true" />} title="② 조회 조건" detail="작성자=나 · 최신순" accent />
+        <FlowNode
+          icon={<UserCheck aria-hidden="true" />}
+          title="② 조회 조건"
+          detail="작성자=나 · 최신순"
+          accent
+        />
         <FlowArrow />
-        <FlowNode icon={<Database aria-hidden="true" />} title="③ DB 검색" detail="조건에 맞는 데이터" />
+        <FlowNode
+          icon={<Database aria-hidden="true" />}
+          title="③ DB 검색"
+          detail="조건에 맞는 데이터"
+        />
         <FlowArrow />
-        <FlowNode icon={<CheckCircle2 aria-hidden="true" />} title="④ 결과 반환" detail="목록 · 빈 상태 · 오류" />
+        <FlowNode
+          icon={<CheckCircle2 aria-hidden="true" />}
+          title="④ 결과 반환"
+          detail="목록 · 빈 상태 · 오류"
+        />
       </div>
     ),
     notes:
@@ -742,13 +899,30 @@ export const slides = [
     title: "Update — 권한을 확인한 뒤 필요한 값만 바꿉니다",
     body: (
       <div className={styles.crudFlow}>
-        <FlowNode icon={<PencilLine aria-hidden="true" />} title="① 수정 요청" detail="Todo ID · 완료=true" />
+        <FlowNode
+          icon={<PencilLine aria-hidden="true" />}
+          title="① 수정 요청"
+          detail="Todo ID · 완료=true"
+        />
         <FlowArrow />
-        <FlowNode icon={<UserCheck aria-hidden="true" />} title="② 대상·권한" detail="존재하는가? 내 것인가?" accent />
+        <FlowNode
+          icon={<UserCheck aria-hidden="true" />}
+          title="② 대상·권한"
+          detail="존재하는가? 내 것인가?"
+          accent
+        />
         <FlowArrow />
-        <FlowNode icon={<Database aria-hidden="true" />} title="③ DB 변경" detail="완료 상태만 수정" />
+        <FlowNode
+          icon={<Database aria-hidden="true" />}
+          title="③ DB 변경"
+          detail="완료 상태만 수정"
+        />
         <FlowArrow />
-        <FlowNode icon={<CheckCircle2 aria-hidden="true" />} title="④ 결과 반환" detail="변경된 Todo · 실패 이유" />
+        <FlowNode
+          icon={<CheckCircle2 aria-hidden="true" />}
+          title="④ 결과 반환"
+          detail="변경된 Todo · 실패 이유"
+        />
       </div>
     ),
     notes:
@@ -761,13 +935,30 @@ export const slides = [
     title: "Delete — 권한을 확인한 뒤 데이터를 삭제합니다",
     body: (
       <div className={styles.crudFlow}>
-        <FlowNode icon={<Trash2 aria-hidden="true" />} title="① 삭제 요청" detail="삭제할 Todo ID" />
+        <FlowNode
+          icon={<Trash2 aria-hidden="true" />}
+          title="① 삭제 요청"
+          detail="삭제할 Todo ID"
+        />
         <FlowArrow />
-        <FlowNode icon={<UserCheck aria-hidden="true" />} title="② 대상·권한" detail="존재하는가? 내 것인가?" accent />
+        <FlowNode
+          icon={<UserCheck aria-hidden="true" />}
+          title="② 대상·권한"
+          detail="존재하는가? 내 것인가?"
+          accent
+        />
         <FlowArrow />
-        <FlowNode icon={<Database aria-hidden="true" />} title="③ DB 삭제" detail="해당 Todo 제거" />
+        <FlowNode
+          icon={<Database aria-hidden="true" />}
+          title="③ DB 삭제"
+          detail="해당 Todo 제거"
+        />
         <FlowArrow />
-        <FlowNode icon={<CircleX aria-hidden="true" />} title="④ 결과 반환" detail="화면 갱신 · 실패 안내" />
+        <FlowNode
+          icon={<CircleX aria-hidden="true" />}
+          title="④ 결과 반환"
+          detail="화면 갱신 · 실패 안내"
+        />
       </div>
     ),
     notes:
@@ -781,7 +972,11 @@ export const slides = [
     variant: "section",
     body: (
       <div className={styles.complexityBridge}>
-        <div className={styles.simpleSide}><ClipboardCheck aria-hidden="true" /><strong>Todo</strong><span>내 할 일 하나</span></div>
+        <div className={styles.simpleSide}>
+          <ClipboardCheck aria-hidden="true" />
+          <strong>Todo</strong>
+          <span>내 할 일 하나</span>
+        </div>
         <ArrowRight aria-hidden="true" />
         <div className={styles.complexSide}>
           <BrandLogo compact />
@@ -802,13 +997,27 @@ export const slides = [
       <div className={styles.projectCreateFlow}>
         <FlowNode icon={<UserRound aria-hidden="true" />} title="로그인" />
         <FlowArrow />
-        <FlowNode icon={<BriefcaseBusiness aria-hidden="true" />} title="발주자 역할" accent />
+        <FlowNode
+          icon={<BriefcaseBusiness aria-hidden="true" />}
+          title="발주자 역할"
+          accent
+        />
         <FlowArrow />
-        <FlowNode icon={<ClipboardCheck aria-hidden="true" />} title="필수 내용" detail="이름·목표·기간" />
+        <FlowNode
+          icon={<ClipboardCheck aria-hidden="true" />}
+          title="필수 내용"
+          detail="이름·목표·기간"
+        />
         <FlowArrow />
-        <FlowNode icon={<Database aria-hidden="true" />} title="프로젝트 저장" />
+        <FlowNode
+          icon={<Database aria-hidden="true" />}
+          title="프로젝트 저장"
+        />
         <FlowArrow />
-        <FlowNode icon={<ArrowRight aria-hidden="true" />} title="상세로 이동" />
+        <FlowNode
+          icon={<ArrowRight aria-hidden="true" />}
+          title="상세로 이동"
+        />
       </div>
     ),
     notes:
@@ -850,12 +1059,20 @@ export const slides = [
       <div className={styles.updateGate}>
         <div className={styles.gateQuestion}>
           <UserCheck aria-hidden="true" />
-          <p>이 프로젝트를 만든<br /><strong>발주자인가?</strong></p>
+          <p>
+            이 프로젝트를 만든
+            <br />
+            <strong>발주자인가?</strong>
+          </p>
         </div>
         <div className={styles.gateOperator}>AND</div>
         <div className={styles.gateQuestion}>
           <ShieldCheck aria-hidden="true" />
-          <p>아직 수정 가능한<br /><strong>상태인가?</strong></p>
+          <p>
+            아직 수정 가능한
+            <br />
+            <strong>상태인가?</strong>
+          </p>
         </div>
         <ArrowRight aria-hidden="true" className={styles.gateArrow} />
         <div className={styles.gatePass}>
@@ -885,7 +1102,9 @@ export const slides = [
           <strong>보관 상태로 변경</strong>
           <span>활성 프로젝트 → 보관된 프로젝트</span>
         </div>
-        <p className={styles.archiveConclusion}>모든 Delete가 실제 삭제를 뜻하지는 않습니다.</p>
+        <p className={styles.archiveConclusion}>
+          모든 Delete가 실제 삭제를 뜻하지는 않습니다.
+        </p>
       </div>
     ),
     notes:
@@ -906,11 +1125,19 @@ export const slides = [
           <TechLogo name="Supabase" file="supabase" />
         </div>
         <div className={styles.stackMeaning}>
-          <span><strong>Next.js</strong> 화면과 백엔드 동작</span>
-          <span><strong>TypeScript</strong> 우리가 쓰는 언어</span>
-          <span><strong>Supabase</strong> 사용자와 데이터 저장</span>
+          <span>
+            <strong>Next.js</strong> 화면과 백엔드 동작
+          </span>
+          <span>
+            <strong>TypeScript</strong> 우리가 쓰는 언어
+          </span>
+          <span>
+            <strong>Supabase</strong> 사용자와 데이터 저장
+          </span>
         </div>
-        <p className={styles.stackConclusion}>새 백엔드 언어를 따로 배우는 것이 아닙니다.</p>
+        <p className={styles.stackConclusion}>
+          새 백엔드 언어를 따로 배우는 것이 아닙니다.
+        </p>
       </div>
     ),
     notes:
@@ -936,16 +1163,34 @@ export const slides = [
             <strong>LinKross의 수행 제안서 제출 백엔드 기능을 만들어줘.</strong>
           </div>
           <div className={styles.promptLines}>
-            <p><span>누가</span> 로그인한 지원자만 사용할 수 있어.</p>
-            <p><span>입력</span> 프로젝트 ID와 수행 제안서 원문을 받아.</p>
-            <p><span>규칙</span> 모집 중이어야 하고 같은 프로젝트에 두 번 제출할 수 없어.</p>
-            <p><span>저장</span> 원문, 지원자, 프로젝트와 제출 시각을 Supabase에 저장해.</p>
-            <p><span>성공</span> 저장된 제안서와 제출 완료 상태를 반환해.</p>
-            <p><span>실패</span> 마감·중복·권한 문제를 이해하기 쉬운 한국어로 알려줘.</p>
+            <p>
+              <span>누가</span> 로그인한 지원자만 사용할 수 있어.
+            </p>
+            <p>
+              <span>입력</span> 프로젝트 ID와 수행 제안서 원문을 받아.
+            </p>
+            <p>
+              <span>규칙</span> 모집 중이어야 하고 같은 프로젝트에 두 번 제출할
+              수 없어.
+            </p>
+            <p>
+              <span>저장</span> 원문, 지원자, 프로젝트와 제출 시각을 Supabase에
+              저장해.
+            </p>
+            <p>
+              <span>성공</span> 저장된 제안서와 제출 완료 상태를 반환해.
+            </p>
+            <p>
+              <span>실패</span> 마감·중복·권한 문제를 이해하기 쉬운 한국어로
+              알려줘.
+            </p>
           </div>
           <div className={styles.promptFooter}>
             <ShieldCheck aria-hidden="true" />
-            <p>기존 코드 구조와 권한 패턴을 먼저 확인하고, 서버에서 규칙을 다시 검증해줘.</p>
+            <p>
+              기존 코드 구조와 권한 패턴을 먼저 확인하고, 서버에서 규칙을 다시
+              검증해줘.
+            </p>
           </div>
         </div>
       </div>
@@ -960,7 +1205,9 @@ export const slides = [
     title: "SOW 승인 — 상태가 아니라 기록을 요청합니다",
     variant: "prompt",
     body: (
-      <div className={`${styles.examplePromptLayout} ${styles.examplePromptLayoutReverse}`}>
+      <div
+        className={`${styles.examplePromptLayout} ${styles.examplePromptLayoutReverse}`}
+      >
         <div className={styles.examplePromptContext}>
           <BadgeCheck aria-hidden="true" />
           <strong>만들 기능</strong>
@@ -973,12 +1220,26 @@ export const slides = [
             <strong>LinKross의 SOW 승인 백엔드 기능을 만들어줘.</strong>
           </div>
           <div className={styles.promptLines}>
-            <p><span>누가</span> 프로젝트 발주자와 선정된 개발자가 사용할 수 있어.</p>
-            <p><span>입력</span> 프로젝트 ID와 승인할 SOW 버전을 받아.</p>
-            <p><span>규칙</span> 프로젝트 참여자이며 최신 버전을 보고 있을 때만 승인해.</p>
-            <p><span>저장</span> 승인자, 역할, 승인 시각과 SOW 버전을 기록해.</p>
-            <p><span>성공</span> 양측이 같은 버전을 승인하면 그 버전을 고정해.</p>
-            <p><span>실패</span> 권한이 없거나 오래된 버전이면 이유를 알려줘.</p>
+            <p>
+              <span>누가</span> 프로젝트 발주자와 선정된 개발자가 사용할 수
+              있어.
+            </p>
+            <p>
+              <span>입력</span> 프로젝트 ID와 승인할 SOW 버전을 받아.
+            </p>
+            <p>
+              <span>규칙</span> 프로젝트 참여자이며 최신 버전을 보고 있을 때만
+              승인해.
+            </p>
+            <p>
+              <span>저장</span> 승인자, 역할, 승인 시각과 SOW 버전을 기록해.
+            </p>
+            <p>
+              <span>성공</span> 양측이 같은 버전을 승인하면 그 버전을 고정해.
+            </p>
+            <p>
+              <span>실패</span> 권한이 없거나 오래된 버전이면 이유를 알려줘.
+            </p>
           </div>
           <div className={styles.promptFooter}>
             <LockKeyhole aria-hidden="true" />
@@ -1002,7 +1263,9 @@ export const slides = [
           <Code2 aria-hidden="true" />
           <strong>만들 기능</strong>
           <span>개발자가 PR과 Commit SHA로 검수를 요청한다.</span>
-          <small>브랜치가 아니라 바뀌지 않는 Commit SHA를 기준으로 삼습니다.</small>
+          <small>
+            브랜치가 아니라 바뀌지 않는 Commit SHA를 기준으로 삼습니다.
+          </small>
         </div>
         <div className={styles.promptPaper}>
           <div className={styles.promptHeader}>
@@ -1010,12 +1273,25 @@ export const slides = [
             <strong>LinKross의 GitHub 검수 요청 백엔드 기능을 만들어줘.</strong>
           </div>
           <div className={styles.promptLines}>
-            <p><span>누가</span> 프로젝트에 선정된 개발자만 사용할 수 있어.</p>
-            <p><span>입력</span> 마일스톤, PR 주소와 Commit SHA를 받아.</p>
-            <p><span>규칙</span> 저장소 접근 권한과 중복 실행 여부를 확인해.</p>
-            <p><span>저장</span> 요청자, PR, SHA, 완료조건 버전과 대기 상태를 기록해.</p>
-            <p><span>성공</span> 생성된 검수 요청 ID와 현재 상태를 반환해.</p>
-            <p><span>실패</span> 권한·중복·잘못된 SHA 문제를 구분해서 알려줘.</p>
+            <p>
+              <span>누가</span> 프로젝트에 선정된 개발자만 사용할 수 있어.
+            </p>
+            <p>
+              <span>입력</span> 마일스톤, PR 주소와 Commit SHA를 받아.
+            </p>
+            <p>
+              <span>규칙</span> 저장소 접근 권한과 중복 실행 여부를 확인해.
+            </p>
+            <p>
+              <span>저장</span> 요청자, PR, SHA, 완료조건 버전과 대기 상태를
+              기록해.
+            </p>
+            <p>
+              <span>성공</span> 생성된 검수 요청 ID와 현재 상태를 반환해.
+            </p>
+            <p>
+              <span>실패</span> 권한·중복·잘못된 SHA 문제를 구분해서 알려줘.
+            </p>
           </div>
           <div className={styles.promptFooter}>
             <ShieldCheck aria-hidden="true" />
@@ -1034,12 +1310,16 @@ export const slides = [
     title: "재검수 — 덮어쓰지 말고 변화 과정을 남깁니다",
     variant: "prompt",
     body: (
-      <div className={`${styles.examplePromptLayout} ${styles.examplePromptLayoutReverse}`}>
+      <div
+        className={`${styles.examplePromptLayout} ${styles.examplePromptLayoutReverse}`}
+      >
         <div className={styles.examplePromptContext}>
           <RefreshCw aria-hidden="true" />
           <strong>만들 기능</strong>
           <span>개발자가 수정한 새 Commit SHA로 재검수를 요청한다.</span>
-          <small>기존 결과를 보존해야 무엇이 개선됐는지 비교할 수 있습니다.</small>
+          <small>
+            기존 결과를 보존해야 무엇이 개선됐는지 비교할 수 있습니다.
+          </small>
         </div>
         <div className={styles.promptPaper}>
           <div className={styles.promptHeader}>
@@ -1047,12 +1327,24 @@ export const slides = [
             <strong>LinKross의 재검수 요청 백엔드 기능을 만들어줘.</strong>
           </div>
           <div className={styles.promptLines}>
-            <p><span>누가</span> 프로젝트에 선정된 개발자만 사용할 수 있어.</p>
-            <p><span>입력</span> 이전 검수 ID와 새로운 Commit SHA를 받아.</p>
-            <p><span>규칙</span> 같은 마일스톤이며 다른 SHA일 때만 허용해.</p>
-            <p><span>저장</span> 이전 검수와 연결된 새로운 검수 이력을 만들어.</p>
-            <p><span>성공</span> 이전 결과와 이번 결과를 비교할 수 있게 반환해.</p>
-            <p><span>실패</span> 같은 SHA·진행 중·권한 문제를 구분해서 알려줘.</p>
+            <p>
+              <span>누가</span> 프로젝트에 선정된 개발자만 사용할 수 있어.
+            </p>
+            <p>
+              <span>입력</span> 이전 검수 ID와 새로운 Commit SHA를 받아.
+            </p>
+            <p>
+              <span>규칙</span> 같은 마일스톤이며 다른 SHA일 때만 허용해.
+            </p>
+            <p>
+              <span>저장</span> 이전 검수와 연결된 새로운 검수 이력을 만들어.
+            </p>
+            <p>
+              <span>성공</span> 이전 결과와 이번 결과를 비교할 수 있게 반환해.
+            </p>
+            <p>
+              <span>실패</span> 같은 SHA·진행 중·권한 문제를 구분해서 알려줘.
+            </p>
           </div>
           <div className={styles.promptFooter}>
             <FileArchive aria-hidden="true" />
@@ -1072,12 +1364,24 @@ export const slides = [
     variant: "section",
     body: (
       <div className={styles.sixBoxOverview}>
-        <span><strong>1</strong>누가?</span>
-        <span><strong>2</strong>무엇을?</span>
-        <span><strong>3</strong>어떤 정보?</span>
-        <span><strong>4</strong>어떤 규칙?</span>
-        <span><strong>5</strong>어떤 데이터?</span>
-        <span><strong>6</strong>어떤 결과?</span>
+        <span>
+          <strong>1</strong>누가?
+        </span>
+        <span>
+          <strong>2</strong>무엇을?
+        </span>
+        <span>
+          <strong>3</strong>어떤 정보?
+        </span>
+        <span>
+          <strong>4</strong>어떤 규칙?
+        </span>
+        <span>
+          <strong>5</strong>어떤 데이터?
+        </span>
+        <span>
+          <strong>6</strong>어떤 결과?
+        </span>
       </div>
     ),
     notes:
@@ -1144,9 +1448,12 @@ export const slides = [
     title: "여섯 칸은 결국 한 문장으로 이어집니다",
     body: (
       <blockquote className={styles.sixBoxSentence}>
-        <strong>누가</strong>, <strong>무엇을</strong>, <strong>어떤 정보로</strong>,<br />
-        <strong>어떤 규칙</strong> 아래 실행하고,<br />
-        <strong>무엇을 저장</strong>하며, <strong>결과를 어떻게 보여줄 것인가?</strong>
+        <strong>누가</strong>, <strong>무엇을</strong>,{" "}
+        <strong>어떤 정보로</strong>,<br />
+        <strong>어떤 규칙</strong> 아래 실행하고,
+        <br />
+        <strong>무엇을 저장</strong>하며,{" "}
+        <strong>결과를 어떻게 보여줄 것인가?</strong>
       </blockquote>
     ),
     notes:
@@ -1165,10 +1472,19 @@ export const slides = [
           <strong>LinKross의 프로젝트 생성 기능을 만들어줘.</strong>
         </div>
         <div className={styles.promptLines}>
-          <p><span>누가</span> 로그인한 발주자만 사용할 수 있어.</p>
-          <p><span>무엇을</span> 새로운 외주 개발 프로젝트를 등록해.</p>
-          <p><span>입력</span> 이름, 목표, 요구사항, 예산, 일정, 모집 기간.</p>
-          <p><span>규칙</span> 필수값을 확인하고, 종료일이 시작일보다 빠르면 막아줘.</p>
+          <p>
+            <span>누가</span> 로그인한 발주자만 사용할 수 있어.
+          </p>
+          <p>
+            <span>무엇을</span> 새로운 외주 개발 프로젝트를 등록해.
+          </p>
+          <p>
+            <span>입력</span> 이름, 목표, 요구사항, 예산, 일정, 모집 기간.
+          </p>
+          <p>
+            <span>규칙</span> 필수값을 확인하고, 종료일이 시작일보다 빠르면
+            막아줘.
+          </p>
         </div>
       </div>
     ),
@@ -1184,14 +1500,27 @@ export const slides = [
     body: (
       <div className={styles.promptPaper}>
         <div className={styles.promptLines}>
-          <p><span>저장</span> Supabase에 프로젝트, 만든 사용자, 생성 시각을 저장해.</p>
-          <p><span>성공</span> 생성된 프로젝트 상세 화면으로 이동해.</p>
-          <p><span>실패</span> 이해할 수 있는 한국어 오류와 재시도 방법을 보여줘.</p>
-          <p><span>진행</span> 저장 중 중복 클릭을 막아줘.</p>
+          <p>
+            <span>저장</span> Supabase에 프로젝트, 만든 사용자, 생성 시각을
+            저장해.
+          </p>
+          <p>
+            <span>성공</span> 생성된 프로젝트 상세 화면으로 이동해.
+          </p>
+          <p>
+            <span>실패</span> 이해할 수 있는 한국어 오류와 재시도 방법을 보여줘.
+          </p>
+          <p>
+            <span>진행</span> 저장 중 중복 클릭을 막아줘.
+          </p>
         </div>
         <div className={styles.promptFooter}>
           <BookOpenText aria-hidden="true" />
-          <p>기존 LinKross 코드 구조를 먼저 확인하고,<br />작은 단계로 구현한 뒤 직접 확인할 항목을 알려줘.</p>
+          <p>
+            기존 LinKross 코드 구조를 먼저 확인하고,
+            <br />
+            작은 단계로 구현한 뒤 직접 확인할 항목을 알려줘.
+          </p>
         </div>
       </div>
     ),
@@ -1205,10 +1534,26 @@ export const slides = [
     title: "오늘 기억할 것은 딱 네 가지입니다",
     body: (
       <div className={styles.fourTakeaways}>
-        <div><Database aria-hidden="true" /><strong>DB</strong><span>데이터를 기억한다</span></div>
-        <div><MessageSquareText aria-hidden="true" /><strong>API</strong><span>요청을 전달한다</span></div>
-        <div><ClipboardCheck aria-hidden="true" /><strong>CRUD</strong><span>만들고·보고·고치고·지운다</span></div>
-        <div><BrainCircuit aria-hidden="true" /><strong>바이브코딩</strong><span>사용자와 규칙을 설명한다</span></div>
+        <div>
+          <Database aria-hidden="true" />
+          <strong>DB</strong>
+          <span>데이터를 기억한다</span>
+        </div>
+        <div>
+          <MessageSquareText aria-hidden="true" />
+          <strong>API</strong>
+          <span>요청을 전달한다</span>
+        </div>
+        <div>
+          <ClipboardCheck aria-hidden="true" />
+          <strong>CRUD</strong>
+          <span>만들고·보고·고치고·지운다</span>
+        </div>
+        <div>
+          <BrainCircuit aria-hidden="true" />
+          <strong>바이브코딩</strong>
+          <span>사용자와 규칙을 설명한다</span>
+        </div>
       </div>
     ),
     notes:
@@ -1222,7 +1567,9 @@ export const slides = [
     variant: "cover",
     body: (
       <div className={styles.closingBody}>
-        <h1 className={styles.coverTitle}>다음 기능부터, 이 여섯 질문으로 시작하세요</h1>
+        <h1 className={styles.coverTitle}>
+          다음 기능부터, 이 여섯 질문으로 시작하세요
+        </h1>
         <div className={styles.closingQuestions}>
           <span>누가?</span>
           <span>무엇을?</span>
@@ -1231,7 +1578,11 @@ export const slides = [
           <span>어떤 데이터?</span>
           <span>성공과 실패는?</span>
         </div>
-        <p className={styles.closingStatement}>설명할 수 있다면,<br /><strong>AI와 함께 만들 수 있습니다.</strong></p>
+        <p className={styles.closingStatement}>
+          설명할 수 있다면,
+          <br />
+          <strong>AI와 함께 만들 수 있습니다.</strong>
+        </p>
         <div className={styles.closingBrand}>
           <BrandLogo />
         </div>
