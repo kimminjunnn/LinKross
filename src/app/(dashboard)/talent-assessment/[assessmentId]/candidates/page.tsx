@@ -22,13 +22,11 @@ import {
   ChevronRight,
   ArrowRight,
   FileSpreadsheet,
-  Info,
   Check,
   FileText,
 } from "lucide-react";
 import {
   INITIAL_CANDIDATES,
-  MOCK_AI_ANALYSIS,
   CandidateComparisonItem,
   PenaltyInfo,
   getSelectedCandidateId,
@@ -413,62 +411,7 @@ export default function CandidateComparisonDashboard() {
         </div>
       )}
 
-      {/* AI Evaluation Assistant Panel */}
-      <section className="rounded-[var(--radius-card)] border border-brand-200 bg-gradient-to-br from-brand-50/40 via-white to-amber-50/30 p-6 sm:p-7 shadow-sm space-y-6">
-        <div className="flex items-center gap-3 border-b border-brand-100 pb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white shadow-md shadow-brand-500/20">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-app-foreground">AI 제출서 원문 구조화 보조</h2>
-            <p className="text-xs text-app-muted">지원자들이 작성한 원문 답변의 핵심 요약과 쟁점을 정리해 드립니다.</p>
-          </div>
-        </div>
 
-        {/* Example Summary */}
-        <div className="rounded-xl border border-brand-200/80 bg-white p-4 text-xs font-medium leading-relaxed text-app-foreground shadow-2xs">
-          “{MOCK_AI_ANALYSIS.summary}”
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-xs">
-          {/* Strengths */}
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-2">
-            <h3 className="font-bold text-emerald-900 flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 제출 원문 핵심 요약
-            </h3>
-            <ul className="space-y-1.5 text-emerald-950 font-medium pl-1">
-              <li className="flex items-start gap-1.5">
-                <span className="text-emerald-600 font-bold">•</span>
-                <span>요구사항의 기술적 제약사항 정확히 이해</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="text-emerald-600 font-bold">•</span>
-                <span>DB 구조 및 JWT 인증 관련 구체적 확인 질문 제시</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="text-emerald-600 font-bold">•</span>
-                <span>체계적인 주차별 마일스톤 및 리스크 대응책 작성</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Potential Concern */}
-          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-2">
-            <h3 className="font-bold text-amber-900 flex items-center gap-1.5">
-              <AlertTriangle className="h-4 w-4 text-amber-600" /> 확인 권장 사항 (발주자 검토 포인트)
-            </h3>
-            <p className="text-amber-950 font-medium leading-relaxed">
-              • Deployment strategy requires additional confirmation (배포 전략 관련 발주자 추가 확인 권장)
-            </p>
-          </div>
-        </div>
-
-        {/* Important Disclaimer */}
-        <div className="rounded-xl border border-app-border bg-app-surface-subtle p-3.5 text-center text-xs font-bold text-app-foreground flex items-center justify-center gap-2">
-          <Info className="h-4 w-4 text-brand-500" />
-          <span>AI는 원문 요약 보조 역할만 수행하며, 지원자 평가 및 최종 개발자 선정은 발주자가 직접 주관적으로 결정합니다.</span>
-        </div>
-      </section>
 
       {/* Candidate Selection Confirmation Modal */}
       {selectionTarget && (
