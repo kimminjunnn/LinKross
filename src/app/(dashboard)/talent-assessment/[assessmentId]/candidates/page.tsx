@@ -153,7 +153,7 @@ export default function CandidateComparisonDashboard() {
               <span className="font-extrabold text-emerald-900">{selectedCandidate.name}</span>
             </div>
             <button
-              onClick={() => router.push("/projects/proj_01/sow")}
+              onClick={() => router.push("/projects/project-a/sow")}
               className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
               <FileSpreadsheet className="h-4 w-4" />

@@ -38,6 +38,7 @@ export default function SowPage() {
   const [workDetail, setWorkDetail] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [budget, setBudget] = useState("");
   const [milestones, setMilestones] =
     useState<MilestoneInput[]>(INITIAL_MILESTONES);
   const [englishSow, setEnglishSow] = useState<EnglishSOWResult | null>(null);
@@ -70,15 +71,28 @@ export default function SowPage() {
   }, []);
 
   // AI 분석 실행 (한국어 폼 자동 정돈)
-  const handleAnalyzeAI = () => {
-    if (!workDetail.trim()) {
-      setStatusMessage("업무 상세를 먼저 입력해 주세요.");
+  const handleAnalyzeAI = (fileContent?: string) => {
+    let textToAnalyze = workDetail;
+    if (budget.trim()) {
+      textToAnalyze = `예산: ${budget} USDC\n\n${textToAnalyze}`;
+    }
+    const combinedDetail = [textToAnalyze, fileContent].filter(Boolean).join("\n\n---\n\n");
+
+    if (!combinedDetail.trim()) {
+      setStatusMessage("업무 상세를 먼저 입력하거나 파일을 업로드해 주세요.");
       return;
     }
 
-    const analysis = analyzeWorkDetail(workDetail, startDate, endDate);
+    const analysis = analyzeWorkDetail(combinedDetail, startDate, endDate);
     if (analysis.extractedStartDate) setStartDate(analysis.extractedStartDate);
     if (analysis.extractedEndDate) setEndDate(analysis.extractedEndDate);
+    
+    // 예산이 AI 분석에서 추출되었고, 현재 예산 입력칸이 비어있다면 자동 채우기
+    if (analysis.extractedBudget && !budget) {
+      const budgetNumStr = analysis.extractedBudget.replace(/[^0-9]/g, "");
+      setBudget(budgetNumStr);
+    }
+
     setMilestones(analysis.milestones);
     const hasUnscheduledMilestone = analysis.milestones.some(
       (milestone) => !milestone.period,
@@ -92,9 +106,17 @@ export default function SowPage() {
   };
 
   // RAG 기반 영문 명세 생성 (비동기 변환)
-  const handleGenerateEnglishSOW = async () => {
-    if (!workDetail.trim()) {
-      setStatusMessage("업무 상세를 먼저 입력해 주세요.");
+  // 참고: 현재는 workDetail 텍스트만 기반으로 번역하지만, 파일에서 추출된 내용이
+  // AI 분석(마일스톤/업무 상세)을 거쳐 폼에 입력/반영되었다고 가정하고 
+  // 기존의 workDetail 상태만 번역/명세 생성에 활용합니다. (숨겨진 파일 텍스트가 있다면 포함)
+  const handleGenerateEnglishSOW = async (hiddenFileContent?: string) => {
+    let textToAnalyze = workDetail;
+    if (hiddenFileContent) {
+      textToAnalyze = [workDetail, hiddenFileContent].filter(Boolean).join("\n\n---\n\n");
+    }
+
+    if (!textToAnalyze.trim() && milestones.length === 0) {
+      setStatusMessage("업무 상세를 먼저 입력하거나 AI 분석을 진행해 주세요.");
       return;
     }
 
@@ -102,10 +124,10 @@ export default function SowPage() {
       milestones.length === 0 ||
       milestones.some(
         (milestone) =>
-          !milestone.title.trim() ||
-          !milestone.period.trim() ||
-          !milestone.amount.trim() ||
-          !milestone.dods.some((dod) => dod.trim()),
+          !String(milestone.title || "").trim() ||
+          !String(milestone.period || "").trim() ||
+          !String(milestone.amount || "").trim() ||
+          !milestone.dods.some((dod) => String(dod || "").trim()),
       );
     if (hasIncompleteMilestone) {
       setStatusMessage(
@@ -120,7 +142,7 @@ export default function SowPage() {
     );
 
     try {
-      const result = await generateSOWWithRAGAsync(workDetail, startDate, endDate, milestones);
+      const result = await generateSOWWithRAGAsync(textToAnalyze, startDate, endDate, milestones);
       setEnglishSow(applyProjectContext(result));
       setStatusMessage("✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!");
     } catch (e) {
@@ -145,50 +167,7 @@ export default function SowPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 1. 상단 프로젝트 빵부시 및 프로젝트 기본 정보 카드 */}
-      <div className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-app-border pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-app-foreground sm:text-2xl">
-                {project.name}
-              </h1>
-              <span className="rounded-pill bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">
-                명세 작성 중
-              </span>
-            </div>
-            <nav
-              aria-label="Breadcrumb"
-              className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-app-muted"
-            >
-              <span>대시보드</span>
-              <ChevronRight className="size-3" />
-              <span>진행 중인 프로젝트</span>
-              <ChevronRight className="size-3" />
-              <span className="font-semibold text-app-foreground">
-                {project.name} · 프리랜서 {project.assignee} · 기간{" "}
-                {project.period} · 총예산 {project.amount}
-              </span>
-            </nav>
-          </div>
-        </div>
 
-        {/* 탭 네비게이션 */}
-        <div className="mt-4 flex gap-4 border-b border-app-border text-xs font-bold">
-          <button className="border-b-2 border-brand-500 pb-2.5 text-brand-600">
-            AI 업무 명세
-          </button>
-          <button className="pb-2.5 text-app-muted hover:text-app-foreground">
-            마일스톤 · 검수
-          </button>
-          <button className="pb-2.5 text-app-muted hover:text-app-foreground">
-            지급
-          </button>
-          <button className="pb-2.5 text-app-muted hover:text-app-foreground">
-            증빙
-          </button>
-        </div>
-      </div>
 
       {/* 상태 메시지 알림 바 */}
       {statusMessage && (
@@ -209,6 +188,8 @@ export default function SowPage() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+            budget={budget}
+            setBudget={setBudget}
             milestones={milestones}
             setMilestones={setMilestones}
             onAnalyzeAI={handleAnalyzeAI}
