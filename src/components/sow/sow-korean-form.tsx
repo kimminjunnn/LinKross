@@ -21,6 +21,7 @@ type SowKoreanFormProps = {
   isGenerating: boolean;
   onSaveDraft: () => void;
   dateError?: boolean;
+  isAnalyzing?: boolean;
 };
 
 export function SowKoreanForm({
@@ -39,6 +40,7 @@ export function SowKoreanForm({
   isGenerating,
   onSaveDraft,
   dateError,
+  isAnalyzing = false,
 }: SowKoreanFormProps) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -252,11 +254,11 @@ export function SowKoreanForm({
           <button
             type="button"
             onClick={handleAnalyzeClick}
-            disabled={isParsing}
+            disabled={isParsing || isAnalyzing}
             className="inline-flex min-h-10 items-center gap-2 rounded-control bg-app-foreground px-4 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            <Sparkles aria-hidden="true" className={`size-3.5 text-brand-400 ${isParsing ? 'animate-spin' : ''}`} />
-            {isParsing ? "파일 분석 중..." : "AI 분석"}
+            <Sparkles aria-hidden="true" className={`size-3.5 text-brand-400 ${(isParsing || isAnalyzing) ? 'animate-spin' : ''}`} />
+            {isParsing ? "파일 분석 중..." : isAnalyzing ? "LLM 분석 중..." : "AI 분석"}
           </button>
           <span className="text-[0.75rem] text-app-muted">
             업무 상세와 첨부 문서를 분석해 마일스톤 개수 · 일정 · 금액 · DoD 초안을 자동 설정합니다.
@@ -339,36 +341,38 @@ export function SowKoreanForm({
                     className="bg-transparent text-sm font-bold text-app-foreground outline-none focus:underline"
                   />
                 </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={m.period}
-                    placeholder="기간"
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setMilestones((prev) =>
-                        prev.map((item) => (item.id === m.id ? { ...item, period: val } : item))
-                      );
-                    }}
-                    className="w-24 text-right text-xs font-semibold text-app-muted outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={m.amount}
-                    placeholder="금액"
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setMilestones((prev) =>
-                        prev.map((item) => (item.id === m.id ? { ...item, amount: val } : item))
-                      );
-                    }}
-                    className="w-24 text-right text-xs font-bold text-app-foreground outline-none"
-                  />
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-end gap-1.5">
+                    <input
+                      type="text"
+                      value={m.amount}
+                      placeholder="금액"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setMilestones((prev) =>
+                          prev.map((item) => (item.id === m.id ? { ...item, amount: val } : item))
+                        );
+                      }}
+                      className="w-28 text-right text-xs font-bold text-app-foreground outline-none placeholder:text-app-muted/50 focus:underline"
+                    />
+                    <input
+                      type="text"
+                      value={m.period}
+                      placeholder="기간"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setMilestones((prev) =>
+                          prev.map((item) => (item.id === m.id ? { ...item, period: val } : item))
+                        );
+                      }}
+                      className="w-28 text-right text-[0.7rem] font-semibold text-app-muted outline-none placeholder:text-app-muted/50 focus:underline"
+                    />
+                  </div>
                   {milestones.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveMilestone(m.id)}
-                      className="text-app-muted hover:text-danger"
+                      className="text-app-muted hover:text-danger mt-0.5"
                       aria-label="마일스톤 삭제"
                     >
                       <Trash2 className="size-3.5" />
