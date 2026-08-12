@@ -179,14 +179,6 @@ export default function ApprovalPage() {
               </ul>
             </div>
 
-            {sowSnapshot?.printText ? (
-              <div className="mt-6 border-t border-app-border pt-5">
-                <h3 className="text-sm font-black text-app-foreground">PDF 인쇄 원본 텍스트</h3>
-                <div className="mt-3 max-h-80 overflow-y-auto rounded-control border border-app-border bg-app-surface p-4 text-sm leading-6 text-app-muted">
-                  <p className="whitespace-pre-line">{sowSnapshot.printText}</p>
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-5 rounded-control border border-brand-200 bg-brand-50 p-4">
