@@ -8,7 +8,7 @@ create table public.payments (
   to_address text not null,
   amount_usdc numeric not null,
   block_number bigint not null,
-  verified_by uuid not null references auth.users(id),
+  verified_by uuid references auth.users(id) on delete set null,
   verified_at timestamptz not null default now()
 );
 
