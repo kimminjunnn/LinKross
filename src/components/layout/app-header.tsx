@@ -2,8 +2,12 @@ import { Bell, LogOut } from "lucide-react";
 
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
+import { UserProfileBadge } from "@/components/layout/user-profile-badge";
+import { getCurrentUserDisplay } from "@/lib/profile-display";
 
-export function AppHeader() {
+export async function AppHeader() {
+  const currentUser = await getCurrentUserDisplay();
+
   return (
     <header className="sticky top-0 z-40 h-[var(--app-header-height)] border-b border-app-border bg-app-surface">
       <div className="mx-auto flex h-full w-full max-w-[var(--app-max-width)]">
@@ -25,18 +29,7 @@ export function AppHeader() {
 
             <div className="h-7 w-px bg-app-border" aria-hidden="true" />
 
-            <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="grid size-9 place-items-center rounded-full bg-brand-100 text-xs font-black text-brand-800"
-              >
-                박
-              </span>
-              <div className="hidden leading-tight md:block">
-                <p className="text-sm font-bold text-app-foreground">박피오</p>
-                <p className="mt-0.5 text-xs text-app-muted">PO</p>
-              </div>
-            </div>
+            <UserProfileBadge initialDisplay={currentUser} />
 
             <form action="/auth/signout" method="post">
               <button
