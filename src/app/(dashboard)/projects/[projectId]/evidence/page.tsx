@@ -1,13 +1,14 @@
-import { CheckCircle2, Clock3, ExternalLink, FileArchive, FileText, ReceiptText } from "lucide-react";
+import Link from "next/link";
+import { Clock3, Download, ExternalLink, FileArchive, FileText, ReceiptText } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
-import { PrintEvidenceButton } from "@/components/project/payment/print-evidence-button";
 import { BASE_SEPOLIA_EXPLORER_URL } from "@/config/testnet";
 import { getMilestonePayment, listMilestoneIds, type MilestonePayment } from "@/lib/milestones";
 import { getVerifiedPayment, type VerifiedPayment } from "@/lib/payments";
 
-export default async function EvidencePage() {
+export default async function EvidencePage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = await params;
   const milestoneIds = listMilestoneIds();
   const paymentEntries = await Promise.all(
     milestoneIds.map(async (milestoneId) => ({
@@ -17,6 +18,8 @@ export default async function EvidencePage() {
     })),
   );
 
+  const m1Payment = paymentEntries.find((entry) => entry.milestoneId === "M1")?.payment;
+  const m2Payment = paymentEntries.find((entry) => entry.milestoneId === "M2")?.payment;
   const hasAnyPayment = paymentEntries.some((entry) => entry.payment);
 
   return (
@@ -35,17 +38,23 @@ export default async function EvidencePage() {
               </div>
               <p className="mt-2 text-sm text-app-muted">승인 금액 1,000 USDC · 인보이스 확인 완료</p>
             </div>
-            <WalletTransferPanel milestoneId="M1" />
+            <WalletTransferPanel
+              milestoneId="M1"
+              initialPayment={m1Payment ? { txHash: m1Payment.txHash, amountUsdc: m1Payment.amountUsdc } : null}
+            />
           </article>
           <article className="rounded-control border border-app-border bg-app-surface-subtle p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-black text-app-foreground">M2 · 핵심 기능</h3>
-                <StatusBadge tone="accent">검수 중</StatusBadge>
+                <StatusBadge tone="success">검수 완료</StatusBadge>
               </div>
-              <p className="mt-2 text-sm text-app-muted">검수 완료 후 승인할 수 있습니다.</p>
+              <p className="mt-2 text-sm text-app-muted">승인 금액 1,200 USDC · 인보이스 확인 완료</p>
             </div>
-            <button type="button" disabled className="mt-4 min-h-10 rounded-control border border-app-border bg-app-surface px-4 text-sm font-bold text-app-muted opacity-60 sm:mt-0">승인 대기중</button>
+            <WalletTransferPanel
+              milestoneId="M2"
+              initialPayment={m2Payment ? { txHash: m2Payment.txHash, amountUsdc: m2Payment.amountUsdc } : null}
+            />
           </article>
         </div>
       </section>
@@ -59,45 +68,43 @@ export default async function EvidencePage() {
           </div>
         </div>
 
-        <ul className="mt-5 space-y-3">
-          <li className="flex gap-3 rounded-control border border-app-border p-3">
-            <FileText className="mt-0.5 size-4 shrink-0 text-success" />
-            <div>
-              <p className="text-sm font-bold text-app-foreground">승인된 업무 명세서</p>
-              <p className="mt-1 text-xs text-app-muted">양측 승인 · v1.2</p>
-            </div>
-            <CheckCircle2 className="ml-auto size-4 shrink-0 text-success" />
-          </li>
-          <li className="flex gap-3 rounded-control border border-app-border p-3">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
-            <div>
-              <p className="text-sm font-bold text-app-foreground">검수 결과</p>
-              <p className="mt-1 text-xs text-app-muted">Commit SHA 및 테스트 로그</p>
-            </div>
-            <CheckCircle2 className="ml-auto size-4 shrink-0 text-success" />
-          </li>
-        </ul>
-
-        <div className="mt-3 space-y-3">
+        <div className="mt-5 space-y-3">
           {paymentEntries.map((entry) => (
-            <PaymentEvidenceCard key={entry.milestoneId} {...entry} />
+            <PaymentEvidenceCard key={entry.milestoneId} projectId={projectId} {...entry} />
           ))}
         </div>
 
-        <PrintEvidenceButton disabled={!hasAnyPayment} />
-        <p className="mt-2 text-center text-xs text-app-muted">
-          {hasAnyPayment ? "인쇄 대화상자에서 PDF로 저장할 수 있습니다." : "마일스톤 지급이 검증되면 활성화됩니다."}
-        </p>
+        {hasAnyPayment ? (
+          <Link
+            href={`/projects/${projectId}/evidence/receipt`}
+            target="_blank"
+            className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
+          >
+            <Download className="size-4" />
+            지급 증빙 전체 PDF 다운로드
+          </Link>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="mt-5 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-control border border-app-border bg-app-surface px-4 text-sm font-bold text-app-muted opacity-60"
+          >
+            <Download className="size-4" />
+            지급 증빙 전체 PDF 다운로드
+          </button>
+        )}
       </section>
     </div>
   );
 }
 
 function PaymentEvidenceCard({
+  projectId,
   milestoneId,
   milestone,
   payment,
 }: {
+  projectId: string;
   milestoneId: string;
   milestone: MilestonePayment;
   payment: VerifiedPayment | null;
@@ -138,18 +145,25 @@ function PaymentEvidenceCard({
         </div>
       </dl>
 
-      <a
-        href={`${BASE_SEPOLIA_EXPLORER_URL}/tx/${payment.txHash}`}
-        target="_blank"
-        rel="noreferrer"
-        className="no-print mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:underline"
-      >
-        Basescan에서 보기
-        <ExternalLink className="size-3.5" />
-      </a>
-      <span className="hidden text-xs text-app-foreground print:inline">
-        {BASE_SEPOLIA_EXPLORER_URL}/tx/{payment.txHash}
-      </span>
+      <div className="mt-2 flex items-center gap-3">
+        <a
+          href={`${BASE_SEPOLIA_EXPLORER_URL}/tx/${payment.txHash}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:underline"
+        >
+          Basescan에서 보기
+          <ExternalLink className="size-3.5" />
+        </a>
+        <Link
+          href={`/projects/${projectId}/evidence/${milestoneId}/receipt`}
+          target="_blank"
+          className="inline-flex items-center gap-1 text-xs font-bold text-app-foreground hover:underline"
+        >
+          <FileText className="size-3.5" />
+          영수증 보기
+        </Link>
+      </div>
     </article>
   );
 }

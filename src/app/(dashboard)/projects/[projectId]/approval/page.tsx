@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CheckCircle2, FileText, LockKeyhole, UserCheck } from "lucide-react";
 
@@ -39,6 +39,7 @@ export default function ApprovalPage() {
   const projectId = params.projectId;
   const [isPoApproved, setIsPoApproved] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isOriginalSummaryVisible, setIsOriginalSummaryVisible] = useState(false);
 
   const subscribeSowSnapshot = useCallback((onStoreChange: () => void) => {
     window.addEventListener("storage", onStoreChange);
@@ -60,16 +61,28 @@ export default function ApprovalPage() {
   const activeAcceptanceCriteria = sowSnapshot?.acceptanceCriteria ?? acceptanceCriteria;
   const activeDefinitionOfDone = sowSnapshot?.definitionOfDone ?? definitionOfDone;
   const activeSummary = sowSnapshot?.summary ?? fallbackSummary;
-
-  const currentSummaryItems = useMemo(
-    () => [
-      { label: "문서 버전", value: documentVersion },
-      { label: "승인 상태", value: isPoApproved ? "2/2 승인 완료" : "1/2 승인 완료" },
-      { label: "다음 행동", value: isPoApproved ? "다음 단계 진행" : "PO 승인 대기" },
-      { label: "완료조건", value: `${activeAcceptanceCriteria.length}개` },
-    ],
-    [activeAcceptanceCriteria.length, documentVersion, isPoApproved],
-  );
+  const translatedSummary = {
+    coreScope: sowSnapshot
+      ? "영문 SOW 원본의 Scope of Work 항목을 기준으로 이번 개발 범위를 확인합니다."
+      : "업무 명세서 탭에서 승인 요청한 원본 문서가 아직 없습니다.",
+    keyAcceptance: sowSnapshot
+      ? `${activeAcceptanceCriteria.length}개 Acceptance Criteria와 ${activeDefinitionOfDone.length}개 Definition of Done을 다음 검수 기준으로 사용합니다.`
+      : "승인 요청 후 완료조건과 검수 기준이 이곳에 표시됩니다.",
+    needsReview: sowSnapshot
+      ? `${documentVersion} 원본 문서가 업무 명세서 탭에서 승인 요청한 버전과 같은지 확인하세요.`
+      : "업무 명세서 탭에서 SOW를 생성하고 승인 요청을 진행하세요.",
+  };
+  const summaryItems = isOriginalSummaryVisible
+    ? [
+        { label: "Core Scope", value: activeSummary.coreScope },
+        { label: "Key Acceptance", value: activeSummary.keyAcceptance },
+        { label: "Needs Review", value: activeSummary.needsReview },
+      ]
+    : [
+        { label: "핵심 범위", value: translatedSummary.coreScope },
+        { label: "주요 승인 기준", value: translatedSummary.keyAcceptance },
+        { label: "확인 포인트", value: translatedSummary.needsReview },
+      ];
 
   const handleFinalApproval = () => {
     setIsPoApproved(true);
@@ -102,17 +115,6 @@ export default function ApprovalPage() {
           </StatusBadge>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {currentSummaryItems.map((item) => (
-            <dl
-              key={item.label}
-              className="rounded-control border border-app-border bg-app-surface-subtle p-4"
-            >
-              <dt className="text-xs font-semibold text-app-muted">{item.label}</dt>
-              <dd className="mt-2 text-base font-black text-app-foreground">{item.value}</dd>
-            </dl>
-          ))}
-        </div>
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
@@ -129,17 +131,17 @@ export default function ApprovalPage() {
                 승인 대상 업무 명세서 원본
               </h2>
               <p className="mt-2 text-sm leading-6 text-app-muted">
-                아래 상세 문서가 실제 승인 기준입니다. SOW 탭에서 PDF 인쇄 요청한 원본 스냅샷을 우선 표시합니다.
+                현재 승인 요청된 업무 명세서 원본을 확인합니다.
               </p>
             </div>
             <StatusBadge tone="brand">
-              {sowSnapshot ? "PDF 원본 저장됨" : "승인 요청 대기"}
+              {sowSnapshot ? "원본 문서 준비" : "승인 요청 대기"}
             </StatusBadge>
           </div>
 
           {sowSnapshot ? (
             <div className="mt-4 rounded-control border border-brand-200 bg-brand-50 p-4 text-sm leading-6 text-brand-700">
-              <strong>{sowSnapshot.pdfFileName}</strong> 파일명으로 PDF 저장을 요청한 SOW 원본입니다.
+              <strong>{sowSnapshot.pdfFileName}</strong> 승인 기준으로 사용할 업무 명세서 원본입니다.
             </div>
           ) : null}
 
@@ -206,71 +208,51 @@ export default function ApprovalPage() {
 
         <div className="space-y-5">
           <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-            <p className="text-xs font-bold tracking-[0.1em] text-accent-700 uppercase">
-              보조 요약
-            </p>
-            <h2 className="mt-2 text-lg font-black text-app-foreground">빠른 확인</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-lg font-black text-app-foreground">업무명세서 요약</h2>
+              <button
+                type="button"
+                onClick={() => setIsOriginalSummaryVisible((current) => !current)}
+                className="shrink-0 rounded-control border border-app-border-strong px-3 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-surface-subtle"
+              >
+                {isOriginalSummaryVisible ? "번역 보기" : "원문 보기"}
+              </button>
+            </div>
             <dl className="mt-5 space-y-4">
-              <div>
-                <dt className="text-xs font-semibold text-app-muted">핵심 범위</dt>
-                <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                  {activeSummary.coreScope}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-app-muted">주요 완료조건</dt>
-                <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                  {activeSummary.keyAcceptance}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-app-muted">확인 필요</dt>
-                <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                  {activeSummary.needsReview}
-                </dd>
-              </div>
+              {summaryItems.map((item) => (
+                <div key={item.label}>
+                  <dt className="text-xs font-semibold text-app-muted">{item.label}</dt>
+                  <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
+                    {item.value}
+                  </dd>
+                </div>
+              ))}
             </dl>
           </section>
 
           <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-            <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">
-              양측 승인 상태
-            </p>
-            <h2 className="mt-2 text-lg font-black text-app-foreground">승인자</h2>
+            <h2 className="text-lg font-black text-app-foreground">승인 진행 상태</h2>
             <div className="mt-5 space-y-3">
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-black text-app-foreground">박피오</h3>
-                    <p className="mt-1 text-xs font-semibold text-app-muted">
-                      역할: PO
-                    </p>
+                    <p className="mt-1 text-xs font-semibold text-app-muted">PO 승인</p>
                   </div>
                   <StatusBadge tone={isPoApproved ? "success" : "warning"}>
                     {isPoApproved ? "승인 완료" : "승인 대기"}
                   </StatusBadge>
                 </div>
-                <p className="mt-3 text-xs font-semibold text-app-muted">
-                  승인일:{" "}
-                  <span className="text-app-foreground">
-                    {isPoApproved ? "2026.08.11" : "-"}
-                  </span>
-                </p>
               </article>
 
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-black text-app-foreground">Sarah Lee</h3>
-                    <p className="mt-1 text-xs font-semibold text-app-muted">
-                      역할: 프리랜서
-                    </p>
+                    <p className="mt-1 text-xs font-semibold text-app-muted">프리랜서 승인</p>
                   </div>
                   <StatusBadge tone="success">승인 완료</StatusBadge>
                 </div>
-                <p className="mt-3 text-xs font-semibold text-app-muted">
-                  승인일: <span className="text-app-foreground">2026.08.11</span>
-                </p>
               </article>
             </div>
           </section>
