@@ -3,7 +3,6 @@
 import OpenAI from "openai";
 
 import { assertActionRole } from "@/lib/auth/workspace-access";
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -30,7 +29,6 @@ export async function analyzeWorkDetailWithLLM(
   currentEndDate: string
 ): Promise<AIAnalysisResult> {
   await assertActionRole("company");
-
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY가 설정되지 않았습니다. .env.local 파일에 키를 추가해주세요.");
   }
