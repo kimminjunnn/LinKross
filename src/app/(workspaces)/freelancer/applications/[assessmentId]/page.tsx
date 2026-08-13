@@ -103,9 +103,12 @@ export default function FreelancerApplicationEditorPage() {
     setErrorMessage(null);
 
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opportunity.id);
+    console.log("[SubmitClientDebug] Submitting. Opportunity ID:", opportunity.id, "isUuid?", isUuid);
     
     if (isUuid) {
+      console.log("[SubmitClientDebug] Calling submitProposalAction...");
       const result = await submitProposalAction(opportunity.id, proposal);
+      console.log("[SubmitClientDebug] Action result:", result);
       if (!result.ok) {
         // Check if unique constraint violated (already applied)
         if (result.error?.includes("unique_proposals") || result.error?.includes("duplicate")) {

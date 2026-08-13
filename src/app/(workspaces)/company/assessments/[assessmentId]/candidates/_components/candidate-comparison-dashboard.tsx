@@ -87,33 +87,37 @@ export function CandidateComparisonDashboard({
 
     // Fetch real-time proposals from Supabase DB
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentAssessmentId);
+    console.log("[CandidatesDebug] isUuid?", isUuid, "currentAssessmentId:", currentAssessmentId);
     if (isUuid) {
       const supabase = createSupabaseBrowserClient();
       supabase
         .from("proposals")
-        .select(`
-          id,
-          content,
-          submitted_at,
-          freelancer_profiles:freelancer_id (
-            display_name,
-            timezone,
-            skills
-          )
-        `)
+        .select("id, content, submitted_at, freelancer_id")
         .eq("project_id", currentAssessmentId)
-        .then(({ data, error }) => {
-          if (error) {
-            console.error("Error fetching proposals:", error);
+        .then(async ({ data: proposalsData, error: proposalsError }) => {
+          console.log("[CandidatesDebug] Proposals Data:", proposalsData, "Error:", proposalsError);
+          if (proposalsError) {
+            console.error("Error fetching proposals:", proposalsError);
             return;
           }
-          if (data && data.length > 0) {
-            const dbCandidates: CandidateComparisonItem[] = data.map((item: any, index: number) => {
-              const profile = item.freelancer_profiles;
+          if (proposalsData && proposalsData.length > 0) {
+            const freelancerIds = proposalsData.map((p) => p.freelancer_id);
+            const { data: profilesData, error: profilesError } = await supabase
+              .from("freelancer_profiles")
+              .select("id, display_name, skills")
+              .in("id", freelancerIds);
+
+            console.log("[CandidatesDebug] Freelancer Profiles:", profilesData, "Error:", profilesError);
+            const profileMap = new Map(
+              (profilesData ?? []).map((p: any) => [p.id, p])
+            );
+
+            const dbCandidates: CandidateComparisonItem[] = proposalsData.map((item: any, index: number) => {
+              const profile = profileMap.get(item.freelancer_id);
               const displayName = profile?.display_name || `Developer ${index + 1}`;
               const skillsList = profile?.skills ? profile.skills.split(",") : ["TypeScript", "Next.js", "PostgreSQL"];
               const initials = displayName.split(" ").map((n: string) => n.charAt(0)).join("").toUpperCase();
-
+              
               return {
                 id: item.id,
                 name: displayName,

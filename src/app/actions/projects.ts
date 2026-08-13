@@ -88,7 +88,11 @@ export async function submitProposalAction(projectId: string, content: string) {
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
   
+  console.log("[SubmitActionDebug] Starting submission for project:", projectId);
+  console.log("[SubmitActionDebug] Auth User ID:", authData.user?.id);
+
   if (!authData.user) {
+    console.error("[SubmitActionDebug] Auth failed - User not logged in.");
     return { ok: false, error: "로그인이 필요합니다." };
   }
 
@@ -103,9 +107,10 @@ export async function submitProposalAction(projectId: string, content: string) {
     .single();
 
   if (error) {
-    console.error("Error submitting proposal:", error);
+    console.error("[SubmitActionDebug] Insert Error:", error);
     return { ok: false, error: error.message };
   }
 
+  console.log("[SubmitActionDebug] Insert Success! Data:", data);
   return { ok: true, data };
 }
