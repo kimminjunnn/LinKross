@@ -95,7 +95,41 @@ export interface CompanyProjectDetail {
   recruitmentStartAt: string;
   recruitmentEndAt: string;
   status: "recruiting" | "closed";
+  lifecycleStage: string;
   createdAt: string;
+}
+
+export interface SowMilestoneInput {
+  code: string;
+  title: string;
+  period: string;
+  amount: string;
+  dods: string[];
+}
+
+export interface SaveSowVersionInput {
+  projectId: string;
+  workDetail: string;
+  startDate: string;
+  endDate: string;
+  budget: string;
+  milestones: SowMilestoneInput[];
+  englishSow?: unknown;
+  printText?: string;
+  pdfFileName?: string;
+}
+
+export interface SaveSowVersionOutput {
+  sowVersionId: string;
+  versionNumber: number;
+  status: string;
+}
+
+export interface SowWorkspaceContext {
+  projectId: string;
+  title: string;
+  lifecycleStage: string;
+  assigneeName: string | null;
 }
 
 export interface OpportunityDetail extends OpportunitySummary {
