@@ -82,3 +82,30 @@ function isProjectType(value: string): value is (typeof PROJECT_TYPES)[number] {
 export async function getOpportunityAction(projectId: string) {
   return getPublicOpportunity(projectId);
 }
+
+export async function submitProposalAction(projectId: string, content: string) {
+  const { createSupabaseServerClient } = require("@/lib/supabase/server");
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  
+  if (!authData.user) {
+    return { ok: false, error: "로그인이 필요합니다." };
+  }
+
+  const { data, error } = await supabase
+    .from("proposals")
+    .insert({
+      project_id: projectId,
+      freelancer_id: authData.user.id,
+      content: content,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error submitting proposal:", error);
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true, data };
+}

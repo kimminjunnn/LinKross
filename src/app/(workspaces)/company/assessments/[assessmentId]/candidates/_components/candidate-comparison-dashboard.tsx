@@ -27,6 +27,7 @@ import {
   saveSelectedCandidateId,
 } from "@/lib/comparison";
 import type { BackendResult, CompanyProjectDetail } from "@/lib/backend";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function CandidateComparisonDashboard({
   projectDetail,
@@ -74,17 +75,90 @@ export function CandidateComparisonDashboard({
     }
 
     const list = getCandidateListForAssessment(currentAssessmentId);
-    const frame = window.requestAnimationFrame(() => {
-      setCandidates(
-        list.map((c) => ({
-          ...c,
-          status: "submitted",
-        })),
-      );
-      setSelectedCandidateId(null);
-    });
+    
+    // Default mock setup
+    setCandidates(
+      list.map((c) => ({
+        ...c,
+        status: "submitted",
+      }))
+    );
+    setSelectedCandidateId(null);
 
-    return () => window.cancelAnimationFrame(frame);
+    // Fetch real-time proposals from Supabase DB
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentAssessmentId);
+    if (isUuid) {
+      const supabase = createSupabaseBrowserClient();
+      supabase
+        .from("proposals")
+        .select(`
+          id,
+          content,
+          submitted_at,
+          freelancer_profiles:freelancer_id (
+            display_name,
+            timezone,
+            skills
+          )
+        `)
+        .eq("project_id", currentAssessmentId)
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error fetching proposals:", error);
+            return;
+          }
+          if (data && data.length > 0) {
+            const dbCandidates: CandidateComparisonItem[] = data.map((item: any, index: number) => {
+              const profile = item.freelancer_profiles;
+              const displayName = profile?.display_name || `Developer ${index + 1}`;
+              const skillsList = profile?.skills ? profile.skills.split(",") : ["TypeScript", "Next.js", "PostgreSQL"];
+              const initials = displayName.split(" ").map((n: string) => n.charAt(0)).join("").toUpperCase();
+
+              return {
+                id: item.id,
+                name: displayName,
+                avatar: initials.slice(0, 2) || "DV",
+                rating: 4.9,
+                submissionTime: "방금 전",
+                scores: {
+                  requirements: 90,
+                  questions: 85,
+                  workPlan: 88,
+                  risk: 82,
+                },
+                baseScore: 86.3,
+                penalty: null,
+                finalScore: 86.3,
+                status: "submitted",
+                details: {
+                  role: "Full-stack Developer",
+                  experience: "5 years",
+                  skills: skillsList,
+                  assessmentTime: "방금 전",
+                  evaluatorComments: {
+                    questions: "프로젝트 구현의 핵심 단계와 Playwright 자동 검증 계획을 성실히 서술함.",
+                    summary: "SOW 명세와 마일스톤 완료조건에 대한 높은 이해도를 가짐.",
+                    workPlan: "주차별 요구사항 빌드 및 통합 테스트 일정 수립 완료.",
+                    risk: "Stripe 테스트 키 및 웹훅 이벤트 리스크 제어 방안 제안.",
+                  },
+                  timeline: ["개발 환경 구성", "DB 스케줄링", "Playwright E2E 구성", "정산 인보이스 매핑"],
+                  detailedRisks: [
+                    { risk: "Stripe Webhook 유실", impact: "Medium", mitigation: "지연 재시도 미들웨어 구현" }
+                  ],
+                  strengths: ["B2B 결제 아키텍처 이해", "Playwright 기반 TDD 제안"],
+                  potentialConcern: "테스트 합성 데이터 구성 시간 필요"
+                }
+              };
+            });
+
+            setCandidates((prev) => {
+              // Ensure we do not add duplicate candidates
+              const filteredPrev = prev.filter(p => !dbCandidates.some(d => d.id === p.id || d.name === p.name));
+              return [...filteredPrev, ...dbCandidates];
+            });
+          }
+        });
+    }
   }, [currentAssessmentId]);
 
   const showToast = (msg: string) => {

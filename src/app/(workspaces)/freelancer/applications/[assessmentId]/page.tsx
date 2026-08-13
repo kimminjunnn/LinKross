@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Save, ShieldCheck } from "lucide-react";
 
 import { getOpportunity } from "@/data/opportunities";
-import { getOpportunityAction } from "@/app/actions/projects";
+import { getOpportunityAction, submitProposalAction } from "@/app/actions/projects";
 
 const STORAGE_PREFIX = "linkross:proposal:";
 
@@ -23,9 +23,11 @@ export default function FreelancerApplicationEditorPage() {
   
   const [opportunity, setOpportunity] = useState<LocalOpportunity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [proposal, setProposal] = useState("");
   const [supportNeeded, setSupportNeeded] = useState("");
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const id = params.assessmentId;
@@ -94,9 +96,28 @@ export default function FreelancerApplicationEditorPage() {
     setSavedMessage("Draft saved on this device.");
   }
 
-  function submitProposal(event: React.FormEvent<HTMLFormElement>) {
+  async function submitProposal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!opportunity) return;
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opportunity.id);
+    
+    if (isUuid) {
+      const result = await submitProposalAction(opportunity.id, proposal);
+      if (!result.ok) {
+        // Check if unique constraint violated (already applied)
+        if (result.error?.includes("unique_proposals") || result.error?.includes("duplicate")) {
+          setErrorMessage("이미 이 프로젝트에 지원서를 제출하셨습니다.");
+        } else {
+          setErrorMessage(result.error || "지원서 제출에 실패했습니다.");
+        }
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const submittedAt = new Date().toISOString();
     window.localStorage.setItem(
       `${STORAGE_PREFIX}${params.assessmentId}`,
@@ -190,12 +211,20 @@ export default function FreelancerApplicationEditorPage() {
             />
           </label>
 
+          {errorMessage && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-xs font-bold text-red-700 rounded-xl flex items-center gap-2">
+              <span className="shrink-0 size-1.5 rounded-full bg-red-500 animate-ping" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <div className="mt-7 flex flex-col-reverse gap-3 border-t border-app-border pt-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <button
                 type="button"
                 onClick={saveDraft}
-                className="inline-flex min-h-11 items-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-bold hover:bg-app-surface-subtle"
+                disabled={isSubmitting}
+                className="inline-flex min-h-11 items-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-bold hover:bg-app-surface-subtle disabled:opacity-50"
               >
                 <Save className="size-4" />
                 Save draft
@@ -206,9 +235,10 @@ export default function FreelancerApplicationEditorPage() {
             </div>
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white hover:bg-brand-600"
+              disabled={isSubmitting}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Submit proposal
+              {isSubmitting ? "Submitting..." : "Submit proposal"}
               <ArrowRight className="size-4" />
             </button>
           </div>
