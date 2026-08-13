@@ -9,6 +9,7 @@ export type {
   CreateProjectOutput,
   OpportunityDetail,
   OpportunitySummary,
+  ProjectDraftFormData,
   ProjectProposal,
   SelectProposalInput,
   SelectProposalOutput,
@@ -23,4 +24,6 @@ export {
   listCompanyProjects,
   listPublicOpportunities,
 } from "@/lib/backend/projects";
+
+export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";

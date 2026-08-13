@@ -1,7 +1,7 @@
 "use server";
 
-import type { CreateProjectInput } from "@/lib/backend";
-import { createProject } from "@/lib/backend";
+import type { BackendResult, CreateProjectInput, ProjectDraftFormData } from "@/lib/backend";
+import { createProject, deleteProjectDraft, saveProjectDraft } from "@/lib/backend";
 import type { CreateProjectFormState } from "@/app/actions/projects-form-state";
 
 const PROJECT_TYPES = ["web", "mobile", "saas", "backend", "other"] as const;
@@ -22,12 +22,21 @@ export async function createProjectAction(
     };
   }
 
+  // 임시 저장 원문은 실제 등록 이후엔 의미가 없으니 정리한다. 실패해도 등록 자체는 이미 성공한 것이므로 무시한다.
+  await deleteProjectDraft();
+
   return {
     status: "success",
     error: null,
     fieldErrors: {},
     projectId: result.data.projectId,
   };
+}
+
+export async function saveProjectDraftAction(
+  formData: ProjectDraftFormData,
+): Promise<BackendResult<{ updatedAt: string }>> {
+  return saveProjectDraft(formData);
 }
 
 function parseCreateProjectForm(formData: FormData): CreateProjectInput {
