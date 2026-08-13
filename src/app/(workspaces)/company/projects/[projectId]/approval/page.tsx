@@ -173,25 +173,17 @@ export default function ApprovalPage() {
             </StatusBadge>
           </div>
 
-          {sowSnapshot ? (
-            <div className="mt-4 rounded-control border border-brand-200 bg-brand-50 p-4 text-sm leading-6 text-brand-700">
-              업무명세서 탭에서 작성된 원본 내용을 확인합니다.
-            </div>
-          ) : null}
-
           <div className="mt-6 rounded-control border border-app-border bg-app-surface-subtle p-5">
-            <div className="grid gap-4 lg:grid-cols-2">
-              {activeDocumentSections.map((section) => (
-                <section key={section.title}>
-                  <h3 className="text-sm font-black text-app-foreground">{section.title}</h3>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-6 text-app-muted">{section.body}</p>
-                </section>
-              ))}
+            <div className="rounded-control border border-app-border bg-app-surface p-5">
+              <h3 className="text-sm font-black text-app-foreground">업무명세서 탭 원본 데이터</h3>
+              <p className="mt-2 text-sm leading-6 text-app-muted">
+                업무명세서 탭에서 작성된 구조화 원본 내용을 이 영역에 표시합니다.
+              </p>
             </div>
 
             <div className="mt-6 border-t border-app-border pt-5">
               <h3 className="text-sm font-black text-app-foreground">
-                Milestone Verification Criteria
+                마일스톤 검증 정보
               </h3>
               <div className="mt-3 overflow-hidden rounded-control border border-app-border bg-app-surface">
                 <div className="overflow-x-auto">
