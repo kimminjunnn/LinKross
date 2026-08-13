@@ -24,6 +24,8 @@
 
 온보딩은 로그인 전에도 접근할 수 있고, 선택한 목적에 맞는 기본 정보를 입력한 뒤 역할과 복귀 경로를 유지한 채 Google 로그인을 시작한다. 기존 계정도 역할별 로그인 또는 워크스페이스 전환을 통해 두 번째 역할을 추가할 수 있다. 기존 단일 역할 데이터베이스는 애플리케이션 배포 전에 `supabase/multi_role_profiles.sql`로 이전한다.
 
+`/opportunities`, `/company/assessments`, `/freelancer/applications`가 다룰 프로젝트 등록·모집·제안서·선정 데이터는 `supabase/projects_recruitment.sql`에 `projects`/`proposals`/`selections` 테이블과 RLS로 초안 작성해 두었다. Supabase에는 실행된 상태이지만 위 라우트는 아직 이 테이블 대신 하드코딩된 mock 데이터(`src/data/opportunities.ts`, `src/data/projects.ts`)를 사용 중이라 실제 연결 작업이 남아 있다.
+
 기업 워크스페이스의 사용자 문구는 한국어, 프리랜서 워크스페이스와 공개 프로젝트 탐색의 사용자 문구는 영어를 기본으로 한다. SOW와 수행 제안서 같은 제출 원문은 작성 언어를 그대로 보존한다.
 
 ## 공통 파일
