@@ -53,14 +53,19 @@ export const workspaceNavigation: Record<
         { label: "Home", href: "/freelancer", icon: "house" },
         { label: "Find projects", href: "/opportunities", icon: "search" },
         {
-          label: "My applications",
+          label: "Proposals & SOW",
           href: "/freelancer/applications",
           icon: "briefcase-business",
         },
         {
-          label: "My projects",
+          label: "Deliveries & QA",
           href: "/freelancer/projects",
           icon: "folder-kanban",
+        },
+        {
+          label: "Invoices & Evidence",
+          href: "/freelancer/invoices",
+          icon: "badge-check",
         },
       ],
     },
