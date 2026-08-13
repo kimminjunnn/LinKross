@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CalendarDays,
+  Check,
   CheckCircle2,
   ChevronRight,
   CircleAlert,
@@ -85,6 +86,7 @@ export default function NewProjectPage() {
   const wasPending = useRef(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [preview, setPreview] = useState<ProjectPreview | null>(null);
+  const [stepCompletion, setStepCompletion] = useState<boolean[]>([false, false, false, false]);
 
   // 제출이 끝나면(성공/실패 모두) 확인 모달을 닫는다.
   useEffect(() => {
@@ -104,6 +106,20 @@ export default function NewProjectPage() {
   }, [state.status, router]);
 
   const fieldError = (name: string) => state.fieldErrors[name];
+
+  function handleFormChange() {
+    const form = formRef.current;
+    if (!form) return;
+    const data = new FormData(form);
+    const get = (name: string) => String(data.get(name) ?? "").trim();
+
+    setStepCompletion([
+      Boolean(get("title") && get("projectType") && get("goal")),
+      Boolean(get("requirements")),
+      Boolean(get("startDate") && get("endDate") && get("budget")),
+      Boolean(get("recruitmentStart") && get("applicationDeadline")),
+    ]);
+  }
 
   function handleReviewClick() {
     const form = formRef.current;
@@ -172,32 +188,35 @@ export default function NewProjectPage() {
             작성 순서
           </p>
           <ol className="mt-4 space-y-1">
-            {steps.map((step, index) => (
-              <li
-                key={step.label}
-                className={`flex gap-3 rounded-xl p-3 ${
-                  index === 0 ? "bg-brand-50" : ""
-                }`}
-              >
-                <span
-                  className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-black ${
-                    index === 0
-                      ? "bg-brand-500 text-white"
-                      : "bg-app-surface-subtle text-app-muted"
+            {steps.map((step, index) => {
+              const isComplete = stepCompletion[index];
+              return (
+                <li
+                  key={step.label}
+                  className={`flex gap-3 rounded-xl p-3 ${
+                    isComplete ? "bg-emerald-50" : ""
                   }`}
                 >
-                  {index + 1}
-                </span>
-                <span>
-                  <span className="block text-sm font-black text-app-foreground">
-                    {step.label}
+                  <span
+                    className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-black ${
+                      isComplete
+                        ? "bg-emerald-500 text-white"
+                        : "bg-app-surface-subtle text-app-muted"
+                    }`}
+                  >
+                    {isComplete ? <Check aria-hidden="true" className="size-3.5" /> : index + 1}
                   </span>
-                  <span className="mt-0.5 block text-xs text-app-muted">
-                    {step.description}
+                  <span>
+                    <span className="block text-sm font-black text-app-foreground">
+                      {step.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-app-muted">
+                      {step.description}
+                    </span>
                   </span>
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ol>
 
           <div className="mt-5 rounded-xl border border-accent-200 bg-accent-50 p-3.5">
@@ -212,7 +231,13 @@ export default function NewProjectPage() {
           </div>
         </aside>
 
-        <form id={FORM_ID} ref={formRef} action={formAction} className="space-y-6">
+        <form
+          id={FORM_ID}
+          ref={formRef}
+          action={formAction}
+          onChange={handleFormChange}
+          className="space-y-6"
+        >
           {state.status === "error" && state.error ? (
             <div className="flex items-start gap-3 rounded-card border border-red-200 bg-red-50 p-4">
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600" />

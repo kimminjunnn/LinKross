@@ -51,6 +51,13 @@ return result.data.map((opportunity) => opportunity.title);
 - 내부 동작: `projects`(lifecycle_stage='preparing') + `project_requirement_versions` + `proposals` 건수 조회
 - 반환: 프로젝트 요약 배열(제목, 상태, 예산, 모집 마감일, 제출 인원)
 
+### `getCompanyProjectDetail(projectId)`
+
+- 사용자: 해당 프로젝트 발주자 본인
+- 용도: `/company/assessments/[assessmentId]/candidates`에서 본인이 등록한 공고 원문 표시
+- 반환: 현재 요구사항 버전 전체(목표·요구사항·예산·일정·모집기간 등)
+- 다른 기업의 프로젝트 ID를 넣으면 `NOT_FOUND`
+
 ### `listPublicOpportunities()`
 
 - 사용자: 비로그인 포함
