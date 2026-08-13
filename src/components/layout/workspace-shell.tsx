@@ -14,7 +14,7 @@ export function WorkspaceShell({
     <div className="flex min-h-screen flex-col bg-app-canvas">
       <AppHeader workspace={workspace} />
       <div className="mx-auto flex w-full max-w-[var(--app-max-width)] flex-1">
-        <AppSidebar workspace={workspace} />
+        {workspace !== "freelancer" && <AppSidebar workspace={workspace} />}
         <main
           id="main-content"
           className="flex min-w-0 flex-1 flex-col px-[var(--app-content-padding)] py-6 lg:py-8"
