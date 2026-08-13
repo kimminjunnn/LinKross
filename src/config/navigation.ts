@@ -50,22 +50,11 @@ export const workspaceNavigation: Record<
     {
       label: "Workspace",
       items: [
-        { label: "Home", href: "/freelancer", icon: "house" },
         { label: "Find projects", href: "/opportunities", icon: "search" },
         {
-          label: "Proposals & SOW",
-          href: "/freelancer/applications",
-          icon: "briefcase-business",
-        },
-        {
-          label: "Deliveries & QA",
+          label: "My projects",
           href: "/freelancer/projects",
           icon: "folder-kanban",
-        },
-        {
-          label: "Invoices & Evidence",
-          href: "/freelancer/invoices",
-          icon: "badge-check",
         },
       ],
     },
