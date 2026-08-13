@@ -20,6 +20,7 @@ import {
   LockKeyhole,
   MessageSquareText,
   MonitorSmartphone,
+  PartyPopper,
   PencilLine,
   Plus,
   RefreshCw,
@@ -148,6 +149,70 @@ function QuestionNumber({
     <div className={styles.questionItem}>
       <span>{number}</span>
       <div>{children}</div>
+    </div>
+  );
+}
+
+type TodoRow = {
+  id: number;
+  content: string;
+  done: boolean;
+};
+
+function TodoTable({
+  label,
+  rows,
+  highlightId,
+}: {
+  label: string;
+  rows: TodoRow[];
+  highlightId?: number;
+}) {
+  return (
+    <div className={styles.todoTableBlock}>
+      <strong>{label}</strong>
+      <table className={styles.todoDataTable}>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>content</th>
+            <th>done</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr
+              key={`${label}-${row.id}`}
+              className={row.id === highlightId ? styles.changedTableRow : ""}
+            >
+              <td>{row.id}</td>
+              <td>{row.content}</td>
+              <td>{row.done ? "완료" : "미완료"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function RoundTripArrows({
+  request,
+  response,
+}: {
+  request: string;
+  response: string;
+}) {
+  return (
+    <div className={styles.roundTripArrows} aria-label={`${request}, ${response}`}>
+      <div>
+        <span>{request}</span>
+        <ArrowRight aria-hidden="true" />
+      </div>
+      <div className={styles.returnArrow}>
+        <ArrowLeft aria-hidden="true" />
+        <span>{response}</span>
+      </div>
     </div>
   );
 }
@@ -824,145 +889,135 @@ export const slides = [
     id: "slide-19",
     section: "Todo로 보는 CRUD",
     label: "CREATE",
-    title: "Create — 입력을 확인하고, 만든 사람과 함께 저장합니다",
+    title: "Create — 새 행이 생기고, 화면에도 새 Todo가 나타납니다",
     body: (
-      <div className={styles.crudFlow}>
-        <FlowNode
-          icon={<Plus aria-hidden="true" />}
-          title="① 입력"
-          detail="발표 자료 만들기"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<ShieldCheck aria-hidden="true" />}
-          title="② 규칙 확인"
-          detail="로그인 · 빈 값 검사"
-          accent
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<Database aria-hidden="true" />}
-          title="③ DB 생성"
-          detail="내용 · 작성자 · 미완료"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<CheckCircle2 aria-hidden="true" />}
-          title="④ 결과 반환"
-          detail="새 Todo 화면 표시"
-        />
+      <div className={styles.crudRoundTripScene}>
+        <div className={styles.crudFrontendCard}>
+          <div className={styles.crudSceneHeader}><MonitorSmartphone aria-hidden="true" /><strong>프론트엔드</strong></div>
+          <div className={styles.miniTodoInput}><span>발표 자료 만들기</span><Plus aria-hidden="true" /></div>
+          <div className={styles.frontendEffect}><CheckCircle2 aria-hidden="true" /><span>응답 후 새 Todo 표시</span></div>
+        </div>
+        <RoundTripArrows request="POST 요청" response="생성 결과" />
+        <div className={styles.crudBackendCard}>
+          <Server aria-hidden="true" />
+          <strong>Create</strong>
+          <span>로그인 · 빈 값 확인</span>
+          <small>새 데이터 저장</small>
+        </div>
+        <RoundTripArrows request="INSERT" response="새 행" />
+        <div className={styles.crudDatabaseCard}>
+          <div className={styles.crudSceneHeader}><Database aria-hidden="true" /><strong>DB · todos 테이블</strong></div>
+          <div className={styles.tableChangePair}>
+            <TodoTable label="저장 전" rows={[{ id: 1, content: "회의하기", done: false }]} />
+            <ArrowRight aria-hidden="true" />
+            <TodoTable label="저장 후" highlightId={2} rows={[{ id: 1, content: "회의하기", done: false }, { id: 2, content: "발표 자료", done: false }]} />
+          </div>
+        </div>
       </div>
     ),
     notes:
-      "Create는 새 데이터를 만드는 일입니다. 입력값만 저장하는 것이 아니라 로그인했는지, 내용이 비어 있지 않은지 확인합니다. 조건을 통과하면 Todo 내용과 작성자, 기본 완료 상태를 함께 저장하고 생성된 결과를 화면에 돌려줍니다.",
+      "Create 요청이 오면 백엔드는 로그인 여부와 빈 값을 확인하고 DB의 todos 테이블에 새 행을 추가합니다. 새로 만들어진 id 2의 행이 응답으로 프론트엔드에 돌아오면, 화면은 그 데이터를 목록에 추가합니다. 즉 DB에 행이 생기는 것과 화면에 Todo가 나타나는 것은 같은 요청의 앞뒤입니다.",
   },
   {
     id: "slide-20",
     section: "Todo로 보는 CRUD",
     label: "READ",
-    title: "Read — 지금 이 사용자에게 보여줄 데이터만 찾습니다",
+    title: "Read — 테이블은 그대로 두고, 찾은 행을 화면에 돌려줍니다",
     body: (
-      <div className={styles.crudFlow}>
-        <FlowNode
-          icon={<Eye aria-hidden="true" />}
-          title="① 목록 요청"
-          detail="내 Todo 보여줘"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<UserCheck aria-hidden="true" />}
-          title="② 조회 조건"
-          detail="작성자=나 · 최신순"
-          accent
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<Database aria-hidden="true" />}
-          title="③ DB 검색"
-          detail="조건에 맞는 데이터"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<CheckCircle2 aria-hidden="true" />}
-          title="④ 결과 반환"
-          detail="목록 · 빈 상태 · 오류"
-        />
+      <div className={styles.crudRoundTripScene}>
+        <div className={styles.crudFrontendCard}>
+          <div className={styles.crudSceneHeader}><MonitorSmartphone aria-hidden="true" /><strong>프론트엔드</strong></div>
+          <div className={styles.frontendRequestText}>“내 Todo 목록을 보여줘”</div>
+          <div className={styles.miniTodoList}><span>발표 자료</span><span>회의하기</span></div>
+          <div className={styles.frontendEffect}><Eye aria-hidden="true" /><span>응답 받은 목록 표시</span></div>
+        </div>
+        <RoundTripArrows request="GET 요청" response="Todo 목록" />
+        <div className={styles.crudBackendCard}>
+          <Server aria-hidden="true" />
+          <strong>Read</strong>
+          <span>작성자 = 나</span>
+          <small>조건에 맞는 데이터 조회</small>
+        </div>
+        <RoundTripArrows request="SELECT" response="조회 행" />
+        <div className={styles.crudDatabaseCard}>
+          <div className={styles.crudSceneHeader}><Database aria-hidden="true" /><strong>DB · todos 테이블</strong></div>
+          <div className={styles.tableChangePair}>
+            <TodoTable label="저장된 데이터" highlightId={2} rows={[{ id: 1, content: "회의하기", done: false }, { id: 2, content: "발표 자료", done: false }]} />
+            <ArrowRight aria-hidden="true" />
+            <TodoTable label="조회 결과" highlightId={2} rows={[{ id: 2, content: "발표 자료", done: false }]} />
+          </div>
+          <p className={styles.noTableMutation}>Read는 테이블 값을 바꾸지 않습니다.</p>
+        </div>
       </div>
     ),
     notes:
-      "Read는 저장된 데이터를 찾는 일입니다. Todo 앱을 열면 백엔드는 아무 Todo나 가져오는 것이 아니라 작성자가 지금 로그인한 사용자인 데이터를 조건에 맞춰 검색합니다. 찾은 목록뿐 아니라 데이터가 없는 빈 상태와 오류도 화면에 돌려줘야 합니다.",
+      "Read는 DB 테이블을 변경하지 않습니다. 백엔드는 현재 사용자의 조건에 맞는 행을 SELECT하고, 찾은 데이터를 프론트엔드에 반환합니다. 프론트엔드는 응답으로 받은 배열을 Todo 목록으로 그립니다. 데이터가 없다면 빈 목록을, 실패했다면 오류 상태를 보여줘야 합니다.",
   },
   {
     id: "slide-21",
     section: "Todo로 보는 CRUD",
     label: "UPDATE",
-    title: "Update — 권한을 확인한 뒤 필요한 값만 바꿉니다",
+    title: "Update — 한 셀의 변화가 화면의 완료 상태를 바꿉니다",
     body: (
-      <div className={styles.crudFlow}>
-        <FlowNode
-          icon={<PencilLine aria-hidden="true" />}
-          title="① 수정 요청"
-          detail="Todo ID · 완료=true"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<UserCheck aria-hidden="true" />}
-          title="② 대상·권한"
-          detail="존재하는가? 내 것인가?"
-          accent
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<Database aria-hidden="true" />}
-          title="③ DB 변경"
-          detail="완료 상태만 수정"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<CheckCircle2 aria-hidden="true" />}
-          title="④ 결과 반환"
-          detail="변경된 Todo · 실패 이유"
-        />
+      <div className={styles.crudRoundTripScene}>
+        <div className={styles.crudFrontendCard}>
+          <div className={styles.crudSceneHeader}><MonitorSmartphone aria-hidden="true" /><strong>프론트엔드</strong></div>
+          <div className={styles.todoStateBefore}>□ 발표 자료</div>
+          <div className={styles.frontendEffect}><CheckCircle2 aria-hidden="true" /><span>응답 후 ✓ 완료 표시</span></div>
+        </div>
+        <RoundTripArrows request="PATCH 요청" response="수정 결과" />
+        <div className={styles.crudBackendCard}>
+          <Server aria-hidden="true" />
+          <strong>Update</strong>
+          <span>존재 · 소유권 확인</span>
+          <small>done 값만 변경</small>
+        </div>
+        <RoundTripArrows request="UPDATE" response="변경 행" />
+        <div className={styles.crudDatabaseCard}>
+          <div className={styles.crudSceneHeader}><Database aria-hidden="true" /><strong>DB · todos 테이블</strong></div>
+          <div className={styles.tableChangePair}>
+            <TodoTable label="수정 전" highlightId={2} rows={[{ id: 2, content: "발표 자료", done: false }]} />
+            <ArrowRight aria-hidden="true" />
+            <TodoTable label="수정 후" highlightId={2} rows={[{ id: 2, content: "발표 자료", done: true }]} />
+          </div>
+        </div>
       </div>
     ),
     notes:
-      "Update는 저장된 값을 바꾸는 일입니다. 백엔드는 Todo ID로 대상을 찾고, 실제로 존재하는지와 로그인한 사용자의 것인지 확인합니다. 권한이 있으면 요청받은 완료 상태만 바꾸고, 내 것이 아니라면 수정하지 않은 채 실패 이유를 돌려줍니다.",
+      "Update 요청에는 바꿀 Todo의 id와 새로운 done 값이 들어갑니다. 백엔드는 대상의 존재와 소유권을 확인한 뒤 해당 행의 done 셀만 미완료에서 완료로 바꿉니다. 변경된 행이 프론트엔드로 돌아오면 화면의 체크박스와 완료 표시도 함께 바뀝니다.",
   },
   {
     id: "slide-22",
     section: "Todo로 보는 CRUD",
     label: "DELETE",
-    title: "Delete — 권한을 확인한 뒤 데이터를 삭제합니다",
+    title: "Delete — 행이 사라지면 화면의 Todo도 함께 사라집니다",
     body: (
-      <div className={styles.crudFlow}>
-        <FlowNode
-          icon={<Trash2 aria-hidden="true" />}
-          title="① 삭제 요청"
-          detail="삭제할 Todo ID"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<UserCheck aria-hidden="true" />}
-          title="② 대상·권한"
-          detail="존재하는가? 내 것인가?"
-          accent
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<Database aria-hidden="true" />}
-          title="③ DB 삭제"
-          detail="해당 Todo 제거"
-        />
-        <FlowArrow />
-        <FlowNode
-          icon={<CircleX aria-hidden="true" />}
-          title="④ 결과 반환"
-          detail="화면 갱신 · 실패 안내"
-        />
+      <div className={styles.crudRoundTripScene}>
+        <div className={styles.crudFrontendCard}>
+          <div className={styles.crudSceneHeader}><MonitorSmartphone aria-hidden="true" /><strong>프론트엔드</strong></div>
+          <div className={styles.deleteTarget}><span>발표 자료</span><Trash2 aria-hidden="true" /></div>
+          <div className={styles.frontendEffect}><CircleX aria-hidden="true" /><span>응답 후 목록에서 제거</span></div>
+        </div>
+        <RoundTripArrows request="DELETE 요청" response="삭제 결과" />
+        <div className={styles.crudBackendCard}>
+          <Server aria-hidden="true" />
+          <strong>Delete</strong>
+          <span>존재 · 소유권 확인</span>
+          <small>해당 행 삭제</small>
+        </div>
+        <RoundTripArrows request="DELETE" response="성공 여부" />
+        <div className={styles.crudDatabaseCard}>
+          <div className={styles.crudSceneHeader}><Database aria-hidden="true" /><strong>DB · todos 테이블</strong></div>
+          <div className={styles.tableChangePair}>
+            <TodoTable label="삭제 전" highlightId={2} rows={[{ id: 1, content: "회의하기", done: false }, { id: 2, content: "발표 자료", done: true }]} />
+            <ArrowRight aria-hidden="true" />
+            <TodoTable label="삭제 후" rows={[{ id: 1, content: "회의하기", done: false }]} />
+          </div>
+        </div>
       </div>
     ),
     notes:
-      "Delete도 버튼 한 번으로 끝나지 않습니다. Todo ID로 대상을 찾고, 존재 여부와 소유 권한을 확인한 뒤 DB에서 삭제합니다. 이미 없으면 없다고 안내하고, 권한이 없으면 삭제를 거절하며, 성공하면 화면에서 해당 Todo를 없앱니다.",
+      "Delete 요청이 오면 백엔드는 Todo id로 행을 찾고 소유권을 확인한 뒤 테이블에서 해당 행을 제거합니다. 성공 응답이 프론트엔드로 돌아오면 목록에서도 같은 Todo를 제거합니다. 이미 없거나 권한이 없다면 DB와 화면을 바꾸지 않고 실패 이유를 알려줘야 합니다.",
   },
   {
     id: "slide-23",
@@ -1368,7 +1423,7 @@ export const slides = [
           <strong>1</strong>누가?
         </span>
         <span>
-          <strong>2</strong>무엇을?
+          <strong>2</strong>무엇을? · CRUD
         </span>
         <span>
           <strong>3</strong>어떤 정보?
@@ -1403,6 +1458,7 @@ export const slides = [
           <BriefcaseBusiness aria-hidden="true" />
           <strong>무엇을?</strong>
           <span>프로젝트를 등록한다</span>
+          <em className={styles.crudTag}>CRUD · Create</em>
         </QuestionNumber>
         <QuestionNumber number="3">
           <ClipboardCheck aria-hidden="true" />
@@ -1412,7 +1468,7 @@ export const slides = [
       </div>
     ),
     notes:
-      "첫 세 칸은 사용자의 의도를 정의합니다. 누가 이 기능을 쓰는지, 그 사람이 무엇을 하는지, 그 행동에 어떤 정보가 필요한지 적습니다. 프로젝트 등록이라면 로그인한 발주자, 등록 행동, 이름·예산·일정·요구사항이 됩니다.",
+      "첫 세 칸은 사용자의 의도를 정의합니다. 누가 이 기능을 쓰는지, 그 사람이 무엇을 하는지, 그 행동에 어떤 정보가 필요한지 적습니다. 여기서 '무엇을'은 보통 CRUD 중 하나로 연결됩니다. 프로젝트를 등록하는 행동은 새 프로젝트 데이터를 만드는 Create입니다. 조회라면 Read, 수정이라면 Update, 삭제나 보관이라면 Delete 관점에서 생각할 수 있습니다.",
   },
   {
     id: "slide-35",
@@ -1562,34 +1618,33 @@ export const slides = [
   {
     id: "slide-40",
     section: "정리",
-    label: "YOUR NEXT BACKEND FEATURE",
-    title: "다음 기능부터, 이 여섯 질문으로 시작하세요",
+    label: "YOU CAN BUILD BACKEND NOW",
+    title: "자, 이제 여러분은 백엔드 개발이 가능합니다",
     variant: "cover",
     body: (
-      <div className={styles.closingBody}>
-        <h1 className={styles.coverTitle}>
-          다음 기능부터, 이 여섯 질문으로 시작하세요
-        </h1>
-        <div className={styles.closingQuestions}>
-          <span>누가?</span>
-          <span>무엇을?</span>
-          <span>어떤 정보?</span>
-          <span>어떤 규칙?</span>
-          <span>어떤 데이터?</span>
-          <span>성공과 실패는?</span>
-        </div>
-        <p className={styles.closingStatement}>
-          설명할 수 있다면,
-          <br />
-          <strong>AI와 함께 만들 수 있습니다.</strong>
+      <div className={styles.closingCelebration}>
+        <PartyPopper aria-hidden="true" />
+        <p className={styles.coverKicker}>BACKEND UNLOCKED</p>
+        <h1 className={styles.coverTitle}>자, 이제 여러분은<br />백엔드 개발이 가능합니다.</h1>
+        <p className={styles.closingKickoff}>
+          모든 코드를 외워서가 아니라,<br />
+          <strong>무엇을 만들어야 하는지 설명할 수 있으니까요.</strong>
         </p>
+        <div className={styles.closingSteps}>
+          <span>여섯 질문 채우기</span>
+          <ArrowRight aria-hidden="true" />
+          <span>AI에게 요청하기</span>
+          <ArrowRight aria-hidden="true" />
+          <span>직접 눌러 확인하기</span>
+        </div>
+        <p className={styles.closingReassurance}>첫 기능은 작게, 버그가 나면 침착하게. 이제 하나씩 만들어봅시다!</p>
         <div className={styles.closingBrand}>
           <BrandLogo />
         </div>
       </div>
     ),
     notes:
-      "앞으로 백엔드 기능을 만들 때는 이 여섯 질문부터 떠올려 주세요. 이 질문에 답할 수 있다면 AI와 함께 LinKross의 백엔드 기능을 하나씩 만들 수 있습니다. 코드 전체를 외우는 것보다, 서비스가 어떻게 동작해야 하는지 정확히 말하는 힘이 먼저입니다.",
+      "자, 이제 여러분은 백엔드 개발이 가능합니다. 모든 코드를 외웠기 때문이 아니라 누가 무엇을 하고, 어떤 규칙으로 데이터를 처리하며, 성공과 실패를 어떻게 보여줄지 설명할 수 있기 때문입니다. 처음부터 완벽할 필요는 없습니다. 작은 기능부터 AI에게 요청하고, 직접 눌러 확인하며 LinKross의 백엔드를 하나씩 완성해봅시다.",
   },
 ] satisfies DeckSlide[];
 

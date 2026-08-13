@@ -1527,6 +1527,188 @@
   color: var(--deck-green);
 }
 
+.crudRoundTripScene {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: 0.95fr 0.42fr 0.78fr 0.42fr 1.55fr;
+  align-items: stretch;
+  gap: 0.48cqw;
+}
+
+.crudFrontendCard,
+.crudBackendCard,
+.crudDatabaseCard {
+  min-width: 0;
+  border: 1px solid var(--deck-line);
+  border-radius: 1.15cqw;
+  background: #f8faf9;
+}
+
+.crudFrontendCard,
+.crudDatabaseCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65cqw;
+  padding: 0.85cqw;
+}
+
+.crudBackendCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.48cqw;
+  padding: 0.75cqw;
+  background: var(--deck-green-soft);
+  text-align: center;
+}
+
+.crudBackendCard > svg {
+  width: 2.7cqw;
+  height: 2.7cqw;
+  color: var(--deck-green-strong);
+  stroke-width: 1.5;
+}
+
+.crudBackendCard strong { font-size: 1.15cqw; }
+.crudBackendCard span { color: var(--deck-ink); font-size: 0.72cqw; font-weight: 850; line-height: 1.35; }
+.crudBackendCard small { color: var(--deck-muted); font-size: 0.66cqw; font-weight: 750; line-height: 1.35; }
+
+.crudSceneHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.45cqw;
+  color: var(--deck-green-dark);
+  font-size: 0.78cqw;
+}
+
+.crudSceneHeader svg { width: 1.25cqw; height: 1.25cqw; }
+
+.roundTripArrows {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2.1cqw;
+}
+
+.roundTripArrows > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15cqw;
+  color: var(--deck-green-dark);
+  font-size: 0.62cqw;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.roundTripArrows svg { width: 1.8cqw; height: 1.8cqw; color: var(--deck-green); }
+.roundTripArrows .returnArrow { color: var(--deck-muted); }
+.roundTripArrows .returnArrow svg { color: #819087; }
+
+.miniTodoInput,
+.deleteTarget,
+.todoStateBefore,
+.frontendRequestText {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45cqw;
+  padding: 0.72cqw;
+  border: 1px solid var(--deck-line);
+  border-radius: 0.7cqw;
+  background: white;
+  color: var(--deck-ink);
+  font-size: 0.72cqw;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.miniTodoInput svg,
+.deleteTarget svg { width: 1.2cqw; height: 1.2cqw; color: var(--deck-green-strong); }
+.deleteTarget svg { color: #b85b63; }
+.frontendRequestText { justify-content: center; text-align: center; }
+
+.miniTodoList { display: grid; gap: 0.35cqw; }
+.miniTodoList span {
+  padding: 0.48cqw 0.6cqw;
+  border-radius: 0.55cqw;
+  background: white;
+  color: var(--deck-ink);
+  font-size: 0.68cqw;
+  font-weight: 800;
+}
+
+.frontendEffect {
+  display: flex;
+  align-items: center;
+  gap: 0.4cqw;
+  margin-top: auto;
+  padding: 0.62cqw;
+  border-radius: 0.68cqw;
+  background: var(--deck-green-soft);
+  color: var(--deck-green-dark);
+  font-size: 0.69cqw;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.frontendEffect svg { width: 1.15cqw; height: 1.15cqw; flex: 0 0 auto; }
+
+.tableChangePair {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.38cqw;
+}
+
+.tableChangePair > svg { width: 1.25cqw; color: var(--deck-green); }
+
+.todoTableBlock { min-width: 0; }
+.todoTableBlock > strong { display: block; margin-bottom: 0.3cqw; color: var(--deck-muted); font-size: 0.64cqw; }
+
+.todoDataTable {
+  width: 100%;
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--deck-line);
+  border-radius: 0.55cqw;
+  background: white;
+  color: var(--deck-ink);
+  font-size: 0.57cqw;
+  table-layout: fixed;
+}
+
+.todoDataTable th,
+.todoDataTable td {
+  overflow: hidden;
+  padding: 0.34cqw 0.25cqw;
+  border-bottom: 1px solid #e7ece8;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todoDataTable th { background: #edf2ee; color: var(--deck-muted); font-weight: 900; }
+.todoDataTable th:first-child,
+.todoDataTable td:first-child { width: 16%; text-align: center; }
+.todoDataTable th:last-child,
+.todoDataTable td:last-child { width: 30%; }
+.todoDataTable tr:last-child td { border-bottom: 0; }
+.changedTableRow td { background: #dff5e8; color: var(--deck-green-dark); font-weight: 900; }
+
+.noTableMutation {
+  margin: auto 0 0;
+  color: var(--deck-muted);
+  font-size: 0.63cqw;
+  font-weight: 800;
+  text-align: right;
+}
+
 .readScene,
 .updateScene {
   display: grid;
@@ -1940,6 +2122,17 @@
 .questionItem strong { font-size: 1.2cqw; }
 .questionItem div > span { color: var(--deck-muted); font-size: 0.78cqw; font-weight: 800; line-height: 1.4; }
 
+.questionItem .crudTag {
+  padding: 0.35cqw 0.65cqw;
+  border-radius: 999px;
+  background: var(--deck-green);
+  color: white;
+  font-size: 0.7cqw;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
 .sixBoxSentence {
   display: flex;
   height: 100%;
@@ -2098,6 +2291,62 @@
 
 .closingStatement strong { color: var(--deck-green-dark); font-size: 1.75cqw; }
 .closingBrand { position: absolute; right: 0; bottom: 1.5%; }
+
+.closingCelebration {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.closingCelebration > svg {
+  position: absolute;
+  top: 4%;
+  right: 5%;
+  width: 8cqw;
+  height: 8cqw;
+  color: var(--deck-green);
+  stroke-width: 1.25;
+  transform: rotate(-8deg);
+}
+
+.closingCelebration .coverTitle { max-width: 72%; margin-bottom: 1cqw; font-size: 4.15cqw; }
+
+.closingKickoff {
+  margin: 0;
+  color: var(--deck-muted);
+  font-size: 1.28cqw;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.closingKickoff strong { color: var(--deck-green-dark); font-size: 1.55cqw; }
+
+.closingSteps {
+  display: flex;
+  align-items: center;
+  gap: 0.55cqw;
+  margin-top: 1.25cqw;
+}
+
+.closingSteps span {
+  padding: 0.52cqw 0.75cqw;
+  border-radius: 999px;
+  background: var(--deck-green-soft);
+  color: var(--deck-green-dark);
+  font-size: 0.74cqw;
+  font-weight: 900;
+}
+
+.closingSteps svg { width: 1.1cqw; height: 1.1cqw; color: var(--deck-green); }
+
+.closingReassurance {
+  margin: 0.85cqw 0 0;
+  color: var(--deck-ink);
+  font-size: 0.86cqw;
+  font-weight: 850;
+}
 
 @keyframes slide-enter {
   from {
