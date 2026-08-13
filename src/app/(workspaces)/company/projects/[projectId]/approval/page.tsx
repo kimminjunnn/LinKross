@@ -1,16 +1,14 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FileText, LockKeyhole, UserCheck } from "lucide-react";
 
 import { StatusBadge } from "@/components/project/status-badge";
 import { isProjectPreparing } from "@/config/project-lifecycle";
 import { PROJECTS } from "@/data/projects";
-import {
-  ApprovalSowSnapshot,
-  readApprovalSowSnapshot,
-} from "@/lib/sow-approval";
+import { ApprovalSowSnapshot } from "@/lib/sow-approval";
+import { getLatestSowApprovalAction } from "@/app/actions/sow";
 
 const fallbackDocumentSections = [
   {
@@ -45,20 +43,13 @@ export default function ApprovalPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isOriginalSummaryVisible, setIsOriginalSummaryVisible] = useState(false);
 
-  const subscribeSowSnapshot = useCallback((onStoreChange: () => void) => {
-    window.addEventListener("storage", onStoreChange);
-    return () => window.removeEventListener("storage", onStoreChange);
-  }, []);
+  const [sowSnapshot, setSowSnapshot] = useState<ApprovalSowSnapshot | null>(null);
 
-  const getSowSnapshot = useCallback((): ApprovalSowSnapshot | null => {
-    return readApprovalSowSnapshot(projectId);
+  useEffect(() => {
+    getLatestSowApprovalAction(projectId)
+      .then(data => setSowSnapshot(data))
+      .catch(err => console.error("Failed to load SOW:", err));
   }, [projectId]);
-
-  const sowSnapshot = useSyncExternalStore(
-    subscribeSowSnapshot,
-    getSowSnapshot,
-    getEmptySowSnapshot,
-  );
 
   const documentVersion = sowSnapshot?.version ?? "v1.2";
   const activeDocumentSections = sowSnapshot?.documentSections ?? fallbackDocumentSections;

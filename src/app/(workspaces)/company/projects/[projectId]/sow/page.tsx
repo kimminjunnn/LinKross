@@ -17,8 +17,8 @@ import {
 import { analyzeWorkDetailWithLLM } from "@/app/actions/analyze";
 import {
   ApprovalSowSnapshot,
-  saveApprovalSowSnapshot,
 } from "@/lib/sow-approval";
+import { createSowApprovalAction } from "@/app/actions/sow";
 import { PROJECTS, type Project } from "@/data/projects";
 import { isProjectPreparing } from "@/config/project-lifecycle";
 
@@ -191,10 +191,15 @@ function SowDraftWorkspace({
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
-  const handleRequestApproval = (snapshot: ApprovalSowSnapshot) => {
-    saveApprovalSowSnapshot(projectId, snapshot);
-    setStatusMessage("✅ PDF 인쇄 원본을 기준으로 승인 탭에 업무 명세서를 전달했습니다.");
-    router.push(`/company/projects/${projectId}/approval`);
+  const handleRequestApproval = async (snapshot: ApprovalSowSnapshot) => {
+    try {
+      await createSowApprovalAction(projectId, snapshot);
+      setStatusMessage("✅ PDF 인쇄 원본을 기준으로 승인 탭에 업무 명세서를 전달했습니다.");
+      router.push(`/company/projects/${projectId}/approval`);
+    } catch (err) {
+      console.error(err);
+      setStatusMessage("❌ 서버 저장에 실패했습니다.");
+    }
   };
 
   return (
