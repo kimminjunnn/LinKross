@@ -6,16 +6,65 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Save, ShieldCheck } from "lucide-react";
 
 import { getOpportunity } from "@/data/opportunities";
+import { getOpportunityAction } from "@/app/actions/projects";
 
 const STORAGE_PREFIX = "linkross:proposal:";
+
+type LocalOpportunity = {
+  id: string;
+  title: string;
+  organization: string;
+  requirements: string;
+};
 
 export default function FreelancerApplicationEditorPage() {
   const params = useParams<{ assessmentId: string }>();
   const router = useRouter();
-  const opportunity = getOpportunity(params.assessmentId);
+  
+  const [opportunity, setOpportunity] = useState<LocalOpportunity | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [proposal, setProposal] = useState("");
   const [supportNeeded, setSupportNeeded] = useState("");
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = params.assessmentId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+    async function loadData() {
+      if (!isUuid) {
+        // Fallback to static mock data
+        const mockOpp = getOpportunity(id);
+        if (mockOpp) {
+          setOpportunity({
+            id: mockOpp.id,
+            title: mockOpp.title,
+            organization: mockOpp.organization,
+            requirements: mockOpp.requirements.join("\n"),
+          });
+        } else {
+          setOpportunity(null);
+        }
+        setIsLoading(false);
+      } else {
+        // Fetch from Supabase
+        const result = await getOpportunityAction(id);
+        if (result.ok) {
+          setOpportunity({
+            id: result.data.id,
+            title: result.data.title,
+            organization: result.data.organizationName,
+            requirements: result.data.requirements,
+          });
+        } else {
+          setOpportunity(null);
+        }
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, [params.assessmentId]);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(`${STORAGE_PREFIX}${params.assessmentId}`);
@@ -36,6 +85,44 @@ export default function FreelancerApplicationEditorPage() {
     }
   }, [params.assessmentId]);
 
+  function saveDraft() {
+    if (!opportunity) return;
+    window.localStorage.setItem(
+      `${STORAGE_PREFIX}${params.assessmentId}`,
+      JSON.stringify({ proposal, supportNeeded, status: "draft" }),
+    );
+    setSavedMessage("Draft saved on this device.");
+  }
+
+  function submitProposal(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!opportunity) return;
+    const submittedAt = new Date().toISOString();
+    window.localStorage.setItem(
+      `${STORAGE_PREFIX}${params.assessmentId}`,
+      JSON.stringify({
+        proposal,
+        supportNeeded,
+        status: "submitted",
+        submittedAt,
+      }),
+    );
+    window.localStorage.setItem(
+      "linkross:last-submitted-opportunity",
+      opportunity.id,
+    );
+    router.push("/freelancer/applications/submission-complete");
+  }
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto w-full max-w-3xl text-center py-20">
+        <div className="animate-spin size-8 border-4 border-brand-500 border-t-transparent rounded-full mx-auto" />
+        <p className="text-slate-400 mt-4 text-xs font-semibold">Loading opportunity details...</p>
+      </div>
+    );
+  }
+
   if (!opportunity) {
     return (
       <div className="mx-auto w-full max-w-3xl rounded-card border border-app-border bg-app-surface p-8 text-center shadow-card">
@@ -52,33 +139,6 @@ export default function FreelancerApplicationEditorPage() {
   }
 
   const currentOpportunity = opportunity;
-
-  function saveDraft() {
-    window.localStorage.setItem(
-      `${STORAGE_PREFIX}${params.assessmentId}`,
-      JSON.stringify({ proposal, supportNeeded, status: "draft" }),
-    );
-    setSavedMessage("Draft saved on this device.");
-  }
-
-  function submitProposal(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const submittedAt = new Date().toISOString();
-    window.localStorage.setItem(
-      `${STORAGE_PREFIX}${params.assessmentId}`,
-      JSON.stringify({
-        proposal,
-        supportNeeded,
-        status: "submitted",
-        submittedAt,
-      }),
-    );
-    window.localStorage.setItem(
-      "linkross:last-submitted-opportunity",
-      currentOpportunity.id,
-    );
-    router.push("/freelancer/applications/submission-complete");
-  }
 
   return (
     <div className="mx-auto w-full max-w-5xl">

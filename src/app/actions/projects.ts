@@ -1,7 +1,7 @@
 "use server";
 
 import type { BackendResult, CreateProjectInput, ProjectDraftFormData } from "@/lib/backend";
-import { createProject, deleteProjectDraft, saveProjectDraft } from "@/lib/backend";
+import { createProject, deleteProjectDraft, getPublicOpportunity, saveProjectDraft } from "@/lib/backend";
 import type { CreateProjectFormState } from "@/app/actions/projects-form-state";
 
 const PROJECT_TYPES = ["web", "mobile", "saas", "backend", "other"] as const;
@@ -76,4 +76,8 @@ function toTimestamp(dateOnly: string, edge: "start" | "end"): string {
 
 function isProjectType(value: string): value is (typeof PROJECT_TYPES)[number] {
   return (PROJECT_TYPES as readonly string[]).includes(value);
+}
+
+export async function getOpportunityAction(projectId: string) {
+  return getPublicOpportunity(projectId);
 }
