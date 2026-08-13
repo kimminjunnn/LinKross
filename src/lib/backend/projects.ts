@@ -1,5 +1,6 @@
 import type {
   BackendResult,
+  CompanyProjectSummary,
   CreateProjectInput,
   CreateProjectOutput,
   OpportunityDetail,
@@ -120,6 +121,101 @@ export async function getPublicOpportunity(
       createdAt: row.created_at,
     },
   };
+}
+
+interface CompanyProjectRow {
+  id: string;
+  status: "recruiting" | "closed";
+  lifecycle_stage: string;
+  current_requirement_version_id: string | null;
+  created_at: string;
+}
+
+interface CompanyProjectVersionRow {
+  id: string;
+  title: string;
+  budget_amount: number | string;
+  budget_max_amount: number | string | null;
+  currency: string;
+  recruitment_end_at: string;
+}
+
+export async function listCompanyProjects(): Promise<BackendResult<CompanyProjectSummary[]>> {
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: projects, error: projectsError } = await supabase
+    .from("projects")
+    .select("id, status, lifecycle_stage, current_requirement_version_id, created_at")
+    .eq("company_id", authData.user.id)
+    .eq("lifecycle_stage", "preparing")
+    .order("created_at", { ascending: false });
+
+  if (projectsError) {
+    return { ok: false, error: mapBackendError(projectsError, "프로젝트 목록을 불러오지 못했습니다.") };
+  }
+
+  const projectRows = (projects ?? []) as CompanyProjectRow[];
+  if (projectRows.length === 0) {
+    return { ok: true, data: [] };
+  }
+
+  const versionIds = projectRows
+    .map((project) => project.current_requirement_version_id)
+    .filter((id): id is string => Boolean(id));
+
+  const { data: versions, error: versionsError } = await supabase
+    .from("project_requirement_versions")
+    .select("id, title, budget_amount, budget_max_amount, currency, recruitment_end_at")
+    .in("id", versionIds);
+
+  if (versionsError) {
+    return { ok: false, error: mapBackendError(versionsError, "프로젝트 목록을 불러오지 못했습니다.") };
+  }
+
+  const versionById = new Map(
+    ((versions ?? []) as CompanyProjectVersionRow[]).map((version) => [version.id, version]),
+  );
+
+  const projectIds = projectRows.map((project) => project.id);
+  const { data: proposalRows, error: proposalsError } = await supabase
+    .from("proposals")
+    .select("project_id")
+    .in("project_id", projectIds)
+    .eq("status", "submitted");
+
+  if (proposalsError) {
+    return { ok: false, error: mapBackendError(proposalsError, "지원자 수를 불러오지 못했습니다.") };
+  }
+
+  const proposalCountByProject = new Map<string, number>();
+  for (const row of (proposalRows ?? []) as { project_id: string }[]) {
+    proposalCountByProject.set(row.project_id, (proposalCountByProject.get(row.project_id) ?? 0) + 1);
+  }
+
+  const summaries: CompanyProjectSummary[] = projectRows.map((project) => {
+    const version = project.current_requirement_version_id
+      ? versionById.get(project.current_requirement_version_id)
+      : undefined;
+
+    return {
+      id: project.id,
+      title: version?.title ?? "(제목 없음)",
+      status: project.status,
+      lifecycleStage: project.lifecycle_stage,
+      budgetAmount: version ? Number(version.budget_amount) : 0,
+      budgetMaxAmount: version?.budget_max_amount == null ? null : Number(version.budget_max_amount),
+      currency: version?.currency ?? "USD",
+      recruitmentEndAt: version?.recruitment_end_at ?? null,
+      proposalCount: proposalCountByProject.get(project.id) ?? 0,
+      createdAt: project.created_at,
+    };
+  });
+
+  return { ok: true, data: summaries };
 }
 
 function toOpportunitySummary(row: OpportunityRow): OpportunitySummary {

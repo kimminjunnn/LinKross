@@ -1,9 +1,14 @@
+"use client";
+
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  CircleAlert,
   CircleDollarSign,
   FileText,
   Info,
@@ -13,6 +18,15 @@ import {
   Save,
   Users,
 } from "lucide-react";
+
+import {
+  createProjectAction,
+} from "@/app/actions/projects";
+import { initialCreateProjectFormState } from "@/app/actions/projects-form-state";
+import {
+  ProjectSummaryModal,
+  type ProjectPreview,
+} from "./_components/project-summary-modal";
 
 const inputClassName =
   "mt-2 min-h-12 w-full rounded-control border border-app-border-strong bg-app-surface px-3.5 text-sm text-app-foreground outline-none transition-colors placeholder:text-app-muted/60 focus:border-brand-500 focus:ring-4 focus:ring-brand-100";
@@ -27,7 +41,82 @@ const steps = [
   { label: "모집 설정", description: "지원 마감과 안내" },
 ] as const;
 
+const FORM_ID = "new-project-form";
+
+const PROJECT_TYPE_LABELS: Record<string, string> = {
+  web: "웹 애플리케이션",
+  mobile: "모바일 앱",
+  saas: "SaaS 플랫폼",
+  backend: "API·백엔드",
+};
+
+function buildPreview(formData: FormData): ProjectPreview {
+  const get = (name: string) => String(formData.get(name) ?? "").trim();
+  const budget = get("budget");
+  const budgetMax = get("budgetMax");
+  const budgetLabel =
+    get("budgetType") === "range" && budgetMax
+      ? `$${budget || "0"} ~ $${budgetMax} (협의 가능한 범위)`
+      : `$${budget || "0"} (고정 금액)`;
+
+  return {
+    title: get("title") || "(제목 없음)",
+    projectTypeLabel: PROJECT_TYPE_LABELS[get("projectType")] ?? "미지정",
+    technology: get("technology") || "-",
+    goal: get("goal") || "-",
+    requirements: get("requirements") || "-",
+    deliverables: get("deliverables") || "-",
+    outOfScope: get("outOfScope") || "-",
+    budgetLabel,
+    scheduleLabel: `${get("startDate") || "-"} ~ ${get("endDate") || "-"}`,
+    recruitmentLabel: `${get("recruitmentStart") || "-"} ~ ${get("applicationDeadline") || "-"}`,
+    applicantGuidance: get("applicantGuidance") || "-",
+  };
+}
+
 export default function NewProjectPage() {
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState(
+    createProjectAction,
+    initialCreateProjectFormState,
+  );
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const wasPending = useRef(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [preview, setPreview] = useState<ProjectPreview | null>(null);
+
+  // 제출이 끝나면(성공/실패 모두) 확인 모달을 닫는다.
+  useEffect(() => {
+    if (wasPending.current && !isPending) {
+      setIsConfirmOpen(false);
+    }
+    wasPending.current = isPending;
+  }, [isPending]);
+
+  // 등록 성공 시 토스트를 잠깐 보여준 뒤 모집 현황으로 이동한다.
+  useEffect(() => {
+    if (state.status !== "success") return;
+    const timer = setTimeout(() => {
+      router.push("/company/assessments");
+    }, 1600);
+    return () => clearTimeout(timer);
+  }, [state.status, router]);
+
+  const fieldError = (name: string) => state.fieldErrors[name];
+
+  function handleReviewClick() {
+    const form = formRef.current;
+    if (!form) return;
+    if (!form.reportValidity()) return;
+    setPreview(buildPreview(new FormData(form)));
+    setIsConfirmOpen(true);
+  }
+
+  function handleConfirmSubmit() {
+    formRef.current?.requestSubmit();
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl pb-20">
       <header className="border-b border-app-border pb-6">
@@ -57,14 +146,18 @@ export default function NewProjectPage() {
           <div className="flex gap-2">
             <button
               type="button"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground transition-colors hover:bg-app-surface-subtle"
+              disabled
+              title="임시 저장은 준비 중입니다."
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground opacity-50 transition-colors"
             >
               <Save aria-hidden="true" className="size-4" />
               임시 저장
             </button>
             <button
               type="button"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600"
+              onClick={handleReviewClick}
+              disabled={isPending}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               프로젝트 만들기
               <ChevronRight aria-hidden="true" className="size-4" />
@@ -119,7 +212,14 @@ export default function NewProjectPage() {
           </div>
         </aside>
 
-        <form className="space-y-6">
+        <form id={FORM_ID} ref={formRef} action={formAction} className="space-y-6">
+          {state.status === "error" && state.error ? (
+            <div className="flex items-start gap-3 rounded-card border border-red-200 bg-red-50 p-4">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600" />
+              <p className="text-sm font-bold text-red-800">{state.error}</p>
+            </div>
+          ) : null}
+
           <section className="rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8">
             <div className="flex items-start gap-3 border-b border-app-border pb-5">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
@@ -139,13 +239,15 @@ export default function NewProjectPage() {
                 <input
                   className={inputClassName}
                   name="title"
+                  required
                   placeholder="예: B2B 고객 포털 MVP 개발"
                 />
+                <FieldError message={fieldError("title")} />
               </label>
 
               <label className="text-sm font-bold text-app-foreground">
                 프로젝트 유형 <span className="text-brand-500">*</span>
-                <select className={inputClassName} name="projectType" defaultValue="">
+                <select className={inputClassName} name="projectType" required defaultValue="">
                   <option value="" disabled>유형을 선택하세요</option>
                   <option value="web">웹 애플리케이션</option>
                   <option value="mobile">모바일 앱</option>
@@ -168,11 +270,13 @@ export default function NewProjectPage() {
                 <textarea
                   className={`${inputClassName} min-h-32 resize-y py-3`}
                   name="goal"
+                  required
                   placeholder="이 프로젝트를 통해 해결하려는 문제와 사용자가 얻게 될 결과를 설명해주세요."
                 />
                 <span className="mt-2 block text-xs font-normal leading-5 text-app-muted">
                   구현 방식보다 비즈니스 목표와 핵심 사용자 경험을 먼저 적어주세요.
                 </span>
+                <FieldError message={fieldError("goal")} />
               </label>
             </div>
           </section>
@@ -196,8 +300,10 @@ export default function NewProjectPage() {
                 <textarea
                   className={`${inputClassName} min-h-44 resize-y py-3`}
                   name="requirements"
+                  required
                   placeholder={"예:\n- 이메일과 비밀번호로 로그인할 수 있어야 합니다.\n- 로그인 후 고객별 대시보드를 확인할 수 있어야 합니다.\n- 운영자가 고객 계정을 관리할 수 있어야 합니다."}
                 />
+                <FieldError message={fieldError("requirements")} />
               </label>
 
               <div className="grid gap-6 sm:grid-cols-2">
@@ -220,22 +326,24 @@ export default function NewProjectPage() {
               </div>
 
               <label className="block text-sm font-bold text-app-foreground">
-                참고자료
-                <span className="mt-2 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50">
+                참고자료 링크·메모
+                <textarea
+                  className={`${inputClassName} min-h-20 resize-y py-3`}
+                  name="referenceNotes"
+                  placeholder="예: 디자인 시안 https://... , 기존 API 문서 https://..."
+                />
+              </label>
+
+              <label className="block text-sm font-bold text-app-foreground">
+                참고자료 파일
+                <span className="mt-2 flex min-h-28 flex-col items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center opacity-60">
                   <Paperclip aria-hidden="true" className="size-5 text-brand-600" />
                   <span className="mt-2 text-sm font-black text-app-foreground">
                     요구사항 문서나 화면 자료 첨부
                   </span>
                   <span className="mt-1 text-xs font-normal text-app-muted">
-                    PDF, DOCX, PNG, JPG · 파일당 최대 20MB
+                    파일 첨부 기능은 준비 중입니다. 지금은 위 메모 칸에 링크를 남겨주세요.
                   </span>
-                  <input
-                    className="sr-only"
-                    type="file"
-                    name="references"
-                    multiple
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                  />
                 </span>
               </label>
             </div>
@@ -257,11 +365,13 @@ export default function NewProjectPage() {
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               <label className="text-sm font-bold text-app-foreground">
                 희망 시작일 <span className="text-brand-500">*</span>
-                <input className={inputClassName} type="date" name="startDate" />
+                <input className={inputClassName} type="date" name="startDate" required />
+                <FieldError message={fieldError("startDate")} />
               </label>
               <label className="text-sm font-bold text-app-foreground">
                 희망 완료일 <span className="text-brand-500">*</span>
-                <input className={inputClassName} type="date" name="endDate" />
+                <input className={inputClassName} type="date" name="endDate" required />
+                <FieldError message={fieldError("endDate")} />
               </label>
               <label className="text-sm font-bold text-app-foreground">
                 예산 <span className="text-brand-500">*</span>
@@ -273,9 +383,11 @@ export default function NewProjectPage() {
                     className={`${inputClassName} pl-8`}
                     inputMode="numeric"
                     name="budget"
+                    required
                     placeholder="12,000"
                   />
                 </span>
+                <FieldError message={fieldError("budgetAmount")} />
               </label>
               <label className="text-sm font-bold text-app-foreground">
                 예산 방식
@@ -283,6 +395,21 @@ export default function NewProjectPage() {
                   <option value="fixed">프로젝트 고정 금액</option>
                   <option value="range">협의 가능한 범위</option>
                 </select>
+              </label>
+              <label className="text-sm font-bold text-app-foreground">
+                최대 예산 (범위 선택 시)
+                <span className="relative block">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 mt-1 -translate-y-1/2 text-sm font-bold text-app-muted">
+                    $
+                  </span>
+                  <input
+                    className={`${inputClassName} pl-8`}
+                    inputMode="numeric"
+                    name="budgetMax"
+                    placeholder="예: 16,000"
+                  />
+                </span>
+                <FieldError message={fieldError("budgetMaxAmount")} />
               </label>
             </div>
           </section>
@@ -308,8 +435,14 @@ export default function NewProjectPage() {
                     aria-hidden="true"
                     className="pointer-events-none absolute left-3.5 top-1/2 mt-1 size-4 -translate-y-1/2 text-app-muted"
                   />
-                  <input className={`${inputClassName} pl-10`} type="date" name="recruitmentStart" />
+                  <input
+                    className={`${inputClassName} pl-10`}
+                    type="date"
+                    name="recruitmentStart"
+                    required
+                  />
                 </span>
+                <FieldError message={fieldError("recruitmentStartAt")} />
               </label>
               <label className="text-sm font-bold text-app-foreground">
                 지원 마감일 <span className="text-brand-500">*</span>
@@ -318,8 +451,14 @@ export default function NewProjectPage() {
                     aria-hidden="true"
                     className="pointer-events-none absolute left-3.5 top-1/2 mt-1 size-4 -translate-y-1/2 text-app-muted"
                   />
-                  <input className={`${inputClassName} pl-10`} type="date" name="applicationDeadline" />
+                  <input
+                    className={`${inputClassName} pl-10`}
+                    type="date"
+                    name="applicationDeadline"
+                    required
+                  />
                 </span>
+                <FieldError message={fieldError("recruitmentEndAt")} />
               </label>
               <label className="sm:col-span-2 text-sm font-bold text-app-foreground">
                 지원자에게 전달할 안내
@@ -342,14 +481,18 @@ export default function NewProjectPage() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-5 text-sm font-bold text-app-foreground transition-colors hover:bg-app-surface-subtle"
+                disabled
+                title="임시 저장은 준비 중입니다."
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-5 text-sm font-bold text-app-foreground opacity-50 transition-colors"
               >
                 <Save aria-hidden="true" className="size-4" />
                 임시 저장
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600"
+                onClick={handleReviewClick}
+                disabled={isPending}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Plus aria-hidden="true" className="size-4" />
                 프로젝트 만들기
@@ -358,6 +501,26 @@ export default function NewProjectPage() {
           </div>
         </form>
       </div>
+
+      <ProjectSummaryModal
+        open={isConfirmOpen}
+        data={preview}
+        isSubmitting={isPending}
+        onCancel={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmSubmit}
+      />
+
+      {state.status === "success" ? (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-control bg-app-foreground px-4 py-3 text-sm font-bold text-white shadow-xl">
+          <CheckCircle2 aria-hidden="true" className="size-4 text-emerald-400" />
+          공고가 성공적으로 등록되었습니다.
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <span className="mt-1.5 block text-xs font-bold text-red-600">{message}</span>;
 }

@@ -3,6 +3,7 @@ export type {
   BackendErrorCode,
   BackendResult,
   BudgetType,
+  CompanyProjectSummary,
   CreateProjectInput,
   CreateProjectOutput,
   OpportunityDetail,
@@ -14,5 +15,10 @@ export type {
   SubmitProposalOutput,
 } from "@/lib/backend/contracts";
 
-export { createProject, getPublicOpportunity, listPublicOpportunities } from "@/lib/backend/projects";
+export {
+  createProject,
+  getPublicOpportunity,
+  listCompanyProjects,
+  listPublicOpportunities,
+} from "@/lib/backend/projects";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
