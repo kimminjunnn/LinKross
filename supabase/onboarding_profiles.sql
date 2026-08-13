@@ -14,8 +14,8 @@ create table public.company_profiles (
 
 alter table public.company_profiles enable row level security;
 
-create policy "company_profiles_select_own" on public.company_profiles
-  for select using (auth.uid() = id);
+create policy "company_profiles_select_public" on public.company_profiles
+  for select to anon, authenticated using (true);
 
 create policy "company_profiles_insert_own" on public.company_profiles
   for insert with check (auth.uid() = id);
@@ -35,8 +35,8 @@ create table public.freelancer_profiles (
 
 alter table public.freelancer_profiles enable row level security;
 
-create policy "freelancer_profiles_select_own" on public.freelancer_profiles
-  for select using (auth.uid() = id);
+create policy "freelancer_profiles_select_public" on public.freelancer_profiles
+  for select to anon, authenticated using (true);
 
 create policy "freelancer_profiles_insert_own" on public.freelancer_profiles
   for insert with check (auth.uid() = id);
