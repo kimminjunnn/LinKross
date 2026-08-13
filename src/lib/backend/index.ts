@@ -11,8 +11,12 @@ export type {
   OpportunitySummary,
   ProjectDraftFormData,
   ProjectProposal,
+  SaveSowVersionInput,
+  SaveSowVersionOutput,
   SelectProposalInput,
   SelectProposalOutput,
+  SowMilestoneInput,
+  SowWorkspaceContext,
   SubmitProposalInput,
   SubmitProposalOutput,
 } from "@/lib/backend/contracts";
@@ -27,3 +31,4 @@ export {
 
 export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
+export { getSowWorkspaceContext, saveSowDraft, submitSowForReview } from "@/lib/backend/sow";
