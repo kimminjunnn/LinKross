@@ -1,5 +1,6 @@
 import type {
   BackendResult,
+  CompanyProjectDetail,
   CompanyProjectSummary,
   CreateProjectInput,
   CreateProjectOutput,
@@ -220,6 +221,92 @@ export async function listCompanyProjects(): Promise<BackendResult<CompanyProjec
   });
 
   return { ok: true, data: summaries };
+}
+
+interface CompanyProjectDetailRow {
+  title: string;
+  project_type: string | null;
+  technology: string | null;
+  goal: string;
+  requirements: string;
+  deliverables: string | null;
+  out_of_scope: string | null;
+  applicant_guidance: string | null;
+  budget_amount: number | string;
+  budget_max_amount: number | string | null;
+  budget_type: "fixed" | "range";
+  currency: string;
+  start_date: string;
+  end_date: string;
+  recruitment_start_at: string;
+  recruitment_end_at: string;
+}
+
+export async function getCompanyProjectDetail(
+  projectId: string,
+): Promise<BackendResult<CompanyProjectDetail>> {
+  if (!isUuid(projectId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트 ID가 아닙니다." } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id, status, created_at, current_requirement_version_id")
+    .eq("id", projectId)
+    .eq("company_id", authData.user.id)
+    .maybeSingle();
+
+  if (projectError) {
+    return { ok: false, error: mapBackendError(projectError, "프로젝트를 불러오지 못했습니다.") };
+  }
+  if (!project || !project.current_requirement_version_id) {
+    return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
+  }
+
+  const { data: version, error: versionError } = await supabase
+    .from("project_requirement_versions")
+    .select(
+      "title, project_type, technology, goal, requirements, deliverables, out_of_scope, applicant_guidance, budget_amount, budget_max_amount, budget_type, currency, start_date, end_date, recruitment_start_at, recruitment_end_at",
+    )
+    .eq("id", project.current_requirement_version_id)
+    .maybeSingle();
+
+  if (versionError || !version) {
+    return { ok: false, error: mapBackendError(versionError, "프로젝트 요구사항을 불러오지 못했습니다.") };
+  }
+
+  const row = version as CompanyProjectDetailRow;
+
+  return {
+    ok: true,
+    data: {
+      id: project.id,
+      title: row.title,
+      projectType: row.project_type,
+      technology: row.technology,
+      goal: row.goal,
+      requirements: row.requirements,
+      deliverables: row.deliverables,
+      outOfScope: row.out_of_scope,
+      applicantGuidance: row.applicant_guidance,
+      budgetAmount: Number(row.budget_amount),
+      budgetMaxAmount: row.budget_max_amount == null ? null : Number(row.budget_max_amount),
+      budgetType: row.budget_type,
+      currency: row.currency,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      recruitmentStartAt: row.recruitment_start_at,
+      recruitmentEndAt: row.recruitment_end_at,
+      status: project.status,
+      createdAt: project.created_at,
+    },
+  };
 }
 
 function toOpportunitySummary(row: OpportunityRow): OpportunitySummary {

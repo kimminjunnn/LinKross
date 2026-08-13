@@ -3,6 +3,7 @@ export type {
   BackendErrorCode,
   BackendResult,
   BudgetType,
+  CompanyProjectDetail,
   CompanyProjectSummary,
   CreateProjectInput,
   CreateProjectOutput,
@@ -17,6 +18,7 @@ export type {
 
 export {
   createProject,
+  getCompanyProjectDetail,
   getPublicOpportunity,
   listCompanyProjects,
   listPublicOpportunities,
