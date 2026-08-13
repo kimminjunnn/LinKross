@@ -61,6 +61,19 @@ export interface OpportunitySummary {
   recruitmentEndAt: string;
 }
 
+export interface CompanyProjectSummary {
+  id: string;
+  title: string;
+  status: "recruiting" | "closed";
+  lifecycleStage: string;
+  budgetAmount: number;
+  budgetMaxAmount: number | null;
+  currency: string;
+  recruitmentEndAt: string | null;
+  proposalCount: number;
+  createdAt: string;
+}
+
 export interface OpportunityDetail extends OpportunitySummary {
   requirements: string;
   deliverables: string | null;
