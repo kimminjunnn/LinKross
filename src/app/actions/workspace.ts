@@ -3,15 +3,22 @@
 import { redirect } from "next/navigation";
 
 import { isUserRole } from "@/config/roles";
+import { getSafePathForRole } from "@/lib/auth-redirect";
 import { getWorkspaceHome } from "@/lib/auth/workspace-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function switchWorkspace(formData: FormData) {
   const value = formData.get("role");
+  const requestedNextPath = formData.get("next");
 
   if (typeof value !== "string" || !isUserRole(value)) {
     throw new Error("Invalid workspace role.");
   }
+
+  const nextPath =
+    typeof requestedNextPath === "string"
+      ? getSafePathForRole(requestedNextPath, value)
+      : getWorkspaceHome(value);
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -19,7 +26,7 @@ export async function switchWorkspace(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?role=${value}`);
+    redirect(`/login?role=${value}&next=${encodeURIComponent(nextPath)}`);
   }
 
   const { error: roleInsertError } = await supabase
@@ -39,5 +46,5 @@ export async function switchWorkspace(formData: FormData) {
     throw new Error("Unable to switch the active workspace.");
   }
 
-  redirect(getWorkspaceHome(value));
+  redirect(nextPath);
 }

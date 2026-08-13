@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { switchWorkspace } from "@/app/actions/workspace";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { getPublicOpportunity } from "@/lib/backend/projects";
+import { getAuthContext, getWorkspaceHome } from "@/lib/auth/workspace-access";
 import {
   formatBudget,
   formatProjectDate,
@@ -26,7 +28,10 @@ export default async function OpportunityDetailPage({
   params: Promise<{ opportunityId: string }>;
 }) {
   const { opportunityId } = await params;
-  const result = await getPublicOpportunity(opportunityId);
+  const [result, authContext] = await Promise.all([
+    getPublicOpportunity(opportunityId),
+    getAuthContext(),
+  ]);
 
   if (!result.ok) {
     if (result.error.code === "NOT_FOUND" || result.error.code === "INVALID_INPUT") {
@@ -50,6 +55,12 @@ export default async function OpportunityDetailPage({
   const technologies = technologyTags(opportunity.technology);
   const applicationPath = `/freelancer/applications/${opportunity.id}`;
   const loginHref = `/login?role=freelancer&next=${encodeURIComponent(applicationPath)}`;
+  const isAuthenticated = authContext.userId !== null;
+  const isFreelancerWorkspaceActive = authContext.activeRole === "freelancer";
+  const workspaceHref =
+    isAuthenticated && authContext.activeRole
+      ? getWorkspaceHome(authContext.activeRole)
+      : "/login?role=freelancer&next=/freelancer";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] pb-20 text-app-foreground">
@@ -57,10 +68,10 @@ export default async function OpportunityDetailPage({
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <BrandLogo />
           <Link
-            href="/login?role=freelancer&next=/freelancer"
+            href={workspaceHref}
             className="rounded-control border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50"
           >
-            프리랜서 로그인
+            {isAuthenticated ? "내 워크스페이스" : "프리랜서 로그인"}
           </Link>
         </div>
       </header>
@@ -173,16 +184,42 @@ export default async function OpportunityDetailPage({
               </div>
             </dl>
 
-            <Link
-              href={loginHref}
-              className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
-            >
-              이 프로젝트에 지원하기
-              <ArrowRight className="size-4" />
-            </Link>
+            {isFreelancerWorkspaceActive ? (
+              <Link
+                href={applicationPath}
+                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+              >
+                수행 제안서 작성하기
+                <ArrowRight className="size-4" />
+              </Link>
+            ) : isAuthenticated ? (
+              <form action={switchWorkspace} className="mt-8">
+                <input type="hidden" name="role" value="freelancer" />
+                <input type="hidden" name="next" value={applicationPath} />
+                <button
+                  type="submit"
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                >
+                  프리랜서로 전환하고 지원하기
+                  <ArrowRight className="size-4" />
+                </button>
+              </form>
+            ) : (
+              <Link
+                href={loginHref}
+                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+              >
+                로그인하고 지원하기
+                <ArrowRight className="size-4" />
+              </Link>
+            )}
             <p className="mt-4 flex items-center justify-center gap-1 text-center text-xs leading-relaxed text-slate-400">
               <Info className="size-3.5 text-slate-300" />
-              수행 제안서 제출에는 로그인이 필요합니다.
+              {isFreelancerWorkspaceActive
+                ? "프로젝트 요구사항을 바탕으로 수행 제안서를 작성합니다."
+                : isAuthenticated
+                  ? "프리랜서 역할로 전환한 뒤 수행 제안서를 작성합니다."
+                  : "수행 제안서 제출에는 로그인이 필요합니다."}
             </p>
           </aside>
         </div>
