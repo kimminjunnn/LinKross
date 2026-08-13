@@ -76,7 +76,9 @@ export async function listPublicOpportunities(): Promise<BackendResult<Opportuni
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("public_opportunities")
-    .select("*")
+    .select(
+      "id,title,organization_name,goal,project_type,technology,budget_amount,budget_max_amount,budget_type,currency,start_date,end_date,recruitment_end_at,created_at",
+    )
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -96,7 +98,9 @@ export async function getPublicOpportunity(
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("public_opportunities")
-    .select("*")
+    .select(
+      "id,title,organization_name,goal,project_type,technology,requirements,deliverables,out_of_scope,applicant_guidance,budget_amount,budget_max_amount,budget_type,currency,start_date,end_date,recruitment_start_at,recruitment_end_at,current_requirement_version_id,created_at",
+    )
     .eq("id", projectId)
     .maybeSingle();
 
