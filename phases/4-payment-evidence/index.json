@@ -1,0 +1,7 @@
+{
+  "project": "LinKross",
+  "phase": "4-payment-evidence",
+  "steps": [
+    { "step": 0, "name": "invoice-payment-evidence", "status": "pending" }
+  ]
+}

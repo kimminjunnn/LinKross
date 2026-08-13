@@ -1,0 +1,7 @@
+{
+  "project": "LinKross",
+  "phase": "1-project-recruitment",
+  "steps": [
+    { "step": 0, "name": "project-proposal-selection-slice", "status": "pending" }
+  ]
+}
