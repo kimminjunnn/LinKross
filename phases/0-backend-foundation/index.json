@@ -1,0 +1,7 @@
+{
+  "project": "LinKross",
+  "phase": "0-backend-foundation",
+  "steps": [
+    { "step": 0, "name": "typed-supabase-contracts", "status": "pending" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "phases": [
+    { "dir": "0-backend-foundation", "status": "pending" },
+    { "dir": "1-project-recruitment", "status": "pending" },
+    { "dir": "2-sow-approval", "status": "pending" },
+    { "dir": "3-github-verification", "status": "pending" },
+    { "dir": "4-payment-evidence", "status": "pending" }
+  ]
+}

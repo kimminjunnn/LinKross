@@ -1,0 +1,7 @@
+{
+  "project": "LinKross",
+  "phase": "3-github-verification",
+  "steps": [
+    { "step": 0, "name": "commit-pinned-verification", "status": "pending" }
+  ]
+}

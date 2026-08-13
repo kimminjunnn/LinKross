@@ -50,13 +50,7 @@ export const workspaceNavigation: Record<
     {
       label: "Workspace",
       items: [
-        { label: "Home", href: "/freelancer", icon: "house" },
         { label: "Find projects", href: "/opportunities", icon: "search" },
-        {
-          label: "My applications",
-          href: "/freelancer/applications",
-          icon: "briefcase-business",
-        },
         {
           label: "My projects",
           href: "/freelancer/projects",

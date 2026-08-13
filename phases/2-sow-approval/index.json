@@ -1,0 +1,7 @@
+{
+  "project": "LinKross",
+  "phase": "2-sow-approval",
+  "steps": [
+    { "step": 0, "name": "versioned-sow-dual-approval", "status": "pending" }
+  ]
+}
