@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeftRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 const ApprovalPage = dynamic(() => import("../approval/page"));
 
@@ -233,17 +233,8 @@ function SowDraftWorkspace({
           />
         </div>
 
-        {/* Center Indicator (Large screen only) */}
-        <div className="hidden xl:flex xl:col-span-1 flex-col items-center justify-center space-y-4 pt-48 text-center text-xs font-bold text-app-muted">
-          <div className="flex flex-col items-center gap-1 rounded-control bg-app-surface-subtle p-2 border border-app-border">
-            <span>비교</span>
-            <ArrowLeftRight className="size-4 text-brand-500" />
-            <span className="text-[0.65rem]">AI 변환 결과</span>
-          </div>
-        </div>
-
         {/* Right Column: 영어 업무 명세서 (AI 생성) */}
-        <div className="xl:col-span-5">
+        <div className="xl:col-span-6">
           <SowEnglishPreview
             projectId={projectId}
             sow={englishSow}
