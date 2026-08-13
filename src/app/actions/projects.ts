@@ -71,7 +71,8 @@ function parseAmount(raw: FormDataEntryValue | null): number {
 
 function toTimestamp(dateOnly: string, edge: "start" | "end"): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return dateOnly;
-  return `${dateOnly}T${edge === "end" ? "23:59:59.999" : "00:00:00.000"}Z`;
+  // Use KST (+09:00) timezone offset to prevent today's projects from being hidden by UTC comparison
+  return `${dateOnly}T${edge === "end" ? "23:59:59.999" : "00:00:00.000"}+09:00`;
 }
 
 function isProjectType(value: string): value is (typeof PROJECT_TYPES)[number] {
