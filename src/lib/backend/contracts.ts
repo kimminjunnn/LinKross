@@ -74,6 +74,8 @@ export interface CompanyProjectSummary {
   createdAt: string;
 }
 
+export type ProjectDraftFormData = Record<string, string>;
+
 export interface CompanyProjectDetail {
   id: string;
   title: string;

@@ -58,6 +58,14 @@ return result.data.map((opportunity) => opportunity.title);
 - 반환: 현재 요구사항 버전 전체(목표·요구사항·예산·일정·모집기간 등)
 - 다른 기업의 프로젝트 ID를 넣으면 `NOT_FOUND`
 
+### `getProjectDraft()` / `saveProjectDraft(formData)` / `deleteProjectDraft()`
+
+- 사용자: 기업(로그인 본인)
+- 용도: `/company/projects/new` "임시 저장" — `projects`/`project_requirement_versions`와
+  완전히 분리된 `project_drafts` 테이블(회사당 1건, `form_data jsonb`)을 그대로 읽고 씀
+- `create_project_with_requirements` RPC나 검증 로직과 무관 — 미완성 값도 그대로 저장됨
+- 실제 등록(`createProject`) 성공 시 `deleteProjectDraft()`로 정리
+
 ### `listPublicOpportunities()`
 
 - 사용자: 비로그인 포함
