@@ -96,12 +96,45 @@ export async function submitProposalAction(projectId: string, content: string) {
     return { ok: false, error: "로그인이 필요합니다." };
   }
 
+  // 1. Fetch current requirement version ID from projects table
+  const { data: projectData, error: projectError } = await supabase
+    .from("projects")
+    .select("current_requirement_version_id")
+    .eq("id", projectId)
+    .single();
+
+  if (projectError || !projectData?.current_requirement_version_id) {
+    console.error("[SubmitActionDebug] Failed to fetch project version:", projectError);
+    return { ok: false, error: "프로젝트 요구사항 버전을 찾을 수 없습니다." };
+  }
+
+  const versionId = projectData.current_requirement_version_id;
+
+  // 2. Fetch freelancer profile info for snapshotting
+  const { data: profileData, error: profileError } = await supabase
+    .from("freelancer_profiles")
+    .select("display_name, headline, skills, portfolio_urls")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+
+  const displayName = profileData?.display_name || "지원자 프리랜서";
+  const headline = profileData?.headline || "개발자";
+  const skills = profileData?.skills || "TypeScript,Next.js";
+  const portfolioUrls = profileData?.portfolio_urls || [];
+
+  // 3. Insert proposal with all snapshots and required version ID
   const { data, error } = await supabase
     .from("proposals")
     .insert({
       project_id: projectId,
       freelancer_id: authData.user.id,
+      requirement_version_id: versionId, // Required Not-Null column!
       content: content,
+      freelancer_display_name_snapshot: displayName,
+      freelancer_headline_snapshot: headline,
+      freelancer_skills_snapshot: skills,
+      freelancer_portfolio_urls_snapshot: portfolioUrls,
+      status: "submitted"
     })
     .select()
     .single();

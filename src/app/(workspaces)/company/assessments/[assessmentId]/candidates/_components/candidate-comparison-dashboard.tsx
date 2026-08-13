@@ -92,30 +92,25 @@ export function CandidateComparisonDashboard({
       const supabase = createSupabaseBrowserClient();
       supabase
         .from("proposals")
-        .select("id, content, submitted_at, freelancer_id")
+        .select(`
+          id,
+          content,
+          submitted_at,
+          freelancer_id,
+          freelancer_display_name_snapshot,
+          freelancer_skills_snapshot
+        `)
         .eq("project_id", currentAssessmentId)
-        .then(async ({ data: proposalsData, error: proposalsError }) => {
-          console.log("[CandidatesDebug] Proposals Data:", proposalsData, "Error:", proposalsError);
+        .then(({ data: proposalsData, error: proposalsError }) => {
+          console.log("[CandidatesDebug] Proposals Snapshot Data:", proposalsData, "Error:", proposalsError);
           if (proposalsError) {
             console.error("Error fetching proposals:", proposalsError);
             return;
           }
           if (proposalsData && proposalsData.length > 0) {
-            const freelancerIds = proposalsData.map((p) => p.freelancer_id);
-            const { data: profilesData, error: profilesError } = await supabase
-              .from("freelancer_profiles")
-              .select("id, display_name, skills")
-              .in("id", freelancerIds);
-
-            console.log("[CandidatesDebug] Freelancer Profiles:", profilesData, "Error:", profilesError);
-            const profileMap = new Map(
-              (profilesData ?? []).map((p: any) => [p.id, p])
-            );
-
             const dbCandidates: CandidateComparisonItem[] = proposalsData.map((item: any, index: number) => {
-              const profile = profileMap.get(item.freelancer_id);
-              const displayName = profile?.display_name || `Developer ${index + 1}`;
-              const skillsList = profile?.skills ? profile.skills.split(",") : ["TypeScript", "Next.js", "PostgreSQL"];
+              const displayName = item.freelancer_display_name_snapshot || `Developer ${index + 1}`;
+              const skillsList = item.freelancer_skills_snapshot ? item.freelancer_skills_snapshot.split(",") : ["TypeScript", "Next.js", "PostgreSQL"];
               const initials = displayName.split(" ").map((n: string) => n.charAt(0)).join("").toUpperCase();
               
               return {
