@@ -30,7 +30,7 @@ const definitionOfDone = [
 const fallbackSummary = {
   coreScope: "승인 요청된 업무 명세서 없음",
   keyAcceptance: "업무 명세서 탭에서 영문 SOW 승인 요청 필요",
-  needsReview: "PDF 인쇄/저장 후 승인 탭에서 원본 문서를 확인",
+  needsReview: "업무명세서 탭에서 작성된 원본 내용을 확인",
 };
 
 const getEmptySowSnapshot = () => null;
@@ -162,12 +162,10 @@ export default function ApprovalPage() {
                 </p>
               </div>
               <h2 className="mt-2 text-xl font-black text-app-foreground">
-                {isReadOnly ? "승인된 업무 명세서 원본" : "승인 대상 업무 명세서 원본"}
+                업무 명세서 원본
               </h2>
               <p className="mt-2 text-sm leading-6 text-app-muted">
-                {isReadOnly
-                  ? "양측이 승인한 고정 버전의 업무 명세서를 확인합니다."
-                  : "현재 승인 요청된 업무 명세서 원본을 확인합니다."}
+                업무명세서 탭에서 작성된 원본 내용을 확인합니다.
               </p>
             </div>
             <StatusBadge tone={isReadOnly ? "success" : "brand"}>
@@ -177,7 +175,7 @@ export default function ApprovalPage() {
 
           {sowSnapshot ? (
             <div className="mt-4 rounded-control border border-brand-200 bg-brand-50 p-4 text-sm leading-6 text-brand-700">
-              <strong>{sowSnapshot.pdfFileName}</strong> 승인 기준으로 사용할 업무 명세서 원본입니다.
+              업무명세서 탭에서 작성된 원본 내용을 확인합니다.
             </div>
           ) : null}
 

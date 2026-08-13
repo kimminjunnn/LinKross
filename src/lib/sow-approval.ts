@@ -101,8 +101,8 @@ export function createApprovalSowSnapshot({
         ].join("\n"),
       },
       {
-        title: "PDF 인쇄 원본",
-        body: `${pdfFileName} 파일명으로 PDF 저장을 요청한 승인 기준 문서입니다.`,
+        title: "업무 명세서 원본",
+        body: "업무명세서 탭에서 작성된 원본 내용을 확인합니다.",
       },
     ],
     acceptanceCriteria: sow.acceptanceCriteria ?? ["TBD"],
@@ -112,7 +112,7 @@ export function createApprovalSowSnapshot({
       keyAcceptance: `${sow.acceptanceCriteria?.length ?? 0}개 Acceptance Criteria와 ${
         sow.definitionOfDone?.length ?? 0
       }개 Definition of Done을 승인 기준으로 사용`,
-      needsReview: `${version} PDF 인쇄 원본과 승인 탭의 상세 문서가 같은 내용인지 확인`,
+      needsReview: "업무명세서 탭에서 작성된 원본 내용을 확인",
     },
   };
 }
