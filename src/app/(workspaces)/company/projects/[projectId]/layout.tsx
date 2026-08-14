@@ -5,15 +5,7 @@ import { notFound } from "next/navigation";
 import { ProjectTabs } from "@/components/project/project-tabs";
 import { StatusBadge } from "@/components/project/status-badge";
 import { getCompanyProjectDetail } from "@/lib/backend";
-import { projectStatuses, type ProjectStatus } from "@/config/project-lifecycle";
-
-const LIFECYCLE_LABEL: Record<string, ProjectStatus> = {
-  preparing: projectStatuses.preparing,
-  in_progress: projectStatuses.inProgress,
-  completed: projectStatuses.completed,
-  cancelled: projectStatuses.cancelled,
-  archived: projectStatuses.completed,
-};
+import { mapLifecycleStageToProjectStatus } from "@/config/project-lifecycle";
 
 const LIFECYCLE_TONE: Record<string, "brand" | "accent" | "success" | "danger"> = {
   preparing: "brand",
@@ -38,7 +30,7 @@ export default async function ProjectDetailLayout({
   }
 
   const project = result.data;
-  const status = LIFECYCLE_LABEL[project.lifecycleStage] ?? projectStatuses.preparing;
+  const status = mapLifecycleStageToProjectStatus(project.lifecycleStage);
   const tone = LIFECYCLE_TONE[project.lifecycleStage] ?? "brand";
 
   return (

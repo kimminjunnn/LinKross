@@ -74,6 +74,13 @@ return result.data.map((opportunity) => opportunity.title);
 - `saveSowDraft`는 `status='draft'`, `submitSowForReview`는 `status='in_review'` + `content_hash`/`submitted_for_review_at` 기록
 - 양측 승인(`sow_approvals`)과 마일스톤 검수·진행은 아직 연결 안 됨(다음 단계)
 
+### `getApprovedSowMilestones(projectId)`
+
+- 사용자: 해당 프로젝트 발주자 본인
+- 용도: `/company/projects/[projectId]/verification` 마일스톤 탭 — 승인된 SOW의 마일스톤·완료조건만 표시
+- 승인된 `sow_versions`(status='approved')이 아직 없으면 `milestones: []`로 빈 상태 반환(양측 승인 전에는 마일스톤 탭이 비어 있는 게 정상)
+- PR/Commit/검수 결과(`milestone_submissions`, `verification_runs`, `criterion_results`)는 아직 연결 안 됨 — GitHub 연동은 별도 단계
+
 ### `listPublicOpportunities()`
 
 - 사용자: 비로그인 포함

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
-import { isProjectPreparing } from "@/config/project-lifecycle";
-import { PROJECTS } from "@/data/projects";
+import { isProjectPreparing, mapLifecycleStageToProjectStatus } from "@/config/project-lifecycle";
+import { getCompanyProjectDetail } from "@/lib/backend";
 
 export default async function ApprovalLayout({
   children,
@@ -11,13 +11,15 @@ export default async function ApprovalLayout({
   params: Promise<{ projectId: string }>;
 }>) {
   const { projectId } = await params;
-  const project = PROJECTS.find((item) => item.id === projectId);
+  const result = await getCompanyProjectDetail(projectId);
 
-  if (!project) {
+  if (!result.ok) {
     notFound();
   }
 
-  if (!isProjectPreparing(project.status)) {
+  const status = mapLifecycleStageToProjectStatus(result.data.lifecycleStage);
+
+  if (!isProjectPreparing(status)) {
     redirect(`/company/projects/${projectId}/sow`);
   }
 
