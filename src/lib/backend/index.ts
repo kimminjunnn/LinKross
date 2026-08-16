@@ -18,10 +18,21 @@ export type {
   SaveSowVersionOutput,
   SelectProposalInput,
   SelectProposalOutput,
+  ApproveSowInput,
+  CriterionKind,
+  SowApprovalCriterion,
+  SowApprovalDocument,
+  SowApprovalDocumentSection,
+  SowApprovalMilestone,
+  SowApprovalRecord,
+  SowApprovalState,
+  SowStatus,
   SowMilestoneInput,
   SowWorkspaceContext,
   SubmitProposalInput,
   SubmitProposalOutput,
+  UserRole,
+  VerificationMethod,
 } from "@/lib/backend/contracts";
 
 export {
@@ -35,7 +46,9 @@ export {
 export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
+  approveSowAsCompany,
   getApprovedSowMilestones,
+  getSowApprovalState,
   getSowWorkspaceContext,
   saveSowDraft,
   submitSowForReview,

@@ -173,7 +173,6 @@ export default async function VerificationPage({
     </div>
   );
 }
-
 function resolveStatus(status: string) {
   return (
     milestoneVerificationStatusConfig[status as MilestoneVerificationStatus] ??
@@ -411,4 +410,3 @@ function SummaryMetric({
     </div>
   );
 }
-

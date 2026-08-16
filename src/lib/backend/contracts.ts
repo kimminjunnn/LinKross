@@ -159,6 +159,80 @@ export interface SowWorkspaceContext {
   assigneeName: string | null;
 }
 
+export type SowStatus = "draft" | "in_review" | "revision_requested" | "approved" | "superseded";
+export type UserRole = "company" | "freelancer";
+export type CriterionKind = "acceptance" | "definition_of_done";
+export type VerificationMethod = "automated_e2e" | "build" | "manual" | "document";
+
+export interface SowApprovalRecord {
+  role: UserRole;
+  approverName: string | null;
+  approvedAt: string;
+}
+
+export interface SowApprovalCriterion {
+  id: string;
+  kind: CriterionKind;
+  description: string;
+  verificationMethod: VerificationMethod;
+  position: number;
+}
+
+export interface SowApprovalMilestone {
+  id: string;
+  code: string;
+  title: string;
+  period: string;
+  amount: string;
+  status: string;
+  acceptanceCriteria: SowApprovalCriterion[];
+  definitionOfDone: SowApprovalCriterion[];
+  verificationMethods: VerificationMethod[];
+}
+
+export interface SowApprovalDocumentSection {
+  title: string;
+  body: string;
+}
+
+export interface SowApprovalDocument {
+  projectId: string;
+  version: string;
+  requestedAt: string;
+  pdfFileName: string;
+  printText: string;
+  documentSections: SowApprovalDocumentSection[];
+  acceptanceCriteria: string[];
+  definitionOfDone: string[];
+  summary: {
+    coreScope: string;
+    keyAcceptance: string;
+    needsReview: string;
+  };
+}
+
+export interface SowApprovalState {
+  projectId: string;
+  sowVersionId: string;
+  version: string;
+  status: SowStatus;
+  contentHash: string;
+  submittedForReviewAt: string | null;
+  approvedAt: string | null;
+  document: SowApprovalDocument;
+  milestones: SowApprovalMilestone[];
+  approvals: {
+    company: SowApprovalRecord | null;
+    freelancer: SowApprovalRecord | null;
+  };
+}
+
+export interface ApproveSowInput {
+  projectId: string;
+  sowVersionId: string;
+  contentHash: string;
+}
+
 export interface OpportunityDetail extends OpportunitySummary {
   requirements: string;
   deliverables: string | null;
