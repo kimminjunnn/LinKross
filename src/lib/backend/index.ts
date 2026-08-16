@@ -1,4 +1,5 @@
 export type {
+  ApprovedSowMilestones,
   BackendError,
   BackendErrorCode,
   BackendResult,
@@ -7,9 +8,11 @@ export type {
   CompanyProjectSummary,
   CreateProjectInput,
   CreateProjectOutput,
+  MilestoneChecklistItem,
   OpportunityDetail,
   OpportunitySummary,
   ProjectDraftFormData,
+  ProjectMilestoneSummary,
   ProjectProposal,
   SaveSowVersionInput,
   SaveSowVersionOutput,
@@ -31,4 +34,9 @@ export {
 
 export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
-export { getSowWorkspaceContext, saveSowDraft, submitSowForReview } from "@/lib/backend/sow";
+export {
+  getApprovedSowMilestones,
+  getSowWorkspaceContext,
+  saveSowDraft,
+  submitSowForReview,
+} from "@/lib/backend/sow";

@@ -1,7 +1,10 @@
 import { createHash } from "crypto";
 
 import type {
+  ApprovedSowMilestones,
   BackendResult,
+  MilestoneChecklistItem,
+  ProjectMilestoneSummary,
   SaveSowVersionInput,
   SaveSowVersionOutput,
   SowWorkspaceContext,
@@ -269,5 +272,102 @@ export async function getSowWorkspaceContext(
       lifecycleStage: project.lifecycle_stage,
       assigneeName,
     },
+  };
+}
+
+export async function getApprovedSowMilestones(
+  projectId: string,
+): Promise<BackendResult<ApprovedSowMilestones>> {
+  if (!isUuid(projectId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트 ID가 아닙니다." } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("company_id", authData.user.id)
+    .maybeSingle();
+
+  if (projectError) {
+    return { ok: false, error: mapBackendError(projectError, "프로젝트를 불러오지 못했습니다.") };
+  }
+  if (!project) {
+    return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
+  }
+
+  const { data: sowVersion, error: sowError } = await supabase
+    .from("sow_versions")
+    .select("id, version_number")
+    .eq("project_id", projectId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (sowError) {
+    return { ok: false, error: mapBackendError(sowError, "승인된 업무 명세서를 확인하지 못했습니다.") };
+  }
+  if (!sowVersion) {
+    return { ok: true, data: { sowVersionId: null, versionNumber: null, milestones: [] } };
+  }
+
+  const { data: milestoneRows, error: milestoneError } = await supabase
+    .from("milestones")
+    .select("id, code, title, description, start_date, end_date, amount, currency, status, position")
+    .eq("sow_version_id", sowVersion.id)
+    .order("position", { ascending: true });
+
+  if (milestoneError) {
+    return { ok: false, error: mapBackendError(milestoneError, "마일스톤을 불러오지 못했습니다.") };
+  }
+
+  const milestoneIds = (milestoneRows ?? []).map((row) => row.id);
+  const criteriaByMilestone = new Map<string, MilestoneChecklistItem[]>();
+
+  if (milestoneIds.length > 0) {
+    const { data: criteriaRows, error: criteriaError } = await supabase
+      .from("completion_criteria")
+      .select("id, milestone_id, description, verification_method, is_required, position")
+      .in("milestone_id", milestoneIds)
+      .order("position", { ascending: true });
+
+    if (criteriaError) {
+      return { ok: false, error: mapBackendError(criteriaError, "완료조건을 불러오지 못했습니다.") };
+    }
+
+    for (const row of criteriaRows ?? []) {
+      const list = criteriaByMilestone.get(row.milestone_id) ?? [];
+      list.push({
+        id: row.id,
+        description: row.description,
+        verificationMethod: row.verification_method,
+        isRequired: row.is_required,
+      });
+      criteriaByMilestone.set(row.milestone_id, list);
+    }
+  }
+
+  const milestones: ProjectMilestoneSummary[] = (milestoneRows ?? []).map((row) => ({
+    id: row.id,
+    code: row.code,
+    title: row.title,
+    description: row.description,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    amount: Number(row.amount),
+    currency: row.currency,
+    status: row.status,
+    position: row.position,
+    checklist: criteriaByMilestone.get(row.id) ?? [],
+  }));
+
+  return {
+    ok: true,
+    data: { sowVersionId: sowVersion.id, versionNumber: sowVersion.version_number, milestones },
   };
 }
