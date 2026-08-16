@@ -15,6 +15,18 @@ export function isProjectReadOnly(status: ProjectStatus) {
   return status === projectStatuses.completed || status === projectStatuses.cancelled;
 }
 
+const LIFECYCLE_STAGE_TO_STATUS: Record<string, ProjectStatus> = {
+  preparing: projectStatuses.preparing,
+  in_progress: projectStatuses.inProgress,
+  completed: projectStatuses.completed,
+  cancelled: projectStatuses.cancelled,
+  archived: projectStatuses.completed,
+};
+
+export function mapLifecycleStageToProjectStatus(lifecycleStage: string): ProjectStatus {
+  return LIFECYCLE_STAGE_TO_STATUS[lifecycleStage] ?? projectStatuses.preparing;
+}
+
 export type MilestoneDecisionStatus =
   | "pending"
   | "revision_required"

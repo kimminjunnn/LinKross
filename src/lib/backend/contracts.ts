@@ -125,6 +125,33 @@ export interface SaveSowVersionOutput {
   status: string;
 }
 
+export interface MilestoneChecklistItem {
+  id: string;
+  description: string;
+  verificationMethod: string;
+  isRequired: boolean;
+}
+
+export interface ProjectMilestoneSummary {
+  id: string;
+  code: string;
+  title: string;
+  description: string | null;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  currency: string;
+  status: string;
+  position: number;
+  checklist: MilestoneChecklistItem[];
+}
+
+export interface ApprovedSowMilestones {
+  sowVersionId: string | null;
+  versionNumber: number | null;
+  milestones: ProjectMilestoneSummary[];
+}
+
 export interface SowWorkspaceContext {
   projectId: string;
   title: string;
