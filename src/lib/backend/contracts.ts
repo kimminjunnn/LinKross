@@ -233,6 +233,10 @@ export interface ApproveSowInput {
   contentHash: string;
 }
 
+export interface RequestSowRevisionInput extends ApproveSowInput {
+  reason: string;
+}
+
 export interface OpportunityDetail extends OpportunitySummary {
   requirements: string;
   deliverables: string | null;
@@ -241,6 +245,13 @@ export interface OpportunityDetail extends OpportunitySummary {
   recruitmentStartAt: string;
   currentRequirementVersionId: string;
   createdAt: string;
+  attachments: Array<{
+    id: string;
+    name: string;
+    mimeType: string;
+    sizeBytes: number;
+    downloadUrl: string;
+  }>;
 }
 
 export interface SubmitProposalInput {
@@ -279,4 +290,239 @@ export interface SelectProposalInput {
 
 export interface SelectProposalOutput {
   selectionId: string;
+}
+
+export type FreelancerApplicationStatus = "submitted" | "withdrawn" | "selected";
+
+export interface FreelancerApplicationSummary {
+  proposalId: string;
+  projectId: string;
+  title: string;
+  organizationName: string;
+  status: FreelancerApplicationStatus;
+  content: string;
+  optionalNotes: string | null;
+  submittedAt: string;
+  withdrawnAt: string | null;
+  budgetAmount: number | null;
+  budgetMaxAmount: number | null;
+  currency: string | null;
+  recruitmentEndAt: string | null;
+}
+
+export interface FreelancerProjectSummary {
+  projectId: string;
+  proposalId: string;
+  title: string;
+  organizationName: string;
+  lifecycleStage: string;
+  startDate: string | null;
+  endDate: string | null;
+  budgetAmount: number | null;
+  budgetMaxAmount: number | null;
+  currency: string | null;
+  selectedAt: string;
+  milestoneCount: number;
+  approvedMilestoneCount: number;
+}
+
+export type VerificationRunStatus =
+  | "queued"
+  | "provisioning"
+  | "installing"
+  | "building"
+  | "running"
+  | "passed"
+  | "failed"
+  | "needs_review"
+  | "timed_out"
+  | "cancelled";
+
+export interface ProjectRepositoryRecord {
+  id: string;
+  projectId: string;
+  owner: string;
+  name: string;
+  url: string;
+  defaultBranch: string | null;
+  isPrivate: boolean;
+  companyConfirmedAt: string | null;
+}
+
+export interface VerificationResultRecord {
+  id: string;
+  criterionId: string;
+  status: "queued" | "running" | "passed" | "failed" | "needs_review" | "not_run";
+  observedResult: string | null;
+  errorMessage: string | null;
+  evidence: Array<{
+    id: string;
+    type: string;
+    url: string | null;
+    storagePath: string | null;
+  }>;
+}
+
+export interface VerificationRunRecord {
+  id: string;
+  scope: "criterion" | "milestone";
+  requestedCriterionId: string | null;
+  attemptNumber: number;
+  status: VerificationRunStatus;
+  queuedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  previewUrl: string | null;
+  errorSummary: string | null;
+  results: VerificationResultRecord[];
+}
+
+export interface MilestoneSubmissionRecord {
+  id: string;
+  attemptNumber: number;
+  pullRequestNumber: number;
+  pullRequestTitle: string;
+  pullRequestUrl: string;
+  headBranch: string;
+  headCommitSha: string;
+  implementationNote: string | null;
+  submittedAt: string;
+  claimedCriterionIds: string[];
+  runs: VerificationRunRecord[];
+}
+
+export interface VerificationMilestoneRecord extends ProjectMilestoneSummary {
+  submissions: MilestoneSubmissionRecord[];
+  decision: {
+    decision: "revision_required" | "approved";
+    reason: string | null;
+    decidedAt: string;
+  } | null;
+}
+
+export interface VerificationWorkspace {
+  projectId: string;
+  isCompany: boolean;
+  repository: ProjectRepositoryRecord | null;
+  sowVersionId: string | null;
+  sowVersionNumber: number | null;
+  milestones: VerificationMilestoneRecord[];
+}
+
+export interface ConnectRepositoryInput {
+  projectId: string;
+  repositoryUrl: string;
+}
+
+export interface SubmitMilestonePullRequestInput {
+  projectId: string;
+  milestoneId: string;
+  pullRequestUrl: string;
+  claimedCriterionIds: string[];
+  implementationNote?: string;
+}
+
+export interface RequestVerificationInput {
+  projectId: string;
+  milestoneId: string;
+  submissionId: string;
+  scope: "criterion" | "milestone";
+  criterionId?: string;
+}
+
+export interface DecideMilestoneInput {
+  projectId: string;
+  milestoneId: string;
+  submissionId: string;
+  verificationRunId?: string;
+  decision: "revision_required" | "approved";
+  reason?: string;
+}
+
+export type InvoiceStatus = "submitted" | "approved" | "rejected" | "cancelled";
+export type PaymentRecordStatus = "requested" | "processing" | "completed" | "failed";
+
+export interface InvoiceRecord {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  organizationName: string;
+  milestoneId: string;
+  milestoneCode: string;
+  milestoneTitle: string;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  amount: number;
+  currency: string;
+  externalReference: string | null;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+}
+
+export interface FinancialMilestoneRecord {
+  id: string;
+  code: string;
+  title: string;
+  amount: number;
+  currency: string;
+  status: string;
+  approvedAt: string | null;
+  invoice: InvoiceRecord | null;
+  payment: {
+    id: string;
+    status: PaymentRecordStatus;
+    amount: number;
+    currency: string;
+    externalReference: string | null;
+    requestedAt: string | null;
+    processingAt: string | null;
+    completedAt: string | null;
+  } | null;
+}
+
+export interface ProjectFinancialWorkspace {
+  projectId: string;
+  projectTitle: string;
+  milestones: FinancialMilestoneRecord[];
+  evidenceBundles: Array<{
+    id: string;
+    versionNumber: number;
+    status: "generating" | "ready" | "failed";
+    storagePath: string | null;
+    sha256: string | null;
+    requestedAt: string;
+    completedAt: string | null;
+    errorMessage: string | null;
+  }>;
+}
+
+export interface SubmitInvoiceInput {
+  projectId: string;
+  milestoneId: string;
+  invoiceNumber: string;
+  externalReference?: string;
+}
+
+export interface ReviewInvoiceInput {
+  projectId: string;
+  invoiceId: string;
+  status: "approved" | "rejected";
+  reviewNote?: string;
+}
+
+export interface CompanyProfileSettings {
+  organizationName: string;
+  contactName: string;
+  contactRole: string;
+  teamSize: string;
+  website: string;
+}
+
+export interface FreelancerProfileSettings {
+  displayName: string;
+  timezone: string;
+  headline: string;
+  skills: string;
+  portfolioUrls: string[];
 }

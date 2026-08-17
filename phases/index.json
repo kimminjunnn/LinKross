@@ -4,6 +4,7 @@
     { "dir": "1-project-recruitment", "status": "pending" },
     { "dir": "2-sow-approval", "status": "pending" },
     { "dir": "3-github-verification", "status": "pending" },
-    { "dir": "4-payment-evidence", "status": "pending" }
+    { "dir": "4-payment-evidence", "status": "pending" },
+    { "dir": "5-backend-gap-closure", "status": "completed" }
   ]
 }

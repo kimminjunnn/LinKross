@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Save, ShieldCheck } from "lucide-react";
 
-import { getOpportunity } from "@/data/opportunities";
 import { getOpportunityAction, submitProposalAction } from "@/app/actions/projects";
 
 const STORAGE_PREFIX = "linkross:proposal:";
@@ -31,41 +30,24 @@ export default function FreelancerApplicationEditorPage() {
 
   useEffect(() => {
     const id = params.assessmentId;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
     async function loadData() {
-      if (!isUuid) {
-        // Fallback to static mock data
-        const mockOpp = getOpportunity(id);
-        if (mockOpp) {
-          setOpportunity({
-            id: mockOpp.id,
-            title: mockOpp.title,
-            organization: mockOpp.organization,
-            requirements: mockOpp.requirements.join("\n"),
-          });
-        } else {
-          setOpportunity(null);
-        }
-        setIsLoading(false);
+      const result = await getOpportunityAction(id);
+      if (result.ok) {
+        setOpportunity({
+          id: result.data.id,
+          title: result.data.title,
+          organization: result.data.organizationName,
+          requirements: result.data.requirements,
+        });
       } else {
-        // Fetch from Supabase
-        const result = await getOpportunityAction(id);
-        if (result.ok) {
-          setOpportunity({
-            id: result.data.id,
-            title: result.data.title,
-            organization: result.data.organizationName,
-            requirements: result.data.requirements,
-          });
-        } else {
-          setOpportunity(null);
-        }
-        setIsLoading(false);
+        setOpportunity(null);
+        setErrorMessage(result.error.message);
       }
+      setIsLoading(false);
     }
 
-    loadData();
+    void loadData();
   }, [params.assessmentId]);
 
   useEffect(() => {
@@ -102,35 +84,14 @@ export default function FreelancerApplicationEditorPage() {
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opportunity.id);
-    console.log("[SubmitClientDebug] Submitting. Opportunity ID:", opportunity.id, "isUuid?", isUuid);
-    
-    if (isUuid) {
-      console.log("[SubmitClientDebug] Calling submitProposalAction...");
-      const result = await submitProposalAction(opportunity.id, proposal);
-      console.log("[SubmitClientDebug] Action result:", result);
-      if (!result.ok) {
-        // Check if unique constraint violated (already applied)
-        if (result.error?.includes("unique_proposals") || result.error?.includes("duplicate")) {
-          setErrorMessage("이미 이 프로젝트에 지원서를 제출하셨습니다.");
-        } else {
-          setErrorMessage(result.error || "지원서 제출에 실패했습니다.");
-        }
-        setIsSubmitting(false);
-        return;
-      }
+    const result = await submitProposalAction(opportunity.id, proposal, supportNeeded);
+    if (!result.ok) {
+      setErrorMessage(result.error.message);
+      setIsSubmitting(false);
+      return;
     }
 
-    const submittedAt = new Date().toISOString();
-    window.localStorage.setItem(
-      `${STORAGE_PREFIX}${params.assessmentId}`,
-      JSON.stringify({
-        proposal,
-        supportNeeded,
-        status: "submitted",
-        submittedAt,
-      }),
-    );
+    window.localStorage.removeItem(`${STORAGE_PREFIX}${params.assessmentId}`);
     window.localStorage.setItem(
       "linkross:last-submitted-opportunity",
       opportunity.id,

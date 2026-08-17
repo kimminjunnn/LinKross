@@ -1,0 +1,738 @@
+import type {
+  BackendResult,
+  ConnectRepositoryInput,
+  DecideMilestoneInput,
+  MilestoneSubmissionRecord,
+  ProjectRepositoryRecord,
+  RequestVerificationInput,
+  SubmitMilestonePullRequestInput,
+  VerificationMilestoneRecord,
+  VerificationResultRecord,
+  VerificationRunRecord,
+  VerificationWorkspace,
+} from "@/lib/backend/contracts";
+import { mapBackendError } from "@/lib/backend/errors";
+import { isUuid } from "@/lib/backend/validation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const GITHUB_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/#?]+?)(?:\.git)?\/?$/i;
+const GITHUB_PR_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)\/?$/i;
+
+type AccessContext = {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  userId: string;
+  isCompany: boolean;
+};
+
+export async function getVerificationWorkspace(
+  projectId: string,
+): Promise<BackendResult<VerificationWorkspace>> {
+  const access = await getProjectAccess(projectId);
+  if (!access.ok) return access;
+  const { supabase, isCompany } = access.data;
+
+  const [{ data: repository, error: repositoryError }, { data: sowVersion, error: sowError }] =
+    await Promise.all([
+      supabase
+        .from("project_repositories")
+        .select("id, project_id, owner_name, repository_name, repository_url, default_branch, is_private, company_confirmed_at")
+        .eq("project_id", projectId)
+        .maybeSingle(),
+      supabase
+        .from("sow_versions")
+        .select("id, version_number")
+        .eq("project_id", projectId)
+        .eq("status", "approved")
+        .maybeSingle(),
+    ]);
+
+  if (repositoryError || sowError) {
+    return {
+      ok: false,
+      error: mapBackendError(repositoryError ?? sowError, "검수 기준 정보를 불러오지 못했습니다."),
+    };
+  }
+
+  if (!sowVersion) {
+    return {
+      ok: true,
+      data: {
+        projectId,
+        isCompany,
+        repository: repository ? toRepository(repository) : null,
+        sowVersionId: null,
+        sowVersionNumber: null,
+        milestones: [],
+      },
+    };
+  }
+
+  const { data: milestoneRows, error: milestoneError } = await supabase
+    .from("milestones")
+    .select("id, code, title, description, start_date, end_date, amount, currency, status, position")
+    .eq("sow_version_id", sowVersion.id)
+    .order("position", { ascending: true });
+
+  if (milestoneError) {
+    return { ok: false, error: mapBackendError(milestoneError, "마일스톤을 불러오지 못했습니다.") };
+  }
+
+  const milestoneIds = (milestoneRows ?? []).map((row) => row.id);
+  if (milestoneIds.length === 0) {
+    return {
+      ok: true,
+      data: {
+        projectId,
+        isCompany,
+        repository: repository ? toRepository(repository) : null,
+        sowVersionId: sowVersion.id,
+        sowVersionNumber: sowVersion.version_number,
+        milestones: [],
+      },
+    };
+  }
+
+  const [criteriaResult, submissionsResult, decisionsResult] = await Promise.all([
+    supabase
+      .from("completion_criteria")
+      .select("id, milestone_id, description, verification_method, is_required, position")
+      .in("milestone_id", milestoneIds)
+      .order("position", { ascending: true }),
+    supabase
+      .from("milestone_submissions")
+      .select("id, milestone_id, attempt_number, pull_request_number, pull_request_title, pull_request_url, head_branch, head_commit_sha, implementation_note, submitted_at")
+      .in("milestone_id", milestoneIds)
+      .order("attempt_number", { ascending: false }),
+    supabase
+      .from("milestone_decisions")
+      .select("milestone_id, decision, reason, decided_at")
+      .in("milestone_id", milestoneIds)
+      .order("decided_at", { ascending: false }),
+  ]);
+
+  const firstError = criteriaResult.error ?? submissionsResult.error ?? decisionsResult.error;
+  if (firstError) {
+    return { ok: false, error: mapBackendError(firstError, "검수 제출 정보를 불러오지 못했습니다.") };
+  }
+
+  const submissionRows = submissionsResult.data ?? [];
+  const submissionIds = submissionRows.map((row) => row.id);
+  const [claimsResult, runsResult] = submissionIds.length
+    ? await Promise.all([
+        supabase
+          .from("milestone_submission_criteria")
+          .select("submission_id, criterion_id")
+          .in("submission_id", submissionIds),
+        supabase
+          .from("verification_runs")
+          .select("id, submission_id, scope, requested_criterion_id, attempt_number, status, queued_at, started_at, completed_at, preview_url, error_summary")
+          .in("submission_id", submissionIds)
+          .order("queued_at", { ascending: false }),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }];
+
+  if (claimsResult.error || runsResult.error) {
+    return {
+      ok: false,
+      error: mapBackendError(claimsResult.error ?? runsResult.error, "검수 실행 정보를 불러오지 못했습니다."),
+    };
+  }
+
+  const runRows = runsResult.data ?? [];
+  const runIds = runRows.map((row) => row.id);
+  const resultsResult = runIds.length
+    ? await supabase
+        .from("criterion_results")
+        .select("id, run_id, criterion_id, status, observed_result, error_message")
+        .in("run_id", runIds)
+    : { data: [], error: null };
+
+  if (resultsResult.error) {
+    return { ok: false, error: mapBackendError(resultsResult.error, "완료조건 결과를 불러오지 못했습니다.") };
+  }
+
+  const resultRows = resultsResult.data ?? [];
+  const resultIds = resultRows.map((row) => row.id);
+  const evidenceResult = resultIds.length
+    ? await supabase
+        .from("evidence_artifacts")
+        .select("id, criterion_result_id, artifact_type, external_url, storage_path")
+        .in("criterion_result_id", resultIds)
+    : { data: [], error: null };
+
+  if (evidenceResult.error) {
+    return { ok: false, error: mapBackendError(evidenceResult.error, "검수 증거를 불러오지 못했습니다.") };
+  }
+
+  const criteriaByMilestone = groupBy(criteriaResult.data ?? [], "milestone_id");
+  const submissionsByMilestone = groupBy(submissionRows, "milestone_id");
+  const claimsBySubmission = groupBy(claimsResult.data ?? [], "submission_id");
+  const runsBySubmission = groupBy(runRows, "submission_id");
+  const resultsByRun = groupBy(resultRows, "run_id");
+  const evidenceByResult = groupBy(evidenceResult.data ?? [], "criterion_result_id");
+  type DecisionRow = NonNullable<typeof decisionsResult.data>[number];
+  const latestDecisionByMilestone = new Map<string, DecisionRow>();
+  for (const decision of decisionsResult.data ?? []) {
+    if (!latestDecisionByMilestone.has(decision.milestone_id)) {
+      latestDecisionByMilestone.set(decision.milestone_id, decision);
+    }
+  }
+
+  const milestones: VerificationMilestoneRecord[] = (milestoneRows ?? []).map((milestone) => ({
+    id: milestone.id,
+    code: milestone.code,
+    title: milestone.title,
+    description: milestone.description,
+    startDate: milestone.start_date,
+    endDate: milestone.end_date,
+    amount: Number(milestone.amount),
+    currency: milestone.currency,
+    status: milestone.status,
+    position: milestone.position,
+    checklist: (criteriaByMilestone.get(milestone.id) ?? []).map((criterion) => ({
+      id: criterion.id,
+      description: criterion.description,
+      verificationMethod: criterion.verification_method,
+      isRequired: criterion.is_required,
+    })),
+    submissions: (submissionsByMilestone.get(milestone.id) ?? []).map((submission) =>
+      toSubmission(
+        submission,
+        claimsBySubmission.get(submission.id) ?? [],
+        runsBySubmission.get(submission.id) ?? [],
+        resultsByRun,
+        evidenceByResult,
+      ),
+    ),
+    decision: latestDecisionByMilestone.has(milestone.id)
+      ? {
+          decision: latestDecisionByMilestone.get(milestone.id)!.decision,
+          reason: latestDecisionByMilestone.get(milestone.id)!.reason,
+          decidedAt: latestDecisionByMilestone.get(milestone.id)!.decided_at,
+        }
+      : null,
+  }));
+
+  return {
+    ok: true,
+    data: {
+      projectId,
+      isCompany,
+      repository: repository ? toRepository(repository) : null,
+      sowVersionId: sowVersion.id,
+      sowVersionNumber: sowVersion.version_number,
+      milestones,
+    },
+  };
+}
+
+export async function connectProjectRepository(
+  input: ConnectRepositoryInput,
+): Promise<BackendResult<ProjectRepositoryRecord>> {
+  if (!isUuid(input.projectId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트 ID가 아닙니다." } };
+  }
+  const match = input.repositoryUrl.trim().match(GITHUB_URL_PATTERN);
+  if (!match) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "공개 GitHub 저장소 URL을 입력해주세요." } };
+  }
+
+  const access = await getProjectAccess(input.projectId);
+  if (!access.ok) return access;
+  if (!access.data.isCompany) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "발주자만 공식 저장소를 확정할 수 있습니다." } };
+  }
+
+  const owner = match[1];
+  const name = match[2];
+  const github = await fetchGithubJson<{
+    id: number;
+    html_url: string;
+    full_name: string;
+    default_branch: string;
+    private: boolean;
+    archived: boolean;
+  }>(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`);
+
+  if (!github.ok) return github;
+  if (github.data.private) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "MVP에서는 공개 저장소만 연결할 수 있습니다." } };
+  }
+  if (github.data.archived) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "보관된 저장소는 검수 대상으로 연결할 수 없습니다." } };
+  }
+
+  const [canonicalOwner, canonicalName] = github.data.full_name.split("/");
+  const { data, error } = await access.data.supabase
+    .from("project_repositories")
+    .upsert(
+      {
+        project_id: input.projectId,
+        provider: "github",
+        owner_name: canonicalOwner,
+        repository_name: canonicalName,
+        repository_url: github.data.html_url,
+        default_branch: github.data.default_branch,
+        github_repository_id: github.data.id,
+        is_private: false,
+        connected_by: access.data.userId,
+        company_confirmed_at: new Date().toISOString(),
+      },
+      { onConflict: "project_id" },
+    )
+    .select("id, project_id, owner_name, repository_name, repository_url, default_branch, is_private, company_confirmed_at")
+    .single();
+
+  if (error || !data) {
+    return { ok: false, error: mapBackendError(error, "GitHub 저장소를 연결하지 못했습니다.") };
+  }
+  return { ok: true, data: toRepository(data) };
+}
+
+export async function submitMilestonePullRequest(
+  input: SubmitMilestonePullRequestInput,
+): Promise<BackendResult<{ submissionId: string; headCommitSha: string }>> {
+  if (!isUuid(input.projectId) || !isUuid(input.milestoneId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 마일스톤 제출 대상이 아닙니다." } };
+  }
+  const prMatch = input.pullRequestUrl.trim().match(GITHUB_PR_URL_PATTERN);
+  if (!prMatch) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "GitHub PR URL 형식이 올바르지 않습니다." } };
+  }
+
+  const access = await getProjectAccess(input.projectId);
+  if (!access.ok) return access;
+  if (access.data.isCompany) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 코드를 제출할 수 있습니다." } };
+  }
+
+  const { data: repository, error: repositoryError } = await access.data.supabase
+    .from("project_repositories")
+    .select("id, owner_name, repository_name")
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (repositoryError) {
+    return { ok: false, error: mapBackendError(repositoryError, "연결 저장소를 확인하지 못했습니다.") };
+  }
+  if (!repository) {
+    return { ok: false, error: { code: "CONFLICT", message: "발주자가 공식 GitHub 저장소를 먼저 연결해야 합니다." } };
+  }
+  if (
+    prMatch[1].toLowerCase() !== repository.owner_name.toLowerCase() ||
+    prMatch[2].toLowerCase() !== repository.repository_name.toLowerCase()
+  ) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "프로젝트 공식 저장소의 PR만 제출할 수 있습니다." } };
+  }
+
+  const { data: milestone, error: milestoneError } = await access.data.supabase
+    .from("milestones")
+    .select("id, status")
+    .eq("id", input.milestoneId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (milestoneError || !milestone) {
+    return { ok: false, error: mapBackendError(milestoneError, "마일스톤을 확인하지 못했습니다.") };
+  }
+  if (["approved", "cancelled"].includes(milestone.status)) {
+    return { ok: false, error: { code: "CONFLICT", message: "완료되거나 취소된 마일스톤에는 새 제출을 추가할 수 없습니다." } };
+  }
+
+  const uniqueCriterionIds = Array.from(new Set(input.claimedCriterionIds));
+  if (uniqueCriterionIds.length === 0 || uniqueCriterionIds.some((id) => !isUuid(id))) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "구현 완료한 조건을 한 개 이상 선택해주세요." } };
+  }
+  const { data: criteria, error: criteriaError } = await access.data.supabase
+    .from("completion_criteria")
+    .select("id")
+    .eq("milestone_id", input.milestoneId)
+    .in("id", uniqueCriterionIds);
+  if (criteriaError || (criteria ?? []).length !== uniqueCriterionIds.length) {
+    return { ok: false, error: mapBackendError(criteriaError, "완료조건 선택을 확인하지 못했습니다.") };
+  }
+
+  const prNumber = Number(prMatch[3]);
+  const github = await fetchGithubJson<{
+    number: number;
+    title: string;
+    html_url: string;
+    state: string;
+    head: { ref: string; sha: string };
+  }>(
+    `https://api.github.com/repos/${encodeURIComponent(repository.owner_name)}/${encodeURIComponent(repository.repository_name)}/pulls/${prNumber}`,
+  );
+  if (!github.ok) return github;
+  if (!/^[0-9a-f]{40}$/i.test(github.data.head.sha)) {
+    return { ok: false, error: { code: "CONFLICT", message: "GitHub에서 전체 Commit SHA를 확인하지 못했습니다." } };
+  }
+
+  const { data: existing } = await access.data.supabase
+    .from("milestone_submissions")
+    .select("id, head_commit_sha")
+    .eq("milestone_id", input.milestoneId)
+    .eq("head_commit_sha", github.data.head.sha)
+    .maybeSingle();
+  if (existing) return { ok: true, data: { submissionId: existing.id, headCommitSha: existing.head_commit_sha } };
+
+  const { data: previous } = await access.data.supabase
+    .from("milestone_submissions")
+    .select("id, attempt_number")
+    .eq("milestone_id", input.milestoneId)
+    .order("attempt_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: submission, error: submissionError } = await access.data.supabase
+    .from("milestone_submissions")
+    .insert({
+      project_id: input.projectId,
+      milestone_id: input.milestoneId,
+      repository_id: repository.id,
+      attempt_number: (previous?.attempt_number ?? 0) + 1,
+      pull_request_number: github.data.number,
+      pull_request_title: github.data.title,
+      pull_request_url: github.data.html_url,
+      head_branch: github.data.head.ref,
+      head_commit_sha: github.data.head.sha,
+      implementation_note: input.implementationNote?.trim() || null,
+      submitted_by: access.data.userId,
+      previous_submission_id: previous?.id ?? null,
+    })
+    .select("id, head_commit_sha")
+    .single();
+
+  if (submissionError || !submission) {
+    return { ok: false, error: mapBackendError(submissionError, "PR 제출 기록을 저장하지 못했습니다.") };
+  }
+
+  const { error: claimError } = await access.data.supabase
+    .from("milestone_submission_criteria")
+    .insert(
+      uniqueCriterionIds.map((criterionId) => ({
+        submission_id: submission.id,
+        milestone_id: input.milestoneId,
+        criterion_id: criterionId,
+      })),
+    );
+  if (claimError) {
+    return { ok: false, error: mapBackendError(claimError, "제출 완료조건을 저장하지 못했습니다.") };
+  }
+
+  return { ok: true, data: { submissionId: submission.id, headCommitSha: submission.head_commit_sha } };
+}
+
+export async function requestVerificationRun(
+  input: RequestVerificationInput,
+): Promise<BackendResult<{ runId: string; status: string }>> {
+  if (![input.projectId, input.milestoneId, input.submissionId].every(isUuid)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 검수 요청 대상이 아닙니다." } };
+  }
+  if (input.scope === "criterion" && (!input.criterionId || !isUuid(input.criterionId))) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "검수할 완료조건이 필요합니다." } };
+  }
+
+  const access = await getProjectAccess(input.projectId);
+  if (!access.ok) return access;
+  const { data: submission, error: submissionError } = await access.data.supabase
+    .from("milestone_submissions")
+    .select("id")
+    .eq("id", input.submissionId)
+    .eq("milestone_id", input.milestoneId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (submissionError || !submission) {
+    return { ok: false, error: mapBackendError(submissionError, "검수 제출을 확인하지 못했습니다.") };
+  }
+
+  if (input.scope === "criterion") {
+    const { data: claim, error: claimError } = await access.data.supabase
+      .from("milestone_submission_criteria")
+      .select("criterion_id")
+      .eq("submission_id", input.submissionId)
+      .eq("criterion_id", input.criterionId!)
+      .maybeSingle();
+    if (claimError || !claim) {
+      return { ok: false, error: mapBackendError(claimError, "제출 완료된 조건만 검수할 수 있습니다.") };
+    }
+  }
+
+  let latestQuery = access.data.supabase
+    .from("verification_runs")
+    .select("id, status, attempt_number")
+    .eq("submission_id", input.submissionId)
+    .eq("scope", input.scope)
+    .order("attempt_number", { ascending: false })
+    .limit(1);
+  latestQuery = input.scope === "criterion"
+    ? latestQuery.eq("requested_criterion_id", input.criterionId!)
+    : latestQuery.is("requested_criterion_id", null);
+  const { data: latestRows, error: latestError } = await latestQuery;
+  if (latestError) return { ok: false, error: mapBackendError(latestError, "이전 검수 요청을 확인하지 못했습니다.") };
+  const previousRun = latestRows?.[0];
+  if (previousRun && ["queued", "provisioning", "installing", "building", "running"].includes(previousRun.status)) {
+    return { ok: true, data: { runId: previousRun.id, status: previousRun.status } };
+  }
+  const nextAttempt = (previousRun?.attempt_number ?? 0) + 1;
+  const idempotencyKey = [input.submissionId, input.scope, input.criterionId ?? "all", nextAttempt].join(":");
+
+  const { data: run, error: runError } = await access.data.supabase
+    .from("verification_runs")
+    .insert({
+      project_id: input.projectId,
+      milestone_id: input.milestoneId,
+      submission_id: input.submissionId,
+      scope: input.scope,
+      requested_criterion_id: input.scope === "criterion" ? input.criterionId : null,
+      attempt_number: nextAttempt,
+      idempotency_key: idempotencyKey,
+      status: "queued",
+      requested_by: access.data.userId,
+    })
+    .select("id, status")
+    .single();
+
+  if (runError || !run) {
+    if (runError?.code === "23505") {
+      const { data: concurrentRun } = await access.data.supabase
+        .from("verification_runs")
+        .select("id, status")
+        .eq("idempotency_key", idempotencyKey)
+        .maybeSingle();
+      if (concurrentRun) return { ok: true, data: { runId: concurrentRun.id, status: concurrentRun.status } };
+    }
+    return { ok: false, error: mapBackendError(runError, "검수 요청을 저장하지 못했습니다.") };
+  }
+  return { ok: true, data: { runId: run.id, status: run.status } };
+}
+
+export async function decideMilestone(
+  input: DecideMilestoneInput,
+): Promise<BackendResult<{ decisionId: string }>> {
+  if (![input.projectId, input.milestoneId, input.submissionId].every(isUuid)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 승인 대상이 아닙니다." } };
+  }
+  if (input.verificationRunId && !isUuid(input.verificationRunId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 검수 실행이 아닙니다." } };
+  }
+  if (input.decision === "revision_required" && !input.reason?.trim()) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "수정 요청 사유를 입력해주세요." } };
+  }
+
+  const access = await getProjectAccess(input.projectId);
+  if (!access.ok) return access;
+  if (!access.data.isCompany) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "발주자만 최종 결정을 기록할 수 있습니다." } };
+  }
+
+  if (input.decision === "approved") {
+    if (!input.verificationRunId) {
+      return { ok: false, error: { code: "CONFLICT", message: "검수 실행 결과를 선택해야 승인할 수 있습니다." } };
+    }
+    const { data: run, error: runError } = await access.data.supabase
+      .from("verification_runs")
+      .select("status")
+      .eq("id", input.verificationRunId)
+      .eq("submission_id", input.submissionId)
+      .maybeSingle();
+    if (runError || !run || !["passed", "needs_review"].includes(run.status)) {
+      return { ok: false, error: mapBackendError(runError, "통과 또는 사람 확인 결과가 있는 실행만 승인할 수 있습니다.") };
+    }
+  }
+
+  const { data, error } = await access.data.supabase
+    .from("milestone_decisions")
+    .insert({
+      project_id: input.projectId,
+      milestone_id: input.milestoneId,
+      submission_id: input.submissionId,
+      verification_run_id: input.verificationRunId ?? null,
+      decision: input.decision,
+      reason: input.reason?.trim() || null,
+      decided_by: access.data.userId,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return { ok: false, error: mapBackendError(error, "마일스톤 결정을 저장하지 못했습니다.") };
+  }
+  return { ok: true, data: { decisionId: data.id } };
+}
+
+async function getProjectAccess(projectId: string): Promise<BackendResult<AccessContext>> {
+  if (!isUuid(projectId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트 ID가 아닙니다." } };
+  }
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id, company_id")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (projectError) {
+    return { ok: false, error: mapBackendError(projectError, "프로젝트 권한을 확인하지 못했습니다.") };
+  }
+  if (!project) {
+    return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
+  }
+  const isCompany = project.company_id === authData.user.id;
+  if (!isCompany) {
+    const { data: selection, error: selectionError } = await supabase
+      .from("selections")
+      .select("id")
+      .eq("project_id", projectId)
+      .maybeSingle();
+    if (selectionError || !selection) {
+      return { ok: false, error: mapBackendError(selectionError, "프로젝트 참여자만 검수 정보를 확인할 수 있습니다.") };
+    }
+  }
+
+  return { ok: true, data: { supabase, userId: authData.user.id, isCompany } };
+}
+
+async function fetchGithubJson<T>(url: string): Promise<BackendResult<T>> {
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "LinKross-MVP",
+        ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+      },
+    });
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: {
+          code: response.status === 404 ? "NOT_FOUND" : "CONFLICT",
+          message:
+            response.status === 404
+              ? "GitHub에서 공개 저장소 또는 PR을 찾지 못했습니다."
+              : `GitHub 확인에 실패했습니다. (${response.status})`,
+        },
+      };
+    }
+    return { ok: true, data: (await response.json()) as T };
+  } catch {
+    return { ok: false, error: { code: "CONFLICT", message: "GitHub 연결이 지연되고 있습니다. 다시 시도해주세요." } };
+  }
+}
+
+function toRepository(row: {
+  id: string;
+  project_id: string;
+  owner_name: string;
+  repository_name: string;
+  repository_url: string;
+  default_branch: string | null;
+  is_private: boolean;
+  company_confirmed_at: string | null;
+}): ProjectRepositoryRecord {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    owner: row.owner_name,
+    name: row.repository_name,
+    url: row.repository_url,
+    defaultBranch: row.default_branch,
+    isPrivate: row.is_private,
+    companyConfirmedAt: row.company_confirmed_at,
+  };
+}
+
+function toSubmission(
+  submission: {
+    id: string;
+    attempt_number: number;
+    pull_request_number: number;
+    pull_request_title: string;
+    pull_request_url: string;
+    head_branch: string;
+    head_commit_sha: string;
+    implementation_note: string | null;
+    submitted_at: string;
+  },
+  claims: Array<{ criterion_id: string }>,
+  runs: Array<{
+    id: string;
+    scope: "criterion" | "milestone";
+    requested_criterion_id: string | null;
+    attempt_number: number;
+    status: VerificationRunRecord["status"];
+    queued_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    preview_url: string | null;
+    error_summary: string | null;
+  }>,
+  resultsByRun: Map<string, Array<{
+    id: string;
+    criterion_id: string;
+    status: VerificationResultRecord["status"];
+    observed_result: string | null;
+    error_message: string | null;
+  }>>,
+  evidenceByResult: Map<string, Array<{
+    id: string;
+    artifact_type: string;
+    external_url: string | null;
+    storage_path: string | null;
+  }>>,
+): MilestoneSubmissionRecord {
+  return {
+    id: submission.id,
+    attemptNumber: submission.attempt_number,
+    pullRequestNumber: submission.pull_request_number,
+    pullRequestTitle: submission.pull_request_title,
+    pullRequestUrl: submission.pull_request_url,
+    headBranch: submission.head_branch,
+    headCommitSha: submission.head_commit_sha,
+    implementationNote: submission.implementation_note,
+    submittedAt: submission.submitted_at,
+    claimedCriterionIds: claims.map((claim) => claim.criterion_id),
+    runs: runs.map((run) => ({
+      id: run.id,
+      scope: run.scope,
+      requestedCriterionId: run.requested_criterion_id,
+      attemptNumber: run.attempt_number,
+      status: run.status,
+      queuedAt: run.queued_at,
+      startedAt: run.started_at,
+      completedAt: run.completed_at,
+      previewUrl: run.preview_url,
+      errorSummary: run.error_summary,
+      results: (resultsByRun.get(run.id) ?? []).map((result) => ({
+        id: result.id,
+        criterionId: result.criterion_id,
+        status: result.status,
+        observedResult: result.observed_result,
+        errorMessage: result.error_message,
+        evidence: (evidenceByResult.get(result.id) ?? []).map((artifact) => ({
+          id: artifact.id,
+          type: artifact.artifact_type,
+          url: artifact.external_url,
+          storagePath: artifact.storage_path,
+        })),
+      })),
+    })),
+  };
+}
+
+function groupBy<T extends Record<string, unknown>>(
+  rows: T[],
+  key: keyof T,
+): Map<string, T[]> {
+  const result = new Map<string, T[]>();
+  for (const row of rows) {
+    const value = String(row[key]);
+    const group = result.get(value) ?? [];
+    group.push(row);
+    result.set(value, group);
+  }
+  return result;
+}

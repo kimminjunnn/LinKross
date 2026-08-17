@@ -14,6 +14,7 @@ import type {
   SowApprovalState,
   SowStatus,
   SowWorkspaceContext,
+  RequestSowRevisionInput,
   UserRole,
   VerificationMethod,
 } from "@/lib/backend/contracts";
@@ -341,9 +342,8 @@ export async function getSowApprovalState(
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id")
+    .select("id, company_id")
     .eq("id", projectId)
-    .eq("company_id", authData.user.id)
     .maybeSingle();
 
   if (projectError) {
@@ -351,6 +351,21 @@ export async function getSowApprovalState(
   }
   if (!project) {
     return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
+  }
+
+  if (project.company_id !== authData.user.id) {
+    const { data: selection, error: selectionError } = await supabase
+      .from("selections")
+      .select("id")
+      .eq("project_id", projectId)
+      .maybeSingle();
+
+    if (selectionError) {
+      return { ok: false, error: mapBackendError(selectionError, "프로젝트 참여 권한을 확인하지 못했습니다.") };
+    }
+    if (!selection) {
+      return { ok: false, error: { code: "FORBIDDEN", message: "프로젝트 참여자만 SOW를 확인할 수 있습니다." } };
+    }
   }
 
   let sowQuery = supabase
@@ -513,6 +528,140 @@ export async function approveSowAsCompany(
   }
 
   return { ok: true, data: state.data };
+}
+
+export async function approveSowAsFreelancer(
+  input: ApproveSowInput,
+): Promise<BackendResult<SowApprovalState>> {
+  if (!isUuid(input.projectId) || !isUuid(input.sowVersionId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 SOW 승인 대상이 아닙니다." } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: selection, error: selectionError } = await supabase
+    .from("selections")
+    .select("proposal_id")
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+
+  if (selectionError) {
+    return { ok: false, error: mapBackendError(selectionError, "프로젝트 참여 권한을 확인하지 못했습니다.") };
+  }
+  if (!selection) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 SOW를 승인할 수 있습니다." } };
+  }
+
+  const { data: proposal, error: proposalError } = await supabase
+    .from("proposals")
+    .select("id")
+    .eq("id", selection.proposal_id)
+    .eq("freelancer_id", authData.user.id)
+    .maybeSingle();
+
+  if (proposalError) {
+    return { ok: false, error: mapBackendError(proposalError, "선정 제안서를 확인하지 못했습니다.") };
+  }
+  if (!proposal) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 SOW를 승인할 수 있습니다." } };
+  }
+
+  const { data: sowVersion, error: sowError } = await supabase
+    .from("sow_versions")
+    .select("id, status, content_hash")
+    .eq("id", input.sowVersionId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+
+  if (sowError) {
+    return { ok: false, error: mapBackendError(sowError, "승인할 SOW를 확인하지 못했습니다.") };
+  }
+  if (!sowVersion) {
+    return { ok: false, error: { code: "NOT_FOUND", message: "승인할 SOW를 찾지 못했습니다." } };
+  }
+  if (sowVersion.content_hash !== input.contentHash) {
+    return {
+      ok: false,
+      error: { code: "CONFLICT", message: "SOW 버전이 변경되었습니다. 새로고침 후 다시 확인해주세요." },
+    };
+  }
+
+  const { data: existingApproval, error: existingError } = await supabase
+    .from("sow_approvals")
+    .select("id")
+    .eq("project_id", input.projectId)
+    .eq("sow_version_id", input.sowVersionId)
+    .eq("approver_role", "freelancer")
+    .maybeSingle();
+
+  if (existingError) {
+    return { ok: false, error: mapBackendError(existingError, "기존 승인 기록을 확인하지 못했습니다.") };
+  }
+  if (!existingApproval && sowVersion.status !== "in_review") {
+    return { ok: false, error: { code: "CONFLICT", message: "현재 검토 중인 SOW만 승인할 수 있습니다." } };
+  }
+
+  if (!existingApproval) {
+    const { error: approvalError } = await supabase.from("sow_approvals").insert({
+      project_id: input.projectId,
+      sow_version_id: input.sowVersionId,
+      approver_id: authData.user.id,
+      approver_role: "freelancer",
+      approver_name_snapshot: getUserDisplayName(authData.user.user_metadata, authData.user.email),
+      content_hash: input.contentHash,
+    });
+
+    if (approvalError) {
+      return { ok: false, error: mapBackendError(approvalError, "SOW 승인을 저장하지 못했습니다.") };
+    }
+  }
+
+  const state = await getSowApprovalState(input.projectId, input.sowVersionId);
+  if (!state.ok) return state;
+  if (!state.data) {
+    return { ok: false, error: { code: "NOT_FOUND", message: "승인한 SOW를 다시 불러오지 못했습니다." } };
+  }
+  return { ok: true, data: state.data };
+}
+
+export async function requestSowRevision(
+  input: RequestSowRevisionInput,
+): Promise<BackendResult<SowApprovalState>> {
+  if (!isUuid(input.projectId) || !isUuid(input.sowVersionId) || !input.reason.trim()) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "수정 요청 사유를 입력해주세요." } };
+  }
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+
+  const { data: sow, error: sowError } = await supabase
+    .from("sow_versions")
+    .select("id, status, content_hash")
+    .eq("id", input.sowVersionId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (sowError || !sow) return { ok: false, error: mapBackendError(sowError, "검토 중인 SOW를 찾지 못했습니다.") };
+  if (sow.status !== "in_review" || sow.content_hash !== input.contentHash) {
+    return { ok: false, error: { code: "CONFLICT", message: "현재 검토 중인 동일 SOW 버전에만 수정을 요청할 수 있습니다." } };
+  }
+
+  const { error } = await supabase.from("sow_revision_requests").insert({
+    project_id: input.projectId,
+    sow_version_id: input.sowVersionId,
+    reason: input.reason.trim(),
+    content_hash: input.contentHash,
+    requested_by: authData.user.id,
+    requester_role: "freelancer",
+  });
+  if (error) return { ok: false, error: mapBackendError(error, "수정 요청을 저장하지 못했습니다.") };
+  const updated = await getSowApprovalState(input.projectId, input.sowVersionId);
+  if (!updated.ok) return updated;
+  if (!updated.data) return { ok: false, error: { code: "NOT_FOUND", message: "수정 요청된 SOW를 다시 불러오지 못했습니다." } };
+  return { ok: true, data: updated.data };
 }
 
 function toSowApprovalState({

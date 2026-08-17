@@ -79,7 +79,7 @@
 
 ### 구현
 
-- `/freelancer/applications/[assessmentId]`의 localStorage를 `proposals`로 교체한다.
+- `/freelancer/applications/[assessmentId]`의 제출 원문과 상태는 `proposals`를 단일 진실 소스로 사용한다. 제출 전 기기 초안만 localStorage에 둔다. (완료)
 - 자유 형식 `content` 원문과 선택 메모를 그대로 저장한다.
 - 제안서 목록·상세를 기업의 모집 관리 화면에 연결한다.
 - 선정 버튼은 `selections` 한 행을 생성한다.

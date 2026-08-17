@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, CircleAlert } from "lucide-react";
@@ -11,14 +11,12 @@ import { SowKoreanForm } from "@/components/sow/sow-korean-form";
 import { SowEnglishPreview } from "@/components/sow/sow-english-preview";
 import {
   EnglishSOWResult,
-  generateSOWWithRAGAsync,
   MilestoneInput,
 } from "@/lib/rag-translator";
-import { analyzeWorkDetailWithLLM } from "@/app/actions/analyze";
+import { analyzeWorkDetailWithLLM, generateEnglishSowWithLLM } from "@/app/actions/analyze";
 import { saveSowDraftAction, submitSowForReviewAction } from "@/app/actions/sow";
 import {
   ApprovalSowSnapshot,
-  saveApprovalSowSnapshot,
 } from "@/lib/sow-approval";
 import type { SowWorkspaceContext } from "@/lib/backend";
 
@@ -52,38 +50,13 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
   const [milestones, setMilestones] =
     useState<MilestoneInput[]>(INITIAL_MILESTONES);
   const [englishSow, setEnglishSow] = useState<EnglishSOWResult | null>(null);
-  const [isGenerating, setIsGenerating] = useState(true);
-  const [statusMessage, setStatusMessage] = useState<string | null>(
-    "초기 영문 명세서를 불러오는 중입니다...",
-  );
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [dateError, setDateError] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const applyProjectContext = (result: EnglishSOWResult): EnglishSOWResult => ({
-    ...result,
-    header: {
-      ...result.header,
-      projectName: context.title,
-      client: "발주자",
-      vendor: context.assigneeName ?? "선정된 프리랜서",
-      effectiveDate: `${startDate} ~ ${endDate}`,
-    },
-  });
-
-  // 초기 렌더링 시 비동기 RAG 엔진 동작
-  React.useEffect(() => {
-    generateSOWWithRAGAsync(workDetail, startDate, endDate, INITIAL_MILESTONES)
-      .then((result) => setEnglishSow(applyProjectContext(result)))
-      .catch((e) => console.error("Initial SOW generation failed:", e))
-      .finally(() => {
-        setIsGenerating(false);
-        setStatusMessage(null);
-      });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // AI 분석 실행 (LLM 기반)
   const handleAnalyzeAI = async (fileContent?: string) => {
@@ -165,12 +138,12 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
     );
 
     try {
-      const result = await generateSOWWithRAGAsync(textToAnalyze, startDate, endDate, milestones);
-      setEnglishSow(applyProjectContext(result));
+      const result = await generateEnglishSowWithLLM({ projectTitle: context.title, assigneeName: context.assigneeName, workDetail: textToAnalyze, startDate, endDate, milestones });
+      setEnglishSow(result);
       setStatusMessage("✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!");
     } catch (e) {
       console.error(e);
-      setStatusMessage("❌ 번역 API 호출에 실패했습니다.");
+      setStatusMessage(`❌ 영문 SOW 생성 실패: ${e instanceof Error ? e.message : "AI 호출을 완료하지 못했습니다."}`);
     } finally {
       setIsGenerating(false);
       setTimeout(() => setStatusMessage(null), 4000);
@@ -241,7 +214,6 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
       return;
     }
 
-    saveApprovalSowSnapshot(projectId, snapshot);
     setStatusMessage("✅ 업무 명세서 검토 요청이 저장되었고, 승인 탭으로 전달했습니다.");
     router.push(`/company/projects/${projectId}/approval`);
   };

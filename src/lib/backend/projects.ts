@@ -73,6 +73,64 @@ export async function createProject(
   return { ok: true, data: { projectId: data } };
 }
 
+export async function uploadProjectFile(
+  projectId: string,
+  file: File,
+): Promise<BackendResult<{ fileId: string }>> {
+  if (!isUuid(projectId) || !(file instanceof File) || file.size === 0) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "첨부할 파일을 확인해주세요." } };
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "첨부 파일은 20MB 이하여야 합니다." } };
+  }
+  const allowedTypes = new Set([
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "text/plain",
+  ]);
+  if (!allowedTypes.has(file.type)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "PDF, DOCX, PNG, JPG, WebP 또는 텍스트 파일만 첨부할 수 있습니다." } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("current_requirement_version_id")
+    .eq("id", projectId)
+    .eq("company_id", authData.user.id)
+    .maybeSingle();
+  if (projectError || !project?.current_requirement_version_id) {
+    return { ok: false, error: mapBackendError(projectError, "첨부 대상 요구사항 버전을 찾지 못했습니다.") };
+  }
+
+  const safeName = file.name.normalize("NFKC").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120) || "attachment";
+  const storagePath = `${projectId}/${crypto.randomUUID()}-${safeName}`;
+  const { error: uploadError } = await supabase.storage.from("linkross-project-files").upload(storagePath, file, { contentType: file.type, upsert: false });
+  if (uploadError) return { ok: false, error: mapBackendError(uploadError, "파일을 업로드하지 못했습니다.") };
+
+  const { data, error } = await supabase.from("project_files").insert({
+    project_id: projectId,
+    requirement_version_id: project.current_requirement_version_id,
+    bucket_id: "linkross-project-files",
+    storage_path: storagePath,
+    original_name: file.name,
+    mime_type: file.type,
+    size_bytes: file.size,
+    visibility: "public",
+    uploaded_by: authData.user.id,
+  }).select("id").single();
+  if (error || !data) {
+    await supabase.storage.from("linkross-project-files").remove([storagePath]);
+    return { ok: false, error: mapBackendError(error, "파일 기록을 저장하지 못했습니다.") };
+  }
+  return { ok: true, data: { fileId: data.id } };
+}
+
 export async function listPublicOpportunities(): Promise<BackendResult<OpportunitySummary[]>> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -97,13 +155,21 @@ export async function getPublicOpportunity(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("public_opportunities")
-    .select(
-      "id,title,organization_name,goal,project_type,technology,requirements,deliverables,out_of_scope,applicant_guidance,budget_amount,budget_max_amount,budget_type,currency,start_date,end_date,recruitment_start_at,recruitment_end_at,current_requirement_version_id,created_at",
-    )
-    .eq("id", projectId)
-    .maybeSingle();
+  const [{ data, error }, { data: fileRows, error: filesError }] = await Promise.all([
+    supabase
+      .from("public_opportunities")
+      .select(
+        "id,title,organization_name,goal,project_type,technology,requirements,deliverables,out_of_scope,applicant_guidance,budget_amount,budget_max_amount,budget_type,currency,start_date,end_date,recruitment_start_at,recruitment_end_at,current_requirement_version_id,created_at",
+      )
+      .eq("id", projectId)
+      .maybeSingle(),
+    supabase
+      .from("project_files")
+      .select("id, storage_path, original_name, mime_type, size_bytes")
+      .eq("project_id", projectId)
+      .eq("visibility", "public")
+      .order("created_at", { ascending: true }),
+  ]);
 
   if (error) {
     return { ok: false, error: mapBackendError(error, "프로젝트를 불러오지 못했습니다.") };
@@ -111,6 +177,18 @@ export async function getPublicOpportunity(
   if (!data) {
     return { ok: false, error: { code: "NOT_FOUND", message: "모집 중인 프로젝트를 찾을 수 없습니다." } };
   }
+  if (filesError) return { ok: false, error: mapBackendError(filesError, "프로젝트 첨부파일을 불러오지 못했습니다.") };
+
+  const attachments = await Promise.all((fileRows ?? []).map(async (file) => {
+    const { data: signed } = await supabase.storage.from("linkross-project-files").createSignedUrl(file.storage_path, 3600);
+    return {
+      id: file.id,
+      name: file.original_name,
+      mimeType: file.mime_type,
+      sizeBytes: Number(file.size_bytes),
+      downloadUrl: signed?.signedUrl ?? "",
+    };
+  }));
 
   const row = data as OpportunityRow;
   return {
@@ -124,6 +202,7 @@ export async function getPublicOpportunity(
       recruitmentStartAt: row.recruitment_start_at,
       currentRequirementVersionId: row.current_requirement_version_id,
       createdAt: row.created_at,
+      attachments: attachments.filter((attachment) => attachment.downloadUrl),
     },
   };
 }
@@ -146,18 +225,33 @@ interface CompanyProjectVersionRow {
 }
 
 export async function listCompanyProjects(): Promise<BackendResult<CompanyProjectSummary[]>> {
+  return listOwnedCompanyProjects("preparing");
+}
+
+export async function listCompanyWorkspaceProjects(): Promise<BackendResult<CompanyProjectSummary[]>> {
+  return listOwnedCompanyProjects(null);
+}
+
+async function listOwnedCompanyProjects(
+  lifecycleStage: "preparing" | null,
+): Promise<BackendResult<CompanyProjectSummary[]>> {
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) {
     return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
   }
 
-  const { data: projects, error: projectsError } = await supabase
+  let projectsQuery = supabase
     .from("projects")
     .select("id, status, lifecycle_stage, current_requirement_version_id, created_at")
     .eq("company_id", authData.user.id)
-    .eq("lifecycle_stage", "preparing")
     .order("created_at", { ascending: false });
+
+  if (lifecycleStage) {
+    projectsQuery = projectsQuery.eq("lifecycle_stage", lifecycleStage);
+  }
+
+  const { data: projects, error: projectsError } = await projectsQuery;
 
   if (projectsError) {
     return { ok: false, error: mapBackendError(projectsError, "프로젝트 목록을 불러오지 못했습니다.") };

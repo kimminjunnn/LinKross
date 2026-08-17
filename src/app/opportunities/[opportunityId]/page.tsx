@@ -6,6 +6,7 @@ import {
   Clock,
   DollarSign,
   FileCheck2,
+  Paperclip,
   Info,
   Layers3,
 } from "lucide-react";
@@ -145,6 +146,21 @@ export default async function OpportunityDetailPage({
                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
                   {opportunity.applicantGuidance}
                 </p>
+              </DetailSection>
+            )}
+
+            {opportunity.attachments.length > 0 && (
+              <DetailSection title="참고자료" icon={<Paperclip className="size-5 text-brand-600" />}>
+                <ul className="space-y-2">
+                  {opportunity.attachments.map((attachment) => (
+                    <li key={attachment.id}>
+                      <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl border border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-brand-300 hover:text-brand-700">
+                        <span>{attachment.name}</span>
+                        <span className="text-xs font-normal text-slate-400">{Math.ceil(attachment.sizeBytes / 1024)} KB</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </DetailSection>
             )}
           </article>

@@ -3,19 +3,12 @@
 import OpenAI from "openai";
 
 import { assertActionRole } from "@/lib/auth/workspace-access";
+import type { EnglishSOWResult, MilestoneInput } from "@/lib/rag-translator";
+import { retrieveGlossaryTerms } from "@/lib/rag-translator";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-export type MilestoneInput = {
-  id: string;
-  code: string;
-  title: string;
-  period: string;
-  amount: string;
-  dods: string[];
-};
 
 export type AIAnalysisResult = {
   milestones: MilestoneInput[];
@@ -120,4 +113,83 @@ ${workDetail}
         : "LLM 연동 분석 중 오류가 발생했습니다.",
     );
   }
+}
+
+export async function generateEnglishSowWithLLM(input: {
+  projectTitle: string;
+  assigneeName: string | null;
+  workDetail: string;
+  startDate: string;
+  endDate: string;
+  milestones: MilestoneInput[];
+}): Promise<EnglishSOWResult> {
+  await assertActionRole("company");
+  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
+  if (!input.workDetail.trim() || input.milestones.length === 0) throw new Error("SOW 원문과 마일스톤이 필요합니다.");
+  if (input.workDetail.length > 20_000 || input.milestones.length > 5) throw new Error("SOW 입력은 20,000자와 마일스톤 5개 이하여야 합니다.");
+
+  const retrievedTerms = retrieveGlossaryTerms(`${input.workDetail} ${input.milestones.flatMap((milestone) => [milestone.title, ...milestone.dods]).join(" ")}`);
+  const completion = await openai.chat.completions.parse({
+    model: process.env.OPENAI_MODEL ?? "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: "You draft plain-English software Statements of Work. Stay grounded in the supplied Korean source. Never invent escrow, automatic payment, legal conclusions, security guarantees, or automatic acceptance. Use TBD for missing terms. Acceptance criteria must be observable, and human approval remains explicit.",
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          source: input.workDetail,
+          period: { start: input.startDate, end: input.endDate },
+          milestones: input.milestones.map(({ title, dods }) => ({ title, completionConditions: dods })),
+          glossary: retrievedTerms,
+        }),
+      },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "grounded_sow_draft",
+        strict: true,
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            background: { type: "string" },
+            objective: { type: "string" },
+            inScope: { type: "array", items: { type: "string" } },
+            outOfScope: { type: "array", items: { type: "string" } },
+            translatedMilestones: { type: "array", items: { type: "object", additionalProperties: false, properties: { titleEn: { type: "string" }, dodsEn: { type: "array", items: { type: "string" } } }, required: ["titleEn", "dodsEn"] } },
+            acceptanceCriteria: { type: "array", items: { type: "string" } },
+            definitionOfDone: { type: "array", items: { type: "string" } },
+            clientResponsibilities: { type: "string" },
+            vendorResponsibilities: { type: "string" },
+            unmappedContent: { type: "array", items: { type: "string" } },
+          },
+          required: ["background", "objective", "inScope", "outOfScope", "translatedMilestones", "acceptanceCriteria", "definitionOfDone", "clientResponsibilities", "vendorResponsibilities", "unmappedContent"],
+        },
+      },
+    },
+    temperature: 0.1,
+  });
+  const draft = completion.choices[0].message.parsed as {
+    background: string; objective: string; inScope: string[]; outOfScope: string[];
+    translatedMilestones: Array<{ titleEn: string; dodsEn: string[] }>;
+    acceptanceCriteria: string[]; definitionOfDone: string[];
+    clientResponsibilities: string; vendorResponsibilities: string; unmappedContent: string[];
+  } | null;
+  if (!draft || draft.translatedMilestones.length !== input.milestones.length) throw new Error("AI가 마일스톤 구조를 정확히 반환하지 못했습니다. 다시 시도해주세요.");
+
+  return {
+    version: "draft",
+    header: { projectName: input.projectTitle, client: "Client", vendor: input.assigneeName ?? "Selected freelancer", effectiveDate: `${input.startDate} ~ ${input.endDate}` },
+    overview: { background: draft.background, objective: draft.objective },
+    scopeOfWork: { inScope: draft.inScope, outOfScope: draft.outOfScope },
+    timelineAndMilestones: input.milestones.map((milestone, index) => ({ code: milestone.code, titleEn: draft.translatedMilestones[index].titleEn, period: milestone.period, amount: milestone.amount, dodsEn: draft.translatedMilestones[index].dodsEn })),
+    acceptanceCriteria: draft.acceptanceCriteria,
+    definitionOfDone: draft.definitionOfDone,
+    rolesAndResponsibilities: { client: draft.clientResponsibilities, vendor: draft.vendorResponsibilities },
+    retrievedTerms,
+    unmappedContent: draft.unmappedContent,
+  };
 }

@@ -414,14 +414,20 @@ export function NewProjectForm({
 
               <label className="block text-sm font-bold text-app-foreground">
                 참고자료 파일
-                <span className="mt-2 flex min-h-28 flex-col items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center opacity-60">
+                <span className="mt-2 flex min-h-28 flex-col items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center">
                   <Paperclip aria-hidden="true" className="size-5 text-brand-600" />
                   <span className="mt-2 text-sm font-black text-app-foreground">
                     요구사항 문서나 화면 자료 첨부
                   </span>
                   <span className="mt-1 text-xs font-normal text-app-muted">
-                    파일 첨부 기능은 준비 중입니다. 지금은 위 메모 칸에 링크를 남겨주세요.
+                    PDF, DOCX, PNG, JPG, WebP, TXT · 최대 20MB
                   </span>
+                  <input
+                    name="attachment"
+                    type="file"
+                    accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt"
+                    className="mt-3 max-w-full text-xs font-normal text-app-muted file:mr-3 file:rounded-control file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-bold file:text-brand-700"
+                  />
                 </span>
               </label>
             </div>
@@ -612,7 +618,7 @@ export function NewProjectForm({
       {state.status === "success" ? (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-control bg-app-foreground px-4 py-3 text-sm font-bold text-white shadow-xl">
           <CheckCircle2 aria-hidden="true" className="size-4 text-emerald-400" />
-          공고가 성공적으로 등록되었습니다.
+          {state.warning ? `공고는 등록됐지만 첨부 실패: ${state.warning}` : "공고가 성공적으로 등록되었습니다."}
         </div>
       ) : null}
     </div>
