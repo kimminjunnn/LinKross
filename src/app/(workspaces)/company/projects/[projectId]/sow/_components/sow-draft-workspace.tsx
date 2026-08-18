@@ -67,11 +67,10 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // AI 분석 실행 (LLM 기반)
   const handleAnalyzeAI = async (fileContent?: string) => {
     let textToAnalyze = workDetail;
-    if (budget.trim()) {
-      textToAnalyze = `예산: ${budget} USDC\n\n${textToAnalyze}`;
+    if (context.budgetAmount) {
+      textToAnalyze = `예산: ${context.budgetAmount} USDC\n\n${textToAnalyze}`;
     }
     const combinedDetail = [textToAnalyze, fileContent].filter(Boolean).join("\n\n---\n\n");
 
@@ -84,15 +83,7 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
     setStatusMessage("✨ AI(LLM)가 문맥을 분석하여 최적의 마일스톤을 설계하고 있습니다...");
 
     try {
-      const analysis = await analyzeWorkDetailWithLLM(combinedDetail, startDate, endDate);
-
-      if (analysis.extractedStartDate) setStartDate(analysis.extractedStartDate);
-      if (analysis.extractedEndDate) setEndDate(analysis.extractedEndDate);
-
-      if (analysis.extractedBudget && !budget) {
-        const budgetNumStr = analysis.extractedBudget.replace(/[^0-9]/g, "");
-        setBudget(budgetNumStr);
-      }
+      const analysis = await analyzeWorkDetailWithLLM(combinedDetail, context.startDate, context.endDate);
 
       setMilestones(analysis.milestones);
       setStatusMessage("✅ AI 마일스톤 분석 및 자동 할당이 완료되었습니다.");
@@ -118,12 +109,7 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
       return;
     }
 
-    if (!startDate.trim() || !endDate.trim()) {
-      setDateError(true);
-      return;
-    } else {
-      setDateError(false);
-    }
+    // date check removed since DB handles it
 
     const hasIncompleteMilestone =
       milestones.length === 0 ||
@@ -147,7 +133,7 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
     );
 
     try {
-      const result = await generateEnglishSowWithLLM({ projectTitle: context.title, assigneeName: context.assigneeName, workDetail: textToAnalyze, startDate, endDate, milestones });
+      const result = await generateEnglishSowWithLLM({ projectTitle: context.title, assigneeName: context.assigneeName, workDetail: textToAnalyze, startDate: context.startDate, endDate: context.endDate, milestones });
       setEnglishSow(result);
       setStatusMessage("✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!");
     } catch (e) {
@@ -167,9 +153,9 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
     const result = await saveSowDraftAction({
       projectId,
       workDetail,
-      startDate,
-      endDate,
-      budget,
+      startDate: context.startDate,
+      endDate: context.endDate,
+      budget: context.budgetAmount.toString(),
       milestones: milestones.map(({ code, title, period, amount, dods }) => ({
         code,
         title,
@@ -200,9 +186,9 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
     const result = await submitSowForReviewAction({
       projectId,
       workDetail,
-      startDate,
-      endDate,
-      budget,
+      startDate: context.startDate,
+      endDate: context.endDate,
+      budget: context.budgetAmount.toString(),
       milestones: milestones.map(({ code, title, period, amount, dods }) => ({
         code,
         title,
@@ -254,19 +240,12 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
           <SowKoreanForm
             workDetail={workDetail}
             setWorkDetail={setWorkDetail}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            budget={budget}
-            setBudget={setBudget}
             milestones={milestones}
             setMilestones={setMilestones}
             onAnalyzeAI={handleAnalyzeAI}
             onGenerateEnglishSOW={handleGenerateEnglishSOW}
             isGenerating={isGenerating}
             onSaveDraft={handleSaveDraft}
-            dateError={dateError}
             isAnalyzing={isAnalyzing || isSavingDraft}
           />
         </div>
