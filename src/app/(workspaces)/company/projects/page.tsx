@@ -69,13 +69,23 @@ export default async function ProjectsPage() {
                     <h2 className="mt-3 truncate text-xl font-black text-app-foreground">{project.title}</h2>
                     <p className="mt-2 text-sm text-app-muted">계약 기준 금액 {amount}</p>
                   </div>
-                  <Link
-                    href={nextHref}
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white hover:bg-brand-600"
-                  >
-                    {project.lifecycleStage === "preparing" ? "업무 명세서 확인" : "검수 현황 확인"}
-                    <ArrowRight className="size-4" />
-                  </Link>
+                  {project.lifecycleStage === "preparing" ? (
+                    <Link
+                      href={nextHref}
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control border border-brand-200 bg-brand-50/50 px-5 text-sm font-bold text-brand-700 hover:bg-brand-100/70 hover:border-brand-300 transition-all duration-200 group"
+                    >
+                      업무 명세서 확인
+                      <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  ) : (
+                    <Link
+                      href={nextHref}
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white hover:bg-brand-600 shadow-sm hover:shadow transition-all duration-200 group"
+                    >
+                      검수 현황 확인
+                      <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  )}
                 </div>
               </article>
             );
