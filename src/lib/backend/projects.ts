@@ -257,7 +257,7 @@ export async function getCompanyProjectDetail(
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id, status, created_at, current_requirement_version_id")
+    .select("id, status, lifecycle_stage, created_at, current_requirement_version_id")
     .eq("id", projectId)
     .eq("company_id", authData.user.id)
     .maybeSingle();
@@ -304,6 +304,7 @@ export async function getCompanyProjectDetail(
       recruitmentStartAt: row.recruitment_start_at,
       recruitmentEndAt: row.recruitment_end_at,
       status: project.status,
+      lifecycleStage: project.lifecycle_stage,
       createdAt: project.created_at,
     },
   };

@@ -66,6 +66,28 @@ return result.data.map((opportunity) => opportunity.title);
 - `create_project_with_requirements` RPC나 검증 로직과 무관 — 미완성 값도 그대로 저장됨
 - 실제 등록(`createProject`) 성공 시 `deleteProjectDraft()`로 정리
 
+### `getSowWorkspaceContext(projectId)` / `saveSowDraft(input)` / `submitSowForReview(input)`
+
+- 사용자: 해당 프로젝트 발주자 본인
+- 용도: `/company/projects/[projectId]/sow` — 프로젝트 컨텍스트(제목·선정 프리랜서 이름) 조회, SOW 초안 저장, 검토 요청 제출
+- 내부 동작: `sow_versions`/`milestones`/`completion_criteria`에 순차 insert (RPC 없음 — RLS+트리거가 상태를 통제). 저장할 때마다 새 `version_number`를 만든다(수정이 아니라 새 버전 생성 — 승인 전 버전은 자유롭게 다시 저장 가능, DELETE 정책이 없어 기존 행은 지우지 않음).
+- `saveSowDraft`는 `status='draft'`, `submitSowForReview`는 `status='in_review'` + `content_hash`/`submitted_for_review_at` 기록
+
+### `getSowApprovalState(projectId)` / `approveSowAsCompany(input)`
+
+- 사용자: 해당 프로젝트 발주자 본인
+- 용도: `/company/projects/[projectId]/approval` — 최신 검토 대상 SOW 원문, 마일스톤, 완료조건과 양측 승인 상태 조회 및 PO 승인
+- 승인 입력의 `sowVersionId`와 `contentHash`를 서버에서 다시 검증해 화면을 연 뒤 변경된 버전을 승인하지 않도록 막는다.
+- 같은 사용자의 승인 재요청은 기존 승인 기록을 반환하는 멱등 동작으로 처리한다.
+- 양측 승인 완료 시 `sow_approvals_finalize` DB 트리거가 SOW, 마일스톤과 프로젝트 상태를 한 트랜잭션에서 전환한다. 애플리케이션에서 같은 상태 전이를 중복 수행하지 않는다.
+
+### `getApprovedSowMilestones(projectId)`
+
+- 사용자: 해당 프로젝트 발주자 본인
+- 용도: `/company/projects/[projectId]/verification` 마일스톤 탭 — 승인된 SOW의 마일스톤·완료조건만 표시
+- 승인된 `sow_versions`(status='approved')이 아직 없으면 `milestones: []`로 빈 상태 반환(양측 승인 전에는 마일스톤 탭이 비어 있는 게 정상)
+- PR/Commit/검수 결과(`milestone_submissions`, `verification_runs`, `criterion_results`)는 아직 연결 안 됨 — GitHub 연동은 별도 단계
+
 ### `listPublicOpportunities()`
 
 - 사용자: 비로그인 포함

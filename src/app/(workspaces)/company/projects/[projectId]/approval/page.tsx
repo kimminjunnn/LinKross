@@ -1,14 +1,21 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FileText, LockKeyhole, UserCheck } from "lucide-react";
 
+import {
+  approveSowAsCompanyAction,
+  getSowApprovalStateAction,
+} from "@/app/actions/sow";
 import { StatusBadge } from "@/components/project/status-badge";
 import { isProjectPreparing } from "@/config/project-lifecycle";
 import { PROJECTS } from "@/data/projects";
-import { ApprovalSowSnapshot } from "@/lib/sow-approval";
-import { getLatestSowApprovalAction } from "@/app/actions/sow";
+import type { SowApprovalState } from "@/lib/backend";
+import {
+  type ApprovalSowSnapshot,
+  readApprovalSowSnapshot,
+} from "@/lib/sow-approval";
 
 const fallbackDocumentSections = [
   {
@@ -31,7 +38,16 @@ const fallbackSummary = {
   needsReview: "업무명세서 탭에서 작성된 원본 내용을 확인",
 };
 
-const getEmptySowSnapshot = () => null;
+function formatVerificationMethod(method: string) {
+  const labels: Record<string, string> = {
+    automated_e2e: "자동 E2E 검수",
+    build: "빌드 확인",
+    manual: "PO 직접 확인",
+    document: "문서/커밋 근거 확인",
+  };
+
+  return labels[method] ?? method;
+}
 
 export default function ApprovalPage() {
   const params = useParams<{ projectId: string }>();
@@ -42,55 +58,73 @@ export default function ApprovalPage() {
   const [isPoApproved, setIsPoApproved] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isOriginalSummaryVisible, setIsOriginalSummaryVisible] = useState(false);
+  const [approvalState, setApprovalState] = useState<SowApprovalState | null>(null);
+  const [localSnapshot] = useState<ApprovalSowSnapshot | null>(() =>
+    readApprovalSowSnapshot(projectId),
+  );
+  const [isApprovalLoading, setIsApprovalLoading] = useState(true);
+  const [approvalLoadError, setApprovalLoadError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
 
-  const [sowSnapshot, setSowSnapshot] = useState<ApprovalSowSnapshot | null>(null);
+  const loadApprovalState = useCallback(async () => {
+    setIsApprovalLoading(true);
+    setApprovalLoadError(null);
 
-  useEffect(() => {
-    getLatestSowApprovalAction(projectId)
-      .then(data => setSowSnapshot(data))
-      .catch(err => console.error("Failed to load SOW:", err));
+    const result = await getSowApprovalStateAction(projectId);
+    if (result.ok) {
+      setApprovalState(result.data);
+    } else {
+      setApprovalState(null);
+      setApprovalLoadError(result.error.message);
+    }
+
+    setIsApprovalLoading(false);
   }, [projectId]);
 
-  const documentVersion = sowSnapshot?.version ?? "v1.2";
-  const activeDocumentSections = sowSnapshot?.documentSections ?? fallbackDocumentSections;
-  const activeAcceptanceCriteria = sowSnapshot?.acceptanceCriteria ?? acceptanceCriteria;
-  const activeDefinitionOfDone = sowSnapshot?.definitionOfDone ?? definitionOfDone;
-  const milestoneSummaries =
-    activeDocumentSections
-      .find((section) => section.title === "Milestones")
-      ?.body.split("\n")
-      .reduce<Array<{ code: string; title: string }>>((rows, line) => {
-        const match = line.match(/^(M\d+)\.\s*(.+)$/);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadApprovalState();
+    }, 0);
 
-        if (match?.[1] && match?.[2]) {
-          rows.push({ code: match[1], title: match[2] });
-        }
+    return () => window.clearTimeout(timeoutId);
+  }, [loadApprovalState]);
 
-        return rows;
-      }, []) ?? [];
-  const milestoneCriteriaRows = (
-    milestoneSummaries.length
-      ? milestoneSummaries
-      : [{ code: "M1", title: "Default verification" }]
-  ).map((milestone) => ({
-    ...milestone,
-    acceptanceCriteria: activeAcceptanceCriteria,
-    definitionOfDone: activeDefinitionOfDone,
-    verificationMethods: [
-      "Playwright sandbox run",
-      "Immutable Commit SHA",
-      "PO preview sign-off",
-    ],
-  }));
-  const activeSummary = sowSnapshot?.summary ?? fallbackSummary;
+  const sowDocument = approvalState?.document ?? localSnapshot;
+  const documentVersion = sowDocument?.version ?? "v1.2";
+  const activeDocumentSections = sowDocument?.documentSections ?? fallbackDocumentSections;
+  const activeAcceptanceCriteria = sowDocument?.acceptanceCriteria ?? acceptanceCriteria;
+  const activeDefinitionOfDone = sowDocument?.definitionOfDone ?? definitionOfDone;
+  const activeSummary = sowDocument?.summary ?? fallbackSummary;
+  const milestoneCriteriaRows =
+    approvalState?.milestones.map((milestone) => {
+      const milestoneAcceptanceCriteria = milestone.acceptanceCriteria.map((item) => item.description);
+      const milestoneDefinitionOfDone = milestone.definitionOfDone.map((item) => item.description);
+
+      return {
+        code: milestone.code,
+        title: milestone.title,
+        period: milestone.period,
+        amount: milestone.amount,
+        acceptanceCriteria: milestoneAcceptanceCriteria.length
+          ? milestoneAcceptanceCriteria
+          : activeAcceptanceCriteria,
+        definitionOfDone: milestoneDefinitionOfDone.length
+          ? milestoneDefinitionOfDone
+          : activeDefinitionOfDone,
+        verificationMethods: milestone.verificationMethods.length
+          ? milestone.verificationMethods.map(formatVerificationMethod)
+          : ["PO 직접 확인"],
+      };
+    }) ?? [];
   const translatedSummary = {
-    coreScope: sowSnapshot
+    coreScope: sowDocument
       ? "영문 SOW 원본의 Scope of Work 항목을 기준으로 이번 개발 범위를 확인합니다."
       : "업무 명세서 탭에서 승인 요청한 원본 문서가 아직 없습니다.",
-    keyAcceptance: sowSnapshot
+    keyAcceptance: sowDocument
       ? `${activeAcceptanceCriteria.length}개 Acceptance Criteria와 ${activeDefinitionOfDone.length}개 Definition of Done을 다음 검수 기준으로 사용합니다.`
       : "승인 요청 후 완료조건과 검수 기준이 이곳에 표시됩니다.",
-    needsReview: sowSnapshot
+    needsReview: sowDocument
       ? `${documentVersion} 원본 문서가 업무 명세서 탭에서 승인 요청한 버전과 같은지 확인하세요.`
       : "업무 명세서 탭에서 SOW를 생성하고 승인 요청을 진행하세요.",
   };
@@ -106,15 +140,49 @@ export default function ApprovalPage() {
         { label: "확인 포인트", value: translatedSummary.needsReview },
       ];
 
-  const handleFinalApproval = () => {
+  const isCompanyApproved =
+    isPoApproved || Boolean(approvalState?.approvals.company) || approvalState?.status === "approved";
+  const isFreelancerApproved = approvalState
+    ? Boolean(approvalState.approvals.freelancer) || approvalState.status === "approved"
+    : Boolean(localSnapshot);
+  const isApprovalComplete =
+    isReadOnly || approvalState?.status === "approved" || (isCompanyApproved && isFreelancerApproved);
+
+  const handleFinalApproval = async () => {
+    if (!approvalState) {
+      setStatusMessage("승인 요청된 업무명세서가 DB에 없습니다. 업무명세서 탭에서 승인 요청을 먼저 진행해주세요.");
+      setIsConfirmOpen(false);
+      return;
+    }
+
+    setIsApproving(true);
+    const result = await approveSowAsCompanyAction({
+      projectId,
+      sowVersionId: approvalState.sowVersionId,
+      contentHash: approvalState.contentHash,
+    });
+
+    if (!result.ok) {
+      setStatusMessage(`PO 승인 저장 실패: ${result.error.message}`);
+      setIsApproving(false);
+      setIsConfirmOpen(false);
+      return;
+    }
+
+    setApprovalState(result.data);
     setIsPoApproved(true);
-    router.push(`/company/projects/${projectId}/verification`);
+    setIsApproving(false);
+    setIsConfirmOpen(false);
+
+    if (result.data.status === "approved" || result.data.approvals.freelancer) {
+      router.push(`/company/projects/${projectId}/verification`);
+      return;
+    }
+
+    setStatusMessage("PO 승인 기록이 DB에 저장되었습니다. 프리랜서 승인까지 완료되면 다음 단계로 이동할 수 있습니다.");
   };
 
-  const isApprovalComplete = isReadOnly || isPoApproved;
-
   const handleCancelApproval = () => {
-    setIsPoApproved(false);
     setIsConfirmOpen(false);
   };
 
@@ -136,11 +204,26 @@ export default function ApprovalPage() {
             </p>
           </div>
           <StatusBadge tone={isApprovalComplete ? "success" : "warning"}>
-            {isApprovalComplete ? "양측 승인 완료" : "PO 승인 대기"}
+            {isApprovalLoading
+              ? "승인 정보 확인 중"
+              : isApprovalComplete
+                ? "양측 승인 완료"
+                : "PO 승인 대기"}
           </StatusBadge>
         </div>
-
       </section>
+
+      {approvalLoadError ? (
+        <div className="rounded-control border border-danger/30 bg-danger/10 p-4 text-sm font-bold text-danger">
+          {approvalLoadError}
+        </div>
+      ) : null}
+
+      {statusMessage ? (
+        <div className="rounded-control border border-brand-200 bg-brand-50 p-4 text-sm font-bold text-brand-800">
+          {statusMessage}
+        </div>
+      ) : null}
 
       <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
@@ -160,16 +243,32 @@ export default function ApprovalPage() {
               </p>
             </div>
             <StatusBadge tone={isReadOnly ? "success" : "brand"}>
-              {isReadOnly ? "승인 완료" : sowSnapshot ? "원본 문서 준비" : "승인 요청 대기"}
+              {isReadOnly ? "승인 완료" : sowDocument ? "원본 문서 준비" : "승인 요청 대기"}
             </StatusBadge>
           </div>
 
           <div className="mt-6 rounded-control border border-app-border bg-app-surface-subtle p-5">
             <div className="rounded-control border border-app-border bg-app-surface p-5">
               <h3 className="text-sm font-black text-app-foreground">업무명세서 탭 원본 데이터</h3>
-              <p className="mt-2 text-sm leading-6 text-app-muted">
-                업무명세서 탭에서 작성된 구조화 원본 내용을 이 영역에 표시합니다.
-              </p>
+              {sowDocument ? (
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  {activeDocumentSections.map((section) => (
+                    <article
+                      key={section.title}
+                      className="rounded-control border border-app-border bg-app-surface-subtle p-4"
+                    >
+                      <h4 className="text-sm font-black text-app-foreground">{section.title}</h4>
+                      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-app-muted">
+                        {section.body}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm leading-6 text-app-muted">
+                  업무명세서 탭에서 승인 요청한 DB 원본이 아직 없습니다. 영문 SOW를 생성한 뒤 승인 요청을 진행해주세요.
+                </p>
+              )}
             </div>
 
             <div className="mt-6 border-t border-app-border pt-5">
@@ -196,43 +295,56 @@ export default function ApprovalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-app-border">
-                      {milestoneCriteriaRows.map((row) => (
-                        <tr key={`${row.code}-${row.title}`} className="align-top">
-                          <td className="px-4 py-4 font-bold text-app-foreground">
-                            <span>{row.code}</span>
-                            <span className="mt-1 block font-semibold text-app-muted">
-                              {row.title}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-app-muted">
-                            <ul className="list-disc space-y-2 pl-4">
-                              {row.acceptanceCriteria.map((item, index) => (
-                                <li key={`${row.code}-acceptance-${index}`}>{item}</li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td className="px-4 py-4 text-app-muted">
-                            <ul className="list-disc space-y-2 pl-4">
-                              {row.definitionOfDone.map((item, index) => (
-                                <li key={`${row.code}-done-${index}`}>{item}</li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td className="px-4 py-4 text-app-muted">
-                            <ul className="list-disc space-y-2 pl-4">
-                              {row.verificationMethods.map((item) => (
-                                <li key={`${row.code}-${item}`}>{item}</li>
-                              ))}
-                            </ul>
+                      {milestoneCriteriaRows.length ? (
+                        milestoneCriteriaRows.map((row) => (
+                          <tr key={`${row.code}-${row.title}`} className="align-top">
+                            <td className="px-4 py-4 font-bold text-app-foreground">
+                              <span>{row.code}</span>
+                              <span className="mt-1 block font-semibold text-app-muted">
+                                {row.title}
+                              </span>
+                              <span className="mt-3 block text-xs font-semibold text-app-muted">
+                                기간: {row.period}
+                              </span>
+                              <span className="mt-1 block text-xs font-semibold text-app-muted">
+                                금액: {row.amount}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-app-muted">
+                              <ul className="list-disc space-y-2 pl-4">
+                                {row.acceptanceCriteria.map((item, index) => (
+                                  <li key={`${row.code}-acceptance-${index}`}>{item}</li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td className="px-4 py-4 text-app-muted">
+                              <ul className="list-disc space-y-2 pl-4">
+                                {row.definitionOfDone.map((item, index) => (
+                                  <li key={`${row.code}-done-${index}`}>{item}</li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td className="px-4 py-4 text-app-muted">
+                              <ul className="list-disc space-y-2 pl-4">
+                                {row.verificationMethods.map((item) => (
+                                  <li key={`${row.code}-${item}`}>{item}</li>
+                                ))}
+                              </ul>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-6 text-sm font-semibold text-app-muted">
+                            아직 확정된 마일스톤 검수 기준이 없습니다. 업무명세서 탭에서 기준을 작성한 뒤 승인 요청하세요.
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
-
           </div>
 
           {!isReadOnly ? (
@@ -244,10 +356,11 @@ export default function ApprovalPage() {
                 <button
                   type="button"
                   onClick={() => setIsConfirmOpen(true)}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
+                  disabled={!approvalState || isCompanyApproved || isApproving}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <UserCheck aria-hidden="true" className="size-4" />
-                  {documentVersion} 승인
+                  {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
                 </button>
               </div>
             </div>
@@ -287,8 +400,8 @@ export default function ApprovalPage() {
                     <h3 className="text-sm font-black text-app-foreground">박피오</h3>
                     <p className="mt-1 text-xs font-semibold text-app-muted">PO 승인</p>
                   </div>
-                  <StatusBadge tone={isApprovalComplete ? "success" : "warning"}>
-                    {isApprovalComplete ? "승인 완료" : "승인 대기"}
+                  <StatusBadge tone={isCompanyApproved ? "success" : "warning"}>
+                    {isCompanyApproved ? "승인 완료" : "승인 대기"}
                   </StatusBadge>
                 </div>
               </article>
@@ -299,7 +412,9 @@ export default function ApprovalPage() {
                     <h3 className="text-sm font-black text-app-foreground">Sarah Lee</h3>
                     <p className="mt-1 text-xs font-semibold text-app-muted">프리랜서 승인</p>
                   </div>
-                  <StatusBadge tone="success">승인 완료</StatusBadge>
+                  <StatusBadge tone={isFreelancerApproved ? "success" : "warning"}>
+                    {isFreelancerApproved ? "승인 완료" : "승인 대기"}
+                  </StatusBadge>
                 </div>
               </article>
             </div>
@@ -324,7 +439,7 @@ export default function ApprovalPage() {
                   최종 승인을 완료 하시겠습니까
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-app-muted">
-                  예를 누르면 업무 명세서 {documentVersion} 승인 단계가 완료되고 다음 단계로 이동합니다.
+                  예를 누르면 업무 명세서 {documentVersion} 승인 기록이 DB에 저장됩니다.
                 </p>
               </div>
             </div>
@@ -333,9 +448,10 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={handleFinalApproval}
-                className="min-h-11 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
+                disabled={isApproving}
+                className="min-h-11 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                예
+                {isApproving ? "저장 중" : "예"}
               </button>
               <button
                 type="button"

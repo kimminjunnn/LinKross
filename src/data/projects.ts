@@ -44,7 +44,7 @@ export type Project = PreparingProject | MilestoneProject;
 
 export const PROJECTS: Project[] = [
   {
-    id: "11111111-1111-1111-1111-111111111111",
+    id: "project-a",
     name: "고객 포털 MVP",
     status: projectStatuses.preparing,
     tone: "brand",
@@ -68,12 +68,12 @@ export const PROJECTS: Project[] = [
       ],
       action: {
         label: "업무 명세서 작성",
-        href: "/company/projects/11111111-1111-1111-1111-111111111111/sow",
+        href: "/company/projects/project-a/sow",
       },
     },
   },
   {
-    id: "22222222-2222-2222-2222-222222222222",
+    id: "project-b",
     name: "정산 자동화 백오피스",
     status: projectStatuses.inProgress,
     tone: "accent",
@@ -86,7 +86,7 @@ export const PROJECTS: Project[] = [
     total: 6,
   },
   {
-    id: "33333333-3333-3333-3333-333333333333",
+    id: "project-c",
     name: "브랜드 사이트 리뉴얼",
     status: projectStatuses.completed,
     tone: "success",

@@ -27,6 +27,7 @@ import {
   saveSelectedCandidateId,
 } from "@/lib/comparison";
 import type { BackendResult, CompanyProjectDetail } from "@/lib/backend";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function CandidateComparisonDashboard({
   projectDetail,
@@ -74,17 +75,89 @@ export function CandidateComparisonDashboard({
     }
 
     const list = getCandidateListForAssessment(currentAssessmentId);
-    const frame = window.requestAnimationFrame(() => {
-      setCandidates(
-        list.map((c) => ({
-          ...c,
-          status: "submitted",
-        })),
-      );
-      setSelectedCandidateId(null);
-    });
+    
+    // Default mock setup
+    setCandidates(
+      list.map((c) => ({
+        ...c,
+        status: "submitted",
+      }))
+    );
+    setSelectedCandidateId(null);
 
-    return () => window.cancelAnimationFrame(frame);
+    // Fetch real-time proposals from Supabase DB
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentAssessmentId);
+    console.log("[CandidatesDebug] isUuid?", isUuid, "currentAssessmentId:", currentAssessmentId);
+    if (isUuid) {
+      const supabase = createSupabaseBrowserClient();
+      supabase
+        .from("proposals")
+        .select(`
+          id,
+          content,
+          submitted_at,
+          freelancer_id,
+          freelancer_display_name_snapshot,
+          freelancer_skills_snapshot
+        `)
+        .eq("project_id", currentAssessmentId)
+        .then(({ data: proposalsData, error: proposalsError }) => {
+          console.log("[CandidatesDebug] Proposals Snapshot Data:", proposalsData, "Error:", proposalsError);
+          if (proposalsError) {
+            console.error("Error fetching proposals:", proposalsError);
+            return;
+          }
+          if (proposalsData && proposalsData.length > 0) {
+            const dbCandidates: CandidateComparisonItem[] = proposalsData.map((item: any, index: number) => {
+              const displayName = item.freelancer_display_name_snapshot || `Developer ${index + 1}`;
+              const skillsList = item.freelancer_skills_snapshot ? item.freelancer_skills_snapshot.split(",") : ["TypeScript", "Next.js", "PostgreSQL"];
+              const initials = displayName.split(" ").map((n: string) => n.charAt(0)).join("").toUpperCase();
+              
+              return {
+                id: item.id,
+                name: displayName,
+                avatar: initials.slice(0, 2) || "DV",
+                rating: 4.9,
+                submissionTime: "방금 전",
+                scores: {
+                  requirements: 90,
+                  questions: 85,
+                  workPlan: 88,
+                  risk: 82,
+                },
+                baseScore: 86.3,
+                penalty: null,
+                finalScore: 86.3,
+                status: "submitted",
+                details: {
+                  role: "Full-stack Developer",
+                  experience: "5 years",
+                  skills: skillsList,
+                  assessmentTime: "방금 전",
+                  evaluatorComments: {
+                    questions: "프로젝트 구현의 핵심 단계와 Playwright 자동 검증 계획을 성실히 서술함.",
+                    summary: "SOW 명세와 마일스톤 완료조건에 대한 높은 이해도를 가짐.",
+                    workPlan: "주차별 요구사항 빌드 및 통합 테스트 일정 수립 완료.",
+                    risk: "Stripe 테스트 키 및 웹훅 이벤트 리스크 제어 방안 제안.",
+                  },
+                  timeline: ["개발 환경 구성", "DB 스케줄링", "Playwright E2E 구성", "정산 인보이스 매핑"],
+                  detailedRisks: [
+                    { risk: "Stripe Webhook 유실", impact: "Medium", mitigation: "지연 재시도 미들웨어 구현" }
+                  ],
+                  strengths: ["B2B 결제 아키텍처 이해", "Playwright 기반 TDD 제안"],
+                  potentialConcern: "테스트 합성 데이터 구성 시간 필요"
+                }
+              };
+            });
+
+            setCandidates((prev) => {
+              // Ensure we do not add duplicate candidates
+              const filteredPrev = prev.filter(p => !dbCandidates.some(d => d.id === p.id || d.name === p.name));
+              return [...filteredPrev, ...dbCandidates];
+            });
+          }
+        });
+    }
   }, [currentAssessmentId]);
 
   const showToast = (msg: string) => {
@@ -154,7 +227,7 @@ export function CandidateComparisonDashboard({
               <span className="font-extrabold text-emerald-900">{selectedCandidate.name}</span>
             </div>
             <button
-              onClick={() => router.push("/company/projects/project-a/sow")}
+              onClick={() => router.push(`/company/projects/${currentAssessmentId}/sow`)}
               className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
             >
               <FileSpreadsheet className="h-4 w-4" />
