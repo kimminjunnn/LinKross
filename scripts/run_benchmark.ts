@@ -184,11 +184,12 @@ ${dataset.workDetail}
     temperature: 0.2,
   });
 
-  return completion.choices[0].message.parsed?.milestones || [];
+  const parsed = completion.choices[0].message.parsed as { milestones: MilestoneInput[] } | null;
+  return parsed?.milestones ?? [];
 }
 
 async function llmTranslate(dataset: Dataset, milestones: MilestoneInput[]): Promise<EnglishSOWResult> {
-  const retrievedTerms = [];
+  const retrievedTerms: Array<{ english: string }> = [];
   GLOSSARY.forEach(({ pattern, english }) => {
     if (dataset.workDetail.match(pattern)) {
       retrievedTerms.push({ english });
@@ -241,7 +242,9 @@ async function llmTranslate(dataset: Dataset, milestones: MilestoneInput[]): Pro
     temperature: 0.1,
   });
 
-  const parsed = completion.choices[0].message.parsed;
+  const parsed = completion.choices[0].message.parsed as
+    | { translatedMilestones: Array<{ titleEn: string; dodsEn: string[] }> }
+    | null;
   if (!parsed) throw new Error("Translation failed");
 
   return {

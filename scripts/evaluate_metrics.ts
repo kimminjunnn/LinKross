@@ -115,7 +115,9 @@ ${JSON.stringify(llmMilestones, null, 2)}
           }
         });
 
-        const parsed = res.choices[0].message.parsed;
+        const parsed = res.choices[0].message.parsed as
+          | { translationScore: number; requirementsScore: number }
+          | null;
         if (parsed) {
           dsTransScore += parsed.translationScore;
           dsReqScore += parsed.requirementsScore;
