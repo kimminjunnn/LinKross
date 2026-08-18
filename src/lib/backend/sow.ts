@@ -795,11 +795,11 @@ function toSowApprovalDocument(sowVersion: SowVersionApprovalRow): SowApprovalDo
     acceptanceCriteria: acceptanceCriteria.length ? acceptanceCriteria : ["TBD"],
     definitionOfDone: definitionOfDone.length ? definitionOfDone : ["TBD"],
     summary: {
-      coreScope: inScope.slice(0, 3).join(", ") || "DB에 저장된 업무명세서 원본",
-      keyAcceptance: `${acceptanceCriteria.length || 1}개 Acceptance Criteria와 ${
+      coreScope: inScope.slice(0, 3).join(", ") || "Original SOW document stored in DB",
+      keyAcceptance: `${acceptanceCriteria.length || 1} Acceptance Criteria and ${
         definitionOfDone.length || 1
-      }개 Definition of Done`,
-      needsReview: "업무명세서 원본과 마일스톤 검증 정보를 함께 확인",
+      } Definition of Done`,
+      needsReview: "Review the original SOW document along with milestone verification details",
     },
   };
 }
