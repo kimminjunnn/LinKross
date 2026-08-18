@@ -910,6 +910,16 @@ create table if not exists public.audit_events (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.github_webhook_deliveries (
+  delivery_id text primary key check (char_length(delivery_id) between 1 and 100),
+  event_type text not null check (char_length(event_type) between 1 and 100),
+  action text check (action is null or char_length(action) between 1 and 100),
+  installation_id bigint check (installation_id is null or installation_id > 0),
+  repository_ids bigint[] not null default '{}',
+  received_at timestamptz not null default now(),
+  processed_at timestamptz
+);
+
 create index if not exists invoices_project_idx
   on public.invoices (project_id, submitted_at desc);
 create index if not exists payments_project_idx
@@ -920,6 +930,8 @@ create index if not exists evidence_bundles_project_idx
   on public.evidence_bundles (project_id, version_number desc);
 create index if not exists audit_events_project_idx
   on public.audit_events (project_id, created_at desc);
+create index if not exists github_webhook_deliveries_installation_idx
+  on public.github_webhook_deliveries (installation_id, received_at desc);
 
 -- ---------------------------------------------------------------------------
 -- 6. RLS에서 재사용할 비공개 권한 함수
@@ -1570,6 +1582,7 @@ alter table public.invoices enable row level security;
 alter table public.payments enable row level security;
 alter table public.evidence_bundles enable row level security;
 alter table public.audit_events enable row level security;
+alter table public.github_webhook_deliveries enable row level security;
 
 drop policy if exists projects_public_recruiting_select on public.projects;
 drop policy if exists projects_participant_select on public.projects;
@@ -2096,6 +2109,7 @@ grant select, insert, update on public.invoices to authenticated;
 grant select, insert on public.payments to authenticated;
 grant select, insert on public.evidence_bundles to authenticated;
 grant select on public.audit_events to authenticated;
+revoke all on public.github_webhook_deliveries from anon, authenticated;
 
 commit;
 
@@ -2129,6 +2143,7 @@ where t.table_schema = 'public'
     'invoices',
     'payments',
     'evidence_bundles',
-    'audit_events'
+    'audit_events',
+    'github_webhook_deliveries'
   )
 order by table_name;

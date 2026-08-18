@@ -38,6 +38,25 @@ export async function submitProposal(
     return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
   }
 
+  const { data: freelancerProfile, error: freelancerProfileError } = await supabase
+    .from("freelancer_profiles")
+    .select("id")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+
+  if (freelancerProfileError) {
+    return { ok: false, error: mapBackendError(freelancerProfileError, "프리랜서 정보를 확인하지 못했습니다.") };
+  }
+  if (!freelancerProfile) {
+    return {
+      ok: false,
+      error: {
+        code: "FREELANCER_PROFILE_REQUIRED",
+        message: "제안서를 제출하려면 먼저 프리랜서 프로필(이름, 소개 등)을 등록해주세요.",
+      },
+    };
+  }
+
   const { data, error } = await supabase
     .from("proposals")
     .insert({

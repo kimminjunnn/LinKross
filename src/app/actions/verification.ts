@@ -6,6 +6,7 @@ import type {
   BackendResult,
   ConnectRepositoryInput,
   DecideMilestoneInput,
+  MilestoneSubmissionReceipt,
   RequestVerificationInput,
   SubmitMilestonePullRequestInput,
 } from "@/lib/backend";
@@ -19,6 +20,7 @@ import {
 function revalidateVerification(projectId: string) {
   revalidatePath(`/company/projects/${projectId}/verification`);
   revalidatePath(`/freelancer/projects/${projectId}`);
+  revalidatePath(`/freelancer/projects/${projectId}/verification`);
 }
 
 export async function connectProjectRepositoryAction(
@@ -32,7 +34,7 @@ export async function connectProjectRepositoryAction(
 
 export async function submitMilestonePullRequestAction(
   input: SubmitMilestonePullRequestInput,
-): Promise<BackendResult<{ submissionId: string; headCommitSha: string }>> {
+): Promise<BackendResult<MilestoneSubmissionReceipt>> {
   const result = await submitMilestonePullRequest(input);
   if (result.ok) revalidateVerification(input.projectId);
   return result;

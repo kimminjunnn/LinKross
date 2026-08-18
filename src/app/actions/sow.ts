@@ -18,10 +18,6 @@ import {
   submitSowForReview,
 } from "@/lib/backend";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export type SowSummaryResult = {
   coreScope: string;
   keyAcceptance: string;
@@ -97,6 +93,9 @@ export async function generateSowSummaryAction(
 `;
 
   try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -114,11 +113,14 @@ export async function generateSowSummaryAction(
 
     const parsed = JSON.parse(content) as SowSummaryResult;
     return { ok: true, data: parsed };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI SOW Summary Generation Error:", error);
     return {
       ok: false,
-      error: { code: "DATABASE_ERROR", message: error.message || "AI 요약 생성 중 오류가 발생했습니다." }
+      error: {
+        code: "DATABASE_ERROR",
+        message: error instanceof Error ? error.message : "AI 요약 생성 중 오류가 발생했습니다.",
+      },
     };
   }
 }

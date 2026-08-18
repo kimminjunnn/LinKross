@@ -7,6 +7,8 @@ export type BackendErrorCode =
   | "DUPLICATE_PROPOSAL"
   | "PROJECT_ALREADY_SELECTED"
   | "CONFLICT"
+  | "COMPANY_PROFILE_REQUIRED"
+  | "FREELANCER_PROFILE_REQUIRED"
   | "DATABASE_ERROR";
 
 export interface BackendError {
@@ -157,6 +159,11 @@ export interface SowWorkspaceContext {
   title: string;
   lifecycleStage: string;
   assigneeName: string | null;
+  budgetAmount: number;
+  budgetMaxAmount: number | null;
+  currency: string;
+  startDate: string;
+  endDate: string;
 }
 
 export type SowStatus = "draft" | "in_review" | "revision_requested" | "approved" | "superseded";
@@ -345,6 +352,7 @@ export interface ProjectRepositoryRecord {
   name: string;
   url: string;
   defaultBranch: string | null;
+  installationId: number | null;
   isPrivate: boolean;
   companyConfirmedAt: string | null;
 }
@@ -394,6 +402,7 @@ export interface MilestoneSubmissionRecord {
 export interface VerificationMilestoneRecord extends ProjectMilestoneSummary {
   submissions: MilestoneSubmissionRecord[];
   decision: {
+    submissionId: string;
     decision: "revision_required" | "approved";
     reason: string | null;
     decidedAt: string;
@@ -420,6 +429,13 @@ export interface SubmitMilestonePullRequestInput {
   pullRequestUrl: string;
   claimedCriterionIds: string[];
   implementationNote?: string;
+}
+
+export interface MilestoneSubmissionReceipt {
+  submissionId: string;
+  headCommitSha: string;
+  verificationRunId: string;
+  verificationStatus: VerificationRunStatus;
 }
 
 export interface RequestVerificationInput {

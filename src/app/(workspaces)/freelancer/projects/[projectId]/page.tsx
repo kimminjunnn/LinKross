@@ -1,63 +1,104 @@
-import Link from "next/link";
-import { ArrowLeft, CircleAlert, FileText, ShieldCheck } from "lucide-react";
+import { CalendarRange, CircleAlert, FileText, Handshake, WalletCards } from "lucide-react";
 
-import { PageHeader } from "@/components/page/page-header";
-import { getProjectFinancialWorkspace, getSowApprovalState, getVerificationWorkspace, listFreelancerProjects } from "@/lib/backend";
+import {
+  getSowApprovalState,
+  listFreelancerApplications,
+  listFreelancerProjects,
+} from "@/lib/backend";
 
 import { FreelancerSowApprovalPanel } from "./sow-approval-panel";
-import { FreelancerCodeSubmission } from "./code-submission";
-import { FreelancerInvoicePanel } from "./invoice-panel";
 
-export default async function FreelancerProjectDetailPage({
+export default async function FreelancerProjectPage({
   params,
 }: {
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const [projectsResult, sowResult, verificationResult, financeResult] = await Promise.all([
+  const [projectsResult, applicationsResult, sowResult] = await Promise.all([
     listFreelancerProjects(),
+    listFreelancerApplications(),
     getSowApprovalState(projectId),
-    getVerificationWorkspace(projectId),
-    getProjectFinancialWorkspace(projectId),
   ]);
 
-  if (!projectsResult.ok || !sowResult.ok || !verificationResult.ok || !financeResult.ok) {
+  if (!projectsResult.ok || !applicationsResult.ok || !sowResult.ok) {
     const message = !projectsResult.ok
       ? projectsResult.error.message
-      : !sowResult.ok
-        ? sowResult.error.message
-        : !verificationResult.ok
-          ? verificationResult.error.message
-          : !financeResult.ok
-            ? financeResult.error.message
-          : "프로젝트를 불러오지 못했습니다.";
-    return <ErrorState message={message} />;
+      : !applicationsResult.ok
+        ? applicationsResult.error.message
+        : !sowResult.ok
+          ? sowResult.error.message
+          : "The project could not be loaded.";
+    return <TabError message={message} />;
   }
 
   const project = projectsResult.data.find((item) => item.projectId === projectId);
-  if (!project) return <ErrorState message="선정된 프로젝트를 찾을 수 없습니다." />;
+  if (!project) return <TabError message="The selected project could not be found." />;
 
+  const proposal = applicationsResult.data.find(
+    (item) => item.projectId === projectId && item.proposalId === project.proposalId,
+  );
   const sow = sowResult.data;
 
   return (
-    <div className="mx-auto w-full max-w-6xl pb-16">
-      <Link href="/freelancer/projects" className="inline-flex items-center gap-2 text-sm font-bold text-app-muted hover:text-brand-700">
-        <ArrowLeft className="size-4" />My projects
-      </Link>
+    <div className="space-y-6">
+      <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
+        <div className="flex items-center gap-2">
+          <Handshake aria-hidden="true" className="size-5 text-brand-600" />
+          <h2 className="text-lg font-black text-app-foreground">Project overview</h2>
+        </div>
 
-      <div className="mt-4">
-        <PageHeader
-          eyebrow={project.organizationName}
-          title={project.title}
-          description="The proposal, SOW version, milestones, code submissions, and evidence remain linked to this project."
-        />
-      </div>
+        <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <OverviewField
+            label="Project period"
+            value={`${formatDate(project.startDate)} – ${formatDate(project.endDate)}`}
+            icon={<CalendarRange className="size-4" />}
+          />
+          <OverviewField
+            label="Agreed budget"
+            value={formatBudget(project.budgetAmount, project.budgetMaxAmount, project.currency)}
+            icon={<WalletCards className="size-4" />}
+          />
+          <OverviewField label="Current stage" value={formatLifecycle(project.lifecycleStage)} />
+          <OverviewField
+            label="Milestones"
+            value={`${project.approvedMilestoneCount}/${project.milestoneCount} approved`}
+          />
+        </dl>
 
-      <div className="mt-7 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="mt-5 border-t border-app-border pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-black text-app-foreground">My delivery proposal</h3>
+            <span className="text-xs font-bold text-app-muted">
+              Selected {formatDate(project.selectedAt)}
+            </span>
+          </div>
+          {proposal ? (
+            <div className="mt-3 rounded-control border border-app-border bg-app-surface-subtle p-4">
+              <p className="whitespace-pre-wrap text-sm leading-6 text-app-foreground">
+                {proposal.content}
+              </p>
+              {proposal.optionalNotes ? (
+                <div className="mt-4 border-t border-app-border pt-4">
+                  <p className="text-xs font-black text-app-muted">Additional notes</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-app-muted">
+                    {proposal.optionalNotes}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="mt-3 rounded-control border border-dashed border-app-border-strong p-4 text-sm text-app-muted">
+              The selected delivery proposal could not be found.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2">
-            <FileText className="size-5 text-brand-600" />
-            <h2 className="text-lg font-black text-app-foreground">SOW and acceptance criteria</h2>
+            <FileText aria-hidden="true" className="size-5 text-brand-600" />
+            <h2 className="text-lg font-black text-app-foreground">Statement of Work</h2>
           </div>
 
           {!sow ? (
@@ -67,14 +108,21 @@ export default async function FreelancerProjectDetailPage({
           ) : (
             <div className="mt-5 space-y-5">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="rounded-full bg-brand-50 px-3 py-1 font-bold text-brand-700">{sow.version}</span>
-                <span className="font-semibold text-app-muted">{sow.status.replaceAll("_", " ")}</span>
+                <span className="rounded-full bg-brand-50 px-3 py-1 font-bold text-brand-700">
+                  {sow.version}
+                </span>
+                <span className="font-semibold text-app-muted">{formatSowStatus(sow.status)}</span>
               </div>
 
               {sow.document.documentSections.map((section) => (
-                <article key={section.title} className="rounded-control border border-app-border bg-app-surface-subtle p-4">
+                <article
+                  key={section.title}
+                  className="rounded-control border border-app-border bg-app-surface-subtle p-4"
+                >
                   <h3 className="text-sm font-black text-app-foreground">{section.title}</h3>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-app-muted">{section.body}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-app-muted">
+                    {section.body}
+                  </p>
                 </article>
               ))}
 
@@ -82,13 +130,15 @@ export default async function FreelancerProjectDetailPage({
                 {sow.milestones.map((milestone) => (
                   <article key={milestone.id} className="rounded-control border border-app-border p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="font-black text-app-foreground">{milestone.code} · {milestone.title}</h3>
+                      <h3 className="font-black text-app-foreground">
+                        {milestone.code} · {milestone.title}
+                      </h3>
                       <span className="text-xs font-bold text-app-muted">{milestone.amount}</span>
                     </div>
                     <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-app-muted">
-                      {[...milestone.acceptanceCriteria, ...milestone.definitionOfDone].map((criterion) => (
-                        <li key={criterion.id}>{criterion.description}</li>
-                      ))}
+                      {[...milestone.acceptanceCriteria, ...milestone.definitionOfDone].map(
+                        (criterion) => <li key={criterion.id}>{criterion.description}</li>,
+                      )}
                     </ul>
                   </article>
                 ))}
@@ -99,29 +149,73 @@ export default async function FreelancerProjectDetailPage({
 
         <aside className="h-fit rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="size-5 text-accent-600" />
+            <Handshake aria-hidden="true" className="size-5 text-accent-600" />
             <h2 className="text-lg font-black text-app-foreground">Dual approval</h2>
           </div>
-          {sow ? <FreelancerSowApprovalPanel initialState={sow} /> : (
-            <p className="mt-4 text-sm leading-6 text-app-muted">Approval becomes available after the client requests review.</p>
+          {sow ? (
+            <FreelancerSowApprovalPanel initialState={sow} />
+          ) : (
+            <p className="mt-4 text-sm leading-6 text-app-muted">
+              Approval and revision requests become available after the client requests review.
+            </p>
           )}
         </aside>
       </div>
-
-      {verificationResult.data.sowVersionId && (
-        <div className="mt-6">
-          <FreelancerCodeSubmission initialWorkspace={verificationResult.data} />
-        </div>
-      )}
-      <div className="mt-6"><FreelancerInvoicePanel workspace={financeResult.data} /></div>
     </div>
   );
 }
 
-function ErrorState({ message }: { message: string }) {
+function OverviewField({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-4xl rounded-card border border-danger/30 bg-danger/10 p-6 text-danger">
-      <div className="flex gap-3"><CircleAlert className="size-5 shrink-0" /><p className="text-sm font-bold">{message}</p></div>
+    <div className="rounded-control border border-app-border bg-app-surface-subtle p-4">
+      <dt className="flex items-center gap-1.5 text-xs font-bold text-app-muted">
+        {icon}
+        {label}
+      </dt>
+      <dd className="mt-2 text-sm font-black text-app-foreground">{value}</dd>
     </div>
   );
+}
+
+function TabError({ message }: { message: string }) {
+  return (
+    <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
+      <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
+      <p className="text-sm font-bold">{message}</p>
+    </div>
+  );
+}
+
+function formatDate(value: string | null) {
+  return value ? value.slice(0, 10) : "-";
+}
+
+function formatBudget(min: number | null, max: number | null, currency: string | null) {
+  if (min == null) return "-";
+  const unit = currency ?? "USD";
+  return max == null
+    ? `${min.toLocaleString()} ${unit}`
+    : `${min.toLocaleString()}–${max.toLocaleString()} ${unit}`;
+}
+
+function formatLifecycle(value: string) {
+  const labels: Record<string, string> = {
+    preparing: "Preparing",
+    in_progress: "In progress",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    archived: "Archived",
+  };
+  return labels[value] ?? value.replaceAll("_", " ");
+}
+
+function formatSowStatus(value: string) {
+  const labels: Record<string, string> = {
+    draft: "Draft",
+    in_review: "In review",
+    revision_requested: "Revision requested",
+    approved: "Approved",
+    superseded: "Superseded",
+  };
+  return labels[value] ?? value.replaceAll("_", " ");
 }
