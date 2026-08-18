@@ -41,10 +41,12 @@ export default async function VerificationPage({
             <TestTube2 className="size-4" />
           </span>
           <div>
-            <h2 className="text-sm font-black text-accent-900">검수 결과와 최종 승인은 분리됩니다.</h2>
+            <h2 className="text-sm font-black text-accent-900">
+              자동 검수 결과는 최종 승인 그 자체가 아닙니다.
+            </h2>
             <p className="mt-1 text-sm leading-6 text-accent-800">
-              실행 결과와 증거를 확인한 뒤 발주자가 직접 승인하거나 수정 요청합니다. Runner가 연결되기 전에는
-              요청만 대기열에 저장되며 통과 결과를 임의로 만들지 않습니다.
+              LinKross는 같은 SHA에서 체크리스트가 작동한 근거를 제공합니다. 발주자는 실패와
+              확인 필요 항목을 검토한 뒤 직접 승인하거나 수정 요청합니다.
             </p>
           </div>
         </div>
