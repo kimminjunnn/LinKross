@@ -3,6 +3,7 @@
 import OpenAI from "openai";
 
 import { assertActionRole } from "@/lib/auth/workspace-access";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -29,6 +30,7 @@ export async function analyzeWorkDetailWithLLM(
   currentEndDate: string
 ): Promise<AIAnalysisResult> {
   await assertActionRole("company");
+
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY가 설정되지 않았습니다. .env.local 파일에 키를 추가해주세요.");
   }
@@ -40,8 +42,8 @@ export async function analyzeWorkDetailWithLLM(
 [필수 규칙 - 절대 누락 금지]
 1. 세부 제약 조건 보존: 원문 텍스트에 기재된 사소한 제약조건(예: '회원가입 없음', '하루 전 취소', '특정 정보 입력 필수'), 제외 대상 등을 절대 임의로 요약하거나 생략하지 마세요. 모든 디테일은 해당 마일스톤의 DoD에 반드시 반영되어야 합니다.
 2. 예산의 차등 분배 (기계적 균등 분배 금지): 마일스톤 예산을 단순 N분의 1로 나누지 마십시오. 백엔드 연동, 보안, 복잡한 트랜잭션이 포함된 난이도 높은 마일스톤에 예산 가중치를 더 부여하고, 단순 화면이나 QA는 상대적으로 낮게 배분하세요.
-3. 필수 마일스톤 추가: 마지막 마일스톤은 반드시 '통합 테스트(QA), 배포, 소스코드 및 매뉴얼 인수인계' 항목을 다루는 마무리를 위한 마일스톤으로 생성하고, 전체 예산의 약 10~15%를 할당하세요.
-4. 객관적이고 테스트 가능한 DoD (완료 기준): DoD는 "예약 기능 구현", "조회 가능" 같은 모호한 표현을 절대 쓰지 마세요. 
+3. 마무리 범위 보존: 원문에 '통합 테스트(QA), 배포, 소스코드 및 매뉴얼 인수인계'가 명시된 경우에만 마지막 마일스톤으로 구성하고 예산을 배분하세요. 원문에 없는 작업이나 비용은 임의로 추가하지 마세요.
+4. 객관적이고 테스트 가능한 DoD (완료 기준): DoD는 "예약 기능 구현", "조회 가능" 같은 모호한 표현을 절대 쓰지 마세요.
    - [나쁜 예] 고객이 예약 페이지에서 수업 예약 가능
    - [좋은 예] 고객이 회원가입 없이 지점, 날짜, 가능 시간을 선택하고 이메일을 입력하면 예약 번호가 생성되며 예약 완료 화면이 표시된다. 중복 예약은 차단된다.
 

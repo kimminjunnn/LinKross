@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 
 import { getDefaultProjectTabSegment, isProjectTabAvailable } from "@/config/project-navigation";
-import { PROJECTS } from "@/data/projects";
+import { mapLifecycleStageToProjectStatus } from "@/config/project-lifecycle";
+import { getCompanyProjectDetail } from "@/lib/backend";
 
 export default async function EvidenceLayout({
   children,
@@ -11,14 +12,16 @@ export default async function EvidenceLayout({
   params: Promise<{ projectId: string }>;
 }>) {
   const { projectId } = await params;
-  const project = PROJECTS.find((item) => item.id === projectId);
+  const result = await getCompanyProjectDetail(projectId);
 
-  if (!project) {
+  if (!result.ok) {
     notFound();
   }
 
-  if (!isProjectTabAvailable(project.status, "evidence")) {
-    const segment = getDefaultProjectTabSegment(project.status);
+  const status = mapLifecycleStageToProjectStatus(result.data.lifecycleStage);
+
+  if (!isProjectTabAvailable(status, "evidence")) {
+    const segment = getDefaultProjectTabSegment(status);
     redirect(`/company/projects/${projectId}/${segment}`);
   }
 

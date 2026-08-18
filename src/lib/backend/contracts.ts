@@ -95,7 +95,142 @@ export interface CompanyProjectDetail {
   recruitmentStartAt: string;
   recruitmentEndAt: string;
   status: "recruiting" | "closed";
+  lifecycleStage: string;
   createdAt: string;
+}
+
+export interface SowMilestoneInput {
+  code: string;
+  title: string;
+  period: string;
+  amount: string;
+  dods: string[];
+}
+
+export interface SaveSowVersionInput {
+  projectId: string;
+  workDetail: string;
+  startDate: string;
+  endDate: string;
+  budget: string;
+  milestones: SowMilestoneInput[];
+  englishSow?: unknown;
+  printText?: string;
+  pdfFileName?: string;
+}
+
+export interface SaveSowVersionOutput {
+  sowVersionId: string;
+  versionNumber: number;
+  status: string;
+}
+
+export interface MilestoneChecklistItem {
+  id: string;
+  description: string;
+  verificationMethod: string;
+  isRequired: boolean;
+}
+
+export interface ProjectMilestoneSummary {
+  id: string;
+  code: string;
+  title: string;
+  description: string | null;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  currency: string;
+  status: string;
+  position: number;
+  checklist: MilestoneChecklistItem[];
+}
+
+export interface ApprovedSowMilestones {
+  sowVersionId: string | null;
+  versionNumber: number | null;
+  milestones: ProjectMilestoneSummary[];
+}
+
+export interface SowWorkspaceContext {
+  projectId: string;
+  title: string;
+  lifecycleStage: string;
+  assigneeName: string | null;
+}
+
+export type SowStatus = "draft" | "in_review" | "revision_requested" | "approved" | "superseded";
+export type UserRole = "company" | "freelancer";
+export type CriterionKind = "acceptance" | "definition_of_done";
+export type VerificationMethod = "automated_e2e" | "build" | "manual" | "document";
+
+export interface SowApprovalRecord {
+  role: UserRole;
+  approverName: string | null;
+  approvedAt: string;
+}
+
+export interface SowApprovalCriterion {
+  id: string;
+  kind: CriterionKind;
+  description: string;
+  verificationMethod: VerificationMethod;
+  position: number;
+}
+
+export interface SowApprovalMilestone {
+  id: string;
+  code: string;
+  title: string;
+  period: string;
+  amount: string;
+  status: string;
+  acceptanceCriteria: SowApprovalCriterion[];
+  definitionOfDone: SowApprovalCriterion[];
+  verificationMethods: VerificationMethod[];
+}
+
+export interface SowApprovalDocumentSection {
+  title: string;
+  body: string;
+}
+
+export interface SowApprovalDocument {
+  projectId: string;
+  version: string;
+  requestedAt: string;
+  pdfFileName: string;
+  printText: string;
+  documentSections: SowApprovalDocumentSection[];
+  acceptanceCriteria: string[];
+  definitionOfDone: string[];
+  summary: {
+    coreScope: string;
+    keyAcceptance: string;
+    needsReview: string;
+  };
+}
+
+export interface SowApprovalState {
+  projectId: string;
+  sowVersionId: string;
+  version: string;
+  status: SowStatus;
+  contentHash: string;
+  submittedForReviewAt: string | null;
+  approvedAt: string | null;
+  document: SowApprovalDocument;
+  milestones: SowApprovalMilestone[];
+  approvals: {
+    company: SowApprovalRecord | null;
+    freelancer: SowApprovalRecord | null;
+  };
+}
+
+export interface ApproveSowInput {
+  projectId: string;
+  sowVersionId: string;
+  contentHash: string;
 }
 
 export interface OpportunityDetail extends OpportunitySummary {

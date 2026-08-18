@@ -12,10 +12,13 @@ export const checklistStatusConfig = {
 export type ChecklistStatus = keyof typeof checklistStatusConfig;
 
 export const milestoneVerificationStatusConfig = {
-  revision_required: { label: "수정 필요", tone: "danger" },
-  ready: { label: "검수 준비 완료", tone: "brand" },
+  scheduled: { label: "예정", tone: "neutral" },
   submission_required: { label: "코드 제출 대기", tone: "warning" },
+  verification_ready: { label: "검수 준비 완료", tone: "brand" },
+  verification_running: { label: "검수 중", tone: "accent" },
+  revision_required: { label: "수정 필요", tone: "danger" },
   approved: { label: "최종 승인", tone: "success" },
+  cancelled: { label: "취소됨", tone: "neutral" },
 } as const;
 
 export type MilestoneVerificationStatus =

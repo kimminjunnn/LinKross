@@ -24,21 +24,21 @@ print(f"Total scenarios found: {len(scenarios)}")
 # 2. Rule-Base (RAG) Evaluator
 def rule_base_generator(text):
     start_time = time.time()
-    
+
     # Extract features (lines starting with digit dot)
     features = re.findall(r'^\d+\.\s*(.*)', text, flags=re.MULTILINE)
     if not features:
         features = ["General Setup", "Development", "Deployment"]
-    
+
     n = len(features)
     budget_per_item = 100 // n if n > 0 else 100
     months_per_item = round(12 / n, 1) if n > 0 else 12
-    
+
     # Primitive translation dictionary
     translation_dict = {
         '결제': 'Payment',
-        '결재': 'Payment', 
-        '반차': 'Half car', 
+        '결재': 'Payment',
+        '반차': 'Half car',
         'API': 'API',
         '채팅': 'Chatting',
         '일괄': 'One time',
@@ -46,16 +46,16 @@ def rule_base_generator(text):
         '안전 재고': 'Safe inventory',
         '가계약': 'Fake contract',
     }
-    
+
     translated_features = []
     for f in features:
         t = f
         for k, v in translation_dict.items():
             t = t.replace(k, v)
         translated_features.append(t)
-    
+
     milestones = [{"title": f, "budget_pct": budget_per_item, "months": months_per_item} for f in features]
-    
+
     latency = time.time() - start_time
     return {
         "latency": latency,
@@ -66,15 +66,15 @@ def rule_base_generator(text):
 # 3. LLM Evaluator (OpenAI GPT-4o-mini)
 def llm_generator(text):
     start_time = time.time()
-    
+
     prompt = f"""
     You are an expert SaaS Product Owner and Technical Writer. Analyze the following project scenario and output JSON.
     Return 1 to 5 milestones based on business priority and technical complexity. Allocate exactly 100% budget and exactly 12 months total.
     Translate the core features into professional B2B SOW English (accurately handling proper nouns and domain terms).
-    
+
     Scenario:
     {text}
-    
+
     Output Format (JSON strictly):
     {{
       "milestones": [
@@ -83,7 +83,7 @@ def llm_generator(text):
       "translation": "English translation summary of core features..."
     }}
     """
-    
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
