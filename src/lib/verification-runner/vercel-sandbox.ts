@@ -388,8 +388,12 @@ function readSandboxCredentials(): { token: string; teamId: string; projectId: s
   const token = process.env.VERCEL_TOKEN?.trim();
   const teamId = process.env.VERCEL_TEAM_ID?.trim();
   const projectId = process.env.VERCEL_PROJECT_ID?.trim();
-  if (!token && !teamId && !projectId) return {};
-  if (!token || !teamId || !projectId) {
+
+  // Vercel deployments authenticate the Sandbox SDK automatically through OIDC.
+  // System environment variables can still expose team/project IDs without a PAT.
+  if (!token) return {};
+
+  if (!teamId || !projectId) {
     throw new StageFailure("provisioning", "Vercel Sandbox credentials are incomplete.");
   }
   return { token, teamId, projectId };
