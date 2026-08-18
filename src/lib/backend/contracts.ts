@@ -7,6 +7,8 @@ export type BackendErrorCode =
   | "DUPLICATE_PROPOSAL"
   | "PROJECT_ALREADY_SELECTED"
   | "CONFLICT"
+  | "COMPANY_PROFILE_REQUIRED"
+  | "FREELANCER_PROFILE_REQUIRED"
   | "DATABASE_ERROR";
 
 export interface BackendError {

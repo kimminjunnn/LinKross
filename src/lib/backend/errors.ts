@@ -29,6 +29,13 @@ export function mapBackendError(
     return { code: "RECRUITMENT_CLOSED", message: "현재 제안서를 제출할 수 없는 모집입니다." };
   }
 
+  if (message.includes("FREELANCER_PROFILE_REQUIRED")) {
+    return {
+      code: "FREELANCER_PROFILE_REQUIRED",
+      message: "제안서를 제출하려면 먼저 프리랜서 프로필(이름, 소개 등)을 등록해주세요.",
+    };
+  }
+
   if (code === "23505") {
     if (message.includes("proposals_project_id_freelancer_id")) {
       return { code: "DUPLICATE_PROPOSAL", message: "이미 이 프로젝트에 제안서를 제출했습니다." };
