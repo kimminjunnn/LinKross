@@ -86,7 +86,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
             submit={(input) => startTransition(async () => {
               const result = await submitMilestonePullRequestAction(input);
               if (!result.ok) {
-                setMessage(result.error.message);
+                setMessage(formatSubmissionError(result.error));
                 return;
               }
               setMessage(`Submission saved at Commit ${result.data.headCommitSha}. Verification is ${formatStatus(result.data.verificationStatus)}.`);
@@ -97,6 +97,12 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
       </div>
     </section>
   );
+}
+
+function formatSubmissionError(error: { message: string; diagnosticCode?: string }) {
+  return error.diagnosticCode
+    ? `${error.message} (진단 코드: ${error.diagnosticCode})`
+    : error.message;
 }
 
 function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit }: {

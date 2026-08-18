@@ -14,6 +14,7 @@ export type BackendErrorCode =
 export interface BackendError {
   code: BackendErrorCode;
   message: string;
+  diagnosticCode?: string;
   fieldErrors?: Record<string, string>;
 }
 

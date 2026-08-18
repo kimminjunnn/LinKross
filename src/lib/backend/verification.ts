@@ -774,6 +774,7 @@ function mapGitHubAppError(error: unknown) {
     return {
       code: error.status === 404 ? "NOT_FOUND" as const : "CONFLICT" as const,
       message: error.message,
+      diagnosticCode: error.diagnosticCode,
     };
   }
   return {

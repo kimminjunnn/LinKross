@@ -15,11 +15,15 @@ type GitHubRequestAuth =
 
 export class GitHubAppError extends Error {
   readonly status?: number;
+  readonly diagnosticCode?: string;
+  readonly requestId?: string;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, diagnosticCode?: string, requestId?: string) {
     super(message);
     this.name = "GitHubAppError";
     this.status = status;
+    this.diagnosticCode = diagnosticCode;
+    this.requestId = requestId;
   }
 }
 
@@ -70,10 +74,23 @@ export async function getGitHubPullRequest(input: {
   repository: string;
   pullRequestNumber: number;
 }): Promise<GitHubPullRequest> {
-  const token = await createInstallationAccessToken(input.installationId, [input.repositoryId]);
-  return githubRequest<GitHubPullRequest>(
-    `/repos/${encodeURIComponent(input.owner)}/${encodeURIComponent(input.repository)}/pulls/${input.pullRequestNumber}`,
-    { type: "installation", token },
+  const context = {
+    installationId: input.installationId,
+    repositoryId: input.repositoryId,
+    pullRequestNumber: input.pullRequestNumber,
+  };
+  const token = await runGitHubOperation(
+    "installation_token",
+    context,
+    () => createInstallationAccessToken(input.installationId, [input.repositoryId]),
+  );
+  return runGitHubOperation(
+    "pull_request_lookup",
+    context,
+    () => githubRequest<GitHubPullRequest>(
+      `/repos/${encodeURIComponent(input.owner)}/${encodeURIComponent(input.repository)}/pulls/${input.pullRequestNumber}`,
+      { type: "installation", token },
+    ),
   );
 }
 
@@ -172,7 +189,7 @@ async function githubRequest<T>(
   const response = await githubFetch(path, auth, init, REQUEST_TIMEOUT_MS);
 
   if (!response.ok) {
-    throwGitHubResponseError(response.status);
+    throwGitHubResponseError(response.status, response.headers.get("x-github-request-id") ?? undefined);
   }
 
   return (await response.json()) as T;
@@ -204,7 +221,7 @@ async function githubFetch(
   }
 }
 
-function throwGitHubResponseError(status: number): never {
+function throwGitHubResponseError(status: number, requestId?: string): never {
   const message =
     status === 404
       ? "GitHub App이 이 저장소에 설치되어 있지 않거나 저장소 접근 권한이 없습니다."
@@ -213,7 +230,37 @@ function throwGitHubResponseError(status: number): never {
         : status === 403
           ? "GitHub App의 저장소 읽기 권한을 확인해주세요."
           : `GitHub 확인에 실패했습니다. (${status})`;
-  throw new GitHubAppError(message, status);
+  throw new GitHubAppError(message, status, undefined, requestId);
+}
+
+async function runGitHubOperation<T>(
+  stage: "installation_token" | "pull_request_lookup",
+  context: Record<string, number>,
+  operation: () => Promise<T>,
+): Promise<T> {
+  console.info("[github-app] operation started", { stage, ...context });
+  try {
+    const result = await operation();
+    console.info("[github-app] operation completed", { stage, ...context });
+    return result;
+  } catch (error) {
+    const status = error instanceof GitHubAppError ? error.status : undefined;
+    const requestId = error instanceof GitHubAppError ? error.requestId : undefined;
+    const diagnosticCode = `GH_${stage.toUpperCase()}_${status ?? "UNKNOWN"}`;
+
+    console.error("[github-app] operation failed", {
+      stage,
+      diagnosticCode,
+      status: status ?? null,
+      githubRequestId: requestId ?? null,
+      ...context,
+    });
+
+    const message = error instanceof GitHubAppError
+      ? error.message
+      : "GitHub 요청을 처리하지 못했습니다. 다시 시도해주세요.";
+    throw new GitHubAppError(message, status, diagnosticCode, requestId);
+  }
 }
 
 function readGitHubAppId(): string {
