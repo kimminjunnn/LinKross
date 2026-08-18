@@ -14,6 +14,29 @@ const INPUT_PATH = `${VERIFIER_HOME}/linkross-playwright-input.json`;
 const OUTPUT_PATH = `${VERIFIER_HOME}/linkross-playwright-output.json`;
 const EVIDENCE_DIRECTORY = `${VERIFIER_HOME}/evidence`;
 const SCREENSHOT_MAX_BYTES = 10 * 1024 * 1024;
+const HEALTH_CHECK_SCRIPT = String.raw`
+(async () => {
+  let lastError = "No response from the application.";
+  for (let attempt = 1; attempt <= 30; attempt += 1) {
+    try {
+      const response = await fetch("http://127.0.0.1:3000/", {
+        redirect: "manual",
+        signal: AbortSignal.timeout(2000),
+      });
+      if (response.status >= 200 && response.status < 400) process.exit(0);
+      lastError = "Unexpected HTTP status " + response.status + ".";
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "Health check request failed.";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  console.error(lastError);
+  process.exit(1);
+})().catch((error) => {
+  console.error(error instanceof Error ? error.message : "Health check failed.");
+  process.exit(1);
+});
+`;
 
 export interface ManagedBrowserOutcome {
   criterionId: string;
@@ -89,13 +112,11 @@ export async function runManagedBrowserCriteria(input: {
     },
   ]);
 
-  await input.appUser.runCommand({
+  const server = await input.appUser.runCommand({
     cmd: "npm",
-    args: ["run", "start"],
+    args: ["run", "start", "--", "--hostname", "127.0.0.1", "--port", "3000"],
     cwd: input.workspace,
     env: {
-      PORT: "3000",
-      HOSTNAME: "127.0.0.1",
       NODE_ENV: "production",
       LINKROSS_TEST_EMAIL: credentials.email,
       LINKROSS_TEST_PASSWORD: credentials.password,
@@ -105,21 +126,28 @@ export async function runManagedBrowserCriteria(input: {
   });
 
   const ready = await input.verifierUser.runCommand({
-    cmd: "bash",
-    args: [
-      "-lc",
-      "for attempt in $(seq 1 30); do curl -fsS --max-time 2 http://127.0.0.1:3000/ >/dev/null && exit 0; sleep 1; done; exit 1",
-    ],
+    cmd: "node",
+    args: ["-e", HEALTH_CHECK_SCRIPT],
     timeoutMs: 40_000,
   });
   if (ready.exitCode !== 0) {
+    await server.kill().catch(() => undefined);
+    const stoppedServer = await server.wait().catch(() => null);
+    const healthOutput = await ready.output().catch(() => "Health check output unavailable.");
+    const serverOutput = stoppedServer
+      ? await stoppedServer.output().catch(() => "Server output unavailable.")
+      : "Server exit status unavailable.";
+    const diagnostic = redactRuntimeDiagnostic(
+      `health=${healthOutput} server_exit=${stoppedServer?.exitCode ?? "unknown"} server=${serverOutput}`,
+      [credentials.email, credentials.password, credentials.invalidPassword],
+    );
     return [
       ...missingSpecs,
       ...runnable.map((criterion) => ({
         criterionId: criterion.id,
         status: "failed" as const,
         observedResult: "빌드된 앱이 격리 환경의 내부 포트에서 제한 시간 안에 시작되지 않았습니다.",
-        errorMessage: "앱 시작 또는 health check에 실패했습니다.",
+        errorMessage: `앱 시작 또는 health check에 실패했습니다. ${diagnostic}`,
         durationMs: 40_000,
       })),
     ];
@@ -218,6 +246,21 @@ function parseOutcomes(value: Buffer | null, expectedCriterionIds: string[]): Ar
 
 function needsReview(criterionId: string, observedResult: string): ManagedBrowserOutcome {
   return { criterionId, status: "needs_review", observedResult, durationMs: 0 };
+}
+
+function redactRuntimeDiagnostic(value: string, sensitiveValues: string[]): string {
+  let redacted = value;
+  for (const sensitiveValue of sensitiveValues) {
+    if (sensitiveValue) redacted = redacted.replaceAll(sensitiveValue, "[REDACTED]");
+  }
+  return redacted
+    .replace(/\bgh[pousr]_[A-Za-z0-9_]{20,}\b/g, "[REDACTED]")
+    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, "[REDACTED]")
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[REDACTED]")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[REDACTED_EMAIL]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 1_500);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
