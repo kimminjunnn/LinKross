@@ -47,6 +47,25 @@ export async function createProject(
     return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
   }
 
+  const { data: companyProfile, error: companyProfileError } = await supabase
+    .from("company_profiles")
+    .select("id")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+
+  if (companyProfileError) {
+    return { ok: false, error: mapBackendError(companyProfileError, "회사 정보를 확인하지 못했습니다.") };
+  }
+  if (!companyProfile) {
+    return {
+      ok: false,
+      error: {
+        code: "COMPANY_PROFILE_REQUIRED",
+        message: "프로젝트를 등록하려면 먼저 회사 정보(조직명, 담당자 등)를 입력해주세요.",
+      },
+    };
+  }
+
   const { data, error } = await supabase.rpc("create_project_with_requirements", {
     p_title: input.title.trim(),
     p_goal: input.goal.trim(),

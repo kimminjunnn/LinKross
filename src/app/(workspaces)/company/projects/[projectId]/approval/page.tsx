@@ -7,6 +7,8 @@ import { FileText, LockKeyhole, UserCheck } from "lucide-react";
 import {
   approveSowAsCompanyAction,
   getSowApprovalStateAction,
+  generateSowSummaryAction,
+  type SowSummaryResult,
 } from "@/app/actions/sow";
 import { StatusBadge } from "@/components/project/status-badge";
 import type { SowApprovalState } from "@/lib/backend";
@@ -55,6 +57,8 @@ export default function ApprovalPage() {
   const [approvalLoadError, setApprovalLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isApproving, setIsApproving] = useState(false);
+  const [aiSummary, setAiSummary] = useState<SowSummaryResult | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const loadApprovalState = useCallback(async () => {
     setIsApprovalLoading(true);
@@ -63,6 +67,33 @@ export default function ApprovalPage() {
     const result = await getSowApprovalStateAction(projectId);
     if (result.ok) {
       setApprovalState(result.data);
+      
+      const sow = result.data?.document;
+      if (sow) {
+        setIsSummaryLoading(true);
+        const workDetailKo = sow.documentSections.find(s => s.title === "한국어 업무 상세")?.body || "";
+        const overviewSec = sow.documentSections.find(s => s.title === "Project Overview & Objectives")?.body || "";
+        
+        let background = "";
+        let objective = "";
+        const bgMatch = overviewSec.match(/Background:\s*([\s\S]*?)(?=Objective:|$)/);
+        const objMatch = overviewSec.match(/Objective:\s*([\s\S]*)/);
+        if (bgMatch) background = bgMatch[1].trim();
+        if (objMatch) objective = objMatch[1].trim();
+
+        const summaryResult = await generateSowSummaryAction(
+          workDetailKo,
+          background,
+          objective,
+          sow.acceptanceCriteria,
+          sow.definitionOfDone
+        );
+
+        if (summaryResult.ok) {
+          setAiSummary(summaryResult.data);
+        }
+        setIsSummaryLoading(false);
+      }
     } else {
       setApprovalState(null);
       setApprovalLoadError(result.error.message);
@@ -107,15 +138,21 @@ export default function ApprovalPage() {
       };
     }) ?? [];
   const translatedSummary = {
-    coreScope: sowDocument
-      ? "영문 SOW 원본의 Scope of Work 항목을 기준으로 이번 개발 범위를 확인합니다."
-      : "업무 명세서 탭에서 승인 요청한 원본 문서가 아직 없습니다.",
-    keyAcceptance: sowDocument
-      ? `${activeAcceptanceCriteria.length}개 Acceptance Criteria와 ${activeDefinitionOfDone.length}개 Definition of Done을 다음 검수 기준으로 사용합니다.`
-      : "승인 요청 후 완료조건과 검수 기준이 이곳에 표시됩니다.",
-    needsReview: sowDocument
-      ? `${documentVersion} 원본 문서가 업무 명세서 탭에서 승인 요청한 버전과 같은지 확인하세요.`
-      : "업무 명세서 탭에서 SOW를 생성하고 승인 요청을 진행하세요.",
+    coreScope: aiSummary
+      ? aiSummary.coreScope
+      : (sowDocument
+          ? "영문 SOW 원본의 Scope of Work 항목을 기준으로 이번 개발 범위를 확인합니다."
+          : "업무 명세서 탭에서 승인 요청한 원본 문서가 아직 없습니다."),
+    keyAcceptance: aiSummary
+      ? aiSummary.keyAcceptance
+      : (sowDocument
+          ? `${activeAcceptanceCriteria.length}개 Acceptance Criteria와 ${activeDefinitionOfDone.length}개 Definition of Done을 다음 검수 기준으로 사용합니다.`
+          : "승인 요청 후 완료조건과 검수 기준이 이곳에 표시됩니다."),
+    needsReview: aiSummary
+      ? aiSummary.needsReview
+      : (sowDocument
+          ? `${documentVersion} 원본 문서가 업무 명세서 탭에서 승인 요청한 버전과 같은지 확인하세요.`
+          : "업무 명세서 탭에서 SOW를 생성하고 승인 요청을 진행하세요."),
   };
   const summaryItems = isOriginalSummaryVisible
     ? [
@@ -368,14 +405,20 @@ export default function ApprovalPage() {
               </button>
             </div>
             <dl className="mt-5 space-y-4">
-              {summaryItems.map((item) => (
-                <div key={item.label}>
-                  <dt className="text-xs font-semibold text-app-muted">{item.label}</dt>
-                  <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
-                    {item.value}
-                  </dd>
+              {isSummaryLoading ? (
+                <div className="py-8 text-center text-xs font-semibold text-app-muted animate-pulse">
+                  Gemini AI가 업무 명세서 요약을 생성하고 있습니다...
                 </div>
-              ))}
+              ) : (
+                summaryItems.map((item) => (
+                  <div key={item.label}>
+                    <dt className="text-xs font-semibold text-app-muted">{item.label}</dt>
+                    <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
+                      {item.value}
+                    </dd>
+                  </div>
+                ))
+              )}
             </dl>
           </section>
 
