@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, LockKeyhole, UserCheck } from "lucide-react";
+import { FileText, LockKeyhole, MessageSquareText, UserCheck, X } from "lucide-react";
 
 import {
   approveSowAsCompanyAction,
@@ -49,6 +49,7 @@ export default function ApprovalPage() {
   const projectId = params.projectId;
   const [isPoApproved, setIsPoApproved] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isRevisionRequestsOpen, setIsRevisionRequestsOpen] = useState(false);
   const [isOriginalSummaryVisible, setIsOriginalSummaryVisible] = useState(false);
   const [approvalState, setApprovalState] = useState<SowApprovalState | null>(null);
   const [isApprovalLoading, setIsApprovalLoading] = useState(true);
@@ -340,15 +341,23 @@ export default function ApprovalPage() {
               <p className="text-sm font-bold leading-6 text-brand-700">
                 이 업무 명세서 {documentVersion} 원본을 확인했고, 해당 버전을 승인합니다.
               </p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
                   onClick={() => setIsConfirmOpen(true)}
                   disabled={!approvalState || isCompanyApproved || isApproving}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   <UserCheck aria-hidden="true" className="size-4" />
                   {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsRevisionRequestsOpen(true)}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle sm:w-auto"
+                >
+                  <MessageSquareText aria-hidden="true" className="size-4" />
+                  수정 요청 확인
                 </button>
               </div>
             </div>
@@ -447,6 +456,60 @@ export default function ApprovalPage() {
                 className="min-h-11 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground"
               >
                 아니오
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isRevisionRequestsOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="revision-requests-title"
+          className="fixed inset-0 z-50 grid place-items-center bg-app-foreground/45 p-4"
+        >
+          <div className="w-full max-w-lg rounded-card border border-app-border bg-app-surface p-5 shadow-floating sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-700">
+                  <MessageSquareText aria-hidden="true" className="size-5" />
+                </span>
+                <div>
+                  <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">
+                    SOW Revision
+                  </p>
+                  <h2 id="revision-requests-title" className="mt-1 text-lg font-black text-app-foreground">
+                    수정 요청 확인
+                  </h2>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRevisionRequestsOpen(false)}
+                aria-label="수정 요청 확인 닫기"
+                className="grid size-9 shrink-0 place-items-center rounded-control text-app-muted hover:bg-app-surface-subtle hover:text-app-foreground"
+              >
+                <X aria-hidden="true" className="size-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-5">
+              <p className="text-sm font-bold text-app-foreground">
+                아직 접수된 수정 요청이 없습니다.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-app-muted">
+                프리랜서가 업무 명세서 수정 요청을 보내면 이곳에서 요청 내용과 보낸 시간을 확인할 수 있습니다.
+              </p>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsRevisionRequestsOpen(false)}
+                className="min-h-10 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90"
+              >
+                확인
               </button>
             </div>
           </div>
