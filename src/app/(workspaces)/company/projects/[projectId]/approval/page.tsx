@@ -2,16 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, LockKeyhole, MessageSquareText, UserCheck, X } from "lucide-react";
+import { FileText, LockKeyhole, MessageSquareText, PencilLine, UserCheck, X } from "lucide-react";
 
 import {
   approveSowAsCompanyAction,
   getSowApprovalStateAction,
   generateSowSummaryAction,
+  markSowRevisionRequestsReadAction,
   type SowSummaryResult,
 } from "@/app/actions/sow";
 import { StatusBadge } from "@/components/project/status-badge";
-import type { SowApprovalState } from "@/lib/backend";
+import type { SowApprovalState, SowRevisionRequestRecord } from "@/lib/backend";
 
 const fallbackDocumentSections = [
   {
@@ -45,6 +46,32 @@ function formatVerificationMethod(method: string) {
   return labels[method] ?? method;
 }
 
+function formatRevisionRequestDateTime(value: string | null) {
+  if (!value) return "요청 시간 확인 예정";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "요청 시간 확인 예정";
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function summarizeRevisionRequest(reason: string) {
+  const trimmed = reason.trim();
+  if (!trimmed) return "수정 요청 내용 확인이 필요합니다.";
+  return trimmed.length > 90 ? `${trimmed.slice(0, 90)}...` : trimmed;
+}
+
+function getRevisionRequesterName(request: SowRevisionRequestRecord) {
+  return request.requesterName ?? (request.requesterRole === "freelancer" ? "프리랜서" : "발주자");
+}
+
 export default function ApprovalPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
@@ -60,6 +87,10 @@ export default function ApprovalPage() {
   const [isApproving, setIsApproving] = useState(false);
   const [aiSummary, setAiSummary] = useState<SowSummaryResult | null>(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [isRevisionRequestsReadSaving, setIsRevisionRequestsReadSaving] = useState(false);
+  const [locallyReadRevisionRequestIds, setLocallyReadRevisionRequestIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const loadApprovalState = useCallback(async () => {
     setIsApprovalLoading(true);
@@ -173,6 +204,58 @@ export default function ApprovalPage() {
   const isReadOnly = approvalState?.status === "approved";
   const isApprovalComplete =
     isReadOnly || approvalState?.status === "approved" || (isCompanyApproved && isFreelancerApproved);
+  const revisionRequests = approvalState?.revisionRequests ?? [];
+  const latestRevisionRequest = revisionRequests[0] ?? null;
+  const unreadRevisionRequests = revisionRequests.filter(
+    (request) => !request.readAt && !locallyReadRevisionRequestIds.has(request.id),
+  );
+  const hasRevisionRequest = revisionRequests.length > 0;
+  const hasUnreadRevisionRequest = unreadRevisionRequests.length > 0;
+  const revisionRequestNotice = {
+    requesterName: approvalState?.approvals.freelancer?.approverName ?? "프리랜서",
+    requestedAt: hasRevisionRequest ? "요청 시간 확인 예정" : "-",
+    summary: hasRevisionRequest
+      ? "업무 범위와 완료 기준 관련 수정 요청이 접수되었습니다."
+      : "현재 접수된 수정 요청이 없습니다.",
+  };
+
+  const revisionRequestDisplay = latestRevisionRequest
+    ? {
+        requesterName: getRevisionRequesterName(latestRevisionRequest),
+        requestedAt: formatRevisionRequestDateTime(latestRevisionRequest.requestedAt),
+        summary: summarizeRevisionRequest(latestRevisionRequest.reason),
+      }
+    : revisionRequestNotice;
+
+  const handleOpenRevisionRequests = async () => {
+    setIsRevisionRequestsOpen(true);
+
+    if (!approvalState || !unreadRevisionRequests.length) return;
+
+    const unreadIds = unreadRevisionRequests.map((request) => request.id);
+    setLocallyReadRevisionRequestIds((current) => {
+      const next = new Set(current);
+      unreadIds.forEach((id) => next.add(id));
+      return next;
+    });
+
+    setIsRevisionRequestsReadSaving(true);
+    const result = await markSowRevisionRequestsReadAction({
+      projectId,
+      sowVersionId: approvalState.sowVersionId,
+    });
+
+    if (result.ok) {
+      setApprovalState(result.data);
+    } else {
+      setStatusMessage(`수정 요청 확인 이력 저장 실패: ${result.error.message}`);
+    }
+    setIsRevisionRequestsReadSaving(false);
+  };
+
+  const handleGoToRevisionEditor = () => {
+    router.push(`/company/projects/${projectId}/sow?mode=revision`);
+  };
 
   const handleFinalApproval = async () => {
     if (!approvalState) {
@@ -378,7 +461,7 @@ export default function ApprovalPage() {
               <p className="text-sm font-bold leading-6 text-brand-700">
                 이 업무 명세서 {documentVersion} 원본을 확인했고, 해당 버전을 승인합니다.
               </p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={() => setIsConfirmOpen(true)}
@@ -388,20 +471,65 @@ export default function ApprovalPage() {
                   <UserCheck aria-hidden="true" className="size-4" />
                   {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setIsRevisionRequestsOpen(true)}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle sm:w-auto"
-                >
-                  <MessageSquareText aria-hidden="true" className="size-4" />
-                  수정 요청 확인
-                </button>
               </div>
             </div>
           ) : null}
         </section>
 
         <div className="space-y-5">
+          <section
+            className={`rounded-card border p-5 shadow-card sm:p-6 ${
+              hasUnreadRevisionRequest
+                ? "border-[#F95803]/30 bg-[#FFF3ED]"
+                : "border-app-border bg-app-surface"
+            }`}
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className={`flex items-center gap-2 ${hasUnreadRevisionRequest ? "text-[#F95803]" : "text-app-foreground"}`}>
+                  {hasUnreadRevisionRequest ? (
+                    <span className="size-2 rounded-full bg-[#F95803]" aria-hidden="true" />
+                  ) : null}
+                  <h2 className="text-lg font-black">수정 요청</h2>
+                </div>
+                <p className="mt-2 text-xs font-bold text-app-muted">
+                  {hasRevisionRequest
+                    ? `${revisionRequestDisplay.requesterName} · ${revisionRequestDisplay.requestedAt}`
+                    : "수정 요청 없음"}
+                </p>
+                <p className="mt-3 text-sm font-bold leading-6 text-app-foreground">
+                  {revisionRequestDisplay.summary}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleOpenRevisionRequests();
+                  }}
+                  disabled={isRevisionRequestsReadSaving}
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-bold ${
+                    hasUnreadRevisionRequest
+                      ? "bg-[#F95803] text-white hover:opacity-90"
+                      : "border border-app-border-strong bg-app-surface text-app-foreground hover:bg-app-surface-subtle"
+                  }`}
+                >
+                  <MessageSquareText aria-hidden="true" className="size-4" />
+                  수정 요청 확인
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGoToRevisionEditor}
+                  disabled={!hasRevisionRequest}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <PencilLine aria-hidden="true" className="size-4" />
+                  업무명세서 수정하기
+                </button>
+              </div>
+            </div>
+          </section>
+
           <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-black text-app-foreground">업무명세서 요약</h2>
@@ -537,14 +665,48 @@ export default function ApprovalPage() {
               </button>
             </div>
 
-            <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-5">
-              <p className="text-sm font-bold text-app-foreground">
-                아직 접수된 수정 요청이 없습니다.
-              </p>
-              <p className="mt-2 text-sm leading-6 text-app-muted">
-                프리랜서가 업무 명세서 수정 요청을 보내면 이곳에서 요청 내용과 보낸 시간을 확인할 수 있습니다.
-              </p>
-            </div>
+            {hasRevisionRequest ? (
+              <div className="mt-5 space-y-3">
+                {revisionRequests.map((request) => {
+                  const isUnread = !request.readAt && !locallyReadRevisionRequestIds.has(request.id);
+
+                  return (
+                    <article
+                      key={request.id}
+                      className={`rounded-control border p-5 ${
+                        isUnread
+                          ? "border-[#F95803]/30 bg-[#FFF3ED]"
+                          : "border-app-border bg-app-surface-subtle"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-app-foreground">수정 요청</p>
+                          <p className="mt-2 text-xs font-bold text-app-muted">
+                            {getRevisionRequesterName(request)} · {formatRevisionRequestDateTime(request.requestedAt)}
+                          </p>
+                        </div>
+                        {isUnread ? (
+                          <span className="size-2 rounded-full bg-[#F95803]" aria-label="읽지 않은 수정 요청" />
+                        ) : null}
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap text-sm font-bold leading-6 text-app-foreground">
+                        {request.reason}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-5">
+                <p className="text-sm font-bold text-app-foreground">
+                  아직 접수된 수정 요청이 없습니다.
+                </p>
+                <p className="mt-2 text-sm leading-6 text-app-muted">
+                  프리랜서가 업무 명세서 수정 요청을 보내면 이곳에서 요청 내용과 보낸 시간을 확인할 수 있습니다.
+                </p>
+              </div>
+            )}
 
             <div className="mt-5 flex justify-end">
               <button

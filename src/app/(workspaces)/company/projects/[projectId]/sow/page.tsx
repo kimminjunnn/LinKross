@@ -4,10 +4,14 @@ import { SowWorkspace } from "./_components/sow-draft-workspace";
 
 export default async function SowPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams?: Promise<{ mode?: string }>;
 }) {
   const { projectId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const isRevisionMode = resolvedSearchParams?.mode === "revision";
   const result = await getSowWorkspaceContext(projectId);
 
   if (!result.ok) {
@@ -18,5 +22,5 @@ export default async function SowPage({
     );
   }
 
-  return <SowWorkspace context={result.data} />;
+  return <SowWorkspace context={result.data} isRevisionMode={isRevisionMode} />;
 }

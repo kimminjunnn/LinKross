@@ -155,6 +155,18 @@ export interface ApprovedSowMilestones {
   milestones: ProjectMilestoneSummary[];
 }
 
+export interface SowWorkspaceDraft {
+  sowVersionId: string;
+  versionNumber: number;
+  status: SowStatus;
+  workDetail: string;
+  startDate: string;
+  endDate: string;
+  budget: string;
+  milestones: SowMilestoneInput[];
+  englishSow: unknown | null;
+}
+
 export interface SowWorkspaceContext {
   projectId: string;
   title: string;
@@ -165,6 +177,8 @@ export interface SowWorkspaceContext {
   currency: string;
   startDate: string;
   endDate: string;
+  latestSowDraft: SowWorkspaceDraft | null;
+  revisionRequests: SowRevisionRequestRecord[];
 }
 
 export type SowStatus = "draft" | "in_review" | "revision_requested" | "approved" | "superseded";
@@ -176,6 +190,17 @@ export interface SowApprovalRecord {
   role: UserRole;
   approverName: string | null;
   approvedAt: string;
+}
+
+export interface SowRevisionRequestRecord {
+  id: string;
+  projectId: string;
+  sowVersionId: string;
+  requesterRole: UserRole;
+  requesterName: string | null;
+  reason: string;
+  requestedAt: string;
+  readAt: string | null;
 }
 
 export interface SowApprovalCriterion {
@@ -233,6 +258,7 @@ export interface SowApprovalState {
     company: SowApprovalRecord | null;
     freelancer: SowApprovalRecord | null;
   };
+  revisionRequests: SowRevisionRequestRecord[];
 }
 
 export interface ApproveSowInput {
@@ -260,6 +286,11 @@ export interface WorkspaceNotification {
   occurredAt: string;
   href: string;
   requiresAction: boolean;
+}
+
+export interface MarkSowRevisionRequestsReadInput {
+  projectId: string;
+  sowVersionId: string;
 }
 
 export interface OpportunityDetail extends OpportunitySummary {
