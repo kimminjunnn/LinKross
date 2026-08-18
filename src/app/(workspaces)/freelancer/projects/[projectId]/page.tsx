@@ -53,7 +53,7 @@ type ActiveProjectMock = {
   milestones: MilestoneMock[];
 };
 
-export default function FreelancerProjectDetailPage({ params }: { params: { projectId: string } }) {
+export default function FreelancerProjectDetailPage() {
   const [subTab, setSubTab] = useState<"qa" | "sow" | "invoices">("qa");
   const [expandedMilestoneId, setExpandedMilestoneId] = useState<string | null>("m2");
 
