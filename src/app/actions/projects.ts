@@ -1,7 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import type { BackendResult, CreateProjectInput, ProjectDraftFormData } from "@/lib/backend";
-import { createProject, deleteProjectDraft, getPublicOpportunity, saveProjectDraft } from "@/lib/backend";
+import {
+  createProject,
+  deleteProjectDraft,
+  getPublicOpportunity,
+  saveProjectDraft,
+  selectProposal,
+  submitProposal,
+  uploadProjectFile,
+} from "@/lib/backend";
 import type { CreateProjectFormState } from "@/app/actions/projects-form-state";
 
 const PROJECT_TYPES = ["web", "mobile", "saas", "backend", "other"] as const;
@@ -17,6 +26,7 @@ export async function createProjectAction(
     return {
       status: "error",
       error: result.error.message,
+      warning: null,
       fieldErrors: result.error.fieldErrors ?? {},
       projectId: null,
     };
@@ -25,9 +35,15 @@ export async function createProjectAction(
   // 임시 저장 원문은 실제 등록 이후엔 의미가 없으니 정리한다. 실패해도 등록 자체는 이미 성공한 것이므로 무시한다.
   await deleteProjectDraft();
 
+  const attachment = formData.get("attachment");
+  const uploadResult = attachment instanceof File && attachment.size > 0
+    ? await uploadProjectFile(result.data.projectId, attachment)
+    : null;
+
   return {
     status: "success",
     error: null,
+    warning: uploadResult && !uploadResult.ok ? uploadResult.error.message : null,
     fieldErrors: {},
     projectId: result.data.projectId,
   };
@@ -83,67 +99,20 @@ export async function getOpportunityAction(projectId: string) {
   return getPublicOpportunity(projectId);
 }
 
-export async function submitProposalAction(projectId: string, content: string) {
-  const { createSupabaseServerClient } = require("@/lib/supabase/server");
-  const supabase = await createSupabaseServerClient();
-  const { data: authData } = await supabase.auth.getUser();
-  
-  console.log("[SubmitActionDebug] Starting submission for project:", projectId);
-  console.log("[SubmitActionDebug] Auth User ID:", authData.user?.id);
+export async function submitProposalAction(
+  projectId: string,
+  content: string,
+  optionalNotes?: string,
+) {
+  return submitProposal({ projectId, content, optionalNotes });
+}
 
-  if (!authData.user) {
-    console.error("[SubmitActionDebug] Auth failed - User not logged in.");
-    return { ok: false, error: "로그인이 필요합니다." };
+export async function selectProposalAction(projectId: string, proposalId: string) {
+  const result = await selectProposal({ projectId, proposalId });
+  if (result.ok) {
+    revalidatePath(`/company/assessments/${projectId}/candidates`);
+    revalidatePath("/company/assessments");
+    revalidatePath("/company/projects");
   }
-
-  // 1. Fetch current requirement version ID from projects table
-  const { data: projectData, error: projectError } = await supabase
-    .from("projects")
-    .select("current_requirement_version_id")
-    .eq("id", projectId)
-    .single();
-
-  if (projectError || !projectData?.current_requirement_version_id) {
-    console.error("[SubmitActionDebug] Failed to fetch project version:", projectError);
-    return { ok: false, error: "프로젝트 요구사항 버전을 찾을 수 없습니다." };
-  }
-
-  const versionId = projectData.current_requirement_version_id;
-
-  // 2. Fetch freelancer profile info for snapshotting
-  const { data: profileData, error: profileError } = await supabase
-    .from("freelancer_profiles")
-    .select("display_name, headline, skills, portfolio_urls")
-    .eq("id", authData.user.id)
-    .maybeSingle();
-
-  const displayName = profileData?.display_name || "지원자 프리랜서";
-  const headline = profileData?.headline || "개발자";
-  const skills = profileData?.skills || "TypeScript,Next.js";
-  const portfolioUrls = profileData?.portfolio_urls || [];
-
-  // 3. Insert proposal with all snapshots and required version ID
-  const { data, error } = await supabase
-    .from("proposals")
-    .insert({
-      project_id: projectId,
-      freelancer_id: authData.user.id,
-      requirement_version_id: versionId, // Required Not-Null column!
-      content: content,
-      freelancer_display_name_snapshot: displayName,
-      freelancer_headline_snapshot: headline,
-      freelancer_skills_snapshot: skills,
-      freelancer_portfolio_urls_snapshot: portfolioUrls,
-      status: "submitted"
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("[SubmitActionDebug] Insert Error:", error);
-    return { ok: false, error: error.message };
-  }
-
-  console.log("[SubmitActionDebug] Insert Success! Data:", data);
-  return { ok: true, data };
+  return result;
 }

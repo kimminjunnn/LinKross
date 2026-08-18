@@ -8,8 +8,6 @@ import {
   ChevronUp,
   Download,
   Edit3,
-  Eye,
-  MessageSquareText,
   Send,
   X,
 } from "lucide-react";
@@ -25,41 +23,6 @@ type SowEnglishPreviewProps = {
   onRequestApproval: (snapshot: ApprovalSowSnapshot) => void;
 };
 
-type FreelancerChangeRequest = {
-  id: string;
-  sender: string;
-  requestedAt: string;
-  summary: string;
-  details: string[];
-};
-
-const mockFreelancerChangeRequests: FreelancerChangeRequest[] = [
-  {
-    id: "change-request-001",
-    sender: "Sarah Lee",
-    requestedAt: "2026.08.13 14:20",
-    summary:
-      "결제 조건과 검수 기준 문구를 더 명확히 해주세요. 마일스톤 기준이 승인 탭에서 어떻게 고정되는지 확인 가능했으면 합니다.",
-    details: [
-      "결제 조건과 검수 기준 문구를 더 명확히 해주세요.",
-      "마일스톤 기준이 승인 탭에서 어떻게 고정되는지 확인 가능했으면 합니다.",
-      "승인 전에 PO가 확인해야 하는 문구를 조금 더 쉽게 정리해주세요.",
-    ],
-  },
-  {
-    id: "change-request-002",
-    sender: "Sarah Lee",
-    requestedAt: "2026.08.13 15:05",
-    summary:
-      "마일스톤 M1의 완료 기준에 Preview 확인 조건을 추가해주세요. 프리랜서가 검수 기준을 쉽게 확인할 수 있도록 표현을 정리해주세요.",
-    details: [
-      "마일스톤 M1의 완료 기준에 Preview 확인 조건을 추가해주세요.",
-      "프리랜서가 검수 기준을 쉽게 확인할 수 있도록 표현을 정리해주세요.",
-      "완료 기준과 Definition of Done이 중복되어 보이지 않도록 구분이 필요합니다.",
-    ],
-  },
-];
-
 export function SowEnglishPreview({
   projectId,
   sow,
@@ -69,12 +32,6 @@ export function SowEnglishPreview({
   const [isPmVerified, setIsPmVerified] = useState(false);
   const [isEditingSection, setIsEditingSection] = useState(false);
   const [isApprovalConfirmOpen, setIsApprovalConfirmOpen] = useState(false);
-  const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false);
-  const [selectedChangeRequest, setSelectedChangeRequest] =
-    useState<FreelancerChangeRequest | null>(null);
-  const [hasUnreadChangeRequests, setHasUnreadChangeRequests] = useState(
-    mockFreelancerChangeRequests.length > 0,
-  );
   const sowContentRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPdf = () => {
@@ -85,11 +42,6 @@ export function SowEnglishPreview({
     if (!sow || !isPmVerified) return;
 
     setIsApprovalConfirmOpen(true);
-  };
-
-  const handleOpenChangeRequests = () => {
-    setIsChangeRequestModalOpen(true);
-    setHasUnreadChangeRequests(false);
   };
 
   const handleConfirmApprovalRequest = () => {
@@ -159,21 +111,6 @@ export function SowEnglishPreview({
             RAG 기반 IT 표준 용어 매핑 및 B2B 계약 가이드라인에 따른 영문 초안입니다.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleOpenChangeRequests}
-          style={{ backgroundColor: "#F95803", borderColor: "#F95803" }}
-          className="no-print relative inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border px-3 text-xs font-bold text-white transition-colors hover:opacity-90"
-        >
-          {hasUnreadChangeRequests && (
-            <span
-              aria-label="새 수정 요청"
-              className="absolute -right-1 -top-1 size-2.5 rounded-full bg-red-600 ring-2 ring-white"
-            />
-          )}
-          <MessageSquareText className="size-4" />
-          수정 요청 확인
-        </button>
       </div>
 
       {/* RAG 추출 전문 용어 태그 */}
@@ -407,147 +344,6 @@ export function SowEnglishPreview({
           승인 요청 시 PDF 저장 없이 같은 SOW 원본 스냅샷이 승인 탭으로 전달됩니다. PDF 저장은 오른쪽 버튼에서 별도로 진행합니다.
         </p>
       </div>
-
-      {isChangeRequestModalOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 no-print"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="change-request-title"
-        >
-          <div className="w-full max-w-2xl rounded-card border border-app-border bg-app-surface p-5 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-700">
-                  Freelancer change request
-                </p>
-                <h3 id="change-request-title" className="mt-1 text-lg font-black text-app-foreground">
-                  수정 요청 확인
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-app-muted">
-                  프리랜서가 보낸 업무명세서 수정 요청 사항을 확인합니다.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsChangeRequestModalOpen(false)}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-control border border-app-border-strong text-app-foreground hover:bg-app-surface-subtle"
-                aria-label="수정 요청 모달 닫기"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {mockFreelancerChangeRequests.length > 0 ? (
-                mockFreelancerChangeRequests.map((request) => (
-                  <article
-                    key={request.id}
-                    className="rounded-control border border-app-border bg-app-surface-subtle p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold text-app-muted">보낸 사람</p>
-                        <h4 className="mt-1 text-sm font-black text-app-foreground">
-                          {request.sender}
-                        </h4>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedChangeRequest(request)}
-                        className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-control border border-app-border-strong bg-app-surface px-3 text-xs font-bold text-app-foreground hover:bg-app-surface-subtle"
-                      >
-                        <Eye className="size-3.5" />
-                        상세 보기
-                      </button>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-app-foreground">
-                      {request.summary}
-                    </p>
-                    <p className="mt-3 text-xs font-semibold text-app-muted">
-                      {request.requestedAt}
-                    </p>
-                  </article>
-                ))
-              ) : (
-                <div className="rounded-control border border-app-border bg-app-surface-subtle p-4 text-sm text-app-muted">
-                  현재 도착한 수정 요청이 없습니다.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {selectedChangeRequest ? (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 px-4 no-print"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="change-request-detail-title"
-        >
-          <div className="w-full max-w-3xl rounded-card border border-app-border bg-app-surface p-6 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-700">
-                  Change request detail
-                </p>
-                <h3
-                  id="change-request-detail-title"
-                  className="mt-1 text-xl font-black text-app-foreground"
-                >
-                  수정 요청 상세
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedChangeRequest(null)}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-control border border-app-border-strong text-app-foreground hover:bg-app-surface-subtle"
-                aria-label="수정 요청 상세 닫기"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <dl className="mt-5 grid gap-3 rounded-control border border-app-border bg-app-surface-subtle p-4 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-xs font-semibold text-app-muted">보낸 사람</dt>
-                <dd className="mt-1 font-bold text-app-foreground">
-                  {selectedChangeRequest.sender}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-app-muted">요청 시간</dt>
-                <dd className="mt-1 font-bold text-app-foreground">
-                  {selectedChangeRequest.requestedAt}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="mt-5">
-              <h4 className="text-sm font-black text-app-foreground">요청 내용</h4>
-              <ul className="mt-3 space-y-2 rounded-control border border-app-border bg-app-surface-subtle p-4 text-sm leading-6 text-app-foreground">
-                {selectedChangeRequest.details.map((detail) => (
-                  <li key={detail} className="flex gap-2">
-                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-500" />
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedChangeRequest(null)}
-                className="min-h-10 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90"
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {isApprovalConfirmOpen ? (
         <div

@@ -1,4 +1,4 @@
-import { getCompanyProjectDetail } from "@/lib/backend";
+import { getCompanyProjectDetail, listProjectProposals } from "@/lib/backend";
 
 import { CandidateComparisonDashboard } from "./_components/candidate-comparison-dashboard";
 
@@ -8,7 +8,10 @@ export default async function CandidatesPage({
   params: Promise<{ assessmentId: string }>;
 }) {
   const { assessmentId } = await params;
-  const projectDetail = await getCompanyProjectDetail(assessmentId);
+  const [projectDetail, proposals] = await Promise.all([
+    getCompanyProjectDetail(assessmentId),
+    listProjectProposals(assessmentId),
+  ]);
 
-  return <CandidateComparisonDashboard projectDetail={projectDetail} />;
+  return <CandidateComparisonDashboard projectDetail={projectDetail} proposals={proposals} />;
 }

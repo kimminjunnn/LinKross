@@ -6,11 +6,14 @@ import type {
   SaveSowVersionInput,
   SaveSowVersionOutput,
   SowApprovalState,
+  RequestSowRevisionInput,
 } from "@/lib/backend";
 import {
   approveSowAsCompany,
+  approveSowAsFreelancer,
   getSowApprovalState,
   saveSowDraft,
+  requestSowRevision,
   submitSowForReview,
 } from "@/lib/backend";
 
@@ -36,4 +39,16 @@ export async function approveSowAsCompanyAction(
   input: ApproveSowInput,
 ): Promise<BackendResult<SowApprovalState>> {
   return approveSowAsCompany(input);
+}
+
+export async function approveSowAsFreelancerAction(
+  input: ApproveSowInput,
+): Promise<BackendResult<SowApprovalState>> {
+  return approveSowAsFreelancer(input);
+}
+
+export async function requestSowRevisionAction(
+  input: RequestSowRevisionInput,
+): Promise<BackendResult<SowApprovalState>> {
+  return requestSowRevision(input);
 }

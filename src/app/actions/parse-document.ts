@@ -10,9 +10,10 @@ export async function parseDocumentAction(formData: FormData): Promise<{ text?: 
 
   try {
     const file = formData.get("file") as File;
-    if (!file) {
+    if (!file || !(file instanceof File) || file.size === 0) {
       return { error: "No file provided" };
     }
+    if (file.size > 20 * 1024 * 1024) return { error: "File size must be 20MB or less." };
 
     // Polyfill DOMMatrix for pdf-parse in Node.js / Next.js server environments
     if (typeof globalThis.DOMMatrix === "undefined") {

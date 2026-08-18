@@ -6,6 +6,7 @@ import {
   Clock,
   DollarSign,
   FileCheck2,
+  Paperclip,
   Info,
   Layers3,
 } from "lucide-react";
@@ -41,10 +42,10 @@ export default async function OpportunityDetailPage({
     return (
       <main className="mx-auto w-full max-w-3xl px-4 py-20 sm:px-6">
         <div className="rounded-card border border-red-200 bg-red-50 p-6 text-sm text-red-800">
-          <h1 className="text-lg font-black">프로젝트를 불러오지 못했습니다.</h1>
+          <h1 className="text-lg font-black">Failed to load project.</h1>
           <p className="mt-2">{result.error.message}</p>
           <Link href="/opportunities" className="mt-5 inline-flex font-bold text-brand-700">
-            프로젝트 목록으로 돌아가기
+            Back to Project List
           </Link>
         </div>
       </main>
@@ -71,7 +72,7 @@ export default async function OpportunityDetailPage({
             href={workspaceHref}
             className="rounded-control border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50"
           >
-            {isAuthenticated ? "내 워크스페이스" : "프리랜서 로그인"}
+            {isAuthenticated ? "My Workspace" : "Freelancer Login"}
           </Link>
         </div>
       </header>
@@ -82,7 +83,7 @@ export default async function OpportunityDetailPage({
           className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-brand-600"
         >
           <ArrowLeft className="size-4" />
-          프로젝트 목록
+          Project List
         </Link>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_21rem]">
@@ -118,14 +119,14 @@ export default async function OpportunityDetailPage({
               </ul>
             )}
 
-            <DetailSection title="핵심 요구사항" icon={<FileCheck2 className="size-5 text-accent-600" />}>
+            <DetailSection title="Key Requirements" icon={<FileCheck2 className="size-5 text-accent-600" />}>
               <p className="whitespace-pre-wrap rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
                 {opportunity.requirements}
               </p>
             </DetailSection>
 
             {opportunity.deliverables && (
-              <DetailSection title="기대 결과물" icon={<Layers3 className="size-5 text-brand-600" />}>
+              <DetailSection title="Expected Deliverables" icon={<Layers3 className="size-5 text-brand-600" />}>
                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
                   {opportunity.deliverables}
                 </p>
@@ -133,7 +134,7 @@ export default async function OpportunityDetailPage({
             )}
 
             {opportunity.outOfScope && (
-              <DetailSection title="제외 범위">
+              <DetailSection title="Out of Scope">
                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
                   {opportunity.outOfScope}
                 </p>
@@ -141,21 +142,36 @@ export default async function OpportunityDetailPage({
             )}
 
             {opportunity.applicantGuidance && (
-              <DetailSection title="지원자 안내">
+              <DetailSection title="Applicant Guidance">
                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
                   {opportunity.applicantGuidance}
                 </p>
               </DetailSection>
             )}
+
+            {opportunity.attachments.length > 0 && (
+              <DetailSection title="참고자료" icon={<Paperclip className="size-5 text-brand-600" />}>
+                <ul className="space-y-2">
+                  {opportunity.attachments.map((attachment) => (
+                    <li key={attachment.id}>
+                      <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl border border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-brand-300 hover:text-brand-700">
+                        <span>{attachment.name}</span>
+                        <span className="text-xs font-normal text-slate-400">{Math.ceil(attachment.sizeBytes / 1024)} KB</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </DetailSection>
+            )}
           </article>
 
           <aside className="h-fit rounded-card border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24">
-            <h2 className="text-xs font-bold tracking-wider text-slate-400 uppercase">프로젝트 조건</h2>
+            <h2 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Project Terms</h2>
 
             <dl className="mt-6 space-y-4">
               <div className="border-b border-slate-100 pb-3">
                 <dt className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <DollarSign className="size-4 text-slate-400" /> 예산
+                  <DollarSign className="size-4 text-slate-400" /> Budget
                 </dt>
                 <dd className="mt-1 text-base font-black text-slate-900">
                   {formatBudget(
@@ -168,18 +184,18 @@ export default async function OpportunityDetailPage({
               </div>
               <div className="border-b border-slate-100 pb-3">
                 <dt className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Clock className="size-4 text-slate-400" /> 프로젝트 기간
+                  <Clock className="size-4 text-slate-400" /> Project Period
                 </dt>
                 <dd className="mt-1 text-sm font-bold text-slate-800">
-                  {formatProjectPeriod(opportunity.startDate, opportunity.endDate)}
+                  {formatProjectPeriod(opportunity.startDate, opportunity.endDate, "en-US")}
                 </dd>
               </div>
               <div>
                 <dt className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Calendar className="size-4 text-slate-400" /> 지원 마감
+                  <Calendar className="size-4 text-slate-400" /> Deadline
                 </dt>
                 <dd className="mt-1 text-sm font-bold text-slate-800">
-                  {formatProjectDate(opportunity.recruitmentEndAt)}
+                  {formatProjectDate(opportunity.recruitmentEndAt, "en-US")}
                 </dd>
               </div>
             </dl>
@@ -189,7 +205,7 @@ export default async function OpportunityDetailPage({
                 href={applicationPath}
                 className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
               >
-                수행 제안서 작성하기
+                Write SOW Proposal
                 <ArrowRight className="size-4" />
               </Link>
             ) : isAuthenticated ? (
@@ -200,7 +216,7 @@ export default async function OpportunityDetailPage({
                   type="submit"
                   className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
                 >
-                  프리랜서로 전환하고 지원하기
+                  Switch to Freelancer and Apply
                   <ArrowRight className="size-4" />
                 </button>
               </form>
@@ -209,17 +225,17 @@ export default async function OpportunityDetailPage({
                 href={loginHref}
                 className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
               >
-                로그인하고 지원하기
+                Login and Apply
                 <ArrowRight className="size-4" />
               </Link>
             )}
             <p className="mt-4 flex items-center justify-center gap-1 text-center text-xs leading-relaxed text-slate-400">
               <Info className="size-3.5 text-slate-300" />
               {isFreelancerWorkspaceActive
-                ? "프로젝트 요구사항을 바탕으로 수행 제안서를 작성합니다."
+                ? "Draft a SOW proposal based on the project requirements."
                 : isAuthenticated
-                  ? "프리랜서 역할로 전환한 뒤 수행 제안서를 작성합니다."
-                  : "수행 제안서 제출에는 로그인이 필요합니다."}
+                  ? "Switch to the freelancer role to write a SOW proposal."
+                  : "Login is required to submit a SOW proposal."}
             </p>
           </aside>
         </div>

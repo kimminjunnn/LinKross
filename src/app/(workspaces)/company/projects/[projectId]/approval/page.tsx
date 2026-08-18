@@ -9,13 +9,7 @@ import {
   getSowApprovalStateAction,
 } from "@/app/actions/sow";
 import { StatusBadge } from "@/components/project/status-badge";
-import { isProjectPreparing } from "@/config/project-lifecycle";
-import { PROJECTS } from "@/data/projects";
 import type { SowApprovalState } from "@/lib/backend";
-import {
-  type ApprovalSowSnapshot,
-  readApprovalSowSnapshot,
-} from "@/lib/sow-approval";
 
 const fallbackDocumentSections = [
   {
@@ -53,15 +47,10 @@ export default function ApprovalPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
   const projectId = params.projectId;
-  const project = PROJECTS.find((item) => item.id === projectId);
-  const isReadOnly = project ? !isProjectPreparing(project.status) : false;
   const [isPoApproved, setIsPoApproved] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isOriginalSummaryVisible, setIsOriginalSummaryVisible] = useState(false);
   const [approvalState, setApprovalState] = useState<SowApprovalState | null>(null);
-  const [localSnapshot] = useState<ApprovalSowSnapshot | null>(() =>
-    readApprovalSowSnapshot(projectId),
-  );
   const [isApprovalLoading, setIsApprovalLoading] = useState(true);
   const [approvalLoadError, setApprovalLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -90,8 +79,8 @@ export default function ApprovalPage() {
     return () => window.clearTimeout(timeoutId);
   }, [loadApprovalState]);
 
-  const sowDocument = approvalState?.document ?? localSnapshot;
-  const documentVersion = sowDocument?.version ?? "v1.2";
+  const sowDocument = approvalState?.document ?? null;
+  const documentVersion = sowDocument?.version ?? "-";
   const activeDocumentSections = sowDocument?.documentSections ?? fallbackDocumentSections;
   const activeAcceptanceCriteria = sowDocument?.acceptanceCriteria ?? acceptanceCriteria;
   const activeDefinitionOfDone = sowDocument?.definitionOfDone ?? definitionOfDone;
@@ -142,9 +131,8 @@ export default function ApprovalPage() {
 
   const isCompanyApproved =
     isPoApproved || Boolean(approvalState?.approvals.company) || approvalState?.status === "approved";
-  const isFreelancerApproved = approvalState
-    ? Boolean(approvalState.approvals.freelancer) || approvalState.status === "approved"
-    : Boolean(localSnapshot);
+  const isFreelancerApproved = Boolean(approvalState?.approvals.freelancer) || approvalState?.status === "approved";
+  const isReadOnly = approvalState?.status === "approved";
   const isApprovalComplete =
     isReadOnly || approvalState?.status === "approved" || (isCompanyApproved && isFreelancerApproved);
 
@@ -397,7 +385,7 @@ export default function ApprovalPage() {
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-black text-app-foreground">박피오</h3>
+                    <h3 className="text-sm font-black text-app-foreground">{approvalState?.approvals.company?.approverName ?? "발주자"}</h3>
                     <p className="mt-1 text-xs font-semibold text-app-muted">PO 승인</p>
                   </div>
                   <StatusBadge tone={isCompanyApproved ? "success" : "warning"}>
@@ -409,7 +397,7 @@ export default function ApprovalPage() {
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-black text-app-foreground">Sarah Lee</h3>
+                    <h3 className="text-sm font-black text-app-foreground">{approvalState?.approvals.freelancer?.approverName ?? "프리랜서"}</h3>
                     <p className="mt-1 text-xs font-semibold text-app-muted">프리랜서 승인</p>
                   </div>
                   <StatusBadge tone={isFreelancerApproved ? "success" : "warning"}>

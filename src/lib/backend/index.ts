@@ -5,17 +5,34 @@ export type {
   BackendResult,
   BudgetType,
   CompanyProjectDetail,
+  CompanyProfileSettings,
   CompanyProjectSummary,
+  ConnectRepositoryInput,
   CreateProjectInput,
   CreateProjectOutput,
+  DecideMilestoneInput,
+  FreelancerApplicationStatus,
+  FreelancerApplicationSummary,
+  FreelancerProjectSummary,
+  FreelancerProfileSettings,
+  FinancialMilestoneRecord,
+  InvoiceRecord,
+  InvoiceStatus,
+  MilestoneSubmissionRecord,
   MilestoneChecklistItem,
   OpportunityDetail,
   OpportunitySummary,
   ProjectDraftFormData,
   ProjectMilestoneSummary,
+  ProjectRepositoryRecord,
+  ProjectFinancialWorkspace,
+  PaymentRecordStatus,
+  ReviewInvoiceInput,
+  RequestSowRevisionInput,
   ProjectProposal,
   SaveSowVersionInput,
   SaveSowVersionOutput,
+  RequestVerificationInput,
   SelectProposalInput,
   SelectProposalOutput,
   ApproveSowInput,
@@ -31,8 +48,15 @@ export type {
   SowWorkspaceContext,
   SubmitProposalInput,
   SubmitProposalOutput,
+  SubmitMilestonePullRequestInput,
+  SubmitInvoiceInput,
   UserRole,
   VerificationMethod,
+  VerificationMilestoneRecord,
+  VerificationResultRecord,
+  VerificationRunRecord,
+  VerificationRunStatus,
+  VerificationWorkspace,
 } from "@/lib/backend/contracts";
 
 export {
@@ -40,16 +64,30 @@ export {
   getCompanyProjectDetail,
   getPublicOpportunity,
   listCompanyProjects,
+  listCompanyWorkspaceProjects,
   listPublicOpportunities,
+  uploadProjectFile,
 } from "@/lib/backend/projects";
 
 export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
+export { listFreelancerApplications, listFreelancerProjects } from "@/lib/backend/freelancer";
+export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
+export { getProjectFinancialWorkspace, listFreelancerInvoices, reviewInvoice, submitInvoice } from "@/lib/backend/finance";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
+  connectProjectRepository,
+  decideMilestone,
+  getVerificationWorkspace,
+  requestVerificationRun,
+  submitMilestonePullRequest,
+} from "@/lib/backend/verification";
+export {
   approveSowAsCompany,
+  approveSowAsFreelancer,
   getApprovedSowMilestones,
   getSowApprovalState,
   getSowWorkspaceContext,
+  requestSowRevision,
   saveSowDraft,
   submitSowForReview,
 } from "@/lib/backend/sow";

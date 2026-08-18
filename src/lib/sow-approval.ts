@@ -21,19 +21,6 @@ export type ApprovalSowSnapshot = {
   };
 };
 
-const STORAGE_PREFIX = "linkross_sow_approval_snapshot:";
-const snapshotCache = new Map<
-  string,
-  {
-    raw: string | null;
-    value: ApprovalSowSnapshot | null;
-  }
->();
-
-export function getApprovalSowStorageKey(projectId: string) {
-  return `${STORAGE_PREFIX}${projectId}`;
-}
-
 export function formatSowVersion(version: string) {
   return version.startsWith("v") ? version : `v${version}`;
 }
@@ -115,36 +102,4 @@ export function createApprovalSowSnapshot({
       needsReview: "업무명세서 탭에서 작성된 원본 내용을 확인",
     },
   };
-}
-
-export function saveApprovalSowSnapshot(projectId: string, snapshot: ApprovalSowSnapshot) {
-  if (typeof window === "undefined") return;
-
-  const storageKey = getApprovalSowStorageKey(projectId);
-  const raw = JSON.stringify(snapshot);
-
-  snapshotCache.set(storageKey, { raw, value: snapshot });
-  window.localStorage.setItem(storageKey, raw);
-}
-
-export function readApprovalSowSnapshot(projectId: string) {
-  if (typeof window === "undefined") return null;
-
-  const storageKey = getApprovalSowStorageKey(projectId);
-  const raw = window.localStorage.getItem(storageKey);
-  const cached = snapshotCache.get(storageKey);
-
-  if (cached?.raw === raw) {
-    return cached.value;
-  }
-
-  try {
-    const value = raw ? (JSON.parse(raw) as ApprovalSowSnapshot) : null;
-    snapshotCache.set(storageKey, { raw, value });
-    return value;
-  } catch (error) {
-    console.error("Failed to read approval SOW snapshot:", error);
-    snapshotCache.set(storageKey, { raw, value: null });
-    return null;
-  }
 }
