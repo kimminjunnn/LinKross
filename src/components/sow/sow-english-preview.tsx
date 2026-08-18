@@ -8,6 +8,7 @@ import {
   ChevronUp,
   Download,
   Edit3,
+  Loader2,
   Send,
   X,
 } from "lucide-react";
@@ -21,12 +22,14 @@ type SowEnglishPreviewProps = {
   projectId: string;
   sow: EnglishSOWResult | null;
   onRequestApproval: (snapshot: ApprovalSowSnapshot) => void;
+  isSubmitting?: boolean;
 };
 
 export function SowEnglishPreview({
   projectId,
   sow,
   onRequestApproval,
+  isSubmitting = false,
 }: SowEnglishPreviewProps) {
   const [showOriginalContrast, setShowOriginalContrast] = useState(true);
   const [isPmVerified, setIsPmVerified] = useState(false);
@@ -323,12 +326,21 @@ export function SowEnglishPreview({
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <button
             type="button"
-            disabled={!isPmVerified}
+            disabled={!isPmVerified || isSubmitting}
             onClick={handleRequestApprovalClick}
             className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
           >
-            <Send className="size-4" />
-            v{sow.version} 해외 프리랜서 승인 요청
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                요청 중...
+              </>
+            ) : (
+              <>
+                <Send className="size-4" />
+                v{sow.version} 해외 프리랜서 승인 요청
+              </>
+            )}
           </button>
 
           <button
@@ -377,16 +389,18 @@ export function SowEnglishPreview({
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={handleConfirmApprovalRequest}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Check className="size-4" />
+                {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 예
               </button>
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => setIsApprovalConfirmOpen(false)}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <X className="size-4" />
                 아니오
