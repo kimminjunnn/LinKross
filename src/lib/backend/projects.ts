@@ -225,15 +225,16 @@ interface CompanyProjectVersionRow {
 }
 
 export async function listCompanyProjects(): Promise<BackendResult<CompanyProjectSummary[]>> {
-  return listOwnedCompanyProjects("preparing");
+  return listOwnedCompanyProjects("preparing", true);
 }
 
 export async function listCompanyWorkspaceProjects(): Promise<BackendResult<CompanyProjectSummary[]>> {
-  return listOwnedCompanyProjects(null);
+  return listOwnedCompanyProjects(null, false);
 }
 
 async function listOwnedCompanyProjects(
   lifecycleStage: "preparing" | null,
+  onlyOpenRecruitment: boolean,
 ): Promise<BackendResult<CompanyProjectSummary[]>> {
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
@@ -249,6 +250,9 @@ async function listOwnedCompanyProjects(
 
   if (lifecycleStage) {
     projectsQuery = projectsQuery.eq("lifecycle_stage", lifecycleStage);
+  }
+  if (onlyOpenRecruitment) {
+    projectsQuery = projectsQuery.eq("status", "recruiting");
   }
 
   const { data: projects, error: projectsError } = await projectsQuery;
@@ -279,7 +283,20 @@ async function listOwnedCompanyProjects(
     ((versions ?? []) as CompanyProjectVersionRow[]).map((version) => [version.id, version]),
   );
 
-  const projectIds = projectRows.map((project) => project.id);
+  const visibleProjectRows = onlyOpenRecruitment
+    ? projectRows.filter((project) => {
+        const version = project.current_requirement_version_id
+          ? versionById.get(project.current_requirement_version_id)
+          : undefined;
+        return version != null && new Date(version.recruitment_end_at).getTime() >= Date.now();
+      })
+    : projectRows;
+
+  if (visibleProjectRows.length === 0) {
+    return { ok: true, data: [] };
+  }
+
+  const projectIds = visibleProjectRows.map((project) => project.id);
   const { data: proposalRows, error: proposalsError } = await supabase
     .from("proposals")
     .select("project_id")
@@ -295,7 +312,7 @@ async function listOwnedCompanyProjects(
     proposalCountByProject.set(row.project_id, (proposalCountByProject.get(row.project_id) ?? 0) + 1);
   }
 
-  const summaries: CompanyProjectSummary[] = projectRows.map((project) => {
+  const summaries: CompanyProjectSummary[] = visibleProjectRows.map((project) => {
     const version = project.current_requirement_version_id
       ? versionById.get(project.current_requirement_version_id)
       : undefined;

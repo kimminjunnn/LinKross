@@ -77,9 +77,9 @@ export function AssessmentsList({
         </div>
       ) : sortedProjects.length === 0 ? (
         <div className="rounded-card border border-dashed border-app-border-strong bg-app-surface-subtle p-10 text-center">
-          <p className="text-sm font-bold text-app-foreground">아직 등록한 프로젝트가 없습니다.</p>
+          <p className="text-sm font-bold text-app-foreground">현재 모집 중인 프로젝트가 없습니다.</p>
           <p className="mt-1.5 text-sm text-app-muted">
-            새 프로젝트를 등록하면 이 화면에서 모집 현황과 지원자 수를 확인할 수 있습니다.
+            새 프로젝트를 등록하면 모집 마감 전까지 이 화면에서 지원자 현황을 확인할 수 있습니다.
           </p>
           <Link
             href="/company/projects/new"

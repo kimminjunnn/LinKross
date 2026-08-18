@@ -48,7 +48,7 @@ return result.data.map((opportunity) => opportunity.title);
 
 - 사용자: 기업(로그인 본인 소유 프로젝트만)
 - 용도: `/company/assessments` 진행 전 프로젝트 목록
-- 내부 동작: `projects`(lifecycle_stage='preparing') + `project_requirement_versions` + `proposals` 건수 조회
+- 내부 동작: `projects`(lifecycle_stage='preparing', status='recruiting') 중 현재 요구사항 버전의 모집 마감 시각이 지나지 않은 프로젝트 + `project_requirement_versions` + `proposals` 건수 조회
 - 반환: 프로젝트 요약 배열(제목, 상태, 예산, 모집 마감일, 제출 인원)
 
 ### `getCompanyProjectDetail(projectId)`
