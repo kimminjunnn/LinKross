@@ -58,6 +58,8 @@ export type {
   VerificationRunRecord,
   VerificationRunStatus,
   VerificationWorkspace,
+  WorkspaceNotification,
+  WorkspaceNotificationKind,
 } from "@/lib/backend/contracts";
 
 export {
@@ -72,6 +74,7 @@ export {
 
 export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
 export { listFreelancerApplications, listFreelancerProjects } from "@/lib/backend/freelancer";
+export { listCompanyNotifications, listFreelancerNotifications } from "@/lib/backend/notifications";
 export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
 export { getProjectFinancialWorkspace, listFreelancerInvoices, reviewInvoice, submitInvoice } from "@/lib/backend/finance";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
