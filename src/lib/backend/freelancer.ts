@@ -6,6 +6,7 @@ import type {
   FreelancerProjectSummary,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
+import { translateToEnglish } from "@/lib/backend/translation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ProposalRow = {
@@ -128,26 +129,32 @@ export async function listFreelancerApplications(): Promise<
     ((companies ?? []) as CompanyProfileRow[]).map((company) => [company.id, company]),
   );
 
-  return {
-    ok: true,
-    data: proposalRows.map((proposal) => {
+  const data = await Promise.all(
+    proposalRows.map(async (proposal) => {
       const project = projectById.get(proposal.project_id);
       const requirement = project?.current_requirement_version_id
         ? requirementById.get(project.current_requirement_version_id)
         : undefined;
       const selection = selectionByProject.get(proposal.project_id);
 
+      const rawTitle = requirement?.title ?? "Project";
+      const rawOrgName = project ? companyById.get(project.company_id)?.organization_name ?? "Client" : "Client";
+
+      const [translatedTitle, translatedOrgName] = await Promise.all([
+        translateToEnglish(rawTitle),
+        translateToEnglish(rawOrgName),
+      ]);
+
       return {
         proposalId: proposal.id,
         projectId: proposal.project_id,
-        title: requirement?.title ?? "접근이 종료된 프로젝트",
-        organizationName: project ? companyById.get(project.company_id)?.organization_name ?? "발주사" : "발주사",
-        status:
-          selection?.proposal_id === proposal.id
-            ? "selected"
-            : proposal.status === "withdrawn"
-              ? "withdrawn"
-              : "submitted",
+        title: translatedTitle,
+        organizationName: translatedOrgName,
+        status: (selection?.proposal_id === proposal.id
+          ? "selected"
+          : proposal.status === "withdrawn"
+            ? "withdrawn"
+            : "submitted") as "selected" | "withdrawn" | "submitted",
         content: proposal.content,
         optionalNotes: proposal.optional_notes,
         submittedAt: proposal.submitted_at,
@@ -159,6 +166,11 @@ export async function listFreelancerApplications(): Promise<
         recruitmentEndAt: requirement?.recruitment_end_at ?? null,
       };
     }),
+  );
+
+  return {
+    ok: true,
+    data,
   };
 }
 
@@ -265,20 +277,27 @@ export const listFreelancerProjects = cache(async function listFreelancerProject
   }
   const projectById = new Map(projectRows.map((project) => [project.id, project]));
 
-  return {
-    ok: true,
-    data: selectionRows.map((selection) => {
+  const data = await Promise.all(
+    selectionRows.map(async (selection) => {
       const project = projectById.get(selection.project_id);
       const requirement = project?.current_requirement_version_id
         ? requirementById.get(project.current_requirement_version_id)
         : undefined;
       const counts = milestoneCounts.get(selection.project_id) ?? { total: 0, approved: 0 };
 
+      const rawTitle = requirement?.title ?? "Project";
+      const rawOrgName = project ? companyById.get(project.company_id)?.organization_name ?? "Client" : "Client";
+
+      const [translatedTitle, translatedOrgName] = await Promise.all([
+        translateToEnglish(rawTitle),
+        translateToEnglish(rawOrgName),
+      ]);
+
       return {
         projectId: selection.project_id,
         proposalId: selection.proposal_id,
-        title: requirement?.title ?? "프로젝트",
-        organizationName: project ? companyById.get(project.company_id)?.organization_name ?? "발주사" : "발주사",
+        title: translatedTitle,
+        organizationName: translatedOrgName,
         lifecycleStage: project?.lifecycle_stage ?? "preparing",
         startDate: requirement?.start_date ?? null,
         endDate: requirement?.end_date ?? null,
@@ -291,5 +310,10 @@ export const listFreelancerProjects = cache(async function listFreelancerProject
         approvedMilestoneCount: counts.approved,
       };
     }),
+  );
+
+  return {
+    ok: true,
+    data,
   };
 });
