@@ -39,11 +39,23 @@ export function SowWorkspace({ context }: { context: SowWorkspaceContext }) {
   return <SowDraftWorkspace context={context} />;
 }
 
+function formatDateForForm(isoDate: string): string {
+  return isoDate ? isoDate.replaceAll("-", ".") : "";
+}
+
+function formatBudgetForForm(amount: number): string {
+  return amount > 0 ? amount.toLocaleString() : "";
+}
+
 function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
   const router = useRouter();
   const projectId = context.projectId;
 
   const [workDetail, setWorkDetail] = useState("");
+  // 공고 등록 시 입력한 일정·예산을 기본값으로 미리 채운다. 필요하면 그대로 수정할 수 있다.
+  const [startDate, setStartDate] = useState(() => formatDateForForm(context.startDate));
+  const [endDate, setEndDate] = useState(() => formatDateForForm(context.endDate));
+  const [budget, setBudget] = useState(() => formatBudgetForForm(context.budgetAmount));
   const [milestones, setMilestones] =
     useState<MilestoneInput[]>(INITIAL_MILESTONES);
   const [englishSow, setEnglishSow] = useState<EnglishSOWResult | null>(null);

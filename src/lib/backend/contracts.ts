@@ -7,6 +7,8 @@ export type BackendErrorCode =
   | "DUPLICATE_PROPOSAL"
   | "PROJECT_ALREADY_SELECTED"
   | "CONFLICT"
+  | "COMPANY_PROFILE_REQUIRED"
+  | "FREELANCER_PROFILE_REQUIRED"
   | "DATABASE_ERROR";
 
 export interface BackendError {
@@ -157,9 +159,11 @@ export interface SowWorkspaceContext {
   title: string;
   lifecycleStage: string;
   assigneeName: string | null;
+  budgetAmount: number;
+  budgetMaxAmount: number | null;
+  currency: string;
   startDate: string;
   endDate: string;
-  budgetAmount: number;
 }
 
 export type SowStatus = "draft" | "in_review" | "revision_requested" | "approved" | "superseded";

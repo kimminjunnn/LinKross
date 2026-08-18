@@ -185,7 +185,7 @@ export async function generateEnglishSowWithLLM(input: {
   if (!draft || draft.translatedMilestones.length !== input.milestones.length) throw new Error("AI가 마일스톤 구조를 정확히 반환하지 못했습니다. 다시 시도해주세요.");
 
   return {
-    version: "draft",
+    version: "1.0",
     header: { projectName: input.projectTitle, client: "Client", vendor: input.assigneeName ?? "Selected freelancer", effectiveDate: `${input.startDate} ~ ${input.endDate}` },
     overview: { background: draft.background, objective: draft.objective },
     scopeOfWork: { inScope: draft.inScope, outOfScope: draft.outOfScope },
