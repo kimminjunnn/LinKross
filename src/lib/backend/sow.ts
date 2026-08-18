@@ -281,7 +281,7 @@ export async function getSowWorkspaceContext(
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id, lifecycle_stage, current_requirement_version_id")
+    .select("id, lifecycle_stage, current_requirement_version_id, start_date, end_date, budget_amount")
     .eq("id", projectId)
     .eq("company_id", authData.user.id)
     .maybeSingle();
@@ -322,6 +322,9 @@ export async function getSowWorkspaceContext(
       title: version?.title ?? "(제목 없음)",
       lifecycleStage: project.lifecycle_stage,
       assigneeName,
+      startDate: project.start_date,
+      endDate: project.end_date,
+      budgetAmount: Number(project.budget_amount),
     },
   };
 }

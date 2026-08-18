@@ -157,6 +157,9 @@ export interface SowWorkspaceContext {
   title: string;
   lifecycleStage: string;
   assigneeName: string | null;
+  startDate: string;
+  endDate: string;
+  budgetAmount: number;
 }
 
 export type SowStatus = "draft" | "in_review" | "revision_requested" | "approved" | "superseded";

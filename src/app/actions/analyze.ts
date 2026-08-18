@@ -36,23 +36,22 @@ export async function analyzeWorkDetailWithLLM(
 1. 세부 제약 조건 보존: 원문 텍스트에 기재된 사소한 제약조건(예: '회원가입 없음', '하루 전 취소', '특정 정보 입력 필수'), 제외 대상 등을 절대 임의로 요약하거나 생략하지 마세요. 모든 디테일은 해당 마일스톤의 DoD에 반드시 반영되어야 합니다.
 2. 예산의 차등 분배 (기계적 균등 분배 금지): 마일스톤 예산을 단순 N분의 1로 나누지 마십시오. 백엔드 연동, 보안, 복잡한 트랜잭션이 포함된 난이도 높은 마일스톤에 예산 가중치를 더 부여하고, 단순 화면이나 QA는 상대적으로 낮게 배분하세요.
 3. 마무리 범위 보존: 원문에 '통합 테스트(QA), 배포, 소스코드 및 매뉴얼 인수인계'가 명시된 경우에만 마지막 마일스톤으로 구성하고 예산을 배분하세요. 원문에 없는 작업이나 비용은 임의로 추가하지 마세요.
-4. 객관적이고 테스트 가능한 DoD (완료 기준): DoD는 "예약 기능 구현", "조회 가능" 같은 모호한 표현을 절대 쓰지 마세요.
-   - [나쁜 예] 고객이 예약 페이지에서 수업 예약 가능
-   - [좋은 예] 고객이 회원가입 없이 지점, 날짜, 가능 시간을 선택하고 이메일을 입력하면 예약 번호가 생성되며 예약 완료 화면이 표시된다. 중복 예약은 차단된다.
+4. Playwright E2E 테스트용 DoD (완료 기준): 기능별로 뭉뚱그려 작성하지 말고, Playwright 자동화 테스트 스크립트로 바로 작성할 수 있도록 '사용자 액션(Action) -> 화면/상태 검증(Assertion)' 형태의 E2E 시나리오로 작성하세요. 문장 끝은 명사형으로 마무리합니다.
+   - [나쁜 예] [추천 시스템] 외부 머신러닝 API와 연동하여 사용자 화면에 개인화 상품 큐레이션 영역이 노출되는지 확인
+   - [좋은 예]
+     - [로그인 기능] 이메일/비밀번호 input에 값 입력 후 '로그인' 버튼 클릭 시 메인 대시보드로 라우팅
+     - [로그인 기능] 로그인 성공 후 쿠키에 인증 토큰(JWT)이 정상적으로 저장되었는지 검증
+     - [추천 시스템] 홈 화면 접속 시 개인화 큐레이션 Section 요소가 visible 상태인지 검증
+     - [추천 시스템] 큐레이션 영역 내 상품 카드 클릭 시 해당 상품 상세 페이지로 이동
+     - [추천 시스템] API 응답 지연 시 화면에 로딩 스피너(Skeleton UI) 노출
 
 [추출 항목]
-1. 날짜 추출: 'YYYY.MM.DD' 형태로 추출 (없으면 제공된 현재 날짜 참고)
-2. 예산 추출: 총 예산과 화폐 단위(예: 50,000 USDC) 추출
-3. 마일스톤 분할 및 세부 정보: (최소 2개 ~ 최대 5개)
-   - period: 전체 기간 내에서 비율에 맞게 'YY.MM.DD - YY.MM.DD' 배분
+1. 마일스톤 분할 및 세부 정보: (최소 2개 ~ 최대 5개)
+   - period: 전체 기간(${currentStartDate} ~ ${currentEndDate}) 내에서 비율에 맞게 'YY.MM.DD - YY.MM.DD' 배분
    - amount: 전체 예산을 난이도에 맞게 차등 배분 (숫자 단위)
-   - dods: 위 규칙에 따른 구체적이고 객관적인 E2E 테스트 시나리오 형태의 완료 조건 배열
+   - dods: 위 규칙에 따른 Playwright E2E 테스트 시나리오(액션+검증) 형태의 완료 조건 배열 (단일 문장에 여러 조건을 섞지 마세요)
 
 중요: 추출되는 모든 텍스트는 반드시 **한국어**로 작성되어야 합니다.
-
-현재 사용자가 폼에 입력해둔 날짜:
-- 시작일: ${currentStartDate || "없음"}
-- 종료일: ${currentEndDate || "없음"}
 
 분석할 업무 상세 텍스트:
 """
@@ -74,9 +73,6 @@ ${workDetail}
           schema: {
             type: "object",
             properties: {
-              extractedStartDate: { type: ["string", "null"], description: "YYYY.MM.DD format" },
-              extractedEndDate: { type: ["string", "null"], description: "YYYY.MM.DD format" },
-              extractedBudget: { type: ["string", "null"], description: "e.g., 50,000 USDC" },
               milestones: {
                 type: "array",
                 items: {
@@ -89,7 +85,7 @@ ${workDetail}
                     amount: { type: "string", description: "Budget allocation for this milestone" },
                     dods: {
                       type: "array",
-                      items: { type: "string", description: "Definition of done checklist item" },
+                      items: { type: "string", description: "Playwright E2E testable Definition of Done checklist item" },
                     },
                   },
                   required: ["id", "code", "title", "period", "amount", "dods"],
@@ -97,7 +93,7 @@ ${workDetail}
                 },
               },
             },
-            required: ["extractedStartDate", "extractedEndDate", "extractedBudget", "milestones"],
+            required: ["milestones"],
             additionalProperties: false,
           },
           strict: true,

@@ -8,38 +8,24 @@ import { parseDocumentAction } from "@/app/actions/parse-document";
 type SowKoreanFormProps = {
   workDetail: string;
   setWorkDetail: (val: string) => void;
-  startDate: string;
-  setStartDate: (val: string) => void;
-  endDate: string;
-  setEndDate: (val: string) => void;
-  budget: string;
-  setBudget: (val: string) => void;
   milestones: MilestoneInput[];
   setMilestones: React.Dispatch<React.SetStateAction<MilestoneInput[]>>;
   onAnalyzeAI: (fileContent?: string) => void;
   onGenerateEnglishSOW: (hiddenContent?: string) => void;
   isGenerating: boolean;
   onSaveDraft: () => void;
-  dateError?: boolean;
   isAnalyzing?: boolean;
 };
 
 export function SowKoreanForm({
   workDetail,
   setWorkDetail,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-  budget,
-  setBudget,
   milestones,
   setMilestones,
   onAnalyzeAI,
   onGenerateEnglishSOW,
   isGenerating,
   onSaveDraft,
-  dateError,
   isAnalyzing = false,
 }: SowKoreanFormProps) {
 
@@ -50,13 +36,6 @@ export function SowKoreanForm({
   const [hiddenFileContent, setHiddenFileContent] = useState("");
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const dateContainerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (dateError && dateContainerRef.current) {
-      dateContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [dateError]);
 
   const handleAnalyzeClick = () => {
     onAnalyzeAI(hiddenFileContent || undefined);
@@ -126,30 +105,7 @@ export function SowKoreanForm({
         </p>
       </div>
 
-      {/* 예산 입력 */}
-      <div className="mt-5">
-        <label htmlFor="budget-input" className="block text-sm font-bold text-app-foreground">
-          예산 (USDC)
-        </label>
-        <div className="relative mt-2 flex items-center w-full sm:w-1/3">
-          <input
-            id="budget-input"
-            type="text"
-            value={budget}
-            onChange={(e) => {
-              const raw = e.target.value.replace(/[^0-9]/g, "");
-              if (raw) {
-                setBudget(parseInt(raw, 10).toLocaleString());
-              } else {
-                setBudget("");
-              }
-            }}
-            placeholder="예: 50,000"
-            className="min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3.5 pr-14 text-sm text-app-foreground outline-none focus:border-brand-500 focus:bg-app-surface"
-          />
-          <span className="absolute right-3.5 text-sm font-bold text-app-muted">USDC</span>
-        </div>
-      </div>
+
 
       {/* 업무 상세 작성 */}
       <div className="mt-5">
@@ -270,42 +226,7 @@ export function SowKoreanForm({
         </div>
       </div>
 
-      {/* 시작일 / 종료일 */}
-      <div className="mt-6" ref={dateContainerRef}>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="start-date-input" className="block text-xs font-bold text-app-foreground">
-            시작일
-          </label>
-          <input
-            id="start-date-input"
-            type="text"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            placeholder="YYYY.MM.DD"
-            className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="end-date-input" className="block text-xs font-bold text-app-foreground">
-            종료일
-          </label>
-          <input
-            id="end-date-input"
-            type="text"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            placeholder="YYYY.MM.DD"
-            className="mt-1.5 min-h-10 w-full rounded-control border border-app-border bg-app-surface-subtle px-3 text-sm text-app-foreground outline-none focus:border-brand-500"
-          />
-        </div>
-        </div>
-        {dateError && (
-          <p className="mt-2 text-xs font-bold text-danger animate-fade-in">
-            날짜를 입력하지 않았습니다.
-          </p>
-        )}
-      </div>
+
 
       {/* 마일스톤 설정 */}
       <div className="mt-7">
