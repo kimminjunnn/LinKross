@@ -91,14 +91,16 @@ export async function listPublicOpportunities(): Promise<BackendResult<Opportuni
 
   const translatedSummaries = await Promise.all(
     summaries.map(async (opportunity) => {
-      const [translatedTitle, translatedGoal] = await Promise.all([
+      const [translatedTitle, translatedGoal, translatedOrgName] = await Promise.all([
         translateToEnglish(opportunity.title),
         translateToEnglish(opportunity.goal),
+        translateToEnglish(opportunity.organizationName),
       ]);
       return {
         ...opportunity,
         title: translatedTitle,
         goal: translatedGoal,
+        organizationName: translatedOrgName,
       };
     })
   );
@@ -135,6 +137,7 @@ export async function getPublicOpportunity(
   const [
     translatedTitle,
     translatedGoal,
+    translatedOrgName,
     translatedRequirements,
     translatedDeliverables,
     translatedOutOfScope,
@@ -142,6 +145,7 @@ export async function getPublicOpportunity(
   ] = await Promise.all([
     translateToEnglish(summary.title),
     translateToEnglish(summary.goal),
+    translateToEnglish(summary.organizationName),
     translateToEnglish(row.requirements),
     translateToEnglish(row.deliverables),
     translateToEnglish(row.out_of_scope),
@@ -154,6 +158,7 @@ export async function getPublicOpportunity(
       ...summary,
       title: translatedTitle,
       goal: translatedGoal,
+      organizationName: translatedOrgName,
       requirements: translatedRequirements,
       deliverables: translatedDeliverables || null,
       outOfScope: translatedOutOfScope || null,

@@ -15,8 +15,8 @@ export function formatBudget(
   return formattedAmount;
 }
 
-export function formatProjectDate(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
+export function formatProjectDate(value: string, locale: string = "ko-KR") {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -24,8 +24,8 @@ export function formatProjectDate(value: string) {
   }).format(toDate(value));
 }
 
-export function formatProjectPeriod(startDate: string, endDate: string) {
-  return `${formatProjectDate(startDate)} – ${formatProjectDate(endDate)}`;
+export function formatProjectPeriod(startDate: string, endDate: string, locale: string = "ko-KR") {
+  return `${formatProjectDate(startDate, locale)} – ${formatProjectDate(endDate, locale)}`;
 }
 
 export function technologyTags(technology: string | null) {
