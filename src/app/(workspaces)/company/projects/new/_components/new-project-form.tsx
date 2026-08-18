@@ -57,11 +57,7 @@ const DRAFT_LABEL: Record<"idle" | "saving" | "saved" | "error", string> = {
 function buildPreview(formData: FormData): ProjectPreview {
   const get = (name: string) => String(formData.get(name) ?? "").trim();
   const budget = get("budget");
-  const budgetMax = get("budgetMax");
-  const budgetLabel =
-    get("budgetType") === "range" && budgetMax
-      ? `$${budget || "0"} ~ $${budgetMax} (협의 가능한 범위)`
-      : `$${budget || "0"} (고정 금액)`;
+  const budgetLabel = `$${budget || "0"} (고정 금액)`;
 
   return {
     title: get("title") || "(제목 없음)",
@@ -485,33 +481,6 @@ export function NewProjectForm({
                   />
                 </span>
                 <FieldError message={fieldError("budgetAmount")} />
-              </label>
-              <label className="text-sm font-bold text-app-foreground">
-                예산 방식
-                <select
-                  className={inputClassName}
-                  name="budgetType"
-                  defaultValue={draftValue("budgetType") || "fixed"}
-                >
-                  <option value="fixed">프로젝트 고정 금액</option>
-                  <option value="range">협의 가능한 범위</option>
-                </select>
-              </label>
-              <label className="text-sm font-bold text-app-foreground">
-                최대 예산 (범위 선택 시)
-                <span className="relative block">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 mt-1 -translate-y-1/2 text-sm font-bold text-app-muted">
-                    $
-                  </span>
-                  <input
-                    className={`${inputClassName} pl-8`}
-                    inputMode="numeric"
-                    name="budgetMax"
-                    defaultValue={draftValue("budgetMax")}
-                    placeholder="예: 16,000"
-                  />
-                </span>
-                <FieldError message={fieldError("budgetMaxAmount")} />
               </label>
             </div>
           </section>
