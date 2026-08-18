@@ -256,6 +256,7 @@ function SowDraftWorkspace({ context }: { context: SowWorkspaceContext }) {
             projectId={projectId}
             sow={englishSow}
             onRequestApproval={handleRequestApproval}
+            isSubmitting={isSubmitting}
           />
         </div>
       </div>

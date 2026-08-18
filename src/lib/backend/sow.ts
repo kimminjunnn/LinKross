@@ -21,6 +21,7 @@ import type {
 import { mapBackendError } from "@/lib/backend/errors";
 import { isUuid } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createMvpVerificationDefinition } from "@/lib/verification-test-spec";
 
 function parseDateText(value: string): string | null {
   const normalized = value.trim().replace(/\./g, "-").replace(/\s+/g, "");
@@ -200,10 +201,16 @@ async function upsertCriteriaForMilestone(
 
   for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
     const existingId = existingIdByOriginalOrder.get(dodIndex + 1);
+    const verification = createMvpVerificationDefinition(dods[dodIndex]);
     if (existingId) {
       const { error } = await supabase
         .from("completion_criteria")
-        .update({ description: dods[dodIndex], position: dodIndex + 1 })
+        .update({
+          description: dods[dodIndex],
+          verification_method: verification.verificationMethod,
+          position: dodIndex + 1,
+          test_spec: verification.testSpec,
+        })
         .eq("id", existingId);
       if (error) {
         return { ok: false, error: mapBackendError(error, "완료 조건을 저장하지 못했습니다.") };
@@ -215,9 +222,10 @@ async function upsertCriteriaForMilestone(
         milestone_id: milestoneId,
         kind: "definition_of_done",
         description: dods[dodIndex],
-        verification_method: "manual",
+        verification_method: verification.verificationMethod,
         is_required: true,
         position: dodIndex + 1,
+        test_spec: verification.testSpec,
       });
       if (error) {
         return { ok: false, error: mapBackendError(error, "완료 조건을 저장하지 못했습니다.") };

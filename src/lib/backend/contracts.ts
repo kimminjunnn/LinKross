@@ -14,6 +14,7 @@ export type BackendErrorCode =
 export interface BackendError {
   code: BackendErrorCode;
   message: string;
+  diagnosticCode?: string;
   fieldErrors?: Record<string, string>;
 }
 
@@ -352,6 +353,7 @@ export interface ProjectRepositoryRecord {
   name: string;
   url: string;
   defaultBranch: string | null;
+  installationId: number | null;
   isPrivate: boolean;
   companyConfirmedAt: string | null;
 }
@@ -401,6 +403,7 @@ export interface MilestoneSubmissionRecord {
 export interface VerificationMilestoneRecord extends ProjectMilestoneSummary {
   submissions: MilestoneSubmissionRecord[];
   decision: {
+    submissionId: string;
     decision: "revision_required" | "approved";
     reason: string | null;
     decidedAt: string;
@@ -427,6 +430,13 @@ export interface SubmitMilestonePullRequestInput {
   pullRequestUrl: string;
   claimedCriterionIds: string[];
   implementationNote?: string;
+}
+
+export interface MilestoneSubmissionReceipt {
+  submissionId: string;
+  headCommitSha: string;
+  verificationRunId: string;
+  verificationStatus: VerificationRunStatus;
 }
 
 export interface RequestVerificationInput {

@@ -2,6 +2,7 @@ import type {
   BackendResult,
   ConnectRepositoryInput,
   DecideMilestoneInput,
+  MilestoneSubmissionReceipt,
   MilestoneSubmissionRecord,
   ProjectRepositoryRecord,
   RequestVerificationInput,
@@ -13,7 +14,14 @@ import type {
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { isUuid } from "@/lib/backend/validation";
+import {
+  getGitHubAppInstallationUrl,
+  getGitHubPullRequest,
+  getInstalledGitHubRepository,
+  GitHubAppError,
+} from "@/lib/github/app";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { resolveMvpVerificationDefinition } from "@/lib/verification-test-spec";
 
 const GITHUB_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/#?]+?)(?:\.git)?\/?$/i;
 const GITHUB_PR_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)\/?$/i;
@@ -22,6 +30,7 @@ type AccessContext = {
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   userId: string;
   isCompany: boolean;
+  isSelectedFreelancer: boolean;
 };
 
 export async function getVerificationWorkspace(
@@ -35,7 +44,7 @@ export async function getVerificationWorkspace(
     await Promise.all([
       supabase
         .from("project_repositories")
-        .select("id, project_id, owner_name, repository_name, repository_url, default_branch, is_private, company_confirmed_at")
+        .select("id, project_id, owner_name, repository_name, repository_url, default_branch, github_installation_id, is_private, company_confirmed_at")
         .eq("project_id", projectId)
         .maybeSingle(),
       supabase
@@ -95,7 +104,7 @@ export async function getVerificationWorkspace(
   const [criteriaResult, submissionsResult, decisionsResult] = await Promise.all([
     supabase
       .from("completion_criteria")
-      .select("id, milestone_id, description, verification_method, is_required, position")
+      .select("id, milestone_id, description, verification_method, is_required, position, test_spec")
       .in("milestone_id", milestoneIds)
       .order("position", { ascending: true }),
     supabase
@@ -105,7 +114,7 @@ export async function getVerificationWorkspace(
       .order("attempt_number", { ascending: false }),
     supabase
       .from("milestone_decisions")
-      .select("milestone_id, decision, reason, decided_at")
+      .select("milestone_id, submission_id, decision, reason, decided_at")
       .in("milestone_id", milestoneIds)
       .order("decided_at", { ascending: false }),
   ]);
@@ -170,6 +179,22 @@ export async function getVerificationWorkspace(
   const runsBySubmission = groupBy(runRows, "submission_id");
   const resultsByRun = groupBy(resultRows, "run_id");
   const evidenceByResult = groupBy(evidenceResult.data ?? [], "criterion_result_id");
+  const storagePaths = Array.from(
+    new Set(
+      (evidenceResult.data ?? [])
+        .map((artifact) => artifact.storage_path)
+        .filter((path): path is string => Boolean(path)),
+    ),
+  );
+  const signedUrlByPath = new Map<string, string>();
+  if (storagePaths.length > 0) {
+    const { data: signedUrls } = await supabase.storage
+      .from("linkross-evidence")
+      .createSignedUrls(storagePaths, 60 * 60);
+    for (const signed of signedUrls ?? []) {
+      if (signed.path && signed.signedUrl) signedUrlByPath.set(signed.path, signed.signedUrl);
+    }
+  }
   type DecisionRow = NonNullable<typeof decisionsResult.data>[number];
   const latestDecisionByMilestone = new Map<string, DecisionRow>();
   for (const decision of decisionsResult.data ?? []) {
@@ -189,12 +214,19 @@ export async function getVerificationWorkspace(
     currency: milestone.currency,
     status: milestone.status,
     position: milestone.position,
-    checklist: (criteriaByMilestone.get(milestone.id) ?? []).map((criterion) => ({
-      id: criterion.id,
-      description: criterion.description,
-      verificationMethod: criterion.verification_method,
-      isRequired: criterion.is_required,
-    })),
+    checklist: (criteriaByMilestone.get(milestone.id) ?? []).map((criterion) => {
+      const verification = resolveMvpVerificationDefinition({
+        description: criterion.description,
+        verificationMethod: criterion.verification_method,
+        testSpec: criterion.test_spec,
+      });
+      return {
+        id: criterion.id,
+        description: criterion.description,
+        verificationMethod: verification.verificationMethod,
+        isRequired: criterion.is_required,
+      };
+    }),
     submissions: (submissionsByMilestone.get(milestone.id) ?? []).map((submission) =>
       toSubmission(
         submission,
@@ -202,10 +234,12 @@ export async function getVerificationWorkspace(
         runsBySubmission.get(submission.id) ?? [],
         resultsByRun,
         evidenceByResult,
+        signedUrlByPath,
       ),
     ),
     decision: latestDecisionByMilestone.has(milestone.id)
       ? {
+          submissionId: latestDecisionByMilestone.get(milestone.id)!.submission_id,
           decision: latestDecisionByMilestone.get(milestone.id)!.decision,
           reason: latestDecisionByMilestone.get(milestone.id)!.reason,
           decidedAt: latestDecisionByMilestone.get(milestone.id)!.decided_at,
@@ -226,6 +260,25 @@ export async function getVerificationWorkspace(
   };
 }
 
+export async function getProjectGitHubAppInstallationUrl(
+  projectId: string,
+): Promise<BackendResult<{ url: string }>> {
+  const access = await getProjectAccess(projectId);
+  if (!access.ok) return access;
+  if (!access.data.isCompany) {
+    return {
+      ok: false,
+      error: { code: "FORBIDDEN", message: "발주자만 GitHub App을 설치할 수 있습니다." },
+    };
+  }
+
+  try {
+    return { ok: true, data: { url: await getGitHubAppInstallationUrl() } };
+  } catch (error) {
+    return { ok: false, error: mapGitHubAppError(error) };
+  }
+}
+
 export async function connectProjectRepository(
   input: ConnectRepositoryInput,
 ): Promise<BackendResult<ProjectRepositoryRecord>> {
@@ -234,7 +287,7 @@ export async function connectProjectRepository(
   }
   const match = input.repositoryUrl.trim().match(GITHUB_URL_PATTERN);
   if (!match) {
-    return { ok: false, error: { code: "INVALID_INPUT", message: "공개 GitHub 저장소 URL을 입력해주세요." } };
+    return { ok: false, error: { code: "INVALID_INPUT", message: "GitHub 저장소 URL을 입력해주세요." } };
   }
 
   const access = await getProjectAccess(input.projectId);
@@ -245,24 +298,14 @@ export async function connectProjectRepository(
 
   const owner = match[1];
   const name = match[2];
-  const github = await fetchGithubJson<{
-    id: number;
-    html_url: string;
-    full_name: string;
-    default_branch: string;
-    private: boolean;
-    archived: boolean;
-  }>(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`);
-
-  if (!github.ok) return github;
-  if (github.data.private) {
-    return { ok: false, error: { code: "INVALID_INPUT", message: "MVP에서는 공개 저장소만 연결할 수 있습니다." } };
-  }
-  if (github.data.archived) {
+  const installedRepository = await readInstalledRepository(owner, name);
+  if (!installedRepository.ok) return installedRepository;
+  const github = installedRepository.data.repository;
+  if (github.archived) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "보관된 저장소는 검수 대상으로 연결할 수 없습니다." } };
   }
 
-  const [canonicalOwner, canonicalName] = github.data.full_name.split("/");
+  const [canonicalOwner, canonicalName] = github.full_name.split("/");
   const { data, error } = await access.data.supabase
     .from("project_repositories")
     .upsert(
@@ -271,16 +314,17 @@ export async function connectProjectRepository(
         provider: "github",
         owner_name: canonicalOwner,
         repository_name: canonicalName,
-        repository_url: github.data.html_url,
-        default_branch: github.data.default_branch,
-        github_repository_id: github.data.id,
-        is_private: false,
+        repository_url: github.html_url,
+        default_branch: github.default_branch,
+        github_repository_id: github.id,
+        github_installation_id: installedRepository.data.installationId,
+        is_private: github.private,
         connected_by: access.data.userId,
         company_confirmed_at: new Date().toISOString(),
       },
       { onConflict: "project_id" },
     )
-    .select("id, project_id, owner_name, repository_name, repository_url, default_branch, is_private, company_confirmed_at")
+    .select("id, project_id, owner_name, repository_name, repository_url, default_branch, github_installation_id, is_private, company_confirmed_at")
     .single();
 
   if (error || !data) {
@@ -291,7 +335,7 @@ export async function connectProjectRepository(
 
 export async function submitMilestonePullRequest(
   input: SubmitMilestonePullRequestInput,
-): Promise<BackendResult<{ submissionId: string; headCommitSha: string }>> {
+): Promise<BackendResult<MilestoneSubmissionReceipt>> {
   if (!isUuid(input.projectId) || !isUuid(input.milestoneId)) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 마일스톤 제출 대상이 아닙니다." } };
   }
@@ -302,13 +346,13 @@ export async function submitMilestonePullRequest(
 
   const access = await getProjectAccess(input.projectId);
   if (!access.ok) return access;
-  if (access.data.isCompany) {
+  if (!access.data.isSelectedFreelancer) {
     return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 코드를 제출할 수 있습니다." } };
   }
 
   const { data: repository, error: repositoryError } = await access.data.supabase
     .from("project_repositories")
-    .select("id, owner_name, repository_name")
+    .select("id, owner_name, repository_name, github_repository_id, github_installation_id")
     .eq("project_id", input.projectId)
     .maybeSingle();
   if (repositoryError) {
@@ -316,6 +360,15 @@ export async function submitMilestonePullRequest(
   }
   if (!repository) {
     return { ok: false, error: { code: "CONFLICT", message: "발주자가 공식 GitHub 저장소를 먼저 연결해야 합니다." } };
+  }
+  if (!repository.github_repository_id || !repository.github_installation_id) {
+    return {
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        message: "GitHub App으로 공식 저장소를 다시 연결한 뒤 PR을 제출해주세요.",
+      },
+    };
   }
   if (
     prMatch[1].toLowerCase() !== repository.owner_name.toLowerCase() ||
@@ -338,7 +391,11 @@ export async function submitMilestonePullRequest(
   }
 
   const uniqueCriterionIds = Array.from(new Set(input.claimedCriterionIds));
-  if (uniqueCriterionIds.length === 0 || uniqueCriterionIds.some((id) => !isUuid(id))) {
+  if (
+    uniqueCriterionIds.length === 0 ||
+    uniqueCriterionIds.length > 50 ||
+    uniqueCriterionIds.some((id) => !isUuid(id))
+  ) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "구현 완료한 조건을 한 개 이상 선택해주세요." } };
   }
   const { data: criteria, error: criteriaError } = await access.data.supabase
@@ -351,27 +408,41 @@ export async function submitMilestonePullRequest(
   }
 
   const prNumber = Number(prMatch[3]);
-  const github = await fetchGithubJson<{
-    number: number;
-    title: string;
-    html_url: string;
-    state: string;
-    head: { ref: string; sha: string };
-  }>(
-    `https://api.github.com/repos/${encodeURIComponent(repository.owner_name)}/${encodeURIComponent(repository.repository_name)}/pulls/${prNumber}`,
-  );
-  if (!github.ok) return github;
-  if (!/^[0-9a-f]{40}$/i.test(github.data.head.sha)) {
+  if (!Number.isSafeInteger(prNumber) || prNumber <= 0) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "GitHub PR 번호가 올바르지 않습니다." } };
+  }
+  const pullRequest = await readPullRequest({
+    installationId: repository.github_installation_id,
+    repositoryId: repository.github_repository_id,
+    owner: repository.owner_name,
+    repository: repository.repository_name,
+    pullRequestNumber: prNumber,
+  });
+  if (!pullRequest.ok) return pullRequest;
+  const github = pullRequest.data;
+  if (github.state !== "open") {
+    return { ok: false, error: { code: "CONFLICT", message: "열려 있는 GitHub PR만 검수 대상으로 제출할 수 있습니다." } };
+  }
+  if (github.base.repo.id !== repository.github_repository_id) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "공식 프로젝트 저장소를 대상으로 하는 PR만 제출할 수 있습니다." } };
+  }
+  if (!/^[0-9a-f]{40}$/i.test(github.head.sha)) {
     return { ok: false, error: { code: "CONFLICT", message: "GitHub에서 전체 Commit SHA를 확인하지 못했습니다." } };
   }
 
-  const { data: existing } = await access.data.supabase
+  const { data: existing, error: existingError } = await access.data.supabase
     .from("milestone_submissions")
     .select("id, head_commit_sha")
     .eq("milestone_id", input.milestoneId)
-    .eq("head_commit_sha", github.data.head.sha)
+    .eq("head_commit_sha", github.head.sha)
     .maybeSingle();
-  if (existing) return { ok: true, data: { submissionId: existing.id, headCommitSha: existing.head_commit_sha } };
+  if (existingError) {
+    return { ok: false, error: mapBackendError(existingError, "기존 PR 제출 기록을 확인하지 못했습니다.") };
+  }
+
+  if (existing) {
+    return queueSubmissionVerification(access.data, input, existing);
+  }
 
   const { data: previous } = await access.data.supabase
     .from("milestone_submissions")
@@ -388,11 +459,11 @@ export async function submitMilestonePullRequest(
       milestone_id: input.milestoneId,
       repository_id: repository.id,
       attempt_number: (previous?.attempt_number ?? 0) + 1,
-      pull_request_number: github.data.number,
-      pull_request_title: github.data.title,
-      pull_request_url: github.data.html_url,
-      head_branch: github.data.head.ref,
-      head_commit_sha: github.data.head.sha,
+      pull_request_number: github.number,
+      pull_request_title: github.title,
+      pull_request_url: github.html_url,
+      head_branch: github.head.ref,
+      head_commit_sha: github.head.sha,
       implementation_note: input.implementationNote?.trim() || null,
       submitted_by: access.data.userId,
       previous_submission_id: previous?.id ?? null,
@@ -401,23 +472,29 @@ export async function submitMilestonePullRequest(
     .single();
 
   if (submissionError || !submission) {
+    if (submissionError?.code === "23505") {
+      const { data: concurrentSubmission } = await access.data.supabase
+        .from("milestone_submissions")
+        .select("id, head_commit_sha")
+        .eq("milestone_id", input.milestoneId)
+        .eq("head_commit_sha", github.head.sha)
+        .maybeSingle();
+      if (concurrentSubmission) {
+        return queueSubmissionVerification(access.data, input, concurrentSubmission);
+      }
+    }
     return { ok: false, error: mapBackendError(submissionError, "PR 제출 기록을 저장하지 못했습니다.") };
   }
 
-  const { error: claimError } = await access.data.supabase
-    .from("milestone_submission_criteria")
-    .insert(
-      uniqueCriterionIds.map((criterionId) => ({
-        submission_id: submission.id,
-        milestone_id: input.milestoneId,
-        criterion_id: criterionId,
-      })),
-    );
-  if (claimError) {
-    return { ok: false, error: mapBackendError(claimError, "제출 완료조건을 저장하지 못했습니다.") };
-  }
+  const claims = await saveSubmissionCriteria(
+    access.data,
+    submission.id,
+    input.milestoneId,
+    uniqueCriterionIds,
+  );
+  if (!claims.ok) return claims;
 
-  return { ok: true, data: { submissionId: submission.id, headCommitSha: submission.head_commit_sha } };
+  return queueSubmissionVerification(access.data, input, submission);
 }
 
 export async function requestVerificationRun(
@@ -432,7 +509,14 @@ export async function requestVerificationRun(
 
   const access = await getProjectAccess(input.projectId);
   if (!access.ok) return access;
-  const { data: submission, error: submissionError } = await access.data.supabase
+  return requestVerificationRunForAccess(access.data, input);
+}
+
+async function requestVerificationRunForAccess(
+  access: AccessContext,
+  input: RequestVerificationInput,
+): Promise<BackendResult<{ runId: string; status: VerificationRunRecord["status"] }>> {
+  const { data: submission, error: submissionError } = await access.supabase
     .from("milestone_submissions")
     .select("id")
     .eq("id", input.submissionId)
@@ -444,7 +528,7 @@ export async function requestVerificationRun(
   }
 
   if (input.scope === "criterion") {
-    const { data: claim, error: claimError } = await access.data.supabase
+    const { data: claim, error: claimError } = await access.supabase
       .from("milestone_submission_criteria")
       .select("criterion_id")
       .eq("submission_id", input.submissionId)
@@ -455,7 +539,7 @@ export async function requestVerificationRun(
     }
   }
 
-  let latestQuery = access.data.supabase
+  let latestQuery = access.supabase
     .from("verification_runs")
     .select("id, status, attempt_number")
     .eq("submission_id", input.submissionId)
@@ -474,7 +558,7 @@ export async function requestVerificationRun(
   const nextAttempt = (previousRun?.attempt_number ?? 0) + 1;
   const idempotencyKey = [input.submissionId, input.scope, input.criterionId ?? "all", nextAttempt].join(":");
 
-  const { data: run, error: runError } = await access.data.supabase
+  const { data: run, error: runError } = await access.supabase
     .from("verification_runs")
     .insert({
       project_id: input.projectId,
@@ -485,14 +569,14 @@ export async function requestVerificationRun(
       attempt_number: nextAttempt,
       idempotency_key: idempotencyKey,
       status: "queued",
-      requested_by: access.data.userId,
+      requested_by: access.userId,
     })
     .select("id, status")
     .single();
 
   if (runError || !run) {
     if (runError?.code === "23505") {
-      const { data: concurrentRun } = await access.data.supabase
+      const { data: concurrentRun } = await access.supabase
         .from("verification_runs")
         .select("id, status")
         .eq("idempotency_key", idempotencyKey)
@@ -502,6 +586,51 @@ export async function requestVerificationRun(
     return { ok: false, error: mapBackendError(runError, "검수 요청을 저장하지 못했습니다.") };
   }
   return { ok: true, data: { runId: run.id, status: run.status } };
+}
+
+async function saveSubmissionCriteria(
+  access: AccessContext,
+  submissionId: string,
+  milestoneId: string,
+  criterionIds: string[],
+): Promise<BackendResult<{ saved: true }>> {
+  const { error } = await access.supabase
+    .from("milestone_submission_criteria")
+    .insert(
+      criterionIds.map((criterionId) => ({
+        submission_id: submissionId,
+        milestone_id: milestoneId,
+        criterion_id: criterionId,
+      })),
+    );
+  if (error) {
+    return { ok: false, error: mapBackendError(error, "제출 완료조건을 저장하지 못했습니다.") };
+  }
+  return { ok: true, data: { saved: true } };
+}
+
+async function queueSubmissionVerification(
+  access: AccessContext,
+  input: Pick<SubmitMilestonePullRequestInput, "projectId" | "milestoneId">,
+  submission: { id: string; head_commit_sha: string },
+): Promise<BackendResult<MilestoneSubmissionReceipt>> {
+  const verification = await requestVerificationRunForAccess(access, {
+    projectId: input.projectId,
+    milestoneId: input.milestoneId,
+    submissionId: submission.id,
+    scope: "milestone",
+  });
+  if (!verification.ok) return verification;
+
+  return {
+    ok: true,
+    data: {
+      submissionId: submission.id,
+      headCommitSha: submission.head_commit_sha,
+      verificationRunId: verification.data.runId,
+      verificationStatus: verification.data.status,
+    },
+  };
 }
 
 export async function decideMilestone(
@@ -580,47 +709,78 @@ async function getProjectAccess(projectId: string): Promise<BackendResult<Access
     return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
   }
   const isCompany = project.company_id === authData.user.id;
-  if (!isCompany) {
-    const { data: selection, error: selectionError } = await supabase
-      .from("selections")
-      .select("id")
-      .eq("project_id", projectId)
-      .maybeSingle();
-    if (selectionError || !selection) {
-      return { ok: false, error: mapBackendError(selectionError, "프로젝트 참여자만 검수 정보를 확인할 수 있습니다.") };
-    }
+  const { data: selection, error: selectionError } = await supabase
+    .from("selections")
+    .select("proposal_id")
+    .eq("project_id", projectId)
+    .maybeSingle();
+  if (selectionError) {
+    return {
+      ok: false,
+      error: mapBackendError(selectionError, "프로젝트 참여 권한을 확인하지 못했습니다."),
+    };
+  }
+  const { data: selectedProposal, error: proposalError } = selection
+    ? await supabase
+        .from("proposals")
+        .select("freelancer_id")
+        .eq("id", selection.proposal_id)
+        .eq("project_id", projectId)
+        .maybeSingle()
+    : { data: null, error: null };
+  if (proposalError) {
+    return {
+      ok: false,
+      error: mapBackendError(proposalError, "선정 프리랜서 권한을 확인하지 못했습니다."),
+    };
+  }
+  const isSelectedFreelancer = selectedProposal?.freelancer_id === authData.user.id;
+  if (!isCompany && !isSelectedFreelancer) {
+    return {
+      ok: false,
+      error: { code: "FORBIDDEN", message: "프로젝트 참여자만 검수 정보를 확인할 수 있습니다." },
+    };
   }
 
-  return { ok: true, data: { supabase, userId: authData.user.id, isCompany } };
+  return {
+    ok: true,
+    data: { supabase, userId: authData.user.id, isCompany, isSelectedFreelancer },
+  };
 }
 
-async function fetchGithubJson<T>(url: string): Promise<BackendResult<T>> {
+async function readInstalledRepository(
+  owner: string,
+  repository: string,
+): Promise<BackendResult<Awaited<ReturnType<typeof getInstalledGitHubRepository>>>> {
   try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-      headers: {
-        Accept: "application/vnd.github+json",
-        "User-Agent": "LinKross-MVP",
-        ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
-      },
-    });
-    if (!response.ok) {
-      return {
-        ok: false,
-        error: {
-          code: response.status === 404 ? "NOT_FOUND" : "CONFLICT",
-          message:
-            response.status === 404
-              ? "GitHub에서 공개 저장소 또는 PR을 찾지 못했습니다."
-              : `GitHub 확인에 실패했습니다. (${response.status})`,
-        },
-      };
-    }
-    return { ok: true, data: (await response.json()) as T };
-  } catch {
-    return { ok: false, error: { code: "CONFLICT", message: "GitHub 연결이 지연되고 있습니다. 다시 시도해주세요." } };
+    return { ok: true, data: await getInstalledGitHubRepository(owner, repository) };
+  } catch (error) {
+    return { ok: false, error: mapGitHubAppError(error) };
   }
+}
+
+async function readPullRequest(
+  input: Parameters<typeof getGitHubPullRequest>[0],
+): Promise<BackendResult<Awaited<ReturnType<typeof getGitHubPullRequest>>>> {
+  try {
+    return { ok: true, data: await getGitHubPullRequest(input) };
+  } catch (error) {
+    return { ok: false, error: mapGitHubAppError(error) };
+  }
+}
+
+function mapGitHubAppError(error: unknown) {
+  if (error instanceof GitHubAppError) {
+    return {
+      code: error.status === 404 ? "NOT_FOUND" as const : "CONFLICT" as const,
+      message: error.message,
+      diagnosticCode: error.diagnosticCode,
+    };
+  }
+  return {
+    code: "CONFLICT" as const,
+    message: "GitHub 요청을 처리하지 못했습니다. 다시 시도해주세요.",
+  };
 }
 
 function toRepository(row: {
@@ -630,6 +790,7 @@ function toRepository(row: {
   repository_name: string;
   repository_url: string;
   default_branch: string | null;
+  github_installation_id: number | null;
   is_private: boolean;
   company_confirmed_at: string | null;
 }): ProjectRepositoryRecord {
@@ -640,6 +801,7 @@ function toRepository(row: {
     name: row.repository_name,
     url: row.repository_url,
     defaultBranch: row.default_branch,
+    installationId: row.github_installation_id,
     isPrivate: row.is_private,
     companyConfirmedAt: row.company_confirmed_at,
   };
@@ -683,6 +845,7 @@ function toSubmission(
     external_url: string | null;
     storage_path: string | null;
   }>>,
+  signedUrlByPath: Map<string, string>,
 ): MilestoneSubmissionRecord {
   return {
     id: submission.id,
@@ -715,7 +878,8 @@ function toSubmission(
         evidence: (evidenceByResult.get(result.id) ?? []).map((artifact) => ({
           id: artifact.id,
           type: artifact.artifact_type,
-          url: artifact.external_url,
+          url: artifact.external_url
+            ?? (artifact.storage_path ? signedUrlByPath.get(artifact.storage_path) ?? null : null),
           storagePath: artifact.storage_path,
         })),
       })),

@@ -19,6 +19,7 @@ export type {
   InvoiceRecord,
   InvoiceStatus,
   MilestoneSubmissionRecord,
+  MilestoneSubmissionReceipt,
   MilestoneChecklistItem,
   OpportunityDetail,
   OpportunitySummary,

@@ -10,7 +10,8 @@
 - 기업/프리랜서 프로젝트 목록과 실제 상태 기반 대시보드
 - SOW 초안·마일스톤·완료조건 저장, 검토 요청, 동일 content hash 양측 승인, append-only 수정 요청
 - 입력 원문에 근거한 서버 측 OpenAI 마일스톤 분석·영문 SOW 초안 생성
-- 공개 GitHub 저장소 확인, 공식 저장소 PR 확인, 40자리 head Commit SHA 고정 제출
+- GitHub App 설치 흐름, 공개·비공개 공식 저장소와 PR 확인, 40자리 head Commit SHA 고정 제출
+- 저장소 단위 Installation Access Token 발급·즉시 폐기, webhook HMAC 검증과 delivery ID 중복 방지 기록
 - 검수 실행 요청의 멱등 대기열 기록, 재실행 attempt, 조건별 결과·증거 조회, 발주자 수정 요청·승인
 - 승인 마일스톤 인보이스 제출·기업 검토, 실제 지급 상태와 증빙 번들 조회
 - 기업·프리랜서 프로필 조회와 수정
@@ -24,9 +25,11 @@
 
 ## 외부 인프라가 있어야 완료할 수 있는 범위
 
-- 비공개 저장소: GitHub App 설치, 최소 권한 토큰, webhook 수신·중복 방지
-- 실제 코드 실행: 격리 VM/컨테이너 Runner, 네트워크·CPU·메모리·시간 제한, 합성 DB, Playwright
-- Runner 결과 쓰기: 일반 사용자 RLS와 분리된 작업자 인증 경계가 `verification_runs`, `criterion_results`, `evidence_artifacts`를 갱신해야 한다.
+- GitHub App 운영 설정: Private Key·webhook secret 등록, App 설치, webhook 공개 HTTPS URL과 Supabase migration 적용
+- webhook 후속 처리: 현재는 검증된 delivery를 중복 없이 기록하며, 새 Commit 자동 감지와 연결 상태 동기화는 별도 작업이다.
+- 실제 코드 실행: Vercel Sandbox 기반 install/build/start 경계와 로그인 MVP용 LinKross 관리 Playwright 시나리오 4개를 구현했다. 원격 인증 설정, Playwright snapshot 생성과 프레임워크별 합성 DB 연결은 아직 필요하다.
+- Runner 결과 쓰기: Runner secret, 작업별 lease, 원자적 선점·상태 전이·결과 저장 API와 비공개 lease 테이블을 구현했다. 원격 SQL 적용은 아직 필요하다.
+- 격리 실행: Vercel Sandbox에 고정 SHA archive를 직접 업로드하고 설치 후 egress를 차단하는 npm install/build/start 실행기를 구현했다. 저장소와 verifier OS 사용자를 분리하고 관리형 Playwright 결과·마스킹 스크린샷을 수집한다. 실제 원격 실행과 합성 DB 연결은 아직 필요하다.
 - 통합 증빙 파일: PDF/ZIP 생성 Worker, 비공개 Storage 보관·만료 정책. 현재 화면은 DB의 번들 생성 상태만 읽는다.
 - 실제 지급: 외부 결제 파트너와 수신 계좌/지갑 데이터 모델. 현재는 DB에 적재된 상태와 외부 참조만 표시한다.
 - 알림·멤버 초대: 발송 공급자, 조직 멤버십과 초대 모델이 필요하다.

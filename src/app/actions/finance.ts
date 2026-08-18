@@ -8,6 +8,7 @@ import { reviewInvoice, submitInvoice } from "@/lib/backend";
 function revalidateFinance(projectId: string) {
   revalidatePath(`/company/projects/${projectId}/evidence`);
   revalidatePath(`/freelancer/projects/${projectId}`);
+  revalidatePath(`/freelancer/projects/${projectId}/evidence`);
   revalidatePath("/freelancer/invoices");
 }
 
