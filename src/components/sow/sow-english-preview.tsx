@@ -11,6 +11,8 @@ import {
   Loader2,
   Send,
   X,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { EnglishSOWResult } from "@/lib/rag-translator";
 import {
@@ -23,6 +25,8 @@ type SowEnglishPreviewProps = {
   sow: EnglishSOWResult | null;
   onRequestApproval: (snapshot: ApprovalSowSnapshot) => void;
   isSubmitting?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 };
 
 export function SowEnglishPreview({
@@ -30,6 +34,8 @@ export function SowEnglishPreview({
   sow,
   onRequestApproval,
   isSubmitting = false,
+  isExpanded = false,
+  onToggleExpand,
 }: SowEnglishPreviewProps) {
   const [showOriginalContrast, setShowOriginalContrast] = useState(true);
   const [isPmVerified, setIsPmVerified] = useState(false);
@@ -114,6 +120,19 @@ export function SowEnglishPreview({
             RAG 기반 IT 표준 용어 매핑 및 B2B 계약 가이드라인에 따른 영문 초안입니다.
           </p>
         </div>
+        {onToggleExpand && (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors no-print"
+          >
+            {isExpanded ? (
+              <><Minimize2 className="size-3.5" /> 반으로 접기</>
+            ) : (
+              <><Maximize2 className="size-3.5" /> 화면 꽉 채우기</>
+            )}
+          </button>
+        )}
       </div>
 
       {/* RAG 추출 전문 용어 태그 */}
@@ -196,9 +215,12 @@ export function SowEnglishPreview({
           <div className="mt-3 space-y-3">
             {sow.timelineAndMilestones?.map((m, i) => (
               <div key={i} className="rounded border border-app-border bg-app-surface p-3 print:border-app-foreground">
-                <div className="flex items-center justify-between text-sm font-bold text-app-foreground">
-                  <span>{m?.code}. {m?.titleEn}</span>
-                  <span className="text-brand-700 print:text-app-foreground">{m?.period} · {m?.amount}</span>
+                <div className="flex items-start justify-between text-sm font-bold text-app-foreground gap-4">
+                  <span className="pt-0.5">{m?.code}. {m?.titleEn}</span>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0 text-right">
+                    <span className="text-[0.75rem] font-semibold text-app-muted print:text-app-foreground">{m?.period}</span>
+                    <span className="text-brand-700 print:text-app-foreground">{m?.amount}</span>
+                  </div>
                 </div>
                 {m?.dodsEn && m.dodsEn.length > 0 && (
                   <div className="mt-2 border-t border-app-border/40 pt-2">
