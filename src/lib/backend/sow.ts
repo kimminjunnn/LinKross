@@ -78,6 +78,156 @@ type SowApprovalRow = {
   approved_at: string;
 };
 
+// 같은 sow_version_id 안에서 position/code unique 제약과 부딪히지 않도록,
+// 기존 행들을 먼저 이 범위 밖(음수)으로 옮겨둔 뒤 목표 값으로 다시 배치한다.
+function buildTempPositionBase(): number {
+  return -Math.floor(Date.now() / 1000);
+}
+
+async function upsertMilestonesForDraft(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  projectId: string,
+  sowVersionId: string,
+  milestones: SaveSowVersionInput["milestones"],
+  overallStart: string,
+  overallEnd: string,
+): Promise<BackendResult<Map<string, string>>> {
+  const { data: existingRows, error: existingError } = await supabase
+    .from("milestones")
+    .select("id, code")
+    .eq("sow_version_id", sowVersionId);
+
+  if (existingError) {
+    return { ok: false, error: mapBackendError(existingError, "기존 마일스톤을 확인하지 못했습니다.") };
+  }
+
+  const existingByCode = new Map((existingRows ?? []).map((row) => [row.code, row.id]));
+
+  const tempBase = buildTempPositionBase();
+  for (let index = 0; index < (existingRows?.length ?? 0); index += 1) {
+    const { error } = await supabase
+      .from("milestones")
+      .update({ position: tempBase - index })
+      .eq("id", existingRows![index].id);
+    if (error) {
+      return { ok: false, error: mapBackendError(error, "마일스톤 저장 준비 중 오류가 발생했습니다.") };
+    }
+  }
+
+  const milestoneIdByCode = new Map<string, string>();
+
+  for (let index = 0; index < milestones.length; index += 1) {
+    const milestone = milestones[index];
+    const code = milestone.code || `M${index + 1}`;
+    const description = milestone.period.trim() ? `기간: ${milestone.period.trim()}` : null;
+    const existingId = existingByCode.get(code);
+
+    if (existingId) {
+      const { error } = await supabase
+        .from("milestones")
+        .update({
+          title: milestone.title || `마일스톤 ${index + 1}`,
+          description,
+          start_date: overallStart,
+          end_date: overallEnd,
+          amount: parseAmount(milestone.amount),
+          currency: "USD",
+          position: index + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingId);
+      if (error) {
+        return { ok: false, error: mapBackendError(error, "마일스톤을 저장하지 못했습니다.") };
+      }
+      milestoneIdByCode.set(code, existingId);
+    } else {
+      const { data: inserted, error } = await supabase
+        .from("milestones")
+        .insert({
+          project_id: projectId,
+          sow_version_id: sowVersionId,
+          code,
+          title: milestone.title || `마일스톤 ${index + 1}`,
+          description,
+          start_date: overallStart,
+          end_date: overallEnd,
+          amount: parseAmount(milestone.amount),
+          currency: "USD",
+          position: index + 1,
+        })
+        .select("id")
+        .single();
+      if (error || !inserted) {
+        return { ok: false, error: mapBackendError(error, "마일스톤을 저장하지 못했습니다.") };
+      }
+      milestoneIdByCode.set(code, inserted.id);
+    }
+  }
+
+  return { ok: true, data: milestoneIdByCode };
+}
+
+async function upsertCriteriaForMilestone(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  projectId: string,
+  sowVersionId: string,
+  milestoneId: string,
+  dods: string[],
+): Promise<BackendResult<null>> {
+  const { data: existingRows, error: existingError } = await supabase
+    .from("completion_criteria")
+    .select("id, position")
+    .eq("milestone_id", milestoneId)
+    .eq("kind", "definition_of_done")
+    .order("position", { ascending: true });
+
+  if (existingError) {
+    return { ok: false, error: mapBackendError(existingError, "기존 완료 조건을 확인하지 못했습니다.") };
+  }
+
+  const tempBase = buildTempPositionBase();
+  for (let index = 0; index < (existingRows?.length ?? 0); index += 1) {
+    const { error } = await supabase
+      .from("completion_criteria")
+      .update({ position: tempBase - index })
+      .eq("id", existingRows![index].id);
+    if (error) {
+      return { ok: false, error: mapBackendError(error, "완료 조건 저장 준비 중 오류가 발생했습니다.") };
+    }
+  }
+
+  const existingIdByOriginalOrder = new Map((existingRows ?? []).map((row, index) => [index + 1, row.id]));
+
+  for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
+    const existingId = existingIdByOriginalOrder.get(dodIndex + 1);
+    if (existingId) {
+      const { error } = await supabase
+        .from("completion_criteria")
+        .update({ description: dods[dodIndex], position: dodIndex + 1 })
+        .eq("id", existingId);
+      if (error) {
+        return { ok: false, error: mapBackendError(error, "완료 조건을 저장하지 못했습니다.") };
+      }
+    } else {
+      const { error } = await supabase.from("completion_criteria").insert({
+        project_id: projectId,
+        sow_version_id: sowVersionId,
+        milestone_id: milestoneId,
+        kind: "definition_of_done",
+        description: dods[dodIndex],
+        verification_method: "manual",
+        is_required: true,
+        position: dodIndex + 1,
+      });
+      if (error) {
+        return { ok: false, error: mapBackendError(error, "완료 조건을 저장하지 못했습니다.") };
+      }
+    }
+  }
+
+  return { ok: true, data: null };
+}
+
 async function insertSowVersion(
   input: SaveSowVersionInput,
   status: "draft" | "in_review",
@@ -114,7 +264,7 @@ async function insertSowVersion(
 
   const { data: latestVersion, error: versionsError } = await supabase
     .from("sow_versions")
-    .select("version_number")
+    .select("id, version_number, status")
     .eq("project_id", input.projectId)
     .order("version_number", { ascending: false })
     .limit(1)
@@ -124,7 +274,6 @@ async function insertSowVersion(
     return { ok: false, error: mapBackendError(versionsError, "업무 명세서 버전을 확인하지 못했습니다.") };
   }
 
-  const nextVersion = (latestVersion?.version_number ?? 0) + 1;
   const overallStart = parseDateText(input.startDate) ?? new Date().toISOString().slice(0, 10);
   const overallEnd = parseDateText(input.endDate) ?? overallStart;
 
@@ -135,84 +284,91 @@ async function insertSowVersion(
     endDateInput: input.endDate,
     englishSow: input.englishSow ?? null,
   };
+  const contentHash = computeContentHash(content);
 
-  // sow_versions는 항상 draft로 먼저 만든다. protect_sow_children 트리거가
-  // draft가 아닌 SOW엔 마일스톤/완료조건을 새로 넣지 못하게 막기 때문에,
-  // in_review로 즉시 만들면 바로 아래에서 마일스톤 insert가 거부된다.
-  const { data: sowVersion, error: sowError } = await supabase
-    .from("sow_versions")
-    .insert({
-      project_id: input.projectId,
-      version_number: nextVersion,
-      source_requirement_version_id: project.current_requirement_version_id,
-      source_proposal_id: selection?.proposal_id ?? null,
-      status: "draft",
-      content,
-      print_text: input.printText ?? null,
-      pdf_file_name: input.pdfFileName ?? null,
-      content_hash: computeContentHash(content),
-      created_by: authData.user.id,
-    })
-    .select("id, version_number, status")
-    .single();
+  // 최신 버전이 아직 draft면(=제출 전 임시 저장 반복) 새 버전을 만들지 않고
+  // 그 행을 그대로 업데이트한다. 버전 번호는 실제로 제출/재수정이 있을 때만 올라간다.
+  const reuseDraft = latestVersion?.status === "draft";
 
-  if (sowError || !sowVersion) {
-    return { ok: false, error: mapBackendError(sowError, "업무 명세서를 저장하지 못했습니다.") };
+  let sowVersion: { id: string; version_number: number; status: SowStatus };
+
+  if (reuseDraft) {
+    const { data: updated, error: updateError } = await supabase
+      .from("sow_versions")
+      .update({
+        source_requirement_version_id: project.current_requirement_version_id,
+        source_proposal_id: selection?.proposal_id ?? null,
+        content,
+        print_text: input.printText ?? null,
+        pdf_file_name: input.pdfFileName ?? null,
+        content_hash: contentHash,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", latestVersion!.id)
+      .select("id, version_number, status")
+      .single();
+
+    if (updateError || !updated) {
+      return { ok: false, error: mapBackendError(updateError, "업무 명세서를 저장하지 못했습니다.") };
+    }
+    sowVersion = updated;
+  } else {
+    const nextVersion = (latestVersion?.version_number ?? 0) + 1;
+
+    // sow_versions는 항상 draft로 먼저 만든다. protect_sow_children 트리거가
+    // draft가 아닌 SOW엔 마일스톤/완료조건을 새로 넣지 못하게 막기 때문에,
+    // in_review로 즉시 만들면 바로 아래에서 마일스톤 insert가 거부된다.
+    const { data: inserted, error: insertError } = await supabase
+      .from("sow_versions")
+      .insert({
+        project_id: input.projectId,
+        version_number: nextVersion,
+        source_requirement_version_id: project.current_requirement_version_id,
+        source_proposal_id: selection?.proposal_id ?? null,
+        status: "draft",
+        content,
+        print_text: input.printText ?? null,
+        pdf_file_name: input.pdfFileName ?? null,
+        content_hash: contentHash,
+        created_by: authData.user.id,
+      })
+      .select("id, version_number, status")
+      .single();
+
+    if (insertError || !inserted) {
+      return { ok: false, error: mapBackendError(insertError, "업무 명세서를 저장하지 못했습니다.") };
+    }
+    sowVersion = inserted;
+  }
+
+  const milestoneUpsert = await upsertMilestonesForDraft(
+    supabase,
+    input.projectId,
+    sowVersion.id,
+    input.milestones,
+    overallStart,
+    overallEnd,
+  );
+  if (!milestoneUpsert.ok) {
+    return milestoneUpsert;
   }
 
   for (let index = 0; index < input.milestones.length; index += 1) {
     const milestone = input.milestones[index];
-    const description = milestone.period.trim() ? `기간: ${milestone.period.trim()}` : null;
-
-    const { data: milestoneRow, error: milestoneError } = await supabase
-      .from("milestones")
-      .insert({
-        project_id: input.projectId,
-        sow_version_id: sowVersion.id,
-        code: milestone.code || `M${index + 1}`,
-        title: milestone.title || `마일스톤 ${index + 1}`,
-        description,
-        start_date: overallStart,
-        end_date: overallEnd,
-        amount: parseAmount(milestone.amount),
-        currency: "USD",
-        position: index + 1,
-      })
-      .select("id")
-      .single();
-
-    if (milestoneError || !milestoneRow) {
-      return {
-        ok: false,
-        error: mapBackendError(
-          milestoneError,
-          "마일스톤을 저장하지 못했습니다. 방금 만든 초안은 그대로 남아있으니 다시 저장해주세요.",
-        ),
-      };
-    }
+    const code = milestone.code || `M${index + 1}`;
+    const milestoneId = milestoneUpsert.data.get(code);
+    if (!milestoneId) continue;
 
     const dods = milestone.dods.map((dod) => dod.trim()).filter(Boolean);
-    for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
-      const { error: criterionError } = await supabase.from("completion_criteria").insert({
-        project_id: input.projectId,
-        sow_version_id: sowVersion.id,
-        milestone_id: milestoneRow.id,
-        kind: "definition_of_done",
-        description: dods[dodIndex],
-        verification_method: "manual",
-        is_required: true,
-        position: dodIndex + 1,
-      });
-
-      if (criterionError) {
-        return {
-          ok: false,
-          error: mapBackendError(
-            criterionError,
-            "완료 조건을 저장하지 못했습니다. 방금 만든 초안은 그대로 남아있으니 다시 저장해주세요.",
-          ),
-        };
-      }
+    const criteriaResult = await upsertCriteriaForMilestone(
+      supabase,
+      input.projectId,
+      sowVersion.id,
+      milestoneId,
+      dods,
+    );
+    if (!criteriaResult.ok) {
+      return criteriaResult;
     }
   }
 
@@ -295,7 +451,7 @@ export async function getSowWorkspaceContext(
 
   const { data: version } = await supabase
     .from("project_requirement_versions")
-    .select("title")
+    .select("title, budget_amount, budget_max_amount, currency, start_date, end_date")
     .eq("id", project.current_requirement_version_id)
     .maybeSingle();
 
@@ -322,6 +478,11 @@ export async function getSowWorkspaceContext(
       title: version?.title ?? "(제목 없음)",
       lifecycleStage: project.lifecycle_stage,
       assigneeName,
+      budgetAmount: version?.budget_amount == null ? 0 : Number(version.budget_amount),
+      budgetMaxAmount: version?.budget_max_amount == null ? null : Number(version.budget_max_amount),
+      currency: version?.currency ?? "USD",
+      startDate: version?.start_date ?? "",
+      endDate: version?.end_date ?? "",
     },
   };
 }
