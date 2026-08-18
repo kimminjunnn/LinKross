@@ -722,7 +722,7 @@ export async function getSowApprovalState(
     if (readRowsError && !isMissingRevisionReadTable(readRowsError)) {
       return {
         ok: false,
-        error: mapBackendError(readRowsError, "?섏젙 ?붿껌 ?뺤씤 ?대젰???щ윭?ㅼ? 紐삵뻽?듬땲??"),
+        error: mapBackendError(readRowsError, "수정 요청 확인 이력을 불러오지 못했습니다."),
       };
     }
 
