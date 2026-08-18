@@ -37,6 +37,12 @@ const INSTALL_NETWORK_POLICY = {
   ],
 };
 
+const RUNTIME_NETWORK_POLICY = {
+  subnets: {
+    allow: ["127.0.0.0/8", "::1/128"],
+  },
+};
+
 type SandboxInstance = Awaited<ReturnType<typeof Sandbox.create>>;
 type ActiveStatus = "provisioning" | "installing" | "building" | "running";
 
@@ -120,7 +126,7 @@ export async function executeNextVerificationInVercelSandbox(
     }
 
     await heartbeatVerificationJob(manifest.run.id, lease);
-    await sandbox.update({ networkPolicy: "deny-all" });
+    await sandbox.update({ networkPolicy: RUNTIME_NETWORK_POLICY });
     const rebuild = await runLoggedCommand(
       appUser,
       "npm lifecycle rebuild (network denied)",
