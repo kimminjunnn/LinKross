@@ -39,7 +39,7 @@ const INSTALL_NETWORK_POLICY = {
 
 const RUNTIME_NETWORK_POLICY = {
   subnets: {
-    allow: ["127.0.0.0/8", "::1/128"],
+    allow: ["127.0.0.0/8"],
   },
 };
 
@@ -254,8 +254,13 @@ export async function executeNextVerificationInVercelSandbox(
   } catch (error) {
     const summary = error instanceof StageFailure
       ? error.safeMessage
-      : "The isolated verification environment could not complete the requested run.";
+      : describeSandboxFailure(error);
     const failedStatus = error instanceof StageFailure ? error.stage : currentStatus;
+    console.error("[verification-runner] Sandbox execution failed", {
+      runId: manifest.run.id,
+      stage: failedStatus,
+      error: summary,
+    });
     try {
       await transitionVerificationJob(manifest.run.id, lease, {
         expectedStatus: failedStatus,
@@ -388,6 +393,17 @@ function redactLog(value: string): string {
     .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, "[REDACTED_API_KEY]")
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[REDACTED_JWT]")
     .replace(/((?:token|secret|password|api[_-]?key)\s*[=:]\s*)[^\s]+/gi, "$1[REDACTED]");
+}
+
+function describeSandboxFailure(error: unknown): string {
+  const name = error instanceof Error ? error.name : "UnknownError";
+  const rawMessage = error instanceof Error
+    ? error.message
+    : typeof error === "string"
+      ? error
+      : "The isolated verification environment could not complete the requested run.";
+  const message = redactLog(rawMessage).replace(/\s+/g, " ").trim();
+  return `Sandbox execution failed (${name}): ${message || "Unknown error"}`.slice(0, 4_000);
 }
 
 function readSandboxCredentials(): { token: string; teamId: string; projectId: string } | object {
