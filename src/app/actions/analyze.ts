@@ -46,7 +46,7 @@ export async function analyzeWorkDetailWithLLM(
      - [추천 시스템] API 응답 지연 시 화면에 로딩 스피너(Skeleton UI) 노출
 
 [추출 항목]
-1. 마일스톤 분할 및 세부 정보: (최소 2개 ~ 최대 5개)
+1. 마일스톤 분할 및 세부 정보: (최소 1개 이상, 개수 제한 없음)
    - period: 전체 기간(${currentStartDate} ~ ${currentEndDate}) 내에서 비율에 맞게 'YY.MM.DD - YY.MM.DD' 배분
    - amount: 전체 예산을 난이도에 맞게 차등 배분 (숫자 단위)
    - dods: 위 규칙에 따른 Playwright E2E 테스트 시나리오(액션+검증) 형태의 완료 조건 배열 (단일 문장에 여러 조건을 섞지 마세요)
@@ -130,7 +130,7 @@ export async function generateEnglishSowWithLLM(input: {
   await assertActionRole("company");
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
   if (!input.workDetail.trim() || input.milestones.length === 0) throw new Error("SOW 원문과 마일스톤이 필요합니다.");
-  if (input.workDetail.length > 20_000 || input.milestones.length > 5) throw new Error("SOW 입력은 20,000자와 마일스톤 5개 이하여야 합니다.");
+  if (input.workDetail.length > 20_000) throw new Error("SOW 입력은 20,000자 이하여야 합니다.");
 
   const retrievedTerms = retrieveGlossaryTerms(`${input.workDetail} ${input.milestones.flatMap((milestone) => [milestone.title, ...milestone.dods]).join(" ")}`);
   const completion = await openai.chat.completions.parse({

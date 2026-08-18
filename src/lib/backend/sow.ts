@@ -437,7 +437,7 @@ export async function getSowWorkspaceContext(
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id, lifecycle_stage, current_requirement_version_id, start_date, end_date, budget_amount")
+    .select("id, lifecycle_stage, current_requirement_version_id")
     .eq("id", projectId)
     .eq("company_id", authData.user.id)
     .maybeSingle();
