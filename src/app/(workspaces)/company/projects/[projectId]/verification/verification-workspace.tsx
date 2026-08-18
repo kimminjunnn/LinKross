@@ -42,13 +42,15 @@ type StatusTone = "neutral" | "brand" | "accent" | "success" | "warning" | "dang
 
 export function CompanyVerificationWorkspace({
   initialWorkspace,
+  initialMessage = null,
 }: {
   initialWorkspace: VerificationWorkspace;
+  initialMessage?: string | null;
 }) {
   const [selectedMilestoneId, setSelectedMilestoneId] = useState(
     initialWorkspace.milestones[0]?.id ?? "",
   );
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(initialMessage);
   const [pending, startTransition] = useTransition();
   const selectedMilestone =
     initialWorkspace.milestones.find((milestone) => milestone.id === selectedMilestoneId) ??
@@ -80,6 +82,7 @@ export function CompanyVerificationWorkspace({
     <>
       <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
         <RepositorySummary
+          projectId={initialWorkspace.projectId}
           repository={initialWorkspace.repository}
           pending={pending}
           connectRepository={connectRepository}
@@ -150,10 +153,12 @@ export function CompanyVerificationWorkspace({
 }
 
 function RepositorySummary({
+  projectId,
   repository,
   pending,
   connectRepository,
 }: {
+  projectId: string;
   repository: ProjectRepositoryRecord | null;
   pending: boolean;
   connectRepository: (formData: FormData) => void;
@@ -223,26 +228,41 @@ function RepositorySummary({
       </dl>
 
       {!repository && (
-        <form
-          action={connectRepository}
-          className="mt-5 flex flex-col gap-2 border-t border-app-border pt-4 sm:flex-row"
-        >
-          <input
-            name="repositoryUrl"
-            type="url"
-            required
-            aria-label="공개 GitHub 저장소 주소"
-            placeholder="https://github.com/owner/repository"
-            className="min-h-11 min-w-0 flex-1 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm"
-          />
-          <button
-            disabled={pending}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-60"
-          >
-            {pending && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-            저장소 확인 및 연결
-          </button>
-        </form>
+        <div className="mt-5 space-y-3 border-t border-app-border pt-4">
+          <div className="flex flex-col gap-3 rounded-control border border-brand-200 bg-brand-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-black text-app-foreground">1. GitHub App 설치</p>
+              <p className="mt-1 text-xs leading-5 text-app-muted">
+                검수할 저장소만 선택하고 Contents와 Pull requests 읽기 권한을 허용합니다.
+              </p>
+            </div>
+            <a
+              href={`/api/github/app/install?projectId=${encodeURIComponent(projectId)}`}
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-black text-white"
+            >
+              <LockKeyhole aria-hidden="true" className="size-4" />
+              GitHub App 설치
+            </a>
+          </div>
+
+          <form action={connectRepository} className="flex flex-col gap-2 sm:flex-row">
+            <input
+              name="repositoryUrl"
+              type="url"
+              required
+              aria-label="GitHub 저장소 주소"
+              placeholder="https://github.com/owner/repository"
+              className="min-h-11 min-w-0 flex-1 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm"
+            />
+            <button
+              disabled={pending}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-60"
+            >
+              {pending && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
+              2. 저장소 확인 및 연결
+            </button>
+          </form>
+        </div>
       )}
     </article>
   );
@@ -287,7 +307,7 @@ function VerificationSummary({ milestone }: { milestone: VerificationMilestoneRe
       <p className="mt-4 text-xs font-semibold leading-5 text-brand-700">
         {latestSubmission
           ? `PR #${latestSubmission.pullRequestNumber}의 Commit SHA를 기준으로 결과를 확인합니다.`
-          : "PR이 제출되면 최신 전체 Commit SHA를 고정하고 검수를 시작합니다."}
+          : "PR이 제출되면 최신 전체 Commit SHA를 고정하고 검수 실행을 대기열에 등록합니다."}
       </p>
     </article>
   );
@@ -467,6 +487,29 @@ function MilestoneDetail({
                             {result.observedResult}
                           </p>
                         )}
+                        {result?.errorMessage && (
+                          <p className="mt-2 text-xs font-semibold leading-5 text-red-700">
+                            {result.errorMessage}
+                          </p>
+                        )}
+                        {result?.evidence.some((artifact) => artifact.url) && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {result.evidence.map((artifact) =>
+                              artifact.url ? (
+                                <a
+                                  key={artifact.id}
+                                  href={artifact.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-pill border border-app-border px-2.5 py-1 text-xs font-bold text-brand-700 hover:border-brand-300 hover:bg-brand-50"
+                                >
+                                  {evidenceLabel(artifact.type)}
+                                  <ExternalLink aria-hidden="true" className="size-3" />
+                                </a>
+                              ) : null,
+                            )}
+                          </div>
+                        )}
                       </div>
                       <StatusBadge tone={criterionStatus.tone}>
                         {criterionStatus.label}
@@ -488,7 +531,7 @@ function MilestoneDetail({
             {latestSubmission
               ? `Commit ${shortSha(latestSubmission.headCommitSha)} 기준으로 마일스톤 전체를 검수합니다.`
               : repositoryConnected
-                ? "프리랜서가 PR을 제출하면 마일스톤 전체 검수를 요청할 수 있습니다."
+                ? "프리랜서가 PR을 제출하면 마일스톤 전체 검수가 자동으로 대기열에 등록됩니다."
                 : "저장소가 아직 연결되지 않아 PR과 Commit SHA를 제출할 수 없습니다."}
           </div>
           <button
@@ -499,7 +542,11 @@ function MilestoneDetail({
           >
             {disabled && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
             {!disabled && <Play aria-hidden="true" className="size-4" />}
-            {runInProgress ? "Runner 연결 대기" : "마일스톤 전체 검수"}
+            {runInProgress
+              ? "Runner 연결 대기"
+              : latestRun
+                ? "마일스톤 재검수"
+                : "검수 요청 복구"}
           </button>
         </div>
 
@@ -635,14 +682,18 @@ function resolveMilestoneStatus(milestone: VerificationMilestoneRecord): {
   label: string;
   tone: StatusTone;
 } {
-  if (milestone.decision?.decision === "approved") {
+  const latestSubmission = milestone.submissions[0];
+  const currentDecision =
+    milestone.decision?.submissionId === latestSubmission?.id ? milestone.decision : null;
+
+  if (currentDecision?.decision === "approved") {
     return milestoneVerificationStatusConfig.approved;
   }
-  if (milestone.decision?.decision === "revision_required") {
+  if (currentDecision?.decision === "revision_required") {
     return milestoneVerificationStatusConfig.revision_required;
   }
 
-  const latestRun = milestone.submissions[0]?.runs[0];
+  const latestRun = latestSubmission?.runs[0];
   if (
     latestRun &&
     ["queued", "provisioning", "installing", "building", "running"].includes(
@@ -731,4 +782,12 @@ function SummaryMetric({
 
 function shortSha(sha: string) {
   return sha.slice(0, 7);
+}
+
+function evidenceLabel(type: string) {
+  if (type === "screenshot") return "스크린샷 보기";
+  if (type === "trace") return "실행 Trace";
+  if (type === "video") return "실행 영상";
+  if (type === "log") return "상세 로그";
+  return "검수 증거";
 }

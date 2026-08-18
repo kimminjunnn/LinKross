@@ -189,9 +189,9 @@ company/customer-portal
 - 가능하면 발주자 소유 저장소에 프리랜서를 collaborator로 초대하는 방식을 권장한다.
 - LinKross는 MVP에서 Contents와 Pull Requests의 읽기 권한만 요청한다.
 
-### 6.3 2주 MVP 연결 방식
+### 6.3 현재 MVP 연결 방식
 
-발표용 MVP에서는 GitHub App 전체 설치 흐름 대신 공개 GitHub 저장소를 프로젝트에 등록할 수 있다.
+발주자는 GitHub App을 검수 대상 저장소에 읽기 전용으로 설치한 뒤 저장소 URL을 등록한다. 서버는 App JWT로 해당 저장소의 설치를 다시 확인하고, Installation Access Token을 요청 범위에서만 발급해 공개·비공개 저장소와 PR을 조회한다.
 
 ```text
 Repository URL
@@ -200,7 +200,7 @@ https://github.com/linkross/demo-login
 [저장소 확인 및 연결]
 ```
 
-서버는 공개 GitHub API를 사용해 저장소와 PR이 실제로 존재하는지 확인한다. 이 단계에서도 실제 Commit SHA의 소스를 내려받아 검수하며, 실행 결과를 가짜로 만들지 않는다.
+서버는 DB에 Installation ID와 GitHub Repository ID를 보존하되 Installation Access Token은 저장하지 않는다. PR 제출 시 저장된 Repository ID 하나로 토큰 범위를 좁히고 실제 head Commit SHA를 확인한다. 검수 Runner에는 GitHub 토큰을 전달하지 않는다.
 
 ## 7. 프리랜서 코드 제출
 
@@ -625,6 +625,12 @@ SowVersion
 - `finished_at`
 - `error_summary`
 
+PR 제출 시 서버는 GitHub에서 열린 PR 여부, 공식 저장소 대상 여부와 전체 head Commit SHA를 확인한다. 제출 기록과 완료 주장 조건을 저장한 뒤 마일스톤 전체 범위의 `queued` 실행을 생성한다. 동일 Commit SHA의 재요청은 기존 제출과 진행 중 실행을 재사용한다.
+
+Runner 조정기는 `FOR UPDATE SKIP LOCKED` 기반으로 대기 실행을 하나씩 선점한다. 작업별 lease는 비공개 테이블에 해시로 저장하고 heartbeat가 끊긴 만료 작업만 재선점한다. 조정기에는 저장소 좌표·PR·고정 Commit SHA·완료조건을 전달하지만 GitHub token과 Supabase key는 검수 Sandbox에 전달하지 않는다. 조건별 결과, 증거 메타데이터와 최종 실행 상태는 하나의 DB 트랜잭션으로 고정한다.
+
+LinKross 관리형 실행기는 GitHub App이 만든 선택 저장소 전용 토큰으로 최대 100MB의 고정 SHA archive를 서버에서 받고 SHA-256을 계산한다. archive만 비영속 Vercel Sandbox에 업로드하며 설치 단계 이후 egress를 차단한다. Sandbox에는 운영 환경변수, GitHub token, Supabase key와 작업 lease를 넣지 않는다. 독립 시나리오가 없는 저장소 자체 테스트는 보조 신호로만 사용하고 자동 승인 근거로 과장하지 않는다.
+
 #### `checklist_results`
 
 - `id`
@@ -699,7 +705,7 @@ Supabase
 
 - Supabase 로그인과 실제 사용자 ID
 - 승인된 SOW의 마일스톤·DoD를 실제 DB 체크리스트로 표시
-- 프로젝트당 공개 GitHub 저장소 하나 등록
+- 프로젝트당 GitHub App이 설치된 공개·비공개 저장소 하나 등록
 - PR URL 제출과 실제 head Commit SHA 확인
 - 프리랜서의 구현 완료 체크리스트 선택
 - 항목별 검수 요청
@@ -712,9 +718,8 @@ Supabase
 
 ### 발표 이후 정식화한다
 
-- GitHub App 설치와 private repository 연결
 - 저장소 및 PR 선택 UI
-- GitHub webhook을 통한 새 Commit 자동 감지
+- 수신·중복 방지된 GitHub webhook을 통한 새 Commit 자동 감지
 - Workflow 기반 단계별 재시도, 취소와 장애 복구
 - 다중 저장소와 다양한 프레임워크 지원
 - AI 기반 테스트 초안 생성

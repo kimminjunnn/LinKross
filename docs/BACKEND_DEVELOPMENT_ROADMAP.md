@@ -125,14 +125,22 @@
 
 ### 구현 순서
 
-1. 프로젝트당 공개 GitHub 저장소 하나 연결
-2. PR URL 검증 및 GitHub에서 40자리 head Commit SHA 확인
+1. 프로젝트당 GitHub App이 설치된 공개·비공개 저장소 하나 연결
+2. 저장소로 제한한 Installation Access Token으로 PR URL과 40자리 head Commit SHA 확인
 3. `milestone_submissions`와 완료 주장 조건 저장
 4. 멱등 키를 가진 `verification_runs` 생성
 5. 격리 Runner에서 설치·빌드·실행·Playwright 수행
 6. 조건별 결과와 로그·스크린샷·Preview 저장
 7. 발주자의 수정 요청 또는 최종 승인 저장
 8. 새 SHA 제출 시 이전 결과를 유지한 채 재검수
+
+현재 구현 상태:
+
+- 선정된 프리랜서가 공식 저장소의 열린 PR을 제출하면 GitHub App으로 PR 대상 저장소와 40자리 head Commit SHA를 다시 확인한다.
+- 제출, 완료 주장 조건, `queued` 상태의 마일스톤 전체 검수 실행을 한 흐름으로 연결한다.
+- 같은 Commit SHA를 다시 제출하면 기존 제출과 진행 중인 검수 실행을 재사용해 중복 실행을 막는다.
+- 신뢰된 Runner 조정기가 사용할 claim·heartbeat·상태 전이·완료 API와 DB 트랜잭션 경계를 구현했으며 원격 SQL 적용은 남아 있다.
+- GitHub 고정 SHA archive를 토큰 없이 Vercel Sandbox로 전달하고, 1 vCPU·10분·lifecycle script 실행 전 egress 차단 조건에서 npm install/build를 수행하는 관리형 실행기를 구현했다. 독립 Playwright 시나리오와 합성 DB는 아직 필요하다.
 
 ### 완료 기준
 

@@ -21,6 +21,7 @@ import type {
 import { mapBackendError } from "@/lib/backend/errors";
 import { isUuid } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createMvpVerificationDefinition } from "@/lib/verification-test-spec";
 
 function parseDateText(value: string): string | null {
   const normalized = value.trim().replace(/\./g, "-").replace(/\s+/g, "");
@@ -193,15 +194,17 @@ async function insertSowVersion(
 
     const dods = milestone.dods.map((dod) => dod.trim()).filter(Boolean);
     for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
+      const verification = createMvpVerificationDefinition(dods[dodIndex]);
       const { error: criterionError } = await supabase.from("completion_criteria").insert({
         project_id: input.projectId,
         sow_version_id: sowVersion.id,
         milestone_id: milestoneRow.id,
         kind: "definition_of_done",
         description: dods[dodIndex],
-        verification_method: "manual",
+        verification_method: verification.verificationMethod,
         is_required: true,
         position: dodIndex + 1,
+        test_spec: verification.testSpec,
       });
 
       if (criterionError) {

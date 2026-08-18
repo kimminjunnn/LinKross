@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import type {
   BackendResult,
   FreelancerApplicationSummary,
@@ -160,16 +162,31 @@ export async function listFreelancerApplications(): Promise<
   };
 }
 
-export async function listFreelancerProjects(): Promise<BackendResult<FreelancerProjectSummary[]>> {
+export const listFreelancerProjects = cache(async function listFreelancerProjects(): Promise<
+  BackendResult<FreelancerProjectSummary[]>
+> {
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) {
     return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
   }
 
+  const { data: userProposals, error: proposalError } = await supabase
+    .from("proposals")
+    .select("id")
+    .eq("freelancer_id", authData.user.id);
+
+  if (proposalError) {
+    return { ok: false, error: mapBackendError(proposalError, "지원 프로젝트를 확인하지 못했습니다.") };
+  }
+
+  const proposalIds = (userProposals ?? []).map((proposal) => proposal.id);
+  if (proposalIds.length === 0) return { ok: true, data: [] };
+
   const { data: selections, error: selectionError } = await supabase
     .from("selections")
     .select("project_id, proposal_id, selected_at")
+    .in("proposal_id", proposalIds)
     .order("selected_at", { ascending: false });
 
   if (selectionError) {
@@ -195,7 +212,7 @@ export async function listFreelancerProjects(): Promise<BackendResult<Freelancer
     .filter((id): id is string => Boolean(id));
   const companyIds = Array.from(new Set(projectRows.map((project) => project.company_id)));
 
-  const [requirementsResult, companiesResult, milestonesResult] = await Promise.all([
+  const [requirementsResult, companiesResult, approvedSowsResult, milestonesResult] = await Promise.all([
     requirementIds.length
       ? supabase
           .from("project_requirement_versions")
@@ -205,10 +222,22 @@ export async function listFreelancerProjects(): Promise<BackendResult<Freelancer
     companyIds.length
       ? supabase.from("company_profiles").select("id, organization_name").in("id", companyIds)
       : Promise.resolve({ data: [], error: null }),
-    supabase.from("milestones").select("project_id, status").in("project_id", projectIds),
+    supabase
+      .from("sow_versions")
+      .select("id, project_id")
+      .in("project_id", projectIds)
+      .eq("status", "approved"),
+    supabase
+      .from("milestones")
+      .select("project_id, sow_version_id, status")
+      .in("project_id", projectIds),
   ]);
 
-  const aggregateError = requirementsResult.error ?? companiesResult.error ?? milestonesResult.error;
+  const aggregateError =
+    requirementsResult.error ??
+    companiesResult.error ??
+    approvedSowsResult.error ??
+    milestonesResult.error;
   if (aggregateError) {
     return { ok: false, error: mapBackendError(aggregateError, "프로젝트 진행 정보를 불러오지 못했습니다.") };
   }
@@ -219,8 +248,16 @@ export async function listFreelancerProjects(): Promise<BackendResult<Freelancer
   const companyById = new Map(
     ((companiesResult.data ?? []) as CompanyProfileRow[]).map((company) => [company.id, company]),
   );
+  const approvedSowIds = new Set(
+    (approvedSowsResult.data ?? []).map((sow) => sow.id),
+  );
   const milestoneCounts = new Map<string, { total: number; approved: number }>();
-  for (const row of (milestonesResult.data ?? []) as { project_id: string; status: string }[]) {
+  for (const row of (milestonesResult.data ?? []) as Array<{
+    project_id: string;
+    sow_version_id: string;
+    status: string;
+  }>) {
+    if (!approvedSowIds.has(row.sow_version_id)) continue;
     const counts = milestoneCounts.get(row.project_id) ?? { total: 0, approved: 0 };
     counts.total += 1;
     if (row.status === "approved") counts.approved += 1;
@@ -255,4 +292,4 @@ export async function listFreelancerProjects(): Promise<BackendResult<Freelancer
       };
     }),
   };
-}
+});

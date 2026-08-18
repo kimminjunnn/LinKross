@@ -6,10 +6,12 @@ import { CompanyVerificationWorkspace } from "./verification-workspace";
 
 export default async function VerificationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ github?: string }>;
 }) {
-  const { projectId } = await params;
+  const [{ projectId }, { github }] = await Promise.all([params, searchParams]);
   const result = await getVerificationWorkspace(projectId);
 
   if (!result.ok) {
@@ -34,7 +36,10 @@ export default async function VerificationPage({
 
   return (
     <div className="space-y-5 pb-12">
-      <CompanyVerificationWorkspace initialWorkspace={result.data} />
+      <CompanyVerificationWorkspace
+        initialWorkspace={result.data}
+        initialMessage={getGitHubSetupMessage(github)}
+      />
       <section className="rounded-card border border-accent-200 bg-accent-50 p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-control bg-accent-100 text-accent-800">
@@ -53,4 +58,17 @@ export default async function VerificationPage({
       </section>
     </div>
   );
+}
+
+function getGitHubSetupMessage(status: string | undefined): string | null {
+  if (status === "installed") {
+    return "GitHub App 설치가 끝났습니다. 아래에 설치 대상으로 선택한 저장소 URL을 입력해 연결을 완료해주세요.";
+  }
+  if (status === "install-error") {
+    return "GitHub App 설치를 시작하지 못했습니다. App ID와 Private Key 서버 설정을 확인해주세요.";
+  }
+  if (status === "setup-error") {
+    return "GitHub App 설치 완료 정보를 확인하지 못했습니다. 다시 설치해주세요.";
+  }
+  return null;
 }

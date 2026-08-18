@@ -1,9 +1,5 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 // Simple in-memory cache to prevent redundant API calls
 const translationCache = new Map<string, string>();
 
@@ -38,6 +34,9 @@ export async function translateToEnglish(text: string | null | undefined): Promi
   }
 
   try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini", // Cost-effective and fast model
       messages: [
