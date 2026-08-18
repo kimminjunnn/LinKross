@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Sparkles, Trash2, UploadCloud, X, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Sparkles, Trash2, UploadCloud, X, ToggleLeft, ToggleRight, Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { MilestoneInput } from "@/lib/rag-translator";
 import { parseDocumentAction } from "@/app/actions/parse-document";
 
@@ -15,6 +15,8 @@ type SowKoreanFormProps = {
   isGenerating: boolean;
   onSaveDraft: () => void;
   isAnalyzing?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 };
 
 export function SowKoreanForm({
@@ -27,6 +29,8 @@ export function SowKoreanForm({
   isGenerating,
   onSaveDraft,
   isAnalyzing = false,
+  isExpanded = false,
+  onToggleExpand,
 }: SowKoreanFormProps) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -98,11 +102,26 @@ export function SowKoreanForm({
 
   return (
     <section className="flex flex-col rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-      <div className="border-b border-app-border pb-4">
-        <h2 className="text-lg font-black text-app-foreground">한국어 업무 명세서 작성 Form</h2>
-        <p className="mt-1 text-xs text-app-muted">
-          작업자가 프롬프트 작성하듯 자유롭게 입력하고, 마일스톤 및 DoD(완료 정의)를 설정합니다.
-        </p>
+      <div className="flex items-start justify-between gap-4 border-b border-app-border pb-4">
+        <div>
+          <h2 className="text-lg font-black text-app-foreground">한국어 업무 명세서 작성 Form</h2>
+          <p className="mt-1 text-xs text-app-muted">
+            작업자가 프롬프트 작성하듯 자유롭게 입력하고, 마일스톤 및 DoD(완료 정의)를 설정합니다.
+          </p>
+        </div>
+        {onToggleExpand && (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors"
+          >
+            {isExpanded ? (
+              <><Minimize2 className="size-3.5" /> 반으로 접기</>
+            ) : (
+              <><Maximize2 className="size-3.5" /> 화면 꽉 채우기</>
+            )}
+          </button>
+        )}
       </div>
 
 
@@ -249,8 +268,8 @@ export function SowKoreanForm({
               className="relative rounded-control border border-app-border bg-app-surface-subtle p-4"
             >
               <div className="flex items-center justify-between gap-2 border-b border-app-border/60 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="rounded bg-app-foreground px-2 py-0.5 text-xs font-bold text-white">
+                <div className="flex items-center gap-2 flex-1 mr-4">
+                  <span className="shrink-0 rounded bg-app-foreground px-2 py-0.5 text-xs font-bold text-white">
                     {m.code}
                   </span>
                   <input
@@ -263,7 +282,7 @@ export function SowKoreanForm({
                         prev.map((item) => (item.id === m.id ? { ...item, title: val } : item))
                       );
                     }}
-                    className="bg-transparent text-sm font-bold text-app-foreground outline-none focus:underline"
+                    className="w-full bg-transparent text-sm font-bold text-app-foreground outline-none focus:underline"
                   />
                 </div>
                 <div className="flex items-start gap-3">
@@ -278,7 +297,7 @@ export function SowKoreanForm({
                           prev.map((item) => (item.id === m.id ? { ...item, amount: val } : item))
                         );
                       }}
-                      className="w-28 text-right text-xs font-bold text-app-foreground outline-none placeholder:text-app-muted/50 focus:underline"
+                      className="w-36 sm:w-48 text-right text-xs font-bold text-app-foreground outline-none placeholder:text-app-muted/50 focus:underline"
                     />
                     <input
                       type="text"
@@ -290,7 +309,7 @@ export function SowKoreanForm({
                           prev.map((item) => (item.id === m.id ? { ...item, period: val } : item))
                         );
                       }}
-                      className="w-28 text-right text-[0.7rem] font-semibold text-app-muted outline-none placeholder:text-app-muted/50 focus:underline"
+                      className="w-36 sm:w-48 text-right text-[0.7rem] font-semibold text-app-muted outline-none placeholder:text-app-muted/50 focus:underline"
                     />
                   </div>
                   {milestones.length > 1 && (
@@ -361,7 +380,11 @@ export function SowKoreanForm({
           disabled={isGenerating}
           className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          <Sparkles className={`size-4 text-brand-400 ${isGenerating ? "animate-spin" : ""}`} />
+          {isGenerating ? (
+            <Loader2 className="size-4 animate-spin text-brand-400" />
+          ) : (
+            <Sparkles className="size-4 text-brand-400" />
+          )}
           {isGenerating ? "RAG 영문 번역 변환 중..." : "AI 영문 명세 생성 (변환)"}
         </button>
         <button

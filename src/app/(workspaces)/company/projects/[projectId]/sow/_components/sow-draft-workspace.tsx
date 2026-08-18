@@ -3,7 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CircleAlert, MessageSquareText } from "lucide-react";
+import { CheckCircle2, CircleAlert, Loader2, MessageSquareText } from "lucide-react";
 
 const ApprovalPage = dynamic(() => import("../../approval/page"));
 
@@ -114,10 +114,10 @@ function SowDraftWorkspace({
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
-  const [dateError, setDateError] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedPane, setExpandedPane] = useState<"none" | "korean" | "english">("none");
 
   const handleAnalyzeAI = async (fileContent?: string) => {
     let textToAnalyze = workDetail;
@@ -137,7 +137,12 @@ function SowDraftWorkspace({
     try {
       const analysis = await analyzeWorkDetailWithLLM(combinedDetail, context.startDate, context.endDate);
 
-      setMilestones(analysis.milestones);
+      const cleanedMilestones = analysis.milestones.map((m) => ({
+        ...m,
+        dods: m.dods.map((dod) => dod.replace(/^\[.*?\]\s*/, "")),
+      }));
+
+      setMilestones(cleanedMilestones);
       setStatusMessage("✅ AI 마일스톤 분석 및 자동 할당이 완료되었습니다.");
     } catch (err: unknown) {
       console.error(err);
@@ -266,7 +271,22 @@ function SowDraftWorkspace({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative">
+      {/* 로딩 오버레이 (화면 정중앙) */}
+      {(isGenerating || isAnalyzing) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl">
+            <Loader2 className="size-14 animate-spin text-brand-500" />
+            <p className="text-xl font-black text-slate-900">
+              {isGenerating ? "AI 영문 명세서 생성 중..." : "AI 마일스톤 분석 중..."}
+            </p>
+            <p className="text-sm font-medium text-slate-500">
+              {isGenerating ? "완벽한 번역을 위해 문맥을 분석하고 있습니다." : "최적의 일정과 완료 조건을 구성하고 있습니다."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {isRevisionMode ? (
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <p className="text-xs font-bold tracking-[0.1em] text-[#F95803] uppercase">
@@ -338,32 +358,40 @@ function SowDraftWorkspace({
         </section>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-12 items-start">
+      <div className={`flex flex-col xl:flex-row items-start ${englishSow && expandedPane === "none" ? "gap-6" : ""}`}>
         {/* Left Column: 한국어 업무 명세서 작성 Form */}
-        <div className="xl:col-span-6">
-          <SowKoreanForm
-            workDetail={workDetail}
-            setWorkDetail={setWorkDetail}
-            milestones={milestones}
-            setMilestones={setMilestones}
-            onAnalyzeAI={handleAnalyzeAI}
-            onGenerateEnglishSOW={handleGenerateEnglishSOW}
-            isGenerating={isGenerating}
-            onSaveDraft={handleSaveDraft}
-            isAnalyzing={isAnalyzing || isSavingDraft}
-          />
-        </div>
+        {(expandedPane === "none" || expandedPane === "korean") && (
+          <div className={expandedPane === "korean" || !englishSow ? "w-full shrink-0" : "w-full xl:w-[calc(50%-12px)] shrink-0"}>
+            <SowKoreanForm
+              workDetail={workDetail}
+              setWorkDetail={setWorkDetail}
+              milestones={milestones}
+              setMilestones={setMilestones}
+              onAnalyzeAI={handleAnalyzeAI}
+              onGenerateEnglishSOW={handleGenerateEnglishSOW}
+              isGenerating={isGenerating}
+              onSaveDraft={handleSaveDraft}
+              isAnalyzing={isAnalyzing || isSavingDraft}
+              isExpanded={expandedPane === "korean"}
+              onToggleExpand={() => setExpandedPane(expandedPane === "korean" ? "none" : "korean")}
+            />
+          </div>
+        )}
 
         {/* Right Column: 영어 업무 명세서 (AI 생성) */}
-        <div className="xl:col-span-6">
-          <SowEnglishPreview
-            projectId={projectId}
-            sow={englishSow}
-            onRequestApproval={handleRequestApproval}
-            isSubmitting={isSubmitting}
-            approvalRequestLabel={isRevisionMode && englishSow ? `v${englishSow.version} 수정본 승인 요청` : undefined}
-          />
-        </div>
+        {englishSow && (expandedPane === "none" || expandedPane === "english") && (
+          <div className={expandedPane === "english" ? "w-full shrink-0" : "w-full xl:w-[calc(50%-12px)] shrink-0"}>
+            <SowEnglishPreview
+              projectId={projectId}
+              sow={englishSow}
+              onRequestApproval={handleRequestApproval}
+              isSubmitting={isSubmitting}
+              approvalRequestLabel={isRevisionMode && englishSow ? `v${englishSow.version} 수정본 승인 요청` : undefined}
+              isExpanded={expandedPane === "english"}
+              onToggleExpand={() => setExpandedPane(expandedPane === "english" ? "none" : "english")}
+            />
+          </div>
+        )}
       </div>
       {isSubmitting ? (
         <p className="text-xs font-bold text-app-muted">검토 요청을 저장하는 중입니다...</p>
