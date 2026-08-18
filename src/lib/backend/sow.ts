@@ -5,6 +5,7 @@ import type {
   ApprovedSowMilestones,
   BackendResult,
   CriterionKind,
+  MarkSowRevisionRequestsReadInput,
   MilestoneChecklistItem,
   ProjectMilestoneSummary,
   SaveSowVersionInput,
@@ -13,8 +14,10 @@ import type {
   SowApprovalDocument,
   SowApprovalState,
   SowStatus,
+  SowWorkspaceDraft,
   SowWorkspaceContext,
   RequestSowRevisionInput,
+  SowRevisionRequestRecord,
   UserRole,
   VerificationMethod,
 } from "@/lib/backend/contracts";
@@ -78,6 +81,30 @@ type SowApprovalRow = {
   approver_name_snapshot: string | null;
   approved_at: string;
 };
+
+type SowRevisionRequestRow = {
+  id: string;
+  project_id: string;
+  sow_version_id: string;
+  requester_role: UserRole;
+  requester_name_snapshot: string | null;
+  reason: string;
+  requested_at: string;
+};
+
+type SowRevisionRequestReadRow = {
+  sow_revision_request_id: string;
+  read_at: string;
+};
+
+function isMissingRevisionReadTable(error: { code?: string; message?: string } | null | undefined) {
+  const message = error?.message ?? "";
+  return error?.code === "42P01" || message.includes("sow_revision_request_reads");
+}
+
+function isDuplicateRevisionRead(error: { code?: string } | null | undefined) {
+  return error?.code === "23505";
+}
 
 // 같은 sow_version_id 안에서 position/code unique 제약과 부딪히지 않도록,
 // 기존 행들을 먼저 이 범위 밖(음수)으로 옮겨둔 뒤 목표 값으로 다시 배치한다.
@@ -479,6 +506,76 @@ export async function getSowWorkspaceContext(
     assigneeName = proposal?.freelancer_display_name_snapshot ?? null;
   }
 
+  const { data: latestSow } = await supabase
+    .from("sow_versions")
+    .select("id, version_number, status, content")
+    .eq("project_id", projectId)
+    .in("status", ["draft", "in_review", "revision_requested"])
+    .order("version_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let latestSowDraft: SowWorkspaceDraft | null = null;
+  let revisionRequestRows: SowRevisionRequestRow[] = [];
+
+  if (latestSow) {
+    const [
+      { data: milestoneRows },
+      { data: criterionRows },
+      { data: revisionRows },
+    ] = await Promise.all([
+      supabase
+        .from("milestones")
+        .select("id, code, title, description, start_date, end_date, amount, currency, position, status")
+        .eq("sow_version_id", latestSow.id)
+        .order("position", { ascending: true }),
+      supabase
+        .from("completion_criteria")
+        .select("id, milestone_id, kind, description, verification_method, position")
+        .eq("sow_version_id", latestSow.id)
+        .order("position", { ascending: true }),
+      supabase
+        .from("sow_revision_requests")
+        .select("id, project_id, sow_version_id, requester_role, requester_name_snapshot, reason, requested_at")
+        .eq("sow_version_id", latestSow.id)
+        .order("requested_at", { ascending: false }),
+    ]);
+
+    const content = isRecord(latestSow.content) ? latestSow.content : {};
+    const criteriaByMilestone = new Map<string, CompletionCriteriaApprovalRow[]>();
+    for (const criterion of (criterionRows ?? []) as CompletionCriteriaApprovalRow[]) {
+      const rows = criteriaByMilestone.get(criterion.milestone_id) ?? [];
+      rows.push(criterion);
+      criteriaByMilestone.set(criterion.milestone_id, rows);
+    }
+
+    latestSowDraft = {
+      sowVersionId: latestSow.id,
+      versionNumber: Number(latestSow.version_number),
+      status: latestSow.status as SowStatus,
+      workDetail: typeof content.workDetailKo === "string" ? content.workDetailKo : "",
+      startDate: typeof content.startDateInput === "string" ? content.startDateInput : version?.start_date ?? "",
+      endDate: typeof content.endDateInput === "string" ? content.endDateInput : version?.end_date ?? "",
+      budget: typeof content.budget === "string" ? content.budget : "",
+      englishSow: content.englishSow ?? null,
+      milestones: ((milestoneRows ?? []) as MilestoneApprovalRow[]).map((milestone) => {
+        const milestoneCriteria = criteriaByMilestone.get(milestone.id) ?? [];
+        const dods = milestoneCriteria
+          .filter((criterion) => criterion.kind === "definition_of_done")
+          .map((criterion) => criterion.description);
+
+        return {
+          code: milestone.code,
+          title: milestone.title,
+          period: formatPeriodForDraft(milestone.start_date, milestone.end_date),
+          amount: formatAmountForDraft(milestone.amount),
+          dods: dods.length ? dods : [""],
+        };
+      }),
+    };
+    revisionRequestRows = (revisionRows ?? []) as SowRevisionRequestRow[];
+  }
+
   return {
     ok: true,
     data: {
@@ -491,6 +588,19 @@ export async function getSowWorkspaceContext(
       currency: version?.currency ?? "USD",
       startDate: version?.start_date ?? "",
       endDate: version?.end_date ?? "",
+      latestSowDraft,
+      revisionRequests: revisionRequestRows.map(
+        (request): SowRevisionRequestRecord => ({
+          id: request.id,
+          projectId: request.project_id,
+          sowVersionId: request.sow_version_id,
+          requesterRole: request.requester_role,
+          requesterName: request.requester_name_snapshot,
+          reason: request.reason,
+          requestedAt: request.requested_at,
+          readAt: null,
+        }),
+      ),
     },
   };
 }
@@ -563,6 +673,7 @@ export async function getSowApprovalState(
     { data: milestones, error: milestonesError },
     { data: criteria, error: criteriaError },
     { data: approvals, error: approvalsError },
+    { data: revisionRequests, error: revisionRequestsError },
   ] = await Promise.all([
     supabase
       .from("milestones")
@@ -579,16 +690,43 @@ export async function getSowApprovalState(
       .select("approver_role, approver_name_snapshot, approved_at")
       .eq("sow_version_id", sowRow.id)
       .order("approved_at", { ascending: true }),
+    supabase
+      .from("sow_revision_requests")
+      .select("id, project_id, sow_version_id, requester_role, requester_name_snapshot, reason, requested_at")
+      .eq("sow_version_id", sowRow.id)
+      .order("requested_at", { ascending: false }),
   ]);
 
-  if (milestonesError || criteriaError || approvalsError) {
+  if (milestonesError || criteriaError || approvalsError || revisionRequestsError) {
     return {
       ok: false,
       error: mapBackendError(
-        milestonesError ?? criteriaError ?? approvalsError,
+        milestonesError ?? criteriaError ?? approvalsError ?? revisionRequestsError,
         "승인 상세 정보를 불러오지 못했습니다.",
       ),
     };
+  }
+
+  const revisionRequestRows = (revisionRequests ?? []) as SowRevisionRequestRow[];
+  let revisionRequestReads: SowRevisionRequestReadRow[] = [];
+
+  if (revisionRequestRows.length) {
+    const requestIds = revisionRequestRows.map((request) => request.id);
+    const { data: readRows, error: readRowsError } = await supabase
+      .from("sow_revision_request_reads")
+      .select("sow_revision_request_id, read_at")
+      .eq("project_id", sowRow.project_id)
+      .eq("read_by", authData.user.id)
+      .in("sow_revision_request_id", requestIds);
+
+    if (readRowsError && !isMissingRevisionReadTable(readRowsError)) {
+      return {
+        ok: false,
+        error: mapBackendError(readRowsError, "?섏젙 ?붿껌 ?뺤씤 ?대젰???щ윭?ㅼ? 紐삵뻽?듬땲??"),
+      };
+    }
+
+    revisionRequestReads = (readRows ?? []) as SowRevisionRequestReadRow[];
   }
 
   return {
@@ -598,8 +736,75 @@ export async function getSowApprovalState(
       milestones: (milestones ?? []) as MilestoneApprovalRow[],
       criteria: (criteria ?? []) as CompletionCriteriaApprovalRow[],
       approvals: (approvals ?? []) as SowApprovalRow[],
+      revisionRequests: revisionRequestRows,
+      revisionRequestReads,
     }),
   };
+}
+
+export async function markSowRevisionRequestsRead(
+  input: MarkSowRevisionRequestsReadInput,
+): Promise<BackendResult<SowApprovalState>> {
+  if (!isUuid(input.projectId) || !isUuid(input.sowVersionId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 SOW 수정 요청 대상이 아닙니다." } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", input.projectId)
+    .eq("company_id", authData.user.id)
+    .maybeSingle();
+
+  if (projectError) {
+    return { ok: false, error: mapBackendError(projectError, "프로젝트 권한을 확인하지 못했습니다.") };
+  }
+  if (!project) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "발주자만 수정 요청을 확인 처리할 수 있습니다." } };
+  }
+
+  const { data: requests, error: requestsError } = await supabase
+    .from("sow_revision_requests")
+    .select("id")
+    .eq("project_id", input.projectId)
+    .eq("sow_version_id", input.sowVersionId);
+
+  if (requestsError) {
+    return { ok: false, error: mapBackendError(requestsError, "수정 요청 목록을 확인하지 못했습니다.") };
+  }
+
+  if (requests?.length) {
+    const readRows = requests.map((request) => ({
+      project_id: input.projectId,
+      sow_revision_request_id: request.id,
+      read_by: authData.user.id,
+    }));
+
+    const { error: readError } = await supabase
+      .from("sow_revision_request_reads")
+      .upsert(readRows, {
+        onConflict: "sow_revision_request_id,read_by",
+        ignoreDuplicates: true,
+      });
+
+    if (readError && !isDuplicateRevisionRead(readError) && !isMissingRevisionReadTable(readError)) {
+      return { ok: false, error: mapBackendError(readError, "수정 요청 확인 이력을 저장하지 못했습니다.") };
+    }
+  }
+
+  const state = await getSowApprovalState(input.projectId, input.sowVersionId);
+  if (!state.ok) return state;
+  if (!state.data) {
+    return { ok: false, error: { code: "NOT_FOUND", message: "수정 요청이 연결된 SOW를 다시 불러오지 못했습니다." } };
+  }
+
+  return { ok: true, data: state.data };
 }
 
 export async function approveSowAsCompany(
@@ -807,6 +1012,33 @@ export async function requestSowRevision(
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
 
+  const { data: selection, error: selectionError } = await supabase
+    .from("selections")
+    .select("proposal_id")
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+
+  if (selectionError) {
+    return { ok: false, error: mapBackendError(selectionError, "프로젝트 참여 권한을 확인하지 못했습니다.") };
+  }
+  if (!selection) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 수정 요청을 보낼 수 있습니다." } };
+  }
+
+  const { data: proposal, error: proposalError } = await supabase
+    .from("proposals")
+    .select("id")
+    .eq("id", selection.proposal_id)
+    .eq("freelancer_id", authData.user.id)
+    .maybeSingle();
+
+  if (proposalError) {
+    return { ok: false, error: mapBackendError(proposalError, "선정 제안서를 확인하지 못했습니다.") };
+  }
+  if (!proposal) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 수정 요청을 보낼 수 있습니다." } };
+  }
+
   const { data: sow, error: sowError } = await supabase
     .from("sow_versions")
     .select("id, status, content_hash")
@@ -838,15 +1070,22 @@ function toSowApprovalState({
   milestones,
   criteria,
   approvals,
+  revisionRequests,
+  revisionRequestReads,
 }: {
   sowVersion: SowVersionApprovalRow;
   milestones: MilestoneApprovalRow[];
   criteria: CompletionCriteriaApprovalRow[];
   approvals: SowApprovalRow[];
+  revisionRequests: SowRevisionRequestRow[];
+  revisionRequestReads: SowRevisionRequestReadRow[];
 }): SowApprovalState {
   const document = toSowApprovalDocument(sowVersion);
   const criteriaByMilestone = new Map<string, CompletionCriteriaApprovalRow[]>();
   const approvalByRole = new Map<UserRole, SowApprovalRow>();
+  const revisionReadByRequestId = new Map(
+    revisionRequestReads.map((read) => [read.sow_revision_request_id, read.read_at]),
+  );
 
   for (const criterion of criteria) {
     const rows = criteriaByMilestone.get(criterion.milestone_id) ?? [];
@@ -892,6 +1131,18 @@ function toSowApprovalState({
       company: toSowApprovalRecord(approvalByRole.get("company") ?? null),
       freelancer: toSowApprovalRecord(approvalByRole.get("freelancer") ?? null),
     },
+    revisionRequests: revisionRequests.map(
+      (request): SowRevisionRequestRecord => ({
+        id: request.id,
+        projectId: request.project_id,
+        sowVersionId: request.sow_version_id,
+        requesterRole: request.requester_role,
+        requesterName: request.requester_name_snapshot,
+        reason: request.reason,
+        requestedAt: request.requested_at,
+        readAt: revisionReadByRequestId.get(request.id) ?? null,
+      }),
+    ),
   };
 }
 
@@ -997,6 +1248,17 @@ function formatAmount(amount: number | string, currency: string) {
   const numeric = Number(amount);
   const formatted = Number.isFinite(numeric) ? numeric.toLocaleString() : String(amount);
   return `${formatted} ${currency}`;
+}
+
+function formatAmountForDraft(amount: number | string) {
+  const numeric = Number(amount);
+  return Number.isFinite(numeric) ? numeric.toLocaleString() : String(amount);
+}
+
+function formatPeriodForDraft(startDate: string, endDate: string) {
+  const start = startDate ? startDate.replaceAll("-", ".") : "";
+  const end = endDate ? endDate.replaceAll("-", ".") : "";
+  return [start, end].filter(Boolean).join(" - ");
 }
 
 function toStringArray(value: unknown) {

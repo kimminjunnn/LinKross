@@ -23,6 +23,7 @@ type SowEnglishPreviewProps = {
   sow: EnglishSOWResult | null;
   onRequestApproval: (snapshot: ApprovalSowSnapshot) => void;
   isSubmitting?: boolean;
+  approvalRequestLabel?: string;
 };
 
 export function SowEnglishPreview({
@@ -30,6 +31,7 @@ export function SowEnglishPreview({
   sow,
   onRequestApproval,
   isSubmitting = false,
+  approvalRequestLabel,
 }: SowEnglishPreviewProps) {
   const [showOriginalContrast, setShowOriginalContrast] = useState(true);
   const [isPmVerified, setIsPmVerified] = useState(false);
@@ -338,7 +340,7 @@ export function SowEnglishPreview({
             ) : (
               <>
                 <Send className="size-4" />
-                v{sow.version} 해외 프리랜서 승인 요청
+                {approvalRequestLabel ?? `v${sow.version} 해외 프리랜서 승인 요청`}
               </>
             )}
           </button>

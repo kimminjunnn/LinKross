@@ -4,6 +4,7 @@ import OpenAI from "openai";
 import type {
   ApproveSowInput,
   BackendResult,
+  MarkSowRevisionRequestsReadInput,
   SaveSowVersionInput,
   SaveSowVersionOutput,
   SowApprovalState,
@@ -13,6 +14,7 @@ import {
   approveSowAsCompany,
   approveSowAsFreelancer,
   getSowApprovalState,
+  markSowRevisionRequestsRead,
   saveSowDraft,
   requestSowRevision,
   submitSowForReview,
@@ -58,6 +60,12 @@ export async function requestSowRevisionAction(
   input: RequestSowRevisionInput,
 ): Promise<BackendResult<SowApprovalState>> {
   return requestSowRevision(input);
+}
+
+export async function markSowRevisionRequestsReadAction(
+  input: MarkSowRevisionRequestsReadInput,
+): Promise<BackendResult<SowApprovalState>> {
+  return markSowRevisionRequestsRead(input);
 }
 
 export async function generateSowSummaryAction(
@@ -115,12 +123,11 @@ export async function generateSowSummaryAction(
     return { ok: true, data: parsed };
   } catch (error: unknown) {
     console.error("AI SOW Summary Generation Error:", error);
+    const message =
+      error instanceof Error ? error.message : "AI 요약 생성 중 오류가 발생했습니다.";
     return {
       ok: false,
-      error: {
-        code: "DATABASE_ERROR",
-        message: error instanceof Error ? error.message : "AI 요약 생성 중 오류가 발생했습니다.",
-      },
+      error: { code: "DATABASE_ERROR", message }
     };
   }
 }
