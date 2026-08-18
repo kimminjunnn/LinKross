@@ -52,8 +52,8 @@ export function OpportunitiesList({
     return (
       <div className="mt-8 rounded-card border border-slate-200 bg-white py-16 text-center shadow-sm">
         <HelpCircle className="mx-auto size-10 text-slate-300" />
-        <h2 className="mt-4 text-lg font-bold text-slate-900">현재 모집 중인 프로젝트가 없습니다</h2>
-        <p className="mt-2 text-sm text-slate-500">새 프로젝트가 등록되면 이곳에 표시됩니다.</p>
+        <h2 className="mt-4 text-lg font-bold text-slate-900">No projects currently recruiting</h2>
+        <p className="mt-2 text-sm text-slate-500">New projects will appear here once registered.</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export function OpportunitiesList({
           <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
-            placeholder="프로젝트명, 기업명 또는 기술 검색"
+            placeholder="Search project name, company, or technology"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             className="w-full rounded-control border border-slate-200 bg-slate-50 py-2.5 pr-4 pl-10 text-sm text-slate-900 placeholder-slate-405 transition-all focus:border-brand-500 focus:bg-white focus:outline-none"
@@ -83,7 +83,7 @@ export function OpportunitiesList({
                   : "bg-slate-100 text-slate-650 hover:bg-slate-200"
               }`}
             >
-              전체 기술
+              All Technologies
             </button>
             {allTechnologies.map((technology) => (
               <button
@@ -149,7 +149,7 @@ export function OpportunitiesList({
 
                     <div className="flex shrink-0 flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
                       <div className="min-w-[220px] rounded-xl border border-slate-105 bg-slate-50 p-4 text-left shadow-sm lg:text-right">
-                        <p className="text-xs font-bold tracking-wider text-slate-400 uppercase">예산</p>
+                        <p className="text-xs font-bold tracking-wider text-slate-400 uppercase">Budget</p>
                         <p className="mt-1.5 text-lg font-black text-slate-900">
                           {formatBudget(
                             opportunity.budgetAmount,
@@ -164,7 +164,7 @@ export function OpportunitiesList({
                         href={`/opportunities/${opportunity.id}`}
                         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-gradient-to-r from-brand-500 to-orange-600 px-6 text-sm font-bold text-white shadow-md transition-all duration-200 hover:translate-x-1 hover:from-brand-600 hover:to-orange-700"
                       >
-                        상세 보기
+                        View Details
                         <ArrowRight className="size-4" />
                       </Link>
                     </div>
@@ -173,15 +173,15 @@ export function OpportunitiesList({
                   <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-100 pt-5 text-xs font-bold text-slate-450">
                     <div className="flex items-center gap-1.5">
                       <WalletCards className="size-4 text-slate-400" />
-                      <span>{opportunity.budgetType === "range" ? "예산 범위" : "고정 예산"}</span>
+                      <span>{opportunity.budgetType === "range" ? "Budget Range" : "Fixed Budget"}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock3 className="size-4 text-slate-400" />
-                      <span>{formatProjectPeriod(opportunity.startDate, opportunity.endDate)}</span>
+                      <span>{formatProjectPeriod(opportunity.startDate, opportunity.endDate, "en-US")}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <CalendarDays className="size-4 text-slate-400" />
-                      <span>지원 마감 {formatProjectDate(opportunity.recruitmentEndAt)}</span>
+                      <span>Apply by {formatProjectDate(opportunity.recruitmentEndAt, "en-US")}</span>
                     </div>
                   </div>
                 </div>
@@ -191,8 +191,8 @@ export function OpportunitiesList({
         ) : (
           <div className="rounded-card border border-slate-200 bg-white py-16 text-center shadow-sm">
             <HelpCircle className="mx-auto size-10 text-slate-300" />
-            <h2 className="mt-4 text-lg font-bold text-slate-900">검색 결과가 없습니다</h2>
-            <p className="mt-2 text-sm text-slate-500">검색어나 기술 필터를 변경해보세요.</p>
+            <h2 className="mt-4 text-lg font-bold text-slate-900">No search results found</h2>
+            <p className="mt-2 text-sm text-slate-500">Try changing the search query or technology filter.</p>
           </div>
         )}
       </div>

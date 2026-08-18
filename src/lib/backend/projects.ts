@@ -10,6 +10,7 @@ import type {
 import { mapBackendError } from "@/lib/backend/errors";
 import { isUuid, validateCreateProject } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { translateToEnglish } from "@/lib/backend/translation";
 
 interface OpportunityRow {
   id: string;
@@ -144,7 +145,25 @@ export async function listPublicOpportunities(): Promise<BackendResult<Opportuni
     return { ok: false, error: mapBackendError(error, "공개 프로젝트를 불러오지 못했습니다.") };
   }
 
-  return { ok: true, data: ((data ?? []) as OpportunityRow[]).map(toOpportunitySummary) };
+  const summaries = ((data ?? []) as OpportunityRow[]).map(toOpportunitySummary);
+
+  const translatedSummaries = await Promise.all(
+    summaries.map(async (opportunity) => {
+      const [translatedTitle, translatedGoal, translatedOrgName] = await Promise.all([
+        translateToEnglish(opportunity.title),
+        translateToEnglish(opportunity.goal),
+        translateToEnglish(opportunity.organizationName),
+      ]);
+      return {
+        ...opportunity,
+        title: translatedTitle,
+        goal: translatedGoal,
+        organizationName: translatedOrgName,
+      };
+    })
+  );
+
+  return { ok: true, data: translatedSummaries };
 }
 
 export async function getPublicOpportunity(
@@ -191,14 +210,37 @@ export async function getPublicOpportunity(
   }));
 
   const row = data as OpportunityRow;
+  const summary = toOpportunitySummary(row);
+
+  const [
+    translatedTitle,
+    translatedGoal,
+    translatedOrgName,
+    translatedRequirements,
+    translatedDeliverables,
+    translatedOutOfScope,
+    translatedApplicantGuidance,
+  ] = await Promise.all([
+    translateToEnglish(summary.title),
+    translateToEnglish(summary.goal),
+    translateToEnglish(summary.organizationName),
+    translateToEnglish(row.requirements),
+    translateToEnglish(row.deliverables),
+    translateToEnglish(row.out_of_scope),
+    translateToEnglish(row.applicant_guidance),
+  ]);
+
   return {
     ok: true,
     data: {
-      ...toOpportunitySummary(row),
-      requirements: row.requirements,
-      deliverables: row.deliverables,
-      outOfScope: row.out_of_scope,
-      applicantGuidance: row.applicant_guidance,
+      ...summary,
+      title: translatedTitle,
+      goal: translatedGoal,
+      organizationName: translatedOrgName,
+      requirements: translatedRequirements,
+      deliverables: translatedDeliverables || null,
+      outOfScope: translatedOutOfScope || null,
+      applicantGuidance: translatedApplicantGuidance || null,
       recruitmentStartAt: row.recruitment_start_at,
       currentRequirementVersionId: row.current_requirement_version_id,
       createdAt: row.created_at,
