@@ -3,7 +3,7 @@ import { readBoundedJson, runnerErrorResponse, RunnerHttpError, runnerJson } fro
 import { executeNextVerificationInVercelSandbox } from "@/lib/verification-runner/vercel-sandbox";
 
 export const runtime = "nodejs";
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   if (!isAuthorizedRunner(request)) {

@@ -125,6 +125,8 @@ Content-Type: application/json
 
 이 엔드포인트는 한 작업만 선점해 다음 순서로 실행한다.
 
+현재 Vercel Hobby 배포의 함수 실행 한도에 맞춰 요청 최대 실행시간은 300초다. 5분을 넘는 검수는 이 동기 엔드포인트에서 처리하지 않고 외부 비동기 조정기로 분리해야 한다.
+
 1. GitHub App Installation Token을 Next.js 서버 메모리에서만 발급한다.
 2. 선택 저장소의 고정 Commit SHA archive를 최대 100MB로 내려받고 SHA-256을 계산한다.
 3. archive와 token 없는 manifest를 1 vCPU, 12분 제한의 비영속 Vercel Sandbox에 업로드한다.
