@@ -245,6 +245,23 @@ export interface RequestSowRevisionInput extends ApproveSowInput {
   reason: string;
 }
 
+export type WorkspaceNotificationKind =
+  | "proposal_selected"
+  | "sow_approval_requested"
+  | "sow_revision_requested"
+  | "sow_approved";
+
+export interface WorkspaceNotification {
+  id: string;
+  kind: WorkspaceNotificationKind;
+  title: string;
+  description: string;
+  projectTitle: string;
+  occurredAt: string;
+  href: string;
+  requiresAction: boolean;
+}
+
 export interface OpportunityDetail extends OpportunitySummary {
   requirements: string;
   deliverables: string | null;
