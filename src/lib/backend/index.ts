@@ -1,4 +1,5 @@
 export type {
+  AdvancePaymentStatusInput,
   ApprovedSowMilestones,
   BackendError,
   BackendErrorCode,
@@ -11,11 +12,13 @@ export type {
   CreateProjectInput,
   CreateProjectOutput,
   DecideMilestoneInput,
+  EvidenceBundleDetail,
   FreelancerApplicationStatus,
   FreelancerApplicationSummary,
   FreelancerProjectSummary,
   FreelancerProfileSettings,
   FinancialMilestoneRecord,
+  GenerateEvidenceBundleOutput,
   InvoiceRecord,
   InvoiceStatus,
   MilestoneSubmissionRecord,
@@ -30,6 +33,7 @@ export type {
   ProjectFinancialWorkspace,
   PaymentRecordStatus,
   ReviewInvoiceInput,
+  RequestPaymentInput,
   RequestSowRevisionInput,
   ProjectProposal,
   SaveSowVersionInput,
@@ -79,7 +83,7 @@ export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/bac
 export { listFreelancerApplications, listFreelancerProjects } from "@/lib/backend/freelancer";
 export { listCompanyNotifications, listFreelancerNotifications } from "@/lib/backend/notifications";
 export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
-export { getProjectFinancialWorkspace, listFreelancerInvoices, reviewInvoice, submitInvoice } from "@/lib/backend/finance";
+export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, requestPayment, reviewInvoice, submitInvoice } from "@/lib/backend/finance";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
   connectProjectRepository,

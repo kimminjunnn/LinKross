@@ -25,7 +25,13 @@ import { mapBackendError } from "@/lib/backend/errors";
 import { translateToEnglish } from "@/lib/backend/translation";
 import { isUuid } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createMvpVerificationDefinition } from "@/lib/verification-test-spec";
+import {
+  MANUAL_GUIDANCE_SPEC_VERSION,
+  createMvpVerificationDefinition,
+  type ManagedTestSpec,
+  type ManualGuidanceSpec,
+} from "@/lib/verification-test-spec";
+import { generateManualCheckGuidance } from "@/lib/verification-guidance";
 
 function parseDateText(value: string): string | null {
   const normalized = value.trim().replace(/\./g, "-").replace(/\s+/g, "");
@@ -227,9 +233,28 @@ async function upsertCriteriaForMilestone(
 
   const existingIdByOriginalOrder = new Map((existingRows ?? []).map((row, index) => [index + 1, row.id]));
 
+  const verifications: Array<{
+    verificationMethod: VerificationMethod;
+    testSpec: ManagedTestSpec | ManualGuidanceSpec | Record<string, never>;
+  }> = dods.map((dod) => createMvpVerificationDefinition(dod));
+  const unresolvedIndexes = verifications
+    .map((verification, index) => (verification.verificationMethod === "manual" ? index : -1))
+    .filter((index) => index !== -1);
+  if (unresolvedIndexes.length > 0) {
+    const guidances = await generateManualCheckGuidance(unresolvedIndexes.map((index) => dods[index]));
+    unresolvedIndexes.forEach((dodIndex, guidanceIndex) => {
+      const guidance = guidances[guidanceIndex];
+      if (!guidance) return;
+      verifications[dodIndex] = {
+        ...verifications[dodIndex],
+        testSpec: { version: MANUAL_GUIDANCE_SPEC_VERSION, kind: "manual_guidance", ...guidance },
+      };
+    });
+  }
+
   for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
     const existingId = existingIdByOriginalOrder.get(dodIndex + 1);
-    const verification = createMvpVerificationDefinition(dods[dodIndex]);
+    const verification = verifications[dodIndex];
     if (existingId) {
       const { error } = await supabase
         .from("completion_criteria")

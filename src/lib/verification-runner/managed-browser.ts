@@ -4,6 +4,7 @@ import type { SandboxUser } from "@vercel/sandbox";
 
 import type { VerificationJobManifest } from "@/lib/verification-runner/contracts";
 import { MANAGED_PLAYWRIGHT_HARNESS } from "@/lib/verification-runner/playwright-harness";
+import type { ManagedBrowserTestSpec } from "@/lib/verification-test-spec";
 
 const PLAYWRIGHT_ROOT = "/vercel/sandbox/linkross-runner";
 const PLAYWRIGHT_MODULE = `${PLAYWRIGHT_ROOT}/node_modules/playwright/index.mjs`;
@@ -56,11 +57,16 @@ export async function runManagedBrowserCriteria(input: {
   onProgress?: () => Promise<void>;
 }): Promise<ManagedBrowserOutcome[]> {
   const criteria = input.manifest.criteria.filter(
-    (criterion) => criterion.verificationMethod === "automated_e2e",
+    (criterion) =>
+      criterion.verificationMethod === "automated_e2e" &&
+      (!criterion.testSpec || criterion.testSpec.kind === "managed_browser"),
   );
   if (criteria.length === 0) return [];
 
-  const runnable = criteria.filter((criterion) => criterion.testSpec);
+  const runnable = criteria.filter(
+    (criterion): criterion is typeof criterion & { testSpec: ManagedBrowserTestSpec } =>
+      Boolean(criterion.testSpec),
+  );
   const missingSpecs = criteria
     .filter((criterion) => !criterion.testSpec)
     .map((criterion) => needsReview(criterion.id, "승인된 완료조건에 LinKross 관리형 Playwright 시나리오가 없습니다."));

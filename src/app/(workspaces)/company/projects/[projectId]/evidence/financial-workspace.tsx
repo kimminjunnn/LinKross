@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, Clock3, FileText, Loader2, XCircle } from "lucide-react";
+import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
-import { reviewInvoiceAction } from "@/app/actions/finance";
-import type { FinancialMilestoneRecord, ProjectFinancialWorkspace } from "@/lib/backend";
+import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
+import { paymentStatusLabel } from "@/config/payment-status";
+import type { FinancialMilestoneRecord, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
 
 export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFinancialWorkspace }) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const allMilestonesPaid = workspace.milestones.length > 0
+    && workspace.milestones.every((milestone) => milestone.status === "approved" && milestone.payment?.status === "completed");
 
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
@@ -21,23 +25,61 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
         {workspace.milestones.length === 0 ? (
           <p className="rounded-control border border-dashed border-app-border-strong p-5 text-sm font-bold text-app-muted">양측 승인된 SOW의 마일스톤이 아직 없습니다.</p>
         ) : workspace.milestones.map((milestone) => (
-          <MilestoneFinanceCard key={milestone.id} milestone={milestone} pending={pending} review={(status, note) => startTransition(async () => {
-            if (!milestone.invoice) return;
-            const result = await reviewInvoiceAction({ projectId: workspace.projectId, invoiceId: milestone.invoice.id, status, reviewNote: note });
-            setMessage(result.ok ? (status === "approved" ? "인보이스를 승인했습니다." : "인보이스를 반려했습니다.") : result.error.message);
-          })} />
+          <MilestoneFinanceCard
+            key={milestone.id}
+            milestone={milestone}
+            pending={pending}
+            review={(status, note) => startTransition(async () => {
+              if (!milestone.invoice) return;
+              const result = await reviewInvoiceAction({ projectId: workspace.projectId, invoiceId: milestone.invoice.id, status, reviewNote: note });
+              setMessage(result.ok ? (status === "approved" ? "인보이스를 승인했습니다." : "인보이스를 반려했습니다.") : result.error.message);
+            })}
+            requestPayment={() => startTransition(async () => {
+              const result = await requestPaymentAction({ projectId: workspace.projectId, milestoneId: milestone.id });
+              setMessage(result.ok ? "지급을 요청했습니다." : result.error.message);
+            })}
+            advancePayment={(status, externalReference) => startTransition(async () => {
+              if (!milestone.payment) return;
+              const result = await advancePaymentStatusAction({ projectId: workspace.projectId, paymentId: milestone.payment.id, status, externalReference });
+              setMessage(result.ok ? `지급 상태를 ${paymentStatusLabel[status]}(으)로 변경했습니다.` : result.error.message);
+            })}
+          />
         ))}
       </div>
+
+      {workspace.lifecycleStage === "completed" ? (
+        <div className="mt-5 flex items-center gap-2 rounded-control bg-accent-50 p-4 text-sm font-black text-accent-700">
+          <PartyPopper className="size-5" />프로젝트가 완료 처리되었습니다.
+        </div>
+      ) : allMilestonesPaid && (
+        <div className="mt-5 rounded-control border border-app-border-strong bg-app-surface-subtle p-4">
+          <p className="text-sm font-bold text-app-foreground">모든 마일스톤이 승인되고 지급까지 완료됐습니다.</p>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => startTransition(async () => {
+              const result = await completeProjectAction(workspace.projectId);
+              setMessage(result.ok ? "프로젝트를 완료 처리했습니다." : result.error.message);
+            })}
+            className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-accent-600 px-4 text-sm font-black text-white disabled:opacity-50"
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <PartyPopper className="size-4" />}프로젝트 완료 처리
+          </button>
+        </div>
+      )}
     </section>
   );
 }
 
-function MilestoneFinanceCard({ milestone, pending, review }: {
+function MilestoneFinanceCard({ milestone, pending, review, requestPayment, advancePayment }: {
   milestone: FinancialMilestoneRecord;
   pending: boolean;
   review: (status: "approved" | "rejected", note: string) => void;
+  requestPayment: () => void;
+  advancePayment: (status: Exclude<PaymentRecordStatus, "requested">, externalReference?: string) => void;
 }) {
   const [note, setNote] = useState("");
+  const [reference, setReference] = useState("");
   return (
     <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -66,9 +108,29 @@ function MilestoneFinanceCard({ milestone, pending, review }: {
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between rounded-control bg-app-surface p-3 text-sm">
-        <span className="font-bold text-app-muted">지급 상태</span>
-        <span className="font-black text-app-foreground">{milestone.payment ? `${milestone.payment.status} · ${milestone.payment.amount.toLocaleString()} ${milestone.payment.currency}` : "외부 지급 기록 없음"}</span>
+      <div className="mt-3 rounded-control bg-app-surface p-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="inline-flex items-center gap-2 font-bold text-app-muted"><Banknote className="size-4" />지급 상태</span>
+          <span className="font-black text-app-foreground">
+            {milestone.payment ? `${paymentStatusLabel[milestone.payment.status]} · ${milestone.payment.amount.toLocaleString()} ${milestone.payment.currency}` : "외부 지급 기록 없음"}
+          </span>
+        </div>
+
+        {!milestone.payment ? (
+          milestone.invoice?.status === "approved" && (
+            <button type="button" disabled={pending} onClick={requestPayment} className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
+              {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
+            </button>
+          )
+        ) : (milestone.payment.status === "requested" || milestone.payment.status === "processing") && (
+          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+            <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="외부 송금 참조값 (선택)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
+            {milestone.payment.status === "requested" && (
+              <button type="button" disabled={pending} onClick={() => advancePayment("processing", reference)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-black text-app-foreground disabled:opacity-50">처리 중으로 변경</button>
+            )}
+            <button type="button" disabled={pending} onClick={() => advancePayment("completed", reference)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-accent-600 px-4 text-sm font-black text-white disabled:opacity-50">지급 완료 처리</button>
+          </div>
+        )}
       </div>
     </article>
   );

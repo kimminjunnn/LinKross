@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { Banknote, FileText, Loader2 } from "lucide-react";
 
 import { submitInvoiceAction } from "@/app/actions/finance";
+import { paymentStatusLabel } from "@/config/payment-status";
 import type { ProjectFinancialWorkspace } from "@/lib/backend";
 
 export function FreelancerInvoicePanel({ workspace }: { workspace: ProjectFinancialWorkspace }) {
@@ -34,6 +35,12 @@ export function FreelancerInvoicePanel({ workspace }: { workspace: ProjectFinanc
                 <input name="externalReference" placeholder="External reference (optional)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
                 <button disabled={pending} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">{pending && <Loader2 className="size-4 animate-spin" />}Submit</button>
               </form>
+            )}
+            {milestone.payment && (
+              <div className="mt-3 flex items-center justify-between rounded-control bg-app-surface-subtle p-3 text-sm">
+                <span className="inline-flex items-center gap-2 font-bold text-app-muted"><Banknote className="size-4" />Payment status</span>
+                <span className="font-black text-app-foreground">{paymentStatusLabel[milestone.payment.status]} · {milestone.payment.amount.toLocaleString()} {milestone.payment.currency}</span>
+              </div>
             )}
           </article>
         ))}

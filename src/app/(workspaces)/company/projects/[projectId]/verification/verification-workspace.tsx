@@ -656,6 +656,13 @@ function MilestoneDetail({
                         <p className="mt-0.5 text-[10px] text-app-muted font-medium">
                           방법: {criterion.verificationMethod}
                         </p>
+                        {criterion.manualGuidance && (
+                          <div className="mt-1.5 space-y-0.5 text-[10px] leading-relaxed text-app-muted bg-app-surface-subtle p-1.5 rounded border border-app-border-strong/50">
+                            <p><span className="font-black text-app-foreground">확인 위치</span> · {criterion.manualGuidance.location}</p>
+                            <p><span className="font-black text-app-foreground">확인 방법</span> · {criterion.manualGuidance.method}</p>
+                            <p><span className="font-black text-app-foreground">기대 결과</span> · {criterion.manualGuidance.expected}</p>
+                          </div>
+                        )}
                         {result?.observedResult && (
                           <p className="mt-1.5 text-[10px] leading-relaxed text-app-muted bg-app-surface-subtle p-1.5 rounded border border-app-border-strong/50 font-mono">
                             {result.observedResult}

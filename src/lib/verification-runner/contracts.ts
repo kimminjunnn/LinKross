@@ -1,5 +1,5 @@
 import type { VerificationMethod, VerificationRunStatus } from "@/lib/backend/contracts";
-import type { ManagedBrowserTestSpec } from "@/lib/verification-test-spec";
+import type { ManagedTestSpec } from "@/lib/verification-test-spec";
 
 export const ACTIVE_RUN_STATUSES = [
   "provisioning",
@@ -50,7 +50,7 @@ export interface VerificationJobManifest {
     id: string;
     description: string;
     verificationMethod: VerificationMethod;
-    testSpec: ManagedBrowserTestSpec | null;
+    testSpec: ManagedTestSpec | null;
     required: boolean;
     position: number;
   }>;

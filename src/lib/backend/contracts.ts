@@ -133,6 +133,11 @@ export interface MilestoneChecklistItem {
   description: string;
   verificationMethod: string;
   isRequired: boolean;
+  manualGuidance?: {
+    location: string;
+    method: string;
+    expected: string;
+  };
 }
 
 export interface ProjectMilestoneSummary {
@@ -549,6 +554,7 @@ export interface FinancialMilestoneRecord {
 export interface ProjectFinancialWorkspace {
   projectId: string;
   projectTitle: string;
+  lifecycleStage: string;
   milestones: FinancialMilestoneRecord[];
   evidenceBundles: Array<{
     id: string;
@@ -574,6 +580,34 @@ export interface ReviewInvoiceInput {
   invoiceId: string;
   status: "approved" | "rejected";
   reviewNote?: string;
+}
+
+export interface RequestPaymentInput {
+  projectId: string;
+  milestoneId: string;
+}
+
+export interface AdvancePaymentStatusInput {
+  projectId: string;
+  paymentId: string;
+  status: Exclude<PaymentRecordStatus, "requested">;
+  externalReference?: string;
+}
+
+export interface GenerateEvidenceBundleOutput {
+  bundleId: string;
+  versionNumber: number;
+}
+
+export interface EvidenceBundleDetail {
+  id: string;
+  versionNumber: number;
+  status: "generating" | "ready" | "failed";
+  sha256: string | null;
+  requestedAt: string;
+  completedAt: string | null;
+  errorMessage: string | null;
+  payload: Record<string, unknown> | null;
 }
 
 export interface CompanyProfileSettings {

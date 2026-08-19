@@ -22,7 +22,7 @@ import {
   GitHubAppError,
 } from "@/lib/github/app";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { resolveMvpVerificationDefinition } from "@/lib/verification-test-spec";
+import { parseManualGuidanceSpec, resolveMvpVerificationDefinition } from "@/lib/verification-test-spec";
 
 const GITHUB_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/#?]+?)(?:\.git)?\/?$/i;
 const GITHUB_PR_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)\/?$/i;
@@ -218,12 +218,16 @@ export async function getVerificationWorkspace(
             verificationMethod: criterion.verification_method,
             testSpec: criterion.test_spec,
           });
+          const guidance = parseManualGuidanceSpec(criterion.test_spec);
           const desc = shouldTranslate ? await translateToEnglish(criterion.description) : criterion.description;
           return {
             id: criterion.id,
             description: desc,
             verificationMethod: verification.verificationMethod,
             isRequired: criterion.is_required,
+            ...(guidance
+              ? { manualGuidance: { location: guidance.location, method: guidance.method, expected: guidance.expected } }
+              : {}),
           };
         })
       );
