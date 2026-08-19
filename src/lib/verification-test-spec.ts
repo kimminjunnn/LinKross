@@ -94,7 +94,7 @@ const LOCKOUT_FAILED_ATTEMPTS = 5;
 function inferLoginLockoutSteps(description: string): ManagedApiCheckStep[] | null {
   const normalized = description.toLowerCase().replace(/[`'"“”‘’]/g, "").replace(/\s+/g, " ").trim();
   const mentionsLoginFailure = /(로그인|login).*(실패|fail)|(실패|fail).*(로그인|login)/.test(normalized);
-  const mentionsLockout = /잠금|잠기|차단|lock|429/.test(normalized);
+  const mentionsLockout = /잠금|잠기|잠긴|잠겨|잠겼|잠글|차단|lock|429/.test(normalized);
   if (!mentionsLoginFailure || !mentionsLockout) return null;
 
   const steps: ManagedApiCheckStep[] = [];
