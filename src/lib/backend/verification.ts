@@ -13,6 +13,7 @@ import type {
   VerificationWorkspace,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
+import { translateToEnglish } from "@/lib/backend/translation";
 import { isUuid } from "@/lib/backend/validation";
 import {
   getGitHubAppInstallationUrl,
@@ -203,49 +204,73 @@ export async function getVerificationWorkspace(
     }
   }
 
-  const milestones: VerificationMilestoneRecord[] = (milestoneRows ?? []).map((milestone) => ({
-    id: milestone.id,
-    code: milestone.code,
-    title: milestone.title,
-    description: milestone.description,
-    startDate: milestone.start_date,
-    endDate: milestone.end_date,
-    amount: Number(milestone.amount),
-    currency: milestone.currency,
-    status: milestone.status,
-    position: milestone.position,
-    checklist: (criteriaByMilestone.get(milestone.id) ?? []).map((criterion) => {
-      const verification = resolveMvpVerificationDefinition({
-        description: criterion.description,
-        verificationMethod: criterion.verification_method,
-        testSpec: criterion.test_spec,
-      });
+  const shouldTranslate = !isCompany;
+
+  const milestones: VerificationMilestoneRecord[] = await Promise.all(
+    (milestoneRows ?? []).map(async (milestone) => {
+      const title = shouldTranslate ? await translateToEnglish(milestone.title) : milestone.title;
+      const description = shouldTranslate ? await translateToEnglish(milestone.description) : milestone.description;
+
+      const checklist = await Promise.all(
+        (criteriaByMilestone.get(milestone.id) ?? []).map(async (criterion) => {
+          const verification = resolveMvpVerificationDefinition({
+            description: criterion.description,
+            verificationMethod: criterion.verification_method,
+            testSpec: criterion.test_spec,
+          });
+          const desc = shouldTranslate ? await translateToEnglish(criterion.description) : criterion.description;
+          return {
+            id: criterion.id,
+            description: desc,
+            verificationMethod: verification.verificationMethod,
+            isRequired: criterion.is_required,
+          };
+        })
+      );
+
+      const submissions = await Promise.all(
+        (submissionsByMilestone.get(milestone.id) ?? []).map((submission) =>
+          toSubmission(
+            submission,
+            claimsBySubmission.get(submission.id) ?? [],
+            runsBySubmission.get(submission.id) ?? [],
+            resultsByRun,
+            evidenceByResult,
+            signedUrlByPath,
+            shouldTranslate,
+          ),
+        ),
+      );
+
+      const decisionRow = latestDecisionByMilestone.get(milestone.id);
+      let decision = null;
+      if (decisionRow) {
+        const reason = shouldTranslate && decisionRow.reason ? await translateToEnglish(decisionRow.reason) : decisionRow.reason;
+        decision = {
+          submissionId: decisionRow.submission_id,
+          decision: decisionRow.decision,
+          reason,
+          decidedAt: decisionRow.decided_at,
+        };
+      }
+
       return {
-        id: criterion.id,
-        description: criterion.description,
-        verificationMethod: verification.verificationMethod,
-        isRequired: criterion.is_required,
+        id: milestone.id,
+        code: milestone.code,
+        title,
+        description,
+        startDate: milestone.start_date,
+        endDate: milestone.end_date,
+        amount: Number(milestone.amount),
+        currency: milestone.currency,
+        status: milestone.status,
+        position: milestone.position,
+        checklist,
+        submissions,
+        decision,
       };
-    }),
-    submissions: (submissionsByMilestone.get(milestone.id) ?? []).map((submission) =>
-      toSubmission(
-        submission,
-        claimsBySubmission.get(submission.id) ?? [],
-        runsBySubmission.get(submission.id) ?? [],
-        resultsByRun,
-        evidenceByResult,
-        signedUrlByPath,
-      ),
-    ),
-    decision: latestDecisionByMilestone.has(milestone.id)
-      ? {
-          submissionId: latestDecisionByMilestone.get(milestone.id)!.submission_id,
-          decision: latestDecisionByMilestone.get(milestone.id)!.decision,
-          reason: latestDecisionByMilestone.get(milestone.id)!.reason,
-          decidedAt: latestDecisionByMilestone.get(milestone.id)!.decided_at,
-        }
-      : null,
-  }));
+    })
+  );
 
   return {
     ok: true,
@@ -807,7 +832,7 @@ function toRepository(row: {
   };
 }
 
-function toSubmission(
+async function toSubmission(
   submission: {
     id: string;
     attempt_number: number;
@@ -846,7 +871,60 @@ function toSubmission(
     storage_path: string | null;
   }>>,
   signedUrlByPath: Map<string, string>,
-): MilestoneSubmissionRecord {
+  translate = false,
+): Promise<MilestoneSubmissionRecord> {
+  const implementationNote = translate && submission.implementation_note
+    ? await translateToEnglish(submission.implementation_note)
+    : submission.implementation_note;
+
+  const mappedRuns = await Promise.all(
+    runs.map(async (run) => {
+      const errorSummary = translate && run.error_summary
+        ? await translateToEnglish(run.error_summary)
+        : run.error_summary;
+
+      const results = await Promise.all(
+        (resultsByRun.get(run.id) ?? []).map(async (result) => {
+          const observedResult = translate && result.observed_result
+            ? await translateToEnglish(result.observed_result)
+            : result.observed_result;
+          const errorMessage = translate && result.error_message
+            ? await translateToEnglish(result.error_message)
+            : result.error_message;
+
+          return {
+            id: result.id,
+            criterionId: result.criterion_id,
+            status: result.status,
+            observedResult,
+            errorMessage,
+            evidence: (evidenceByResult.get(result.id) ?? []).map((artifact) => ({
+              id: artifact.id,
+              type: artifact.artifact_type,
+              url: artifact.external_url
+                ?? (artifact.storage_path ? signedUrlByPath.get(artifact.storage_path) ?? null : null),
+              storagePath: artifact.storage_path,
+            })),
+          };
+        })
+      );
+
+      return {
+        id: run.id,
+        scope: run.scope,
+        requestedCriterionId: run.requested_criterion_id,
+        attemptNumber: run.attempt_number,
+        status: run.status,
+        queuedAt: run.queued_at,
+        startedAt: run.started_at,
+        completedAt: run.completed_at,
+        previewUrl: run.preview_url,
+        errorSummary,
+        results,
+      };
+    })
+  );
+
   return {
     id: submission.id,
     attemptNumber: submission.attempt_number,
@@ -855,35 +933,10 @@ function toSubmission(
     pullRequestUrl: submission.pull_request_url,
     headBranch: submission.head_branch,
     headCommitSha: submission.head_commit_sha,
-    implementationNote: submission.implementation_note,
+    implementationNote,
     submittedAt: submission.submitted_at,
     claimedCriterionIds: claims.map((claim) => claim.criterion_id),
-    runs: runs.map((run) => ({
-      id: run.id,
-      scope: run.scope,
-      requestedCriterionId: run.requested_criterion_id,
-      attemptNumber: run.attempt_number,
-      status: run.status,
-      queuedAt: run.queued_at,
-      startedAt: run.started_at,
-      completedAt: run.completed_at,
-      previewUrl: run.preview_url,
-      errorSummary: run.error_summary,
-      results: (resultsByRun.get(run.id) ?? []).map((result) => ({
-        id: result.id,
-        criterionId: result.criterion_id,
-        status: result.status,
-        observedResult: result.observed_result,
-        errorMessage: result.error_message,
-        evidence: (evidenceByResult.get(result.id) ?? []).map((artifact) => ({
-          id: artifact.id,
-          type: artifact.artifact_type,
-          url: artifact.external_url
-            ?? (artifact.storage_path ? signedUrlByPath.get(artifact.storage_path) ?? null : null),
-          storagePath: artifact.storage_path,
-        })),
-      })),
-    })),
+    runs: mappedRuns,
   };
 }
 

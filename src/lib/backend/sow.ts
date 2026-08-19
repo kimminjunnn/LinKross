@@ -22,6 +22,7 @@ import type {
   VerificationMethod,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
+import { translateToEnglish } from "@/lib/backend/translation";
 import { isUuid } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createMvpVerificationDefinition } from "@/lib/verification-test-spec";
@@ -729,15 +730,18 @@ export async function getSowApprovalState(
     revisionRequestReads = (readRows ?? []) as SowRevisionRequestReadRow[];
   }
 
+  const isCompany = project.company_id === authData.user.id;
+
   return {
     ok: true,
-    data: toSowApprovalState({
+    data: await toSowApprovalState({
       sowVersion: sowRow,
       milestones: (milestones ?? []) as MilestoneApprovalRow[],
       criteria: (criteria ?? []) as CompletionCriteriaApprovalRow[],
       approvals: (approvals ?? []) as SowApprovalRow[],
       revisionRequests: revisionRequestRows,
       revisionRequestReads,
+      translate: !isCompany,
     }),
   };
 }
@@ -1065,13 +1069,14 @@ export async function requestSowRevision(
   return { ok: true, data: updated.data };
 }
 
-function toSowApprovalState({
+async function toSowApprovalState({
   sowVersion,
   milestones,
   criteria,
   approvals,
   revisionRequests,
   revisionRequestReads,
+  translate = false,
 }: {
   sowVersion: SowVersionApprovalRow;
   milestones: MilestoneApprovalRow[];
@@ -1079,8 +1084,9 @@ function toSowApprovalState({
   approvals: SowApprovalRow[];
   revisionRequests: SowRevisionRequestRow[];
   revisionRequestReads: SowRevisionRequestReadRow[];
-}): SowApprovalState {
-  const document = toSowApprovalDocument(sowVersion);
+  translate?: boolean;
+}): Promise<SowApprovalState> {
+  const document = await toSowApprovalDocument(sowVersion, translate);
   const criteriaByMilestone = new Map<string, CompletionCriteriaApprovalRow[]>();
   const approvalByRole = new Map<UserRole, SowApprovalRow>();
   const revisionReadByRequestId = new Map(
@@ -1097,6 +1103,67 @@ function toSowApprovalState({
     approvalByRole.set(approval.approver_role, approval);
   }
 
+  const mappedMilestones = await Promise.all(
+    milestones.map(async (milestone) => {
+      const milestoneCriteria = criteriaByMilestone.get(milestone.id) ?? [];
+      const acceptanceCriteria = milestoneCriteria.filter((criterion) => criterion.kind === "acceptance");
+      const definitionOfDone = milestoneCriteria.filter(
+        (criterion) => criterion.kind === "definition_of_done",
+      );
+
+      const title = translate ? await translateToEnglish(milestone.title) : milestone.title;
+
+      const mappedAcceptance = await Promise.all(
+        acceptanceCriteria.map(async (criterion) => {
+          const mapped = toSowApprovalCriterion(criterion);
+          if (translate) {
+            mapped.description = await translateToEnglish(mapped.description);
+          }
+          return mapped;
+        })
+      );
+
+      const mappedDoD = await Promise.all(
+        definitionOfDone.map(async (criterion) => {
+          const mapped = toSowApprovalCriterion(criterion);
+          if (translate) {
+            mapped.description = await translateToEnglish(mapped.description);
+          }
+          return mapped;
+        })
+      );
+
+      return {
+        id: milestone.id,
+        code: milestone.code,
+        title,
+        period: `${milestone.start_date} - ${milestone.end_date}`,
+        amount: formatAmount(milestone.amount, milestone.currency),
+        status: milestone.status,
+        acceptanceCriteria: mappedAcceptance,
+        definitionOfDone: mappedDoD,
+        verificationMethods: Array.from(
+          new Set(milestoneCriteria.map((criterion) => criterion.verification_method)),
+        ),
+      };
+    })
+  );
+
+  const mappedRevisionRequests = await Promise.all(
+    revisionRequests.map(
+      async (request): Promise<SowRevisionRequestRecord> => ({
+        id: request.id,
+        projectId: request.project_id,
+        sowVersionId: request.sow_version_id,
+        requesterRole: request.requester_role,
+        requesterName: request.requester_name_snapshot,
+        reason: translate ? await translateToEnglish(request.reason) : request.reason,
+        requestedAt: request.requested_at,
+        readAt: revisionReadByRequestId.get(request.id) ?? null,
+      }),
+    )
+  );
+
   return {
     projectId: sowVersion.project_id,
     sowVersionId: sowVersion.id,
@@ -1106,47 +1173,16 @@ function toSowApprovalState({
     submittedForReviewAt: sowVersion.submitted_for_review_at,
     approvedAt: sowVersion.approved_at,
     document,
-    milestones: milestones.map((milestone) => {
-      const milestoneCriteria = criteriaByMilestone.get(milestone.id) ?? [];
-      const acceptanceCriteria = milestoneCriteria.filter((criterion) => criterion.kind === "acceptance");
-      const definitionOfDone = milestoneCriteria.filter(
-        (criterion) => criterion.kind === "definition_of_done",
-      );
-
-      return {
-        id: milestone.id,
-        code: milestone.code,
-        title: milestone.title,
-        period: `${milestone.start_date} - ${milestone.end_date}`,
-        amount: formatAmount(milestone.amount, milestone.currency),
-        status: milestone.status,
-        acceptanceCriteria: acceptanceCriteria.map(toSowApprovalCriterion),
-        definitionOfDone: definitionOfDone.map(toSowApprovalCriterion),
-        verificationMethods: Array.from(
-          new Set(milestoneCriteria.map((criterion) => criterion.verification_method)),
-        ),
-      };
-    }),
+    milestones: mappedMilestones,
     approvals: {
       company: toSowApprovalRecord(approvalByRole.get("company") ?? null),
       freelancer: toSowApprovalRecord(approvalByRole.get("freelancer") ?? null),
     },
-    revisionRequests: revisionRequests.map(
-      (request): SowRevisionRequestRecord => ({
-        id: request.id,
-        projectId: request.project_id,
-        sowVersionId: request.sow_version_id,
-        requesterRole: request.requester_role,
-        requesterName: request.requester_name_snapshot,
-        reason: request.reason,
-        requestedAt: request.requested_at,
-        readAt: revisionReadByRequestId.get(request.id) ?? null,
-      }),
-    ),
+    revisionRequests: mappedRevisionRequests,
   };
 }
 
-function toSowApprovalDocument(sowVersion: SowVersionApprovalRow): SowApprovalDocument {
+async function toSowApprovalDocument(sowVersion: SowVersionApprovalRow, translate = false): Promise<SowApprovalDocument> {
   const content = isRecord(sowVersion.content) ? sowVersion.content : {};
   const englishSow = isRecord(content.englishSow) ? content.englishSow : null;
   const overview = englishSow && isRecord(englishSow.overview) ? englishSow.overview : {};
@@ -1159,11 +1195,19 @@ function toSowApprovalDocument(sowVersion: SowVersionApprovalRow): SowApprovalDo
   const acceptanceCriteria = toStringArray(englishSow?.acceptanceCriteria);
   const definitionOfDone = toStringArray(englishSow?.definitionOfDone);
   const workDetailKo = typeof content.workDetailKo === "string" ? content.workDetailKo.trim() : "";
+
+  let translatedWorkDetail = workDetailKo;
+  let workDetailTitle = "한국어 업무 상세";
+  if (translate && workDetailKo) {
+    translatedWorkDetail = await translateToEnglish(workDetailKo);
+    workDetailTitle = "Korean Work Details";
+  }
+
   const documentSections = [
     workDetailKo
       ? {
-          title: "한국어 업무 상세",
-          body: workDetailKo,
+          title: workDetailTitle,
+          body: translatedWorkDetail,
         }
       : null,
     hasText(overview.background) || hasText(overview.objective)
