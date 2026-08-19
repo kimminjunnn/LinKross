@@ -142,8 +142,8 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Member Selection CTA Cards (3 Columns) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mb-24">
+          {/* Member Selection CTA Cards (2 Columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl mb-8">
             {/* 기존 회원 (로그인 화면 /login 으로 이동) */}
             <Link
               href="/login"
@@ -162,32 +162,6 @@ export default async function HomePage() {
               
               <div className="mt-auto w-full py-3 px-4 rounded-xl bg-slate-100 group-hover:bg-orange-500 text-slate-700 group-hover:text-white font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-slate-200 group-hover:border-orange-500">
                 <span>로그인 화면으로 이동</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </Link>
-
-            {/* 데모 체험하기 (데모 페이지로 이동 - Highlighted in the middle) */}
-            <Link
-              href="/demo/projects/quarterly-improvement"
-              className="group relative p-8 bg-white border-2 border-orange-500/80 hover:border-orange-500 rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">
-                Recommeded
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-orange-50 group-hover:bg-orange-100 text-orange-600 flex items-center justify-center mb-6 transition-colors duration-300 shadow-xs">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-
-              <h2 className="text-xl font-extrabold text-slate-900 mb-2">워크스페이스 데모 체험</h2>
-              <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed break-keep">
-                회원가입 없이 실제 SOW 계약 및 로그인 검수 대시보드 데모를 바로 체험해 보세요.
-              </p>
-              
-              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-orange-500 text-white font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-orange-500 group-hover:bg-orange-600">
-                <span>대시보드 데모 보기</span>
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </Link>
@@ -212,6 +186,17 @@ export default async function HomePage() {
                 <span>역할 선택 및 시작하기</span>
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>
+            </Link>
+          </div>
+
+          {/* 데모 체험하기 우회 링크 */}
+          <div className="mb-24 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-500 select-none">
+            <span>가입 없이 워크스페이스 대시보드가 궁금하신가요?</span>
+            <Link
+              href="/demo/projects/quarterly-improvement"
+              className="text-orange-500 font-black hover:text-orange-600 underline underline-offset-4 transition-colors"
+            >
+              데모 체험하기
             </Link>
           </div>
 
