@@ -316,7 +316,7 @@ export default async function HomePage() {
               <div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">강력한 개발 도구 연동</h3>
                 <p className="mt-2 text-sm text-slate-500 leading-relaxed break-keep">
-                  GitHub, Slack 등 이미 사용 중인 개발 프로세스에 LinKross의 실시간 검수가 자연스럽게 결합됩니다.
+                  GitHub 등 이미 사용 중인 개발 워크플로우에 LinKross의 실시간 검수가 자연스럽게 결합됩니다.
                 </p>
               </div>
 
@@ -339,14 +339,14 @@ export default async function HomePage() {
                 {/* Integration 2 */}
                 <div className="p-6 rounded-2xl bg-white border border-slate-200 flex gap-4">
                   <div className="size-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                    <svg className="size-6 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523 2.528 2.528 0 0 1-2.522-2.523 2.528 2.528 0 0 1 2.522-2.52h2.52v2.52zm1.261 0a2.528 2.528 0 0 1 2.52-2.52h5.043a2.528 2.528 0 0 1 2.522 2.52v5.042a2.528 2.528 0 0 1-2.522 2.52H8.823a2.528 2.528 0 0 1-2.52-2.52v-5.042zM8.823 5.043a2.528 2.528 0 0 1 2.52-2.522 2.528 2.528 0 0 1 2.522 2.522v2.52h-2.522a2.528 2.528 0 0 1-2.52-2.52zm0 1.261a2.528 2.528 0 0 1 2.52 2.52v5.043a2.528 2.528 0 0 1-2.52 2.522H3.78a2.528 2.528 0 0 1-2.52-2.522V8.824a2.528 2.528 0 0 1 2.52-2.52h5.043zm10.135 3.738a2.528 2.528 0 0 1 2.522-2.52 2.528 2.528 0 0 1 2.52 2.52 2.528 2.528 0 0 1-2.52 2.522h-2.522v-2.522zm-1.262 0a2.528 2.528 0 0 1-2.52 2.522h-5.043a2.528 2.528 0 0 1-2.522-2.522V3.78a2.528 2.528 0 0 1 2.522-2.52h5.043a2.528 2.528 0 0 1 2.52 2.52v5.043zm-3.78 10.135a2.528 2.528 0 0 1-2.52 2.522 2.528 2.528 0 0 1-2.522-2.522v-2.52h2.522a2.528 2.528 0 0 1 2.52-2.52zm0-1.262a2.528 2.528 0 0 1-2.52-2.52v-5.043a2.528 2.528 0 0 1 2.52-2.522h5.043a2.528 2.528 0 0 1 2.52 2.522v5.043a2.528 2.528 0 0 1-2.52 2.52h-5.043z"/>
+                    <svg className="size-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-sm text-slate-900">Slack 실시간 알림 연동</h4>
+                    <h4 className="font-extrabold text-sm text-slate-900">Vercel Sandbox 연동</h4>
                     <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-                      자동 검수 시작, 테스트 통과 여부, 발주사 승인 및 수정 요청 상황을 등록한 Slack 채널로 즉시 전달받아 지체 없이 협업을 이어갑니다.
+                      일회성 샌드박스 프리뷰 배포 연동을 지원하여, 빌드 결과를 브라우저에서 실시간으로 직접 조작하며 시각적 완성도와 성능을 검증할 수 있습니다.
                     </p>
                   </div>
                 </div>
