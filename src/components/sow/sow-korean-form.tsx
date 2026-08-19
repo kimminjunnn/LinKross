@@ -104,7 +104,7 @@ export function SowKoreanForm({
     <section className="flex flex-col rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <div className="flex items-start justify-between gap-4 border-b border-app-border pb-4">
         <div>
-          <h2 className="text-lg font-black text-app-foreground">한국어 업무 명세서 작성 Form</h2>
+          <h2 className="text-lg font-semibold text-app-foreground">한국어 업무 명세서 작성 Form</h2>
           <p className="mt-1 text-xs text-app-muted">
             작업자가 프롬프트 작성하듯 자유롭게 입력하고, 마일스톤 및 DoD(완료 정의)를 설정합니다.
           </p>
@@ -113,7 +113,7 @@ export function SowKoreanForm({
           <button
             type="button"
             onClick={onToggleExpand}
-            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors"
+            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors"
           >
             {isExpanded ? (
               <><Minimize2 className="size-3.5" /> 반으로 접기</>
@@ -128,7 +128,7 @@ export function SowKoreanForm({
 
       {/* 업무 상세 작성 */}
       <div className="mt-5">
-        <label htmlFor="work-detail-input" className="block text-sm font-bold text-app-foreground">
+        <label htmlFor="work-detail-input" className="block text-sm text-app-foreground">
           업무 상세
         </label>
         <textarea
@@ -141,7 +141,7 @@ export function SowKoreanForm({
 
         {/* File Upload Bar under Task Details */}
         <div className="mt-3">
-          <label className="block text-[0.75rem] font-bold text-app-foreground mb-1.5">
+          <label className="block text-xs text-app-foreground mb-1.5">
             문서 기반 AI 마일스톤 생성 (선택 사항)
           </label>
           <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ export function SowKoreanForm({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-3 py-1.5 text-xs font-semibold text-app-foreground hover:bg-app-border transition-colors"
+              className="flex items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-3 py-1.5 text-xs text-app-foreground hover:bg-app-border transition-colors"
             >
               <UploadCloud className="size-3.5" />
               {isParsing ? '분석 중...' : (isAutoAppend ? '파일 내용 삽입' : '파일 업로드')}
@@ -200,7 +200,7 @@ export function SowKoreanForm({
             <button
               type="button"
               onClick={() => setIsAutoAppend(!isAutoAppend)}
-              className="ml-2 flex items-center gap-1.5 text-xs font-semibold text-app-muted hover:text-app-foreground transition-colors"
+              className="ml-2 flex items-center gap-1.5 text-xs text-app-muted hover:text-app-foreground transition-colors"
               title="켜두면 파일 업로드 즉시 상세 폼에 내용이 추가됩니다."
             >
               {isAutoAppend ? (
@@ -222,10 +222,10 @@ export function SowKoreanForm({
                 </button>
               </div>
             )}
-            <span className="text-[0.65rem] text-app-muted">지원 포맷: PDF, DOCX, TXT, MD 등 문서 파일 전반</span>
+            <span className="text-xs text-app-muted">지원 포맷: PDF, DOCX, TXT, MD 등 문서 파일 전반</span>
           </div>
           {parseError && (
-            <p className="mt-1.5 text-[0.7rem] text-danger">{parseError}</p>
+            <p className="mt-1.5 text-xs text-danger">{parseError}</p>
           )}
         </div>
 
@@ -234,12 +234,12 @@ export function SowKoreanForm({
             type="button"
             onClick={handleAnalyzeClick}
             disabled={isParsing || isAnalyzing}
-            className="inline-flex min-h-10 items-center gap-2 rounded-control bg-app-foreground px-4 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="inline-flex min-h-10 items-center gap-2 rounded-control bg-app-foreground px-4 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Sparkles aria-hidden="true" className={`size-3.5 text-brand-400 ${(isParsing || isAnalyzing) ? 'animate-spin' : ''}`} />
             {isParsing ? "파일 분석 중..." : isAnalyzing ? "LLM 분석 중..." : "AI 분석"}
           </button>
-          <span className="text-[0.75rem] text-app-muted">
+          <span className="text-xs text-app-muted">
             업무 상세와 첨부 문서를 분석해 마일스톤 개수 · 일정 · 금액 · DoD 초안을 자동 설정합니다.
           </span>
         </div>
@@ -251,12 +251,12 @@ export function SowKoreanForm({
       <div className="mt-7">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-app-foreground">마일스톤 설정</h3>
-            <p className="text-[0.75rem] text-app-muted">
+            <h3 className="text-sm font-semibold text-app-foreground">마일스톤 설정</h3>
+            <p className="text-xs text-app-muted">
               AI 분석 결과 자동 생성 · 각 행 직접 수정 가능 · 마일스톤별 DoD 입력
             </p>
           </div>
-          <span className="rounded-pill bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700">
+          <span className="rounded-pill bg-brand-50 px-2.5 py-1 text-xs text-brand-700">
             합계 {totalAmount.toLocaleString()} USDC
           </span>
         </div>
@@ -269,7 +269,7 @@ export function SowKoreanForm({
             >
               <div className="flex items-center justify-between gap-2 border-b border-app-border/60 pb-2">
                 <div className="flex items-center gap-2 flex-1 mr-4">
-                  <span className="shrink-0 rounded bg-app-foreground px-2 py-0.5 text-xs font-bold text-white">
+                  <span className="shrink-0 rounded bg-app-foreground px-2 py-0.5 text-xs font-semibold text-white">
                     {m.code}
                   </span>
                   <input
@@ -282,7 +282,7 @@ export function SowKoreanForm({
                         prev.map((item) => (item.id === m.id ? { ...item, title: val } : item))
                       );
                     }}
-                    className="w-full bg-transparent text-sm font-bold text-app-foreground outline-none focus:underline"
+                    className="w-full bg-transparent text-sm text-app-foreground outline-none focus:underline"
                   />
                 </div>
                 <div className="flex items-start gap-3">
@@ -297,7 +297,7 @@ export function SowKoreanForm({
                           prev.map((item) => (item.id === m.id ? { ...item, amount: val } : item))
                         );
                       }}
-                      className="w-36 sm:w-48 text-right text-xs font-bold text-app-foreground outline-none placeholder:text-app-muted/50 focus:underline"
+                      className="w-36 sm:w-48 text-right text-xs text-app-foreground outline-none placeholder:text-app-muted/50 focus:underline"
                     />
                     <input
                       type="text"
@@ -309,7 +309,7 @@ export function SowKoreanForm({
                           prev.map((item) => (item.id === m.id ? { ...item, period: val } : item))
                         );
                       }}
-                      className="w-36 sm:w-48 text-right text-[0.7rem] font-semibold text-app-muted outline-none placeholder:text-app-muted/50 focus:underline"
+                      className="w-36 sm:w-48 text-right text-xs text-app-muted outline-none placeholder:text-app-muted/50 focus:underline"
                     />
                   </div>
                   {milestones.length > 1 && (
@@ -327,7 +327,7 @@ export function SowKoreanForm({
 
               {/* DoD 목록 */}
               <div className="mt-3 space-y-2">
-                <span className="text-[0.7rem] font-bold text-app-muted uppercase">DoD (Definition of Done)</span>
+                <span className="text-xs font-semibold text-app-muted uppercase">DoD (Definition of Done)</span>
                 {m.dods.map((dod, dIdx) => (
                   <div key={dIdx} className="flex items-center gap-2">
                     <input
@@ -352,7 +352,7 @@ export function SowKoreanForm({
                 <button
                   type="button"
                   onClick={() => handleAddDoD(m.id)}
-                  className="mt-1 text-xs font-semibold text-brand-600 hover:underline"
+                  className="mt-1 text-xs text-brand-600 hover:underline"
                 >
                   + DoD 추가
                 </button>
@@ -364,7 +364,7 @@ export function SowKoreanForm({
         <button
           type="button"
           onClick={handleAddMilestone}
-          className="mt-3 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-control border border-dashed border-app-border text-xs font-bold text-app-muted hover:border-brand-400 hover:text-brand-600"
+          className="mt-3 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-control border border-dashed border-app-border text-xs text-app-muted hover:border-brand-400 hover:text-brand-600"
         >
           <Plus className="size-3.5" />
           마일스톤 추가
@@ -378,7 +378,7 @@ export function SowKoreanForm({
           type="button"
           onClick={() => onGenerateEnglishSOW(hiddenFileContent || undefined)}
           disabled={isGenerating}
-          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isGenerating ? (
             <Loader2 className="size-4 animate-spin text-brand-400" />
@@ -390,7 +390,7 @@ export function SowKoreanForm({
         <button
           type="button"
           onClick={onSaveDraft}
-          className="min-h-11 rounded-control border border-app-border-strong px-5 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle"
+          className="min-h-11 rounded-control border border-app-border-strong px-5 text-sm text-app-foreground hover:bg-app-surface-subtle"
         >
           임시 저장
         </button>

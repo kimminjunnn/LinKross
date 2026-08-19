@@ -30,7 +30,7 @@ export function ProjectTabs({
               <Link
                 href={href}
                 aria-current={isActive ? "page" : undefined}
-                className={`relative flex min-h-14 min-w-40 items-center justify-center px-5 text-sm font-bold transition-colors ${
+                className={`relative flex min-h-14 min-w-40 items-center justify-center px-5 text-sm transition-colors ${
                   isActive
                     ? "text-brand-700"
                     : "text-app-muted hover:text-app-foreground"

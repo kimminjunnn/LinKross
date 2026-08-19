@@ -26,7 +26,7 @@ export function HeaderTabs() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
               isActive 
                 ? "bg-brand-50 text-brand-600 border border-brand-100/50 shadow-sm" 
                 : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"

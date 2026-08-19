@@ -300,10 +300,10 @@ export default function ApprovalPage() {
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">
+            <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
               {isReadOnly ? "Approved SOW" : "PO approval"}
             </p>
-            <h2 className="mt-2 text-xl font-black text-app-foreground">
+            <h2 className="mt-2 text-xl font-semibold text-app-foreground">
               {isReadOnly ? "승인된 업무 명세서" : "업무 명세서 승인"}
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-app-muted">
@@ -323,13 +323,13 @@ export default function ApprovalPage() {
       </section>
 
       {approvalLoadError ? (
-        <div className="rounded-control border border-danger/30 bg-danger/10 p-4 text-sm font-bold text-danger">
+        <div className="rounded-control border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
           {approvalLoadError}
         </div>
       ) : null}
 
       {statusMessage ? (
-        <div className="rounded-control border border-brand-200 bg-brand-50 p-4 text-sm font-bold text-brand-800">
+        <div className="rounded-control border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
           {statusMessage}
         </div>
       ) : null}
@@ -340,11 +340,11 @@ export default function ApprovalPage() {
             <div>
               <div className="flex items-center gap-2 text-brand-700">
                 <FileText aria-hidden="true" className="size-5" />
-                <p className="text-xs font-bold tracking-[0.1em] uppercase">
+                <p className="text-xs font-semibold tracking-[0.1em] uppercase">
                   승인 기준 문서 {documentVersion}
                 </p>
               </div>
-              <h2 className="mt-2 text-xl font-black text-app-foreground">
+              <h2 className="mt-2 text-xl font-semibold text-app-foreground">
                 업무 명세서 원본
               </h2>
               <p className="mt-2 text-sm leading-6 text-app-muted">
@@ -358,7 +358,7 @@ export default function ApprovalPage() {
 
           <div className="mt-6 rounded-control border border-app-border bg-app-surface-subtle p-5">
             <div className="rounded-control border border-app-border bg-app-surface p-5">
-              <h3 className="text-sm font-black text-app-foreground">업무명세서 탭 원본 데이터</h3>
+              <h3 className="text-sm font-semibold text-app-foreground">업무명세서 탭 원본 데이터</h3>
               {sowDocument ? (
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
                   {activeDocumentSections.map((section) => (
@@ -366,7 +366,7 @@ export default function ApprovalPage() {
                       key={section.title}
                       className="rounded-control border border-app-border bg-app-surface-subtle p-4"
                     >
-                      <h4 className="text-sm font-black text-app-foreground">{section.title}</h4>
+                      <h4 className="text-sm font-semibold text-app-foreground">{section.title}</h4>
                       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-app-muted">
                         {section.body}
                       </p>
@@ -381,13 +381,13 @@ export default function ApprovalPage() {
             </div>
 
             <div className="mt-6 border-t border-app-border pt-5">
-              <h3 className="text-sm font-black text-app-foreground">
+              <h3 className="text-sm font-semibold text-app-foreground">
                 마일스톤 검증 정보
               </h3>
               <div className="mt-3 overflow-hidden rounded-control border border-app-border bg-app-surface">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-app-border text-left text-sm">
-                    <thead className="bg-app-surface-subtle text-xs font-bold text-app-muted">
+                    <thead className="bg-app-surface-subtle text-xs text-app-muted">
                       <tr>
                         <th scope="col" className="w-[18%] px-4 py-3">
                           Milestone
@@ -407,15 +407,15 @@ export default function ApprovalPage() {
                       {milestoneCriteriaRows.length ? (
                         milestoneCriteriaRows.map((row) => (
                           <tr key={`${row.code}-${row.title}`} className="align-top">
-                            <td className="px-4 py-4 font-bold text-app-foreground">
+                            <td className="px-4 py-4 text-app-foreground">
                               <span>{row.code}</span>
-                              <span className="mt-1 block font-semibold text-app-muted">
+                              <span className="mt-1 block text-app-muted">
                                 {row.title}
                               </span>
-                              <span className="mt-3 block text-xs font-semibold text-app-muted">
+                              <span className="mt-3 block text-xs text-app-muted">
                                 기간: {row.period}
                               </span>
-                              <span className="mt-1 block text-xs font-semibold text-app-muted">
+                              <span className="mt-1 block text-xs text-app-muted">
                                 금액: {row.amount}
                               </span>
                             </td>
@@ -444,7 +444,7 @@ export default function ApprovalPage() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-6 text-sm font-semibold text-app-muted">
+                          <td colSpan={4} className="px-4 py-6 text-sm text-app-muted">
                             아직 확정된 마일스톤 검수 기준이 없습니다. 업무명세서 탭에서 기준을 작성한 뒤 승인 요청하세요.
                           </td>
                         </tr>
@@ -458,7 +458,7 @@ export default function ApprovalPage() {
 
           {!isReadOnly ? (
             <div className="mt-5 rounded-control border border-brand-200 bg-brand-50 p-4">
-              <p className="text-sm font-bold leading-6 text-brand-700">
+              <p className="text-sm leading-6 text-brand-700">
                 이 업무 명세서 {documentVersion} 원본을 확인했고, 해당 버전을 승인합니다.
               </p>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -466,7 +466,7 @@ export default function ApprovalPage() {
                   type="button"
                   onClick={() => setIsConfirmOpen(true)}
                   disabled={!approvalState || isCompanyApproved || isApproving}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   <UserCheck aria-hidden="true" className="size-4" />
                   {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
@@ -490,14 +490,14 @@ export default function ApprovalPage() {
                   {hasUnreadRevisionRequest ? (
                     <span className="size-2 rounded-full bg-[#F95803]" aria-hidden="true" />
                   ) : null}
-                  <h2 className="text-lg font-black">수정 요청</h2>
+                  <h2 className="text-lg font-semibold">수정 요청</h2>
                 </div>
-                <p className="mt-2 text-xs font-bold text-app-muted">
+                <p className="mt-2 text-xs text-app-muted">
                   {hasRevisionRequest
                     ? `${revisionRequestDisplay.requesterName} · ${revisionRequestDisplay.requestedAt}`
                     : "수정 요청 없음"}
                 </p>
-                <p className="mt-3 text-sm font-bold leading-6 text-app-foreground">
+                <p className="mt-3 text-sm leading-6 text-app-foreground">
                   {revisionRequestDisplay.summary}
                 </p>
               </div>
@@ -508,7 +508,7 @@ export default function ApprovalPage() {
                     void handleOpenRevisionRequests();
                   }}
                   disabled={isRevisionRequestsReadSaving}
-                  className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-bold ${
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold ${
                     hasUnreadRevisionRequest
                       ? "bg-[#F95803] text-white hover:opacity-90"
                       : "border border-app-border-strong bg-app-surface text-app-foreground hover:bg-app-surface-subtle"
@@ -521,7 +521,7 @@ export default function ApprovalPage() {
                   type="button"
                   onClick={handleGoToRevisionEditor}
                   disabled={!hasRevisionRequest}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-45"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-semibold text-app-foreground hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <PencilLine aria-hidden="true" className="size-4" />
                   업무명세서 수정하기
@@ -532,25 +532,25 @@ export default function ApprovalPage() {
 
           <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-lg font-black text-app-foreground">업무명세서 요약</h2>
+              <h2 className="text-lg font-semibold text-app-foreground">업무명세서 요약</h2>
               <button
                 type="button"
                 onClick={() => setIsOriginalSummaryVisible((current) => !current)}
-                className="shrink-0 rounded-control border border-app-border-strong px-3 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-surface-subtle"
+                className="shrink-0 rounded-control border border-app-border-strong px-3 py-1.5 text-xs text-app-foreground hover:bg-app-surface-subtle"
               >
                 {isOriginalSummaryVisible ? "번역 보기" : "원문 보기"}
               </button>
             </div>
             <dl className="mt-5 space-y-4">
               {isSummaryLoading ? (
-                <div className="py-8 text-center text-xs font-semibold text-app-muted animate-pulse">
+                <div className="py-8 text-center text-xs text-app-muted animate-pulse">
                   Gemini AI가 업무 명세서 요약을 생성하고 있습니다...
                 </div>
               ) : (
                 summaryItems.map((item) => (
                   <div key={item.label}>
-                    <dt className="text-xs font-semibold text-app-muted">{item.label}</dt>
-                    <dd className="mt-1 text-sm font-bold leading-6 text-app-foreground">
+                    <dt className="text-xs text-app-muted">{item.label}</dt>
+                    <dd className="mt-1 text-sm leading-6 text-app-foreground">
                       {item.value}
                     </dd>
                   </div>
@@ -560,13 +560,13 @@ export default function ApprovalPage() {
           </section>
 
           <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-            <h2 className="text-lg font-black text-app-foreground">승인 진행 상태</h2>
+            <h2 className="text-lg font-semibold text-app-foreground">승인 진행 상태</h2>
             <div className="mt-5 space-y-3">
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-black text-app-foreground">{approvalState?.approvals.company?.approverName ?? "발주자"}</h3>
-                    <p className="mt-1 text-xs font-semibold text-app-muted">PO 승인</p>
+                    <h3 className="text-sm font-semibold text-app-foreground">{approvalState?.approvals.company?.approverName ?? "발주자"}</h3>
+                    <p className="mt-1 text-xs text-app-muted">PO 승인</p>
                   </div>
                   <StatusBadge tone={isCompanyApproved ? "success" : "warning"}>
                     {isCompanyApproved ? "승인 완료" : "승인 대기"}
@@ -577,8 +577,8 @@ export default function ApprovalPage() {
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-black text-app-foreground">{approvalState?.approvals.freelancer?.approverName ?? "프리랜서"}</h3>
-                    <p className="mt-1 text-xs font-semibold text-app-muted">프리랜서 승인</p>
+                    <h3 className="text-sm font-semibold text-app-foreground">{approvalState?.approvals.freelancer?.approverName ?? "프리랜서"}</h3>
+                    <p className="mt-1 text-xs text-app-muted">프리랜서 승인</p>
                   </div>
                   <StatusBadge tone={isFreelancerApproved ? "success" : "warning"}>
                     {isFreelancerApproved ? "승인 완료" : "승인 대기"}
@@ -603,7 +603,7 @@ export default function ApprovalPage() {
                 <LockKeyhole aria-hidden="true" className="size-5" />
               </span>
               <div>
-                <h2 id="final-approval-title" className="text-lg font-black text-app-foreground">
+                <h2 id="final-approval-title" className="text-lg font-semibold text-app-foreground">
                   최종 승인을 완료 하시겠습니까
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-app-muted">
@@ -617,14 +617,14 @@ export default function ApprovalPage() {
                 type="button"
                 onClick={handleFinalApproval}
                 disabled={isApproving}
-                className="min-h-11 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isApproving ? "저장 중" : "예"}
               </button>
               <button
                 type="button"
                 onClick={handleCancelApproval}
-                className="min-h-11 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground"
+                className="min-h-11 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm text-app-foreground"
               >
                 아니오
               </button>
@@ -647,10 +647,10 @@ export default function ApprovalPage() {
                   <MessageSquareText aria-hidden="true" className="size-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">
+                  <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
                     SOW Revision
                   </p>
-                  <h2 id="revision-requests-title" className="mt-1 text-lg font-black text-app-foreground">
+                  <h2 id="revision-requests-title" className="mt-1 text-lg font-semibold text-app-foreground">
                     수정 요청 확인
                   </h2>
                 </div>
@@ -681,8 +681,8 @@ export default function ApprovalPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-app-foreground">수정 요청</p>
-                          <p className="mt-2 text-xs font-bold text-app-muted">
+                          <p className="text-sm text-app-foreground">수정 요청</p>
+                          <p className="mt-2 text-xs text-app-muted">
                             {getRevisionRequesterName(request)} · {formatRevisionRequestDateTime(request.requestedAt)}
                           </p>
                         </div>
@@ -690,7 +690,7 @@ export default function ApprovalPage() {
                           <span className="size-2 rounded-full bg-[#F95803]" aria-label="읽지 않은 수정 요청" />
                         ) : null}
                       </div>
-                      <p className="mt-3 whitespace-pre-wrap text-sm font-bold leading-6 text-app-foreground">
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-app-foreground">
                         {request.reason}
                       </p>
                     </article>
@@ -699,7 +699,7 @@ export default function ApprovalPage() {
               </div>
             ) : (
               <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-5">
-                <p className="text-sm font-bold text-app-foreground">
+                <p className="text-sm text-app-foreground">
                   아직 접수된 수정 요청이 없습니다.
                 </p>
                 <p className="mt-2 text-sm leading-6 text-app-muted">
@@ -712,7 +712,7 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={() => setIsRevisionRequestsOpen(false)}
-                className="min-h-10 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90"
+                className="min-h-10 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white hover:opacity-90"
               >
                 확인
               </button>

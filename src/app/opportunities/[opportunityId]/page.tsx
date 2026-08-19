@@ -42,9 +42,9 @@ export default async function OpportunityDetailPage({
     return (
       <main className="mx-auto w-full max-w-3xl px-4 py-20 sm:px-6">
         <div className="rounded-card border border-red-200 bg-red-50 p-6 text-sm text-red-800">
-          <h1 className="text-lg font-black">Failed to load project.</h1>
+          <h1 className="text-lg font-semibold">Failed to load project.</h1>
           <p className="mt-2">{result.error.message}</p>
-          <Link href="/opportunities" className="mt-5 inline-flex font-bold text-brand-700">
+          <Link href="/opportunities" className="mt-5 inline-flex font-semibold text-brand-700">
             Back to Project List
           </Link>
         </div>
@@ -70,7 +70,7 @@ export default async function OpportunityDetailPage({
           <BrandLogo />
           <Link
             href={workspaceHref}
-            className="rounded-control border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50"
+            className="rounded-control border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50"
           >
             {isAuthenticated ? "My Workspace" : "Freelancer Login"}
           </Link>
@@ -80,7 +80,7 @@ export default async function OpportunityDetailPage({
       <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <Link
           href="/opportunities"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-brand-600"
+          className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-brand-600"
         >
           <ArrowLeft className="size-4" />
           Project List
@@ -91,15 +91,15 @@ export default async function OpportunityDetailPage({
             <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-brand-500 to-accent-500" />
 
             <div className="flex items-center gap-2">
-              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-orange-100 text-xs font-black text-brand-700 uppercase">
+              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-orange-100 text-xs font-semibold text-brand-700 uppercase">
                 {opportunity.organizationName.charAt(0)}
               </span>
-              <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+              <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                 {opportunity.organizationName}
               </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
               {opportunity.title}
             </h1>
             <p className="mt-5 whitespace-pre-wrap text-base leading-relaxed text-slate-600">
@@ -111,7 +111,7 @@ export default async function OpportunityDetailPage({
                 {technologies.map((technology) => (
                   <li
                     key={technology}
-                    className="rounded-pill border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600"
+                    className="rounded-pill border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600"
                   >
                     {technology}
                   </li>
@@ -154,9 +154,9 @@ export default async function OpportunityDetailPage({
                 <ul className="space-y-2">
                   {opportunity.attachments.map((attachment) => (
                     <li key={attachment.id}>
-                      <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl border border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-brand-300 hover:text-brand-700">
+                      <a href={attachment.downloadUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl border border-slate-200 p-3 text-sm text-slate-700 hover:border-brand-300 hover:text-brand-700">
                         <span>{attachment.name}</span>
-                        <span className="text-xs font-normal text-slate-400">{Math.ceil(attachment.sizeBytes / 1024)} KB</span>
+                        <span className="text-xs text-slate-400">{Math.ceil(attachment.sizeBytes / 1024)} KB</span>
                       </a>
                     </li>
                   ))}
@@ -166,14 +166,14 @@ export default async function OpportunityDetailPage({
           </article>
 
           <aside className="h-fit rounded-card border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24">
-            <h2 className="text-xs font-bold tracking-wider text-slate-400 uppercase">Project Terms</h2>
+            <h2 className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Project Terms</h2>
 
             <dl className="mt-6 space-y-4">
               <div className="border-b border-slate-100 pb-3">
                 <dt className="flex items-center gap-1.5 text-xs text-slate-500">
                   <DollarSign className="size-4 text-slate-400" /> Budget
                 </dt>
-                <dd className="mt-1 text-base font-black text-slate-900">
+                <dd className="mt-1 text-base text-slate-900">
                   {formatBudget(
                     opportunity.budgetAmount,
                     opportunity.budgetMaxAmount,
@@ -186,7 +186,7 @@ export default async function OpportunityDetailPage({
                 <dt className="flex items-center gap-1.5 text-xs text-slate-500">
                   <Clock className="size-4 text-slate-400" /> Project Period
                 </dt>
-                <dd className="mt-1 text-sm font-bold text-slate-800">
+                <dd className="mt-1 text-sm text-slate-800">
                   {formatProjectPeriod(opportunity.startDate, opportunity.endDate, "en-US")}
                 </dd>
               </div>
@@ -194,7 +194,7 @@ export default async function OpportunityDetailPage({
                 <dt className="flex items-center gap-1.5 text-xs text-slate-500">
                   <Calendar className="size-4 text-slate-400" /> Deadline
                 </dt>
-                <dd className="mt-1 text-sm font-bold text-slate-800">
+                <dd className="mt-1 text-sm text-slate-800">
                   {formatProjectDate(opportunity.recruitmentEndAt, "en-US")}
                 </dd>
               </div>
@@ -203,7 +203,7 @@ export default async function OpportunityDetailPage({
             {isFreelancerWorkspaceActive ? (
               <Link
                 href={applicationPath}
-                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
               >
                 Write SOW Proposal
                 <ArrowRight className="size-4" />
@@ -214,7 +214,7 @@ export default async function OpportunityDetailPage({
                 <input type="hidden" name="next" value={applicationPath} />
                 <button
                   type="submit"
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
                 >
                   Switch to Freelancer and Apply
                   <ArrowRight className="size-4" />
@@ -223,7 +223,7 @@ export default async function OpportunityDetailPage({
             ) : (
               <Link
                 href={loginHref}
-                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
               >
                 Login and Apply
                 <ArrowRight className="size-4" />
@@ -255,7 +255,7 @@ function DetailSection({
 }) {
   return (
     <section className="mt-9 border-t border-slate-100 pt-7">
-      <h2 className="flex items-center gap-2 text-xl font-black text-slate-900">
+      <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
         {icon}
         {title}
       </h2>

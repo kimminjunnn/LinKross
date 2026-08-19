@@ -44,7 +44,7 @@ export default async function ProjectsPage() {
         actions={
           <Link
             href="/company/projects/new"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-4 text-xs sm:text-sm font-bold text-white shadow-xs hover:shadow-md transition-all duration-200"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-xs hover:shadow-md transition-all duration-200"
           >
             <Plus className="size-4" />새 프로젝트
           </Link>
@@ -88,9 +88,9 @@ export default async function ProjectsPage() {
             return (
               <div key={idx} className="rounded-xl border border-app-border bg-app-surface p-5 shadow-xs flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-app-muted">{stat.label}</p>
-                  <p className="text-xl sm:text-2xl font-black text-app-foreground leading-none">{stat.value}</p>
-                  <p className="text-[10px] text-app-muted/80">{stat.desc}</p>
+                  <p className="text-xs text-app-muted">{stat.label}</p>
+                  <p className="text-xl sm:text-2xl font-semibold text-app-foreground leading-none">{stat.value}</p>
+                  <p className="text-xs text-app-muted/80">{stat.desc}</p>
                 </div>
                 <div className={`p-3 rounded-xl border ${stat.color} shrink-0`}>
                   <Icon className="size-5" />
@@ -105,7 +105,7 @@ export default async function ProjectsPage() {
       {!result.ok ? (
         <div className="mt-7 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
           <CircleAlert className="size-5 shrink-0" />
-          <p className="text-sm font-bold">{result.error.message}</p>
+          <p className="text-sm">{result.error.message}</p>
         </div>
       ) : result.data.length === 0 ? (
         <div className="mt-7 rounded-xl border border-dashed border-app-border-strong p-16 text-center bg-white shadow-xs max-w-2xl mx-auto space-y-4">
@@ -113,14 +113,14 @@ export default async function ProjectsPage() {
             <FolderKanban className="size-6" />
           </div>
           <div className="space-y-1">
-            <p className="font-extrabold text-base text-app-foreground">아직 프로젝트가 없습니다.</p>
+            <p className="text-base text-app-foreground">아직 프로젝트가 없습니다.</p>
             <p className="text-xs sm:text-sm text-app-muted max-w-sm mx-auto leading-relaxed">
               새로운 프로젝트를 등록하면 지원자 모집부터 SOW 합의, 자동 검수 및 정산까지 LinKross의 통합 관리가 시작됩니다.
             </p>
           </div>
           <Link
             href="/company/projects/new"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-4 text-xs font-bold text-white transition-all shadow-xs"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-4 text-xs font-semibold text-white transition-all shadow-xs"
           >
             <Plus className="size-4" /> 첫 프로젝트 만들기
           </Link>
@@ -149,7 +149,7 @@ export default async function ProjectsPage() {
                   <div className="min-w-0 space-y-2">
                     {/* Badge row */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                         isCompleted
                           ? "bg-green-50 text-green-700 border-green-200"
                           : isPreparing
@@ -162,24 +162,24 @@ export default async function ProjectsPage() {
                         {LIFECYCLE_LABEL[project.lifecycleStage] ?? status}
                       </span>
                       
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400 bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 rounded-md">
                         <Users2 className="size-3 text-slate-400" />
                         제안서 {project.proposalCount}건
                       </span>
                     </div>
 
                     {/* Project Title */}
-                    <h2 className="text-lg sm:text-xl font-extrabold text-app-foreground leading-snug truncate group-hover:text-brand-600 transition-colors">
+                    <h2 className="text-lg sm:text-xl font-semibold text-app-foreground leading-snug truncate group-hover:text-brand-600 transition-colors">
                       {project.title}
                     </h2>
 
                     {/* Metadata line */}
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-app-muted">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-app-muted">
                       <span className="inline-flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-slate-600">
                         <Wallet className="size-3.5 text-slate-400" />
                         계약금: {amount}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
+                      <span className="inline-flex items-center gap-1 text-xs text-slate-400">
                         <CalendarDays className="size-3.5" />
                         등록일: {new Date(project.createdAt).toLocaleDateString()}
                       </span>
@@ -191,7 +191,7 @@ export default async function ProjectsPage() {
                     {project.lifecycleStage === "preparing" ? (
                       <Link
                         href={nextHref}
-                        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50/50 hover:bg-brand-100/75 hover:border-brand-300 px-5 text-xs sm:text-sm font-bold text-brand-700 hover:text-brand-800 transition-all duration-200 group shadow-xs active:scale-[0.98]"
+                        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50/50 hover:bg-brand-100/75 hover:border-brand-300 px-5 text-xs sm:text-sm font-semibold text-brand-700 hover:text-brand-800 transition-all duration-200 group shadow-xs active:scale-[0.98]"
                       >
                         업무 명세서 확인
                         <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
@@ -199,7 +199,7 @@ export default async function ProjectsPage() {
                     ) : (
                       <Link
                         href={nextHref}
-                        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-5 text-xs sm:text-sm font-bold text-white transition-all duration-200 group shadow-xs hover:shadow-md active:scale-[0.98]"
+                        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-5 text-xs sm:text-sm font-semibold text-white transition-all duration-200 group shadow-xs hover:shadow-md active:scale-[0.98]"
                       >
                         검수 현황 확인
                         <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />

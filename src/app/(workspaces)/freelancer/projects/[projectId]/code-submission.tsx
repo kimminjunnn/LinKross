@@ -42,7 +42,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
       <div className="flex items-start gap-3">
         <GitPullRequest aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-600" />
         <div>
-          <h2 className="text-lg font-black text-app-foreground">Code submission and verification</h2>
+          <h2 className="text-lg font-semibold text-app-foreground">Code submission and verification</h2>
           <p className="mt-1 text-sm leading-6 text-app-muted">
             Submit an open PR from the official project repository. LinKross locks the immutable head Commit SHA and queues milestone verification.
           </p>
@@ -50,14 +50,14 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
       </div>
 
       {initialWorkspace.repository ? (
-        <a href={initialWorkspace.repository.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-control bg-brand-50 px-3 py-2 text-sm font-bold text-brand-700">
+        <a href={initialWorkspace.repository.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-control bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700">
           {initialWorkspace.repository.owner}/{initialWorkspace.repository.name}<ExternalLink aria-hidden="true" className="size-4" />
         </a>
       ) : (
         <div className="mt-4 flex items-start gap-3 rounded-control border border-dashed border-app-border-strong bg-app-surface-subtle p-4">
           <Clock3 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-app-muted" />
           <div>
-            <p className="text-sm font-black text-app-foreground">Waiting for the official repository</p>
+            <p className="text-sm text-app-foreground">Waiting for the official repository</p>
             <p className="mt-1 text-sm leading-6 text-app-muted">
               The client must connect and confirm the GitHub repository before you can submit a PR.
             </p>
@@ -66,7 +66,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
       )}
 
       {message ? (
-        <p aria-live="polite" className="mt-4 rounded-control bg-app-surface-subtle p-3 text-sm font-bold text-app-muted">
+        <p aria-live="polite" className="mt-4 rounded-control bg-app-surface-subtle p-3 text-sm text-app-muted">
           {message}
         </p>
       ) : null}
@@ -136,14 +136,14 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-black text-app-foreground">{milestone.code} · {milestone.title}</h3>
+            <h3 className="font-semibold text-app-foreground">{milestone.code} · {milestone.title}</h3>
             <StatusPill label={status.label} tone={status.tone} />
           </div>
-          <p className="mt-2 text-xs font-bold text-app-muted">
+          <p className="mt-2 text-xs text-app-muted">
             {formatDateRange(milestone.startDate, milestone.endDate)} · {milestone.amount.toLocaleString()} {milestone.currency}
           </p>
         </div>
-        <span className="text-xs font-bold text-app-muted">
+        <span className="text-xs text-app-muted">
           {milestone.submissions.length} {milestone.submissions.length === 1 ? "submission" : "submissions"}
         </span>
       </div>
@@ -152,7 +152,7 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
         <div className="mt-4 flex items-start gap-3 rounded-control border border-danger/30 bg-danger/10 p-4 text-danger">
           <RotateCcw aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           <div>
-            <p className="text-sm font-black">Changes requested by the client</p>
+            <p className="text-sm">Changes requested by the client</p>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-6">
               {currentDecision.reason || "Review the verification results and submit a new Commit SHA."}
             </p>
@@ -167,18 +167,18 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
           PR submission will become available after the client connects the official repository.
         </p>
       ) : submissionClosed ? (
-        <p className="mt-4 flex items-center gap-2 rounded-control bg-success/10 p-4 text-sm font-bold text-success">
+        <p className="mt-4 flex items-center gap-2 rounded-control bg-success/10 p-4 text-sm text-success">
           <CheckCircle2 aria-hidden="true" className="size-5 shrink-0" />
           {status.key === "approved" ? "This milestone is approved. No further submission is required." : "This milestone is closed."}
         </p>
       ) : (
         <form action={submitForm} className="mt-5 space-y-4 border-t border-app-border pt-5">
           <div>
-            <label htmlFor={prInputId} className="text-xs font-black text-app-foreground">GitHub PR URL</label>
+            <label htmlFor={prInputId} className="text-xs text-app-foreground">GitHub PR URL</label>
             <input id={prInputId} name="pullRequestUrl" type="url" required disabled={pending} placeholder="https://github.com/owner/repository/pull/123" className="mt-2 min-h-11 w-full rounded-control border border-app-border-strong px-3 text-sm disabled:opacity-50" />
           </div>
           <fieldset disabled={pending} className="space-y-2">
-            <legend className="text-xs font-black text-app-foreground">Criteria completed in this PR</legend>
+            <legend className="text-xs text-app-foreground">Criteria completed in this PR</legend>
             {milestone.checklist.map((criterion) => (
               <label key={criterion.id} className="flex items-start gap-2 rounded-control bg-app-surface-subtle p-3 text-sm text-app-muted">
                 <input type="checkbox" name="criterionId" value={criterion.id} className="mt-1" />
@@ -187,10 +187,10 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
             ))}
           </fieldset>
           <div>
-            <label htmlFor={noteInputId} className="text-xs font-black text-app-foreground">Implementation note <span className="font-semibold text-app-muted">(optional)</span></label>
+            <label htmlFor={noteInputId} className="text-xs text-app-foreground">Implementation note <span className="text-app-muted">(optional)</span></label>
             <textarea id={noteInputId} name="implementationNote" disabled={pending} placeholder="Known limitations or test instructions" className="mt-2 min-h-24 w-full rounded-control border border-app-border-strong p-3 text-sm disabled:opacity-50" />
           </div>
-          <button disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
+          <button disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
             {pending ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <GitPullRequest aria-hidden="true" className="size-4" />}Submit PR
           </button>
           <p className="text-xs leading-5 text-app-muted">
@@ -201,16 +201,16 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
 
       {milestone.submissions.length > 0 ? (
         <details className="mt-5 border-t border-app-border pt-4">
-          <summary className="cursor-pointer text-sm font-black text-app-foreground">Submission history</summary>
+          <summary className="cursor-pointer text-sm text-app-foreground">Submission history</summary>
           <div className="mt-3 space-y-3">
             {milestone.submissions.map((submission) => (
               <div key={submission.id} className="rounded-control bg-app-surface-subtle p-3 text-sm">
-                <a href={submission.pullRequestUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-black text-brand-700 hover:underline">
+                <a href={submission.pullRequestUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:underline">
                   PR #{submission.pullRequestNumber} · attempt {submission.attemptNumber}<ExternalLink aria-hidden="true" className="size-3.5" />
                 </a>
                 <p className="mt-1 break-all font-mono text-xs text-app-muted">{submission.headCommitSha}</p>
                 {submission.runs.map((run) => (
-                  <p key={run.id} className="mt-2 flex items-center gap-2 text-xs font-bold text-app-muted">
+                  <p key={run.id} className="mt-2 flex items-center gap-2 text-xs text-app-muted">
                     <ShieldCheck aria-hidden="true" className="size-4" />Verification {run.attemptNumber}: {formatStatus(run.status)}
                   </p>
                 ))}
@@ -236,8 +236,8 @@ function VerificationSummary({ milestone, submission }: {
     <section aria-label="Latest verification result" className="mt-4 rounded-control border border-app-border bg-app-surface-subtle p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-bold text-app-muted">Latest submitted Commit</p>
-          <p className="mt-1 break-all font-mono text-xs font-bold text-app-foreground">{submission.headCommitSha}</p>
+          <p className="text-xs text-app-muted">Latest submitted Commit</p>
+          <p className="mt-1 break-all font-mono text-xs text-app-foreground">{submission.headCommitSha}</p>
         </div>
         {latestRun ? <RunStatusPill run={latestRun} /> : <StatusPill label="Verification pending" tone="neutral" />}
       </div>
@@ -256,7 +256,7 @@ function VerificationSummary({ milestone, submission }: {
           return (
             <li key={criterion.id} className="rounded-control border border-app-border bg-app-surface p-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <p className="min-w-0 flex-1 text-sm font-bold leading-5 text-app-foreground">{criterion.description}</p>
+                <p className="min-w-0 flex-1 text-sm leading-5 text-app-foreground">{criterion.description}</p>
                 <StatusPill label={resultStatus.label} tone={resultStatus.tone} />
               </div>
               {result?.observedResult ? <p className="mt-2 text-xs leading-5 text-app-muted">{result.observedResult}</p> : null}
@@ -264,7 +264,7 @@ function VerificationSummary({ milestone, submission }: {
               {result?.evidence.some((artifact) => artifact.url) ? (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {result.evidence.map((artifact) => artifact.url ? (
-                    <a key={artifact.id} href={artifact.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-black text-brand-700 hover:underline">
+                    <a key={artifact.id} href={artifact.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline">
                       Open {formatStatus(artifact.type)}<ExternalLink aria-hidden="true" className="size-3" />
                     </a>
                   ) : null)}
@@ -276,7 +276,7 @@ function VerificationSummary({ milestone, submission }: {
       </ul>
 
       {latestRun?.previewUrl ? (
-        <a href={latestRun.previewUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-black text-brand-700 hover:underline">
+        <a href={latestRun.previewUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline">
           Open preview<ExternalLink aria-hidden="true" className="size-3.5" />
         </a>
       ) : null}
@@ -290,7 +290,7 @@ function RunStatusPill({ run }: { run: VerificationRunRecord }) {
 }
 
 function StatusPill({ label, tone }: { label: string; tone: StatusTone }) {
-  return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${STATUS_TONE_CLASS[tone]}`}>{label}</span>;
+  return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_TONE_CLASS[tone]}`}>{label}</span>;
 }
 
 function resolveMilestoneStatus(

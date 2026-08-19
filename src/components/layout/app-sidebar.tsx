@@ -33,7 +33,7 @@ export function AppSidebar({ workspace }: { workspace: WorkspaceRole }) {
 
         <div className="mt-auto pt-8">
           <div className="rounded-card border border-accent-100 bg-accent-50 p-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-accent-800">
+            <div className="flex items-center gap-2 text-sm text-accent-800">
               <CircleHelp aria-hidden="true" className="size-4" />
               {copy.title}
             </div>

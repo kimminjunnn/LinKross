@@ -8,20 +8,20 @@ export default async function EvidenceBundleDetailPage({ params }: { params: Pro
   const result = await getEvidenceBundleDetail(projectId, bundleId);
 
   if (!result.ok) {
-    return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm font-bold text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
+    return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
   }
 
   const bundle = result.data;
 
   return (
     <div className="space-y-5">
-      <Link href={`/company/projects/${projectId}/evidence`} className="inline-flex items-center gap-2 text-sm font-bold text-app-muted hover:text-app-foreground"><ArrowLeft className="size-4" />증빙 목록으로</Link>
+      <Link href={`/company/projects/${projectId}/evidence`} className="inline-flex items-center gap-2 text-sm font-semibold text-app-muted hover:text-app-foreground"><ArrowLeft className="size-4" />증빙 목록으로</Link>
 
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-        <h1 className="text-xl font-black text-app-foreground">통합 증빙 번들 v{bundle.versionNumber}</h1>
+        <h1 className="text-xl font-semibold text-app-foreground">통합 증빙 번들 v{bundle.versionNumber}</h1>
         <p className="mt-1 text-sm text-app-muted">상태 {bundle.status} · 생성 {new Date(bundle.requestedAt).toLocaleString("ko-KR")}</p>
         {bundle.sha256 && <p className="mt-2 break-all rounded-control bg-app-surface-subtle p-3 font-mono text-xs text-app-muted">SHA-256 {bundle.sha256}</p>}
-        {bundle.errorMessage && <p className="mt-2 text-sm font-bold text-danger">{bundle.errorMessage}</p>}
+        {bundle.errorMessage && <p className="mt-2 text-sm text-danger">{bundle.errorMessage}</p>}
         <p className="mt-3 text-xs leading-5 text-app-muted">이 문서는 프로젝트 진행 확인 자료이며 법률, 세무 판단 또는 정식 전자계약을 대체하지 않습니다.</p>
       </section>
 
@@ -42,7 +42,7 @@ function BundleContent({ payload }: { payload: Record<string, unknown> }) {
   return (
     <div className="space-y-4">
       <Section title="프로젝트 및 요구사항">
-        <p className="text-sm font-bold text-app-foreground">{project?.title ?? "-"}</p>
+        <p className="text-sm text-app-foreground">{project?.title ?? "-"}</p>
         {requirementVersion && <p className="mt-1 text-sm text-app-muted">{String(requirementVersion.goal ?? "")}</p>}
       </Section>
 
@@ -76,11 +76,11 @@ function BundleContent({ payload }: { payload: Record<string, unknown> }) {
             const finalDecision = milestone.finalDecision as Record<string, unknown> | null;
             return (
               <div key={String(milestone.id)} className="rounded-control bg-app-surface-subtle p-3">
-                <p className="font-black text-app-foreground">{String(milestone.code)} · {String(milestone.title)} <span className="ml-2 text-xs font-bold text-app-muted">{String(milestone.status)}</span></p>
+                <p className="text-app-foreground">{String(milestone.code)} · {String(milestone.title)} <span className="ml-2 text-xs text-app-muted">{String(milestone.status)}</span></p>
                 {submissions[0] && (
                   <p className="mt-1 text-xs text-app-muted">PR #{String(submissions[0].pull_request_number)} · commit {String(submissions[0].head_commit_sha).slice(0, 12)}</p>
                 )}
-                {finalDecision && <p className="mt-1 text-xs font-bold text-accent-700">최종 승인 · {new Date(String(finalDecision.decided_at)).toLocaleString("ko-KR")}</p>}
+                {finalDecision && <p className="mt-1 text-xs text-accent-700">최종 승인 · {new Date(String(finalDecision.decided_at)).toLocaleString("ko-KR")}</p>}
               </div>
             );
           })}
@@ -105,7 +105,7 @@ function BundleContent({ payload }: { payload: Record<string, unknown> }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-      <h2 className="font-black text-app-foreground">{title}</h2>
+      <h2 className="font-semibold text-app-foreground">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
