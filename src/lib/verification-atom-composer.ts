@@ -155,7 +155,19 @@ function normalizeAndValidate(item: FlatItem): ComposeOutcome {
 
   if (item.automatable !== "ui") return { spec: null, reason: "schema_rejected" };
 
-  const steps = (item.steps ?? []).map(toAtom).filter((atom): atom is object => atom !== null);
+  // 변환에 실패한 step을 버리고 나머지로 조합을 만들면 단언이 사라진 채
+  // 무조건 통과하는 시나리오가 될 수 있다. 하나라도 실패하면 조합 전체를 버린다.
+  const steps: object[] = [];
+  for (const rawStep of item.steps ?? []) {
+    const atom = toAtom(rawStep);
+    if (!atom) return { spec: null, reason: "schema_rejected" };
+    steps.push(atom);
+  }
+  // 동작만 있고 확인이 없는 조합은 무엇도 검증하지 못하므로 채택하지 않는다.
+  if (!steps.some((atom) => String((atom as { atom: string }).atom).startsWith("expect_"))) {
+    return { spec: null, reason: "schema_rejected" };
+  }
+
   const spec = parseManagedBrowserAtomTestSpec({
     version: MANAGED_BROWSER_SPEC_VERSION_V2,
     kind: "managed_browser",
@@ -261,7 +273,11 @@ function buildSystemPrompt(): string {
     "- 특정 시각·날짜에 의존하는 조건",
     "",
     "automatable=ui: 브라우저에서 보고 조작해 확인할 수 있는 경우. steps 를 채우고 apiSteps 는 비웁니다.",
-    "- '버튼이 동작하지 않는다', '로그인이 되지 않는다' 등 제출 차단/실패 조건은 버튼 자체의 disabled 속성(expect_disabled)을 함부로 추정하지 마세요. 버튼은 클릭 가능하지만 제출이 차단되는 것이 일반적입니다. click 후 expect_path 유지, expect_form_blocked, 또는 expect_error_feedback을 사용하세요.",
+    "- '버튼이 동작하지 않는다', '로그인이 되지 않는다' 등 제출 차단/실패 조건은 버튼 자체의 disabled 속성(expect_disabled)을 함부로 추정하지 마세요. 버튼은 클릭 가능하지만 제출이 차단되는 것이 일반적입니다.",
+    "- expect_path 는 '어딘가로 이동하지 않았다'만 증명하며 '왜' 이동하지 않았는지는 증명하지 못합니다. 잘못된 비밀번호처럼 원인이 다른 실패도 같은 경로에 남기 때문에, expect_path 단독으로는 서로 다른 두 DoD('이메일이 없으면 막힌다'와 '비밀번호가 틀리면 막힌다')를 구분하지 못하고 둘 다 통과시켜 버립니다.",
+    "- 특정 입력란이 비어 있거나 형식이 틀려서 제출이 막히는 조건(예: '이메일을 입력하지 않으면 로그인이 되지 않는다')은 반드시 그 입력란 자체에 expect_form_blocked 를 사용하세요. expect_path 는 보조 단언으로만 추가하고, 단독으로 쓰지 마세요.",
+    "- 서버 응답에 따라 화면에 문구가 뜨는 조건(예: '비밀번호가 틀리면 오류가 표시된다')은 expect_error_feedback 을 사용하세요.",
+    "- 페이지가 열린 직후에는 어떤 요소도 키보드 포커스를 갖고 있지 않습니다. expect_focused 로 특정 요소의 포커스를 확인하려면, 그 요소로 포커스가 이동하도록 만드는 press(Tab 등) 단계가 반드시 그 앞에 먼저 있어야 합니다. press 없이 곧바로 expect_focused 를 쓰면 항상 실패합니다.",
     "automatable=api: HTTP 요청과 응답 상태 코드로 확인하는 것이 더 안정적인 경우(횟수 제한, 중복 차단 등). apiSteps 를 채우고 steps 는 비웁니다.",
     "",
     "사용하지 않는 필드는 빈 문자열(숫자는 0)로 두세요.",
