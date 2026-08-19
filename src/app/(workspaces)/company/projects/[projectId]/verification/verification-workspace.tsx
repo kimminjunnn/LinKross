@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -53,6 +53,63 @@ const ACTIVE_RUN_STATUSES: VerificationRunRecord["status"][] = [
   "building",
   "running",
 ];
+
+function LinKrossMark({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="35 25 70 70"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M70 85L93 45" stroke="#F97316" strokeWidth="12" strokeLinecap="round" />
+      <path
+        d="M47 75L70 35L93 75"
+        stroke="#0F172A"
+        strokeWidth="12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M47 45L70 85" stroke="#F97316" strokeWidth="12" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function VerificationLoadingOverlay({
+  milestoneLabel,
+  onDismiss,
+}: {
+  milestoneLabel: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+      onClick={onDismiss}
+    >
+      <div
+        className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <LinKrossMark className="size-14 animate-lk-mark-flow" />
+        <p className="text-xl font-semibold text-slate-900">격리 환경에서 검수 중입니다...</p>
+        <p className="max-w-xs text-center text-sm text-slate-500">
+          {milestoneLabel} 설치·빌드·테스트를 실행하고 있습니다. 완료되면 이 화면이 자동으로 갱신됩니다.
+        </p>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-1 cursor-pointer text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+        >
+          닫고 계속 둘러보기
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function ProjectTimeline({
   milestones,
@@ -161,9 +218,21 @@ export function CompanyVerificationWorkspace({
   );
   const [message, setMessage] = useState<string | null>(initialMessage);
   const [pending, startTransition] = useTransition();
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const wasRunningRef = useRef(false);
   const selectedMilestone =
     initialWorkspace.milestones.find((milestone) => milestone.id === selectedMilestoneId) ??
     initialWorkspace.milestones[0];
+
+  const runningMilestone = useMemo(
+    () =>
+      initialWorkspace.milestones.find((milestone) => {
+        const latestRunStatus = milestone.submissions[0]?.runs[0]?.status;
+        return latestRunStatus !== undefined && ACTIVE_RUN_STATUSES.includes(latestRunStatus);
+      }) ?? null,
+    [initialWorkspace.milestones],
+  );
+  const anyRunInProgress = runningMilestone !== null;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -177,17 +246,16 @@ export function CompanyVerificationWorkspace({
   }, [initialWorkspace.projectId, initialWorkspace.repository]);
 
   useEffect(() => {
-    const anyRunInProgress = initialWorkspace.milestones.some((milestone) => {
-      const latestRunStatus = milestone.submissions[0]?.runs[0]?.status;
-      return (
-        latestRunStatus !== undefined && ACTIVE_RUN_STATUSES.includes(latestRunStatus)
-      );
-    });
     if (!anyRunInProgress) return;
 
     const interval = window.setInterval(() => router.refresh(), 4000);
     return () => window.clearInterval(interval);
-  }, [initialWorkspace.milestones, router]);
+  }, [anyRunInProgress, router]);
+
+  useEffect(() => {
+    if (anyRunInProgress && !wasRunningRef.current) setOverlayDismissed(false);
+    wasRunningRef.current = anyRunInProgress;
+  }, [anyRunInProgress]);
 
   function handleDismissWelcome() {
     localStorage.setItem(`lk-welcome-dismissed-${initialWorkspace.projectId}`, "true");
@@ -251,6 +319,13 @@ export function CompanyVerificationWorkspace({
 
   return (
     <>
+      {anyRunInProgress && runningMilestone && !overlayDismissed && (
+        <VerificationLoadingOverlay
+          milestoneLabel={`${runningMilestone.code} · ${runningMilestone.title}`}
+          onDismiss={() => setOverlayDismissed(true)}
+        />
+      )}
+
       <ProjectTimeline
         milestones={initialWorkspace.milestones}
         selectedMilestoneId={selectedMilestone.id}
