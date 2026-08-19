@@ -80,7 +80,7 @@ export function OpportunitiesList({
               className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-all ${
                 selectedTechnology === null
                   ? "bg-brand-500 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-650 hover:bg-slate-200"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
               All Technologies
@@ -93,7 +93,7 @@ export function OpportunitiesList({
                 className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-all ${
                   selectedTechnology === technology
                     ? "bg-brand-500 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-650 hover:bg-slate-200"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {technology}
@@ -138,7 +138,7 @@ export function OpportunitiesList({
                           {technologies.map((technology) => (
                             <li
                               key={technology}
-                              className="rounded-pill border border-slate-200/60 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-650"
+                              className="rounded-pill border border-slate-200/60 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600"
                             >
                               {technology}
                             </li>
@@ -170,7 +170,7 @@ export function OpportunitiesList({
                     </div>
                   </div>
 
-                  <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-100 pt-5 text-xs font-bold text-slate-450">
+                  <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-100 pt-5 text-xs font-bold text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <WalletCards className="size-4 text-slate-400" />
                       <span>{opportunity.budgetType === "range" ? "Budget Range" : "Fixed Budget"}</span>

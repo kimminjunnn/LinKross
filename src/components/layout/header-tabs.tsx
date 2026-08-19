@@ -32,7 +32,7 @@ export function HeaderTabs() {
                 : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
             }`}
           >
-            <Icon className={`size-3.5 ${isActive ? "text-brand-500" : "text-slate-450"}`} />
+            <Icon className={`size-3.5 ${isActive ? "text-brand-500" : "text-slate-400"}`} />
             {tab.label}
           </Link>
         );

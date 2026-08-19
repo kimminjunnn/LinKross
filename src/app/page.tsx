@@ -194,7 +194,7 @@ export default async function HomePage() {
             <span>가입 없이 워크스페이스 대시보드가 궁금하신가요?</span>
             <Link
               href="/demo/projects/quarterly-improvement"
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-650 hover:text-orange-700 transition-all hover:scale-[1.03] shadow-xs border border-orange-200/50 cursor-pointer ml-1 active:scale-[0.98]"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 hover:text-orange-700 transition-all hover:scale-[1.03] shadow-xs border border-orange-200/50 cursor-pointer ml-1 active:scale-[0.98]"
             >
               <span>데모 체험하기</span>
               <span className="text-xs transition-transform group-hover:translate-x-0.5">→</span>
@@ -272,7 +272,7 @@ export default async function HomePage() {
                         "잘못된 비밀번호 입력 시 오류가 표시된다. (Handles invalid credentials)",
                         "이메일 미입력 시 로그인이 차단된다. (Validates empty fields)"
                       ].map((item, idx) => (
-                        <li key={idx} className="flex items-center justify-between text-xs font-bold bg-white border border-slate-150 rounded-xl p-3 shadow-xs">
+                        <li key={idx} className="flex items-center justify-between text-xs font-bold bg-white border border-slate-200 rounded-xl p-3 shadow-xs">
                           <span className="text-slate-800 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> {item}
                           </span>

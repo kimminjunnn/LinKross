@@ -81,7 +81,7 @@ export default async function ProjectsPage() {
               value: `${totalProposals}건`,
               desc: "지원자가 보낸 프로젝트 수행서",
               icon: Users2,
-              color: "text-indigo-650 bg-indigo-50 border-indigo-100"
+              color: "text-indigo-600 bg-indigo-50 border-indigo-100"
             }
           ].map((stat, idx) => {
             const Icon = stat.icon;
@@ -103,12 +103,12 @@ export default async function ProjectsPage() {
 
       {/* Main Content Area */}
       {!result.ok ? (
-        <div className="mt-7 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger animate-fadeIn">
+        <div className="mt-7 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
           <CircleAlert className="size-5 shrink-0" />
           <p className="text-sm font-bold">{result.error.message}</p>
         </div>
       ) : result.data.length === 0 ? (
-        <div className="mt-7 rounded-xl border border-dashed border-app-border-strong p-16 text-center bg-white shadow-xs max-w-2xl mx-auto space-y-4 animate-fadeIn">
+        <div className="mt-7 rounded-xl border border-dashed border-app-border-strong p-16 text-center bg-white shadow-xs max-w-2xl mx-auto space-y-4">
           <div className="size-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
             <FolderKanban className="size-6" />
           </div>
@@ -126,7 +126,7 @@ export default async function ProjectsPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4 animate-fadeIn">
+        <div className="space-y-4">
           {result.data.map((project) => {
             const status = mapLifecycleStageToProjectStatus(project.lifecycleStage);
             const nextHref =
@@ -143,7 +143,7 @@ export default async function ProjectsPage() {
             return (
               <article 
                 key={project.id} 
-                className="group rounded-xl border border-app-border bg-app-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-slate-350 transition-all duration-300"
+                className="group rounded-xl border border-app-border bg-app-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-300"
               >
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0 space-y-2">
@@ -153,7 +153,7 @@ export default async function ProjectsPage() {
                         isCompleted
                           ? "bg-green-50 text-green-700 border-green-200"
                           : isPreparing
-                          ? "bg-amber-55/10 text-amber-700 border-amber-250/20"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
                           : "bg-brand-50 text-brand-700 border-brand-100"
                       }`}>
                         <span className={`size-1.5 rounded-full ${

@@ -111,7 +111,7 @@ export default async function OpportunityDetailPage({
                 {technologies.map((technology) => (
                   <li
                     key={technology}
-                    className="rounded-pill border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-650"
+                    className="rounded-pill border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600"
                   >
                     {technology}
                   </li>

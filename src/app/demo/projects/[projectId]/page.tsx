@@ -221,7 +221,7 @@ export default function DemoProjectPage() {
 
           {/* Tab 1: Project Details View (Korean SOW) */}
           {activeTab === "project" && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-6">
               {/* Overview Details Grid */}
               <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
@@ -258,7 +258,7 @@ export default function DemoProjectPage() {
                   
                   <div className="flex items-center gap-2 text-[11px] font-bold">
                     <span className="rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5">v1.0 SOW 승인 완료</span>
-                    <span className="text-slate-450">해시 불변 잠금됨</span>
+                    <span className="text-slate-400">해시 불변 잠금됨</span>
                   </div>
 
                   <div className="space-y-4">
@@ -279,7 +279,7 @@ export default function DemoProjectPage() {
                   </div>
                   
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between rounded-lg border border-slate-150 p-4 bg-slate-50/50">
+                    <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4 bg-slate-50/50">
                       <div>
                         <p className="text-xs font-bold text-slate-800">김민준 대표 (PO)</p>
                         <p className="text-[10px] text-slate-400 mt-0.5">2026-08-19 서명됨</p>
@@ -289,7 +289,7 @@ export default function DemoProjectPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between rounded-lg border border-slate-150 p-4 bg-slate-50/50">
+                    <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4 bg-slate-50/50">
                       <div>
                         <p className="text-xs font-bold text-slate-800">외국인 프리랜서</p>
                         <p className="text-[10px] text-slate-400 mt-0.5">2026-08-19 서명됨</p>
@@ -310,7 +310,7 @@ export default function DemoProjectPage() {
 
           {/* Tab 2: Milestones & Verification (Client Review Actions) */}
           {activeTab === "milestones" && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-6">
               {/* Connected repository banner */}
               <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-start gap-3">
@@ -339,7 +339,7 @@ export default function DemoProjectPage() {
                         최종 승인 완료
                       </span>
                     </div>
-                    <p className="mt-2 text-xs font-semibold text-slate-450">
+                    <p className="mt-2 text-xs font-semibold text-slate-400">
                       기간: 2026-08-19 – 2026-08-25 · 배정 예산: 8,000 USD · 검수 대상: sha-a1b2c3d
                     </p>
                   </div>
@@ -432,7 +432,7 @@ export default function DemoProjectPage() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-2 text-xs font-semibold text-slate-450">
+                    <p className="mt-2 text-xs font-semibold text-slate-400">
                       기간: 2026-08-25 – 2026-08-31 · 배정 예산: 4,000 USD · 검수 대상: sha-e5f6g7h
                     </p>
                   </div>
@@ -462,7 +462,7 @@ export default function DemoProjectPage() {
                           <div>
                             <span className="text-[10px] font-bold text-slate-400 block mb-0.5">M2-C{idx + 1}</span>
                             <p className="text-xs font-bold text-slate-800">{item.desc}</p>
-                            <p className="mt-1 text-[10px] font-bold text-slate-450">검수 방법: {item.method}</p>
+                            <p className="mt-1 text-[10px] font-bold text-slate-400">검수 방법: {item.method}</p>
                           </div>
                           <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold border ${item.statusColor}`}>
                             {item.status}
@@ -513,7 +513,7 @@ export default function DemoProjectPage() {
 
                     {m2Status === "rejected" && (
                       <div className="rounded-lg border border-red-200 p-4 bg-red-50/20 text-xs text-red-800 flex gap-2">
-                        <XCircle className="size-4 shrink-0 mt-0.5 text-red-650" />
+                        <XCircle className="size-4 shrink-0 mt-0.5 text-red-600" />
                         <div>
                           <p className="font-bold">프리랜서에게 수정을 요구했습니다.</p>
                           <p className="mt-1 text-red-700"><strong>요청 사유:</strong> "{savedRevisionReason}"</p>
@@ -554,7 +554,7 @@ export default function DemoProjectPage() {
 
           {/* Tab 3: Payments & Evidence */}
           {activeTab === "payments" && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-6">
               {/* Invoice Panel */}
               <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -624,7 +624,7 @@ export default function DemoProjectPage() {
 
       {/* Revision Request Modal (shadcn style) */}
       {showRevisionModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-xs animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white border border-slate-200 rounded-xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="font-extrabold text-sm text-slate-900">수정 요청 이유 작성</h3>
@@ -638,7 +638,7 @@ export default function DemoProjectPage() {
             
             <form onSubmit={handleRequestRevision} className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-450 uppercase block mb-1.5">반려 및 수정 요구 사항</label>
+                <label className="text-[11px] font-bold text-slate-400 uppercase block mb-1.5">반려 및 수정 요구 사항</label>
                 <textarea
                   required
                   rows={4}
@@ -653,7 +653,7 @@ export default function DemoProjectPage() {
                 <button
                   type="button"
                   onClick={() => setShowRevisionModal(false)}
-                  className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-650 hover:bg-slate-50 transition-colors"
+                  className="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   취소
                 </button>
@@ -671,7 +671,7 @@ export default function DemoProjectPage() {
 
       {/* Video Modal (shadcn/ui inspired Modal) */}
       {showVideoModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-xs animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-slate-950 border border-slate-800 rounded-lg w-full max-w-2xl overflow-hidden shadow-2xl relative">
             <button 
               onClick={() => setShowVideoModal(false)}
@@ -696,11 +696,11 @@ export default function DemoProjectPage() {
 
       {/* Screenshot Modal (shadcn/ui inspired Modal) */}
       {showScreenshotModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-xs animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white border border-slate-200 rounded-lg w-full max-w-2xl overflow-hidden shadow-2xl relative">
             <button 
               onClick={() => setShowScreenshotModal(false)}
-              className="absolute top-4 right-4 z-10 text-slate-500 hover:text-slate-950 bg-slate-100 hover:bg-slate-250 rounded-full p-2 transition-colors hover:cursor-pointer"
+              className="absolute top-4 right-4 z-10 text-slate-500 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors hover:cursor-pointer"
             >
               <X className="size-4" />
             </button>
