@@ -63,6 +63,12 @@ function ProjectTimeline({
   selectedMilestoneId: string;
   onSelectMilestone: (id: string) => void;
 }) {
+  const approvedCount = milestones.filter(m => m.decision?.decision === "approved").length;
+  const totalCount = milestones.length;
+  const progressPercent = totalCount > 1 
+    ? (approvedCount / (totalCount - 1)) * 100 
+    : 0;
+
   return (
     <div className="mb-6 rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <h3 className="text-xs font-semibold tracking-[0.1em] text-app-muted uppercase mb-4">
@@ -70,7 +76,12 @@ function ProjectTimeline({
       </h3>
       <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-start md:gap-4">
         {/* 연결 선 (가로) - MD 이상에서만 보임 */}
-        <div className="absolute left-6 right-6 top-6 hidden h-0.5 bg-app-border-strong/50 md:block" />
+        <div className="absolute left-6 right-6 top-6 hidden h-0.5 bg-slate-200 md:block">
+          <div 
+            className="h-full bg-success-500 transition-all duration-500" 
+            style={{ width: `${progressPercent}%` }} 
+          />
+        </div>
 
         {milestones.map((milestone) => {
           const isSelected = milestone.id === selectedMilestoneId;
@@ -85,16 +96,17 @@ function ProjectTimeline({
           let icon = <span className="text-xs">{milestone.code}</span>;
 
           if (isApproved) {
-            stepBg = "bg-success-50 border-success-500 text-success-700";
+            stepBg = "bg-success-500 border-success-600 text-white shadow-sm shadow-success-500/25";
             icon = <Check className="size-4 stroke-[3]" />;
           } else if (isRevisionRequired) {
-            stepBg = "bg-warning-50 border-warning-500 text-warning-700";
+            stepBg = "bg-amber-500 border-amber-600 text-white shadow-sm shadow-amber-500/25";
             icon = <RotateCcw className="size-4" />;
           } else if (isRunning) {
-            stepBg = "bg-brand-50 border-brand-500 text-brand-700 animate-pulse";
-            icon = <Play className="size-4 fill-brand-600 text-brand-600" />;
+            stepBg = "bg-brand-500 border-brand-600 text-white animate-pulse shadow-md shadow-brand-500/30";
+            icon = <Play className="size-4 fill-white text-white" />;
           } else if (isSelected) {
-            stepBg = "bg-app-surface border-brand-600 text-brand-700 ring-2 ring-brand-100";
+            stepBg = "bg-app-surface border-brand-500 text-brand-600 ring-4 ring-brand-500/10 shadow-xs";
+            icon = <span className="text-xs font-black">{milestone.code}</span>;
           }
 
           return (
@@ -105,7 +117,7 @@ function ProjectTimeline({
               className="group relative z-10 flex flex-1 cursor-pointer flex-col items-center text-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600"
             >
               {/* 스텝 서클 */}
-              <div className={`grid size-12 place-items-center rounded-pill border-2 transition-all group-hover:scale-105 ${stepBg}`}>
+              <div className={`grid size-12 place-items-center rounded-pill border-2 transition-all duration-300 group-hover:scale-105 ${stepBg}`}>
                 {icon}
               </div>
 
@@ -382,18 +394,51 @@ function RepositorySummary({
       <dl className="mt-5 grid gap-3 border-t border-app-border pt-4 sm:grid-cols-3">
         <RepositoryField
           label="기본 브랜치"
-          value={repository?.defaultBranch ?? "-"}
-          icon={<GitBranch className="size-4" />}
+          value={
+            repository?.defaultBranch ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-slate-800">
+                {repository.defaultBranch}
+              </span>
+            ) : (
+              "-"
+            )
+          }
+          icon={<GitBranch className="size-3.5 text-slate-400" />}
         />
         <RepositoryField
           label="권한"
-          value={repository?.isPrivate ? "비공개" : "읽기 전용"}
-          icon={<ShieldCheck className="size-4" />}
+          value={
+            repository ? (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+                repository.isPrivate 
+                  ? "bg-amber-50 text-amber-700 border border-amber-250/20" 
+                  : "bg-slate-50 text-slate-600 border border-slate-200/50"
+              }`}>
+                {repository.isPrivate ? "비공개" : "읽기 전용"}
+              </span>
+            ) : (
+              "-"
+            )
+          }
+          icon={<ShieldCheck className="size-3.5 text-slate-400" />}
         />
         <RepositoryField
           label="연결 확인"
-          value={repository?.companyConfirmedAt ? "발주자 확인 완료" : "아직 없음"}
-          icon={<UserRound className="size-4" />}
+          value={
+            repository ? (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+                repository.companyConfirmedAt 
+                  ? "bg-green-50 text-green-700 border border-green-200" 
+                  : "bg-slate-50 text-slate-500 border border-slate-200/50"
+              }`}>
+                <span className={`size-1.5 rounded-full ${repository.companyConfirmedAt ? "bg-green-500" : "bg-slate-450"}`} />
+                {repository.companyConfirmedAt ? "발주자 확인 완료" : "확인 대기"}
+              </span>
+            ) : (
+              "-"
+            )
+          }
+          icon={<UserRound className="size-3.5 text-slate-400" />}
         />
       </dl>
 
@@ -408,10 +453,10 @@ function RepositorySummary({
             </div>
             <a
               href={`/api/github/app/install?projectId=${encodeURIComponent(projectId)}`}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white transition-colors hover:opacity-90 cursor-pointer"
             >
-              <LockKeyhole aria-hidden="true" className="size-4" />
-              GitHub App 설치
+              <LockKeyhole aria-hidden="true" className="size-3.5 !text-white" />
+              <span className="!text-white">GitHub App 설치</span>
             </a>
           </div>
 
@@ -472,16 +517,19 @@ function VerificationSummary({ milestone }: { milestone: VerificationMilestoneRe
           label="완료조건"
           value={String(milestone.checklist.length)}
           tone="text-app-foreground"
+          icon={<Clock className="size-7 stroke-[1]" />}
         />
         <SummaryMetric
           label="제출"
           value={String(submittedCount)}
-          tone={submittedCount ? "text-brand-700" : "text-app-muted"}
+          tone={submittedCount ? "text-brand-600" : "text-app-muted"}
+          icon={<ExternalLink className="size-7 stroke-[1]" />}
         />
         <SummaryMetric
           label="검수"
           value={String(verifiedCount)}
-          tone={verifiedCount ? "text-accent-800" : "text-app-muted"}
+          tone={verifiedCount ? "text-accent-600" : "text-app-muted"}
+          icon={<ShieldCheck className="size-7 stroke-[1]" />}
         />
       </div>
       <p className="mt-4 text-xs leading-5 text-brand-700">
@@ -974,7 +1022,7 @@ function RepositoryField({
   icon,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   icon: React.ReactNode;
 }) {
   return (
@@ -992,13 +1040,20 @@ function SummaryMetric({
   label,
   value,
   tone,
+  icon,
 }: {
   label: string;
   value: string;
   tone: string;
+  icon?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-control border border-brand-200 bg-app-surface/80 px-2 py-3">
+    <div className="relative overflow-hidden rounded-control border border-brand-200 bg-app-surface/80 px-2 py-3">
+      {icon && (
+        <span aria-hidden="true" className="absolute right-2 top-2 text-app-border-strong">
+          {icon}
+        </span>
+      )}
       <p className={`text-2xl font-bold ${tone}`}>{value}</p>
       <p className="mt-1 text-xs text-app-muted">{label}</p>
     </div>

@@ -126,7 +126,7 @@ export function OnboardingFlow() {
                   ? "/login?role=company&next=/company"
                   : "/"
             }
-            className="rounded-control px-3 py-2 text-sm text-app-muted transition-colors hover:bg-app-surface-subtle hover:text-app-foreground"
+            className="rounded-control px-3 py-2 text-sm font-bold text-app-muted transition-colors hover:bg-app-surface-subtle hover:text-app-foreground"
           >
             {isApplicantProfile ? "Skip for now" : "나중에 하기"}
           </Link>
@@ -137,10 +137,10 @@ export function OnboardingFlow() {
         <div className="mx-auto w-full max-w-4xl">
           <div className="mb-8 flex items-center justify-between gap-4 sm:mb-10">
             <div>
-              <p className="text-xs font-semibold tracking-[0.16em] text-brand-700 uppercase">
+              <p className="text-xs font-black tracking-[0.16em] text-brand-700 uppercase">
                 {isApplicantProfile ? "Getting started" : "시작하기"}
               </p>
-              <p className="mt-1 text-sm text-app-foreground">
+              <p className="mt-1 text-sm font-bold text-app-foreground">
                 {isApplicantProfile ? `Step ${stepNumber} of 2` : `${stepNumber}/2 단계`}
               </p>
             </div>
@@ -168,7 +168,7 @@ export function OnboardingFlow() {
               <div className="max-w-2xl">
                 <h1
                   id="onboarding-purpose-title"
-                  className="text-3xl font-bold tracking-[-0.04em] text-app-foreground sm:text-4xl"
+                  className="text-3xl font-black tracking-[-0.04em] text-app-foreground sm:text-4xl"
                 >
                   LinKross에서 어떤 일을 시작하시나요?
                 </h1>
@@ -179,7 +179,7 @@ export function OnboardingFlow() {
               </div>
 
               <div
-                className="mt-8 grid gap-4 md:grid-cols-2"
+                className="mt-8 grid gap-5 md:grid-cols-2"
                 role="radiogroup"
                 aria-label="이용 목적"
               >
@@ -194,49 +194,57 @@ export function OnboardingFlow() {
                       role="radio"
                       aria-checked={isSelected}
                       onClick={() => setIntent(option.id)}
-                      className={`group relative min-h-72 rounded-card border-2 bg-app-surface p-6 text-left shadow-card transition-all sm:p-7 ${
+                      className={`group relative min-h-[17.5rem] rounded-2xl border-2 bg-app-surface p-6 text-left shadow-xs hover:cursor-pointer transition-all duration-300 sm:p-7 ${
                         isSelected
-                          ? "border-brand-500 ring-4 ring-brand-100"
-                          : "border-app-border hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-floating"
+                          ? "border-brand-500 ring-2 ring-brand-500/10 bg-brand-50/5 shadow-xs"
+                          : "border-slate-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-slate-50/30 hover:shadow-md"
                       }`}
                     >
+                      {/* Styled Icon Container */}
                       <span
-                        className={`grid size-12 place-items-center rounded-xl transition-colors ${
+                        className={`grid size-12 place-items-center rounded-xl border transition-all duration-300 shadow-xs ${
                           isSelected
-                            ? "bg-brand-500 text-white"
-                            : "bg-brand-50 text-brand-700 group-hover:bg-brand-100"
+                            ? "bg-brand-500 text-white border-brand-600 shadow-sm shadow-brand-500/25"
+                            : "bg-brand-50 text-brand-700 border-brand-100 group-hover:bg-brand-100/70 group-hover:text-brand-850"
                         }`}
                       >
-                        <Icon aria-hidden="true" className="size-6" />
+                        <Icon aria-hidden="true" className="size-5.5" />
                       </span>
 
-                      <span className="mt-7 block text-xs font-semibold tracking-[0.12em] text-brand-700 uppercase">
+                      {/* Content details */}
+                      <span className="mt-6 block text-[10px] font-extrabold tracking-wider text-brand-600 uppercase">
                         {option.eyebrow}
                       </span>
-                      <span className="mt-2 block text-xl font-semibold tracking-tight text-app-foreground sm:text-2xl">
+                      <span className="mt-2 block text-lg sm:text-xl font-extrabold tracking-tight text-app-foreground group-hover:text-brand-650 transition-colors">
                         {option.title}
                       </span>
-                      <span className="mt-3 block text-sm leading-6 text-app-muted">
+                      <span className="mt-2.5 block text-xs sm:text-sm leading-relaxed text-app-muted font-medium break-keep">
                         {option.description}
                       </span>
 
-                      <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
-                        {option.action}
+                      {/* Action CTA */}
+                      <span className={`mt-6 inline-flex items-center gap-1.5 text-xs font-black transition-all ${
+                        isSelected 
+                          ? "text-brand-600" 
+                          : "text-brand-700 group-hover:text-brand-800"
+                      }`}>
+                        <span>{option.action}</span>
                         <ArrowRight
                           aria-hidden="true"
-                          className="size-4 transition-transform group-hover:translate-x-1"
+                          className="size-3.5 transition-transform group-hover:translate-x-0.5"
                         />
                       </span>
 
+                      {/* Custom Radio check dot */}
                       <span
                         aria-hidden="true"
-                        className={`absolute right-5 top-5 grid size-7 place-items-center rounded-full border transition-colors ${
+                        className={`absolute right-6 top-6 grid size-6 place-items-center rounded-full border transition-all duration-300 ${
                           isSelected
-                            ? "border-brand-500 bg-brand-500 text-white"
-                            : "border-app-border bg-app-surface text-transparent"
+                            ? "border-brand-500 bg-brand-500 text-white scale-100 shadow-xs"
+                            : "border-slate-200 bg-white text-transparent scale-95 group-hover:border-slate-350"
                         }`}
                       >
-                        <Check className="size-4" strokeWidth={3} />
+                        <Check className="size-3.5" strokeWidth={3} />
                       </span>
                     </button>
                   );
@@ -256,7 +264,7 @@ export function OnboardingFlow() {
                   type="button"
                   disabled={!intent}
                   onClick={continueToProfile}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-app-border-strong disabled:text-app-surface"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-app-border-strong disabled:text-app-surface"
                 >
                   계속하기
                   <ArrowRight aria-hidden="true" className="size-4" />
@@ -268,7 +276,7 @@ export function OnboardingFlow() {
               <button
                 type="button"
                 onClick={() => setStep("purpose")}
-                className="mb-5 inline-flex items-center gap-2 rounded-control text-sm font-semibold text-app-muted transition-colors hover:text-app-foreground"
+                className="mb-5 inline-flex items-center gap-2 rounded-control text-sm font-bold text-app-muted transition-colors hover:text-app-foreground"
               >
                 <ArrowLeft aria-hidden="true" className="size-4" />
                 {intent === "apply" ? "Back to role selection" : "이용 목적 다시 선택"}
@@ -281,10 +289,10 @@ export function OnboardingFlow() {
                       <span className="grid size-12 place-items-center rounded-xl bg-white/10 text-brand-300">
                         <SelectedIcon aria-hidden="true" className="size-6" />
                       </span>
-                      <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-brand-300 uppercase">
+                      <p className="mt-7 text-xs font-black tracking-[0.12em] text-brand-300 uppercase">
                         {selectedOption.eyebrow}
                       </p>
-                      <h2 className="mt-2 text-2xl font-bold tracking-tight">
+                      <h2 className="mt-2 text-2xl font-black tracking-tight">
                         {selectedOption.title}
                       </h2>
                       <p className="mt-4 text-sm leading-6 text-white/70">
@@ -298,12 +306,12 @@ export function OnboardingFlow() {
 
                 <form onSubmit={finishOnboarding} className="p-7 sm:p-9">
                   <div>
-                    <p className="text-sm text-brand-700">
+                    <p className="text-sm font-black text-brand-700">
                       {intent === "apply" ? "Basic information" : "기본 정보"}
                     </p>
                     <h1
                       id="onboarding-profile-title"
-                      className="mt-2 text-2xl font-bold tracking-tight text-app-foreground sm:text-3xl"
+                      className="mt-2 text-2xl font-black tracking-tight text-app-foreground sm:text-3xl"
                     >
                       {intent === "recruit"
                         ? "프로젝트를 등록할 팀을 알려주세요"
@@ -325,7 +333,7 @@ export function OnboardingFlow() {
                     </p>
                     <button
                       type="submit"
-                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600"
                     >
                       {intent === "recruit"
                         ? "프로젝트 등록하기"
@@ -346,7 +354,7 @@ export function OnboardingFlow() {
 function RecruiterFields() {
   return (
     <div className="mt-7 grid gap-5 sm:grid-cols-2">
-      <label className="text-sm text-app-foreground sm:col-span-2">
+      <label className="text-sm font-bold text-app-foreground sm:col-span-2">
         회사 또는 팀 이름
         <input
           required
@@ -356,7 +364,7 @@ function RecruiterFields() {
           className={fieldClassName}
         />
       </label>
-      <label className="text-sm text-app-foreground">
+      <label className="text-sm font-bold text-app-foreground">
         담당자 이름
         <input
           required
@@ -366,7 +374,7 @@ function RecruiterFields() {
           className={fieldClassName}
         />
       </label>
-      <label className="text-sm text-app-foreground">
+      <label className="text-sm font-bold text-app-foreground">
         담당자 역할
         <select required name="role" defaultValue="" className={fieldClassName}>
           <option value="" disabled>
@@ -378,7 +386,7 @@ function RecruiterFields() {
           <option value="other">기타</option>
         </select>
       </label>
-      <label className="text-sm text-app-foreground">
+      <label className="text-sm font-bold text-app-foreground">
         팀 규모
         <select required name="teamSize" defaultValue="" className={fieldClassName}>
           <option value="" disabled>
@@ -390,8 +398,8 @@ function RecruiterFields() {
           <option value="31+">31명 이상</option>
         </select>
       </label>
-      <label className="text-sm text-app-foreground">
-        회사 웹사이트 <span className="text-app-muted">(선택)</span>
+      <label className="text-sm font-bold text-app-foreground">
+        회사 웹사이트 <span className="font-medium text-app-muted">(선택)</span>
         <input
           name="website"
           type="url"
@@ -426,7 +434,7 @@ function ApplicantFields() {
 
   return (
     <div className="mt-7 grid gap-5 sm:grid-cols-2">
-      <label className="text-sm text-app-foreground">
+      <label className="text-sm font-bold text-app-foreground">
         Display name
         <input
           required
@@ -436,7 +444,7 @@ function ApplicantFields() {
           className={fieldClassName}
         />
       </label>
-      <label className="text-sm text-app-foreground">
+      <label className="text-sm font-bold text-app-foreground">
         Time zone
         <select required name="timezone" defaultValue="Asia/Seoul" className={fieldClassName}>
           <option value="Asia/Seoul">Seoul (UTC+9)</option>
@@ -446,7 +454,7 @@ function ApplicantFields() {
           <option value="other">Other</option>
         </select>
       </label>
-      <label className="text-sm text-app-foreground sm:col-span-2">
+      <label className="text-sm font-bold text-app-foreground sm:col-span-2">
         Professional headline
         <input
           required
@@ -455,7 +463,7 @@ function ApplicantFields() {
           className={fieldClassName}
         />
       </label>
-      <label className="text-sm text-app-foreground sm:col-span-2">
+      <label className="text-sm font-bold text-app-foreground sm:col-span-2">
         Key skills or areas of expertise
         <input
           required
@@ -465,9 +473,9 @@ function ApplicantFields() {
         />
       </label>
       <fieldset className="sm:col-span-2">
-        <legend className="text-sm text-app-foreground">
+        <legend className="text-sm font-bold text-app-foreground">
           GitHub or portfolio links{" "}
-          <span className="text-app-muted">(optional)</span>
+          <span className="font-medium text-app-muted">(optional)</span>
         </legend>
 
         <div className="space-y-2">
@@ -497,7 +505,7 @@ function ApplicantFields() {
         <button
           type="button"
           onClick={addPortfolioLink}
-          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-control border border-app-border-strong px-3.5 text-sm font-semibold text-app-foreground transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-control border border-app-border-strong px-3.5 text-sm font-bold text-app-foreground transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
         >
           <Plus aria-hidden="true" className="size-4" />
           Add link
