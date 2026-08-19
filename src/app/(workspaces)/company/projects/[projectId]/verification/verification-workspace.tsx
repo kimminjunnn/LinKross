@@ -219,6 +219,7 @@ export function CompanyVerificationWorkspace({
   const [message, setMessage] = useState<string | null>(initialMessage);
   const [pending, startTransition] = useTransition();
   const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const [verifyingLabel, setVerifyingLabel] = useState<string | null>(null);
   const wasRunningRef = useRef(false);
   const selectedMilestone =
     initialWorkspace.milestones.find((milestone) => milestone.id === selectedMilestoneId) ??
@@ -232,7 +233,10 @@ export function CompanyVerificationWorkspace({
       }) ?? null,
     [initialWorkspace.milestones],
   );
-  const anyRunInProgress = runningMilestone !== null;
+  // 검수를 동기 대기로 처리하므로, 방금 누른 탭 자신은 initialWorkspace가
+  // 갱신되기 전까지 anyRunInProgress를 못 잡는다. verifyingLabel이 그 공백을 메운다.
+  const anyRunInProgress = runningMilestone !== null || verifyingLabel !== null;
+  const overlayLabel = verifyingLabel ?? (runningMilestone ? `${runningMilestone.code} · ${runningMilestone.title}` : "");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -319,9 +323,9 @@ export function CompanyVerificationWorkspace({
 
   return (
     <>
-      {anyRunInProgress && runningMilestone && !overlayDismissed && (
+      {anyRunInProgress && !overlayDismissed && (
         <VerificationLoadingOverlay
-          milestoneLabel={`${runningMilestone.code} · ${runningMilestone.title}`}
+          milestoneLabel={overlayLabel}
           onDismiss={() => setOverlayDismissed(true)}
         />
       )}
@@ -397,6 +401,7 @@ export function CompanyVerificationWorkspace({
             disabled={pending}
             run={(task) => startTransition(task)}
             setMessage={setMessage}
+            setVerifyingLabel={setVerifyingLabel}
           />
         </div>
       </section>
@@ -624,6 +629,7 @@ function MilestoneDetail({
   disabled,
   run,
   setMessage,
+  setVerifyingLabel,
 }: {
   projectId: string;
   milestone: VerificationMilestoneRecord;
@@ -632,6 +638,7 @@ function MilestoneDetail({
   disabled: boolean;
   run: (task: () => Promise<void>) => void;
   setMessage: (message: string) => void;
+  setVerifyingLabel: (label: string | null) => void;
 }) {
   const latestSubmission = milestone.submissions[0];
   const latestRun = latestSubmission?.runs[0];
@@ -643,13 +650,18 @@ function MilestoneDetail({
   function requestRun() {
     if (!latestSubmission) return;
     run(async () => {
-      const result = await requestVerificationRunAction({
-        projectId,
-        milestoneId: milestone.id,
-        submissionId: latestSubmission.id,
-        scope: "milestone",
-      });
-      setMessage(result.ok ? "격리 환경에서 검수가 완료됐습니다. 아래에서 결과를 확인하세요." : result.error.message);
+      setVerifyingLabel(`${milestone.code} · ${milestone.title}`);
+      try {
+        const result = await requestVerificationRunAction({
+          projectId,
+          milestoneId: milestone.id,
+          submissionId: latestSubmission.id,
+          scope: "milestone",
+        });
+        setMessage(result.ok ? "격리 환경에서 검수가 완료됐습니다. 아래에서 결과를 확인하세요." : result.error.message);
+      } finally {
+        setVerifyingLabel(null);
+      }
     });
   }
 
