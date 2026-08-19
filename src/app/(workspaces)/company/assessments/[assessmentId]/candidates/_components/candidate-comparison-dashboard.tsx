@@ -82,13 +82,17 @@ export function CandidateComparisonDashboard({
           onClick={() => setIsReqExpanded(!isReqExpanded)}
           className="flex w-full items-center justify-between p-5 text-left font-black text-app-foreground hover:bg-slate-50/50 transition-colors rounded-card cursor-pointer"
         >
-          <span className="text-sm font-black flex items-center gap-2">
+          <span className="text-sm font-black text-app-foreground">
             등록 요구사항
-            <span className="text-xs font-bold text-app-muted font-normal">
-              ({isReqExpanded ? "접기" : "자세히 보기"})
-            </span>
           </span>
-          {isReqExpanded ? <ChevronUp className="size-4 text-app-muted" /> : <ChevronDown className="size-4 text-app-muted" />}
+          <div className="flex items-center gap-1.5 text-xs font-bold text-app-muted">
+            <span>{isReqExpanded ? "요구사항 접기" : "요구사항 펼치기"}</span>
+            {isReqExpanded ? (
+              <ChevronUp className="size-4 text-app-muted/80" />
+            ) : (
+              <ChevronDown className="size-4 text-app-muted/80" />
+            )}
+          </div>
         </button>
         {isReqExpanded && (
           <div className="border-t border-app-border p-5 bg-app-surface-subtle/50 animate-fadeIn">
