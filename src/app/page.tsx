@@ -190,13 +190,14 @@ export default async function HomePage() {
           </div>
 
           {/* 데모 체험하기 우회 링크 */}
-          <div className="mb-24 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-500 select-none">
+          <div className="mb-24 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-500 select-none">
             <span>가입 없이 워크스페이스 대시보드가 궁금하신가요?</span>
             <Link
               href="/demo/projects/quarterly-improvement"
-              className="text-orange-500 font-black hover:text-orange-600 underline underline-offset-4 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-650 hover:text-orange-700 transition-all hover:scale-[1.03] shadow-xs border border-orange-200/50 cursor-pointer ml-1 active:scale-[0.98]"
             >
-              데모 체험하기
+              <span>데모 체험하기</span>
+              <span className="text-xs transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
           </div>
 
