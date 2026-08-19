@@ -6,6 +6,7 @@ import { Sandbox, type SandboxUser } from "@vercel/sandbox";
 
 import type { VerificationJobManifest } from "@/lib/verification-runner/contracts";
 import { runManagedBrowserCriteria } from "@/lib/verification-runner/managed-browser";
+import { runManagedApiCheckCriteria } from "@/lib/verification-runner/managed-api-check";
 import {
   claimVerificationJob,
   completeVerificationJob,
@@ -164,8 +165,17 @@ export async function executeNextVerificationInVercelSandbox(
       hasStartScript: Boolean(packageJson.scripts?.start),
       onProgress: () => heartbeatVerificationJob(manifest.run.id, lease).then(() => undefined),
     });
+    const apiCheckOutcomes = await runManagedApiCheckCriteria({
+      appUser,
+      verifierUser,
+      manifest,
+      workspace: WORKSPACE,
+      hasStartScript: Boolean(packageJson.scripts?.start),
+      onProgress: () => heartbeatVerificationJob(manifest.run.id, lease).then(() => undefined),
+    });
+    const automatedOutcomes = [...browserOutcomes, ...apiCheckOutcomes];
     const browserOutcomesByCriterion = new Map(
-      browserOutcomes.map((outcome) => [outcome.criterionId, outcome]),
+      automatedOutcomes.map((outcome) => [outcome.criterionId, outcome]),
     );
     const screenshotEvidence = new Map<string, {
       storagePath: string;
@@ -186,7 +196,7 @@ export async function executeNextVerificationInVercelSandbox(
 
     await heartbeatVerificationJob(manifest.run.id, lease);
     const safeLog = redactLog(
-      formatRunnerLog(manifest, source.sha256, commandLog, browserOutcomes),
+      formatRunnerLog(manifest, source.sha256, commandLog, automatedOutcomes),
     );
     const evidence = await uploadVerificationLog({
       projectId: manifest.project.id,
@@ -242,7 +252,7 @@ export async function executeNextVerificationInVercelSandbox(
       results,
       durationMs:
         commandLog.reduce((total, command) => total + (command.durationMs ?? 0), 0)
-        + browserOutcomes.reduce((total, outcome) => total + outcome.durationMs, 0),
+        + automatedOutcomes.reduce((total, outcome) => total + outcome.durationMs, 0),
     });
 
     return {
