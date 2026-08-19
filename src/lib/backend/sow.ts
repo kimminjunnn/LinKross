@@ -139,6 +139,17 @@ type SowRevisionRequestReadRow = {
   read_at: string;
 };
 
+type SowApprovalParticipantRows = {
+  companyName: string | null;
+  freelancerName: string | null;
+};
+
+type SowApprovalProjectRow = {
+  id: string;
+  company_id: string;
+  company_contact_name_snapshot?: string | null;
+};
+
 function isMissingRevisionReadTable(error: { code?: string; message?: string } | null | undefined) {
   const message = error?.message ?? "";
   return error?.code === "42P01" || message.includes("sow_revision_request_reads");
@@ -150,6 +161,135 @@ function isDuplicateRevisionRead(error: { code?: string } | null | undefined) {
 
 // 같은 sow_version_id 안에서 position/code unique 제약과 부딪히지 않도록,
 // 기존 행들을 먼저 이 범위 밖(음수)으로 옮겨둔 뒤 목표 값으로 다시 배치한다.
+async function getCompanyApprovalName(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  companyId: string,
+  fallbackEmail?: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("company_profiles")
+    .select("contact_name")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  return typeof data?.contact_name === "string" && data.contact_name.trim()
+    ? data.contact_name.trim()
+    : fallbackEmail ?? null;
+}
+
+async function getFreelancerApprovalName(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  freelancerId: string,
+  snapshotName: string | null,
+  fallbackEmail?: string,
+): Promise<string | null> {
+  if (snapshotName?.trim()) return snapshotName.trim();
+
+  const { data } = await supabase
+    .from("freelancer_profiles")
+    .select("display_name")
+    .eq("id", freelancerId)
+    .maybeSingle();
+
+  return typeof data?.display_name === "string" && data.display_name.trim()
+    ? data.display_name.trim()
+    : fallbackEmail ?? null;
+}
+
+async function getSowApprovalParticipantRows(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  projectId: string,
+  companyId: string,
+  companyNameSnapshot: string | null,
+): Promise<BackendResult<SowApprovalParticipantRows>> {
+  const [
+    { data: companyProfile, error: companyProfileError },
+    { data: selection, error: selectionError },
+  ] = await Promise.all([
+    supabase
+      .from("company_profiles")
+      .select("contact_name")
+      .eq("id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("selections")
+      .select("proposal_id")
+      .eq("project_id", projectId)
+      .maybeSingle(),
+  ]);
+
+  if (companyProfileError || selectionError) {
+    return {
+      ok: false,
+      error: mapBackendError(
+        companyProfileError ?? selectionError,
+        "SOW 승인 참여자 정보를 불러오지 못했습니다.",
+      ),
+    };
+  }
+
+  if (!selection?.proposal_id) {
+    return {
+      ok: true,
+      data: {
+        companyName: companyNameSnapshot ?? companyProfile?.contact_name ?? null,
+        freelancerName: null,
+      },
+    };
+  }
+
+  const { data: proposal, error: proposalError } = await supabase
+    .from("proposals")
+    .select("freelancer_id, freelancer_display_name_snapshot")
+    .eq("id", selection.proposal_id)
+    .maybeSingle();
+
+  if (proposalError) {
+    return {
+      ok: false,
+      error: mapBackendError(proposalError, "선정된 프리랜서 정보를 불러오지 못했습니다."),
+    };
+  }
+
+  const snapshotName =
+    typeof proposal?.freelancer_display_name_snapshot === "string"
+      ? proposal.freelancer_display_name_snapshot.trim()
+      : "";
+
+  let currentProfileName: string | null = null;
+  if (!snapshotName && proposal?.freelancer_id) {
+    const { data: freelancerProfile, error: freelancerProfileError } = await supabase
+      .from("freelancer_profiles")
+      .select("display_name")
+      .eq("id", proposal.freelancer_id)
+      .maybeSingle();
+
+    if (freelancerProfileError) {
+      return {
+        ok: false,
+        error: mapBackendError(freelancerProfileError, "프리랜서 프로필 정보를 불러오지 못했습니다."),
+      };
+    }
+
+    currentProfileName =
+      typeof freelancerProfile?.display_name === "string"
+        ? freelancerProfile.display_name.trim()
+        : null;
+  }
+
+  return {
+    ok: true,
+    data: {
+      companyName:
+        companyNameSnapshot ??
+        (typeof companyProfile?.contact_name === "string" && companyProfile.contact_name.trim()
+          ? companyProfile.contact_name.trim()
+          : null),
+      freelancerName: snapshotName || currentProfileName,
+    },
+  };
+}
+
 function buildTempPositionBase(): number {
   return -Math.floor(Date.now() / 1000);
 }
@@ -693,6 +833,7 @@ export async function getSowWorkspaceContext(
 export async function getSowApprovalState(
   projectId: string,
   sowVersionId?: string,
+  viewerRole?: UserRole,
 ): Promise<BackendResult<SowApprovalState | null>> {
   if (!isUuid(projectId) || (sowVersionId !== undefined && !isUuid(sowVersionId))) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트 ID가 아닙니다." } };
@@ -704,11 +845,27 @@ export async function getSowApprovalState(
     return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
   }
 
-  const { data: project, error: projectError } = await supabase
+  const projectResult = await supabase
     .from("projects")
-    .select("id, company_id")
+    .select("id, company_id, company_contact_name_snapshot")
     .eq("id", projectId)
     .maybeSingle();
+  let project = projectResult.data as SowApprovalProjectRow | null;
+  let projectError = projectResult.error;
+
+  if (
+    projectError?.code === "42703" ||
+    projectError?.message?.includes("company_contact_name_snapshot")
+  ) {
+    const fallbackResult = await supabase
+      .from("projects")
+      .select("id, company_id")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    project = fallbackResult.data as SowApprovalProjectRow | null;
+    projectError = fallbackResult.error;
+  }
 
   if (projectError) {
     return { ok: false, error: mapBackendError(projectError, "프로젝트를 확인하지 못했습니다.") };
@@ -717,7 +874,9 @@ export async function getSowApprovalState(
     return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
   }
 
-  if (project.company_id !== authData.user.id) {
+  const projectRow = project as SowApprovalProjectRow;
+
+  if (projectRow.company_id !== authData.user.id) {
     const { data: selection, error: selectionError } = await supabase
       .from("selections")
       .select("id")
@@ -754,6 +913,19 @@ export async function getSowApprovalState(
   }
 
   const sowRow = sowVersion as SowVersionApprovalRow;
+  const companyNameSnapshot =
+    typeof projectRow.company_contact_name_snapshot === "string" &&
+    projectRow.company_contact_name_snapshot.trim()
+      ? projectRow.company_contact_name_snapshot.trim()
+      : null;
+  const participantRows = await getSowApprovalParticipantRows(
+    supabase,
+    projectId,
+    projectRow.company_id,
+    companyNameSnapshot,
+  );
+  if (!participantRows.ok) return participantRows;
+
   const [
     { data: milestones, error: milestonesError },
     { data: criteria, error: criteriaError },
@@ -814,7 +986,8 @@ export async function getSowApprovalState(
     revisionRequestReads = (readRows ?? []) as SowRevisionRequestReadRow[];
   }
 
-  const isCompany = project.company_id === authData.user.id;
+  const effectiveViewerRole: UserRole =
+    viewerRole ?? (projectRow.company_id === authData.user.id ? "company" : "freelancer");
 
   return {
     ok: true,
@@ -823,9 +996,10 @@ export async function getSowApprovalState(
       milestones: (milestones ?? []) as MilestoneApprovalRow[],
       criteria: (criteria ?? []) as CompletionCriteriaApprovalRow[],
       approvals: (approvals ?? []) as SowApprovalRow[],
+      participants: participantRows.data,
       revisionRequests: revisionRequestRows,
       revisionRequestReads,
-      translate: !isCompany,
+      translate: effectiveViewerRole === "freelancer",
     }),
   };
 }
@@ -886,7 +1060,7 @@ export async function markSowRevisionRequestsRead(
     }
   }
 
-  const state = await getSowApprovalState(input.projectId, input.sowVersionId);
+  const state = await getSowApprovalState(input.projectId, input.sowVersionId, "company");
   if (!state.ok) return state;
   if (!state.data) {
     return { ok: false, error: { code: "NOT_FOUND", message: "수정 요청이 연결된 SOW를 다시 불러오지 못했습니다." } };
@@ -908,12 +1082,35 @@ export async function approveSowAsCompany(
     return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
   }
 
-  const { data: project, error: projectError } = await supabase
+  const projectResult = await supabase
     .from("projects")
-    .select("id")
+    .select("id, company_contact_name_snapshot")
     .eq("id", input.projectId)
     .eq("company_id", authData.user.id)
     .maybeSingle();
+  let project = projectResult.data as Pick<
+    SowApprovalProjectRow,
+    "id" | "company_contact_name_snapshot"
+  > | null;
+  let projectError = projectResult.error;
+
+  if (
+    projectError?.code === "42703" ||
+    projectError?.message?.includes("company_contact_name_snapshot")
+  ) {
+    const fallbackResult = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", input.projectId)
+      .eq("company_id", authData.user.id)
+      .maybeSingle();
+
+    project = fallbackResult.data as Pick<
+      SowApprovalProjectRow,
+      "id" | "company_contact_name_snapshot"
+    > | null;
+    projectError = fallbackResult.error;
+  }
 
   if (projectError) {
     return { ok: false, error: mapBackendError(projectError, "프로젝트를 확인하지 못했습니다.") };
@@ -921,6 +1118,8 @@ export async function approveSowAsCompany(
   if (!project) {
     return { ok: false, error: { code: "NOT_FOUND", message: "프로젝트를 찾을 수 없습니다." } };
   }
+
+  const projectRow = project as Pick<SowApprovalProjectRow, "id" | "company_contact_name_snapshot">;
 
   const { data: sowVersion, error: sowError } = await supabase
     .from("sow_versions")
@@ -967,12 +1166,21 @@ export async function approveSowAsCompany(
   }
 
   if (!existingApproval) {
+    const companyNameSnapshot =
+      typeof projectRow.company_contact_name_snapshot === "string" &&
+      projectRow.company_contact_name_snapshot.trim()
+        ? projectRow.company_contact_name_snapshot.trim()
+        : null;
+    const approverName =
+      companyNameSnapshot ??
+      (await getCompanyApprovalName(supabase, authData.user.id, authData.user.email));
+
     const { error: approvalError } = await supabase.from("sow_approvals").insert({
       project_id: input.projectId,
       sow_version_id: input.sowVersionId,
       approver_id: authData.user.id,
       approver_role: "company",
-      approver_name_snapshot: getUserDisplayName(authData.user.user_metadata, authData.user.email),
+      approver_name_snapshot: approverName,
       content_hash: input.contentHash,
     });
 
@@ -983,7 +1191,7 @@ export async function approveSowAsCompany(
 
   // 두 번째 승인 시 DB 트리거가 SOW, 마일스톤, 프로젝트 상태를 한 트랜잭션에서 전환한다.
   // 애플리케이션에서 같은 전환을 반복하면 RLS와 충돌하므로 승인 행 삽입 후 결과만 다시 읽는다.
-  const state = await getSowApprovalState(input.projectId, input.sowVersionId);
+  const state = await getSowApprovalState(input.projectId, input.sowVersionId, "company");
   if (!state.ok) return state;
   if (!state.data) {
     return { ok: false, error: { code: "NOT_FOUND", message: "승인한 SOW를 다시 불러오지 못했습니다." } };
@@ -1020,7 +1228,7 @@ export async function approveSowAsFreelancer(
 
   const { data: proposal, error: proposalError } = await supabase
     .from("proposals")
-    .select("id")
+    .select("id, freelancer_display_name_snapshot")
     .eq("id", selection.proposal_id)
     .eq("freelancer_id", authData.user.id)
     .maybeSingle();
@@ -1068,12 +1276,19 @@ export async function approveSowAsFreelancer(
   }
 
   if (!existingApproval) {
+    const approverName = await getFreelancerApprovalName(
+      supabase,
+      authData.user.id,
+      proposal.freelancer_display_name_snapshot,
+      authData.user.email,
+    );
+
     const { error: approvalError } = await supabase.from("sow_approvals").insert({
       project_id: input.projectId,
       sow_version_id: input.sowVersionId,
       approver_id: authData.user.id,
       approver_role: "freelancer",
-      approver_name_snapshot: getUserDisplayName(authData.user.user_metadata, authData.user.email),
+      approver_name_snapshot: approverName,
       content_hash: input.contentHash,
     });
 
@@ -1082,7 +1297,7 @@ export async function approveSowAsFreelancer(
     }
   }
 
-  const state = await getSowApprovalState(input.projectId, input.sowVersionId);
+  const state = await getSowApprovalState(input.projectId, input.sowVersionId, "freelancer");
   if (!state.ok) return state;
   if (!state.data) {
     return { ok: false, error: { code: "NOT_FOUND", message: "승인한 SOW를 다시 불러오지 못했습니다." } };
@@ -1147,7 +1362,7 @@ export async function requestSowRevision(
     requester_role: "freelancer",
   });
   if (error) return { ok: false, error: mapBackendError(error, "수정 요청을 저장하지 못했습니다.") };
-  const updated = await getSowApprovalState(input.projectId, input.sowVersionId);
+  const updated = await getSowApprovalState(input.projectId, input.sowVersionId, "freelancer");
   if (!updated.ok) return updated;
   if (!updated.data) return { ok: false, error: { code: "NOT_FOUND", message: "수정 요청된 SOW를 다시 불러오지 못했습니다." } };
   return { ok: true, data: updated.data };
@@ -1158,6 +1373,7 @@ async function toSowApprovalState({
   milestones,
   criteria,
   approvals,
+  participants,
   revisionRequests,
   revisionRequestReads,
   translate = false,
@@ -1166,6 +1382,7 @@ async function toSowApprovalState({
   milestones: MilestoneApprovalRow[];
   criteria: CompletionCriteriaApprovalRow[];
   approvals: SowApprovalRow[];
+  participants: SowApprovalParticipantRows;
   revisionRequests: SowRevisionRequestRow[];
   revisionRequestReads: SowRevisionRequestReadRow[];
   translate?: boolean;
@@ -1256,6 +1473,18 @@ async function toSowApprovalState({
     contentHash: sowVersion.content_hash,
     submittedForReviewAt: sowVersion.submitted_for_review_at,
     approvedAt: sowVersion.approved_at,
+    participants: {
+      company: {
+        role: "company",
+        roleLabel: "PO",
+        displayName: participants.companyName ?? "PO",
+      },
+      freelancer: {
+        role: "freelancer",
+        roleLabel: "Freelancer",
+        displayName: participants.freelancerName ?? "Freelancer",
+      },
+    },
     document,
     milestones: mappedMilestones,
     approvals: {
@@ -1397,22 +1626,6 @@ function toStringArray(value: unknown) {
 
 function hasText(value: unknown) {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-function getUserDisplayName(metadata: unknown, email?: string) {
-  if (isRecord(metadata)) {
-    const candidate =
-      metadata.full_name ??
-      metadata.name ??
-      metadata.display_name ??
-      metadata.user_name;
-
-    if (typeof candidate === "string" && candidate.trim()) {
-      return candidate.trim();
-    }
-  }
-
-  return email ?? null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

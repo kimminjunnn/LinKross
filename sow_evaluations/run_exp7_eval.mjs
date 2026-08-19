@@ -15,7 +15,6 @@ if (fs.existsSync(envLocalPath)) {
     }
   }
 }
-}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +23,6 @@ const openai = new OpenAI({
 const currentStartDate = '26.09.01';
 const currentEndDate = '26.12.31';
 
-<<<<<<< HEAD
 const laundryPromptText = `
 동네에서 세탁소를 운영하고 있는데, 픽업과 배송 주문을 전부 전화와 카카오톡으로 받다 보니 관리가 안 됩니다. 어떤 손님이 언제 세탁물을 맡겼는지, 지금 세탁 중인지 배송 중인지 헷갈리고, 배송 기사님이 여러 명이다 보니 누가 어떤 주문을 담당하는지도 수기로 적어야 합니다. 손님이 앱에서 직접 픽업을 요청하고, 세탁물이 지금 어느 단계에 있는지 확인할 수 있고, 저와 기사님들은 전체 주문을 한눈에 관리할 수 있는 웹 서비스를 만들고 싶습니다.
 
@@ -85,9 +83,6 @@ const laundryPromptText = `
 async function runExperiment() {
   console.log("=== EXP_7: 세탁소 픽업/배송 SOW 생성 및 5대 약점 검증 실험 시작 ===");
 
-=======
-async function analyzeWorkDetailWithLLM(workDetail) {
->>>>>>> 0213045e99dc71966ebfabb16f49cb3deba22286
   const prompt = `
 당신은 매우 엄격한 QA 엔지니어이자 외주 개발 계약(SOW) 전문가입니다.
 사용자가 작성한 한국어 '업무 상세 내용'을 분석하여 다음 사항을 추출하고 구성하되, 아래의 [필수 규칙]을 반드시 엄수하십시오.
@@ -132,7 +127,6 @@ async function analyzeWorkDetailWithLLM(workDetail) {
 
 분석할 업무 상세 텍스트:
 """
-<<<<<<< HEAD
 ${laundryPromptText}
 """
 `;
@@ -225,7 +219,7 @@ ${laundryPromptText}
 }
 
 runExperiment();
-=======
+/*
 ${workDetail}
 """
 `;
@@ -302,4 +296,4 @@ async function main() {
 }
 
 main().catch(console.error);
->>>>>>> 0213045e99dc71966ebfabb16f49cb3deba22286
+*/

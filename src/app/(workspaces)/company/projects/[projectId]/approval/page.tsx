@@ -199,11 +199,11 @@ export default function ApprovalPage() {
       ];
 
   const isCompanyApproved =
-    isPoApproved || Boolean(approvalState?.approvals.company) || approvalState?.status === "approved";
-  const isFreelancerApproved = Boolean(approvalState?.approvals.freelancer) || approvalState?.status === "approved";
+    isPoApproved || Boolean(approvalState?.approvals.company);
+  const isFreelancerApproved = Boolean(approvalState?.approvals.freelancer);
   const isReadOnly = approvalState?.status === "approved";
   const isApprovalComplete =
-    isReadOnly || approvalState?.status === "approved" || (isCompanyApproved && isFreelancerApproved);
+    isReadOnly || (isCompanyApproved && isFreelancerApproved);
   const revisionRequests = approvalState?.revisionRequests ?? [];
   const latestRevisionRequest = revisionRequests[0] ?? null;
   const unreadRevisionRequests = revisionRequests.filter(
@@ -283,7 +283,10 @@ export default function ApprovalPage() {
     setIsApproving(false);
     setIsConfirmOpen(false);
 
-    if (result.data.status === "approved" || result.data.approvals.freelancer) {
+    if (
+      result.data.status === "approved" ||
+      (result.data.approvals.company && result.data.approvals.freelancer)
+    ) {
       router.push(`/company/projects/${projectId}/verification`);
       return;
     }
@@ -465,7 +468,7 @@ export default function ApprovalPage() {
                 <button
                   type="button"
                   onClick={() => setIsConfirmOpen(true)}
-                  disabled={!approvalState || isCompanyApproved || isApproving}
+                  disabled={!approvalState || approvalState.status !== "in_review" || isCompanyApproved || isApproving}
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   <UserCheck aria-hidden="true" className="size-4" />
@@ -565,8 +568,8 @@ export default function ApprovalPage() {
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-app-foreground">{approvalState?.approvals.company?.approverName ?? "발주자"}</h3>
-                    <p className="mt-1 text-xs text-app-muted">PO 승인</p>
+                    <p className="text-xs font-medium text-app-muted">{approvalState?.participants.company.roleLabel ?? "PO"}</p>
+                    <h3 className="mt-1 text-sm font-semibold text-app-foreground">{approvalState?.participants.company.displayName ?? "PO"}</h3>
                   </div>
                   <StatusBadge tone={isCompanyApproved ? "success" : "warning"}>
                     {isCompanyApproved ? "승인 완료" : "승인 대기"}
@@ -577,8 +580,8 @@ export default function ApprovalPage() {
               <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-app-foreground">{approvalState?.approvals.freelancer?.approverName ?? "프리랜서"}</h3>
-                    <p className="mt-1 text-xs text-app-muted">프리랜서 승인</p>
+                    <p className="text-xs font-medium text-app-muted">{approvalState?.participants.freelancer.roleLabel ?? "Freelancer"}</p>
+                    <h3 className="mt-1 text-sm font-semibold text-app-foreground">{approvalState?.participants.freelancer.displayName ?? "Freelancer"}</h3>
                   </div>
                   <StatusBadge tone={isFreelancerApproved ? "success" : "warning"}>
                     {isFreelancerApproved ? "승인 완료" : "승인 대기"}
