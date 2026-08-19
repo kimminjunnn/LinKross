@@ -166,25 +166,25 @@ export default async function HomePage() {
               </div>
             </Link>
 
-            {/* 신규 회원 (온보딩 역할 선택 화면으로 이동 - White button with black text) */}
+            {/* 신규 회원 (온보딩 역할 선택 화면으로 이동 - Orange style restored) */}
             <Link
               href="/onboarding"
-              className="group relative p-8 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 flex flex-col items-center text-center overflow-hidden border border-slate-850"
+              className="group relative p-8 bg-orange-500 hover:bg-orange-600 text-white rounded-3xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center overflow-hidden border border-orange-400"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center mb-6 shadow-xs backdrop-blur-xs">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-6 shadow-xs backdrop-blur-xs">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
 
               <h2 className="text-xl font-extrabold text-white mb-2">신규 회원이신가요?</h2>
-              <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed break-keep">
+              <p className="text-xs sm:text-sm text-orange-100 mb-6 leading-relaxed break-keep">
                 발주자 또는 외주 개발자 맞춤형 역할을 선택하고 3초 만에 시작하세요.
               </p>
               
-              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-white text-slate-900 font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm border border-white">
+              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm border border-white">
                 <span>역할 선택 및 시작하기</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                <span className="text-slate-900 group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </Link>
           </div>
