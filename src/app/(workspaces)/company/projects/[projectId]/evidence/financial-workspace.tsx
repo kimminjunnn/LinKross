@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
 import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
-import { ReceiptDocument } from "@/components/project/payment/receipt-document";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
+import { StatusBadge } from "@/components/project/status-badge";
 import { paymentMethodLabel, paymentMethods } from "@/config/payment-method";
 import { paymentStatusLabel } from "@/config/payment-status";
 import type { FinancialMilestoneRecord, PaymentMethod, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
@@ -95,7 +95,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
           <div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-app-foreground">{milestone.code} · {milestone.title}</h3><span className="rounded-full bg-app-surface px-2.5 py-1 text-xs font-bold text-app-muted">{milestone.status.replaceAll("_", " ")}</span></div>
           <p className="mt-2 text-sm text-app-muted">SOW 금액 {milestone.amount.toLocaleString()} {milestone.currency}</p>
         </div>
-        {milestone.approvedAt ? <span className="inline-flex items-center gap-1 text-xs font-black text-accent-700"><CheckCircle2 className="size-4" />최종 승인</span> : <span className="inline-flex items-center gap-1 text-xs font-black text-app-muted"><Clock3 className="size-4" />승인 대기</span>}
+        {milestone.approvedAt ? <StatusBadge tone="success">검수 완료</StatusBadge> : <span className="inline-flex items-center gap-1 text-xs font-black text-app-muted"><Clock3 className="size-4" />승인 대기</span>}
       </div>
 
       {!milestone.invoice ? (
@@ -147,18 +147,8 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
             ) : (
               <p className="mt-3 text-xs font-bold text-warning">프리랜서의 지갑 주소를 찾을 수 없습니다.</p>
             )
-          ) : milestone.payment.status === "completed" && milestone.payment.completedAt && milestone.payment.toAddress && milestone.payment.externalReference && milestone.payment.blockNumber ? (
-            <ReceiptDocument
-              projectTitle={milestone.title}
-              milestoneCode={milestone.code}
-              milestoneTitle={milestone.title}
-              amountUsdc={milestone.payment.amount}
-              toAddress={milestone.payment.toAddress}
-              txHash={milestone.payment.externalReference}
-              blockNumber={milestone.payment.blockNumber}
-              completedAt={milestone.payment.completedAt}
-              paymentId={milestone.payment.id}
-            />
+          ) : milestone.payment.status === "completed" ? (
+            <p className="text-xs font-bold text-accent-700">온체인 검증 완료 · 자세한 내역은 오른쪽 지급 증빙에서 확인</p>
           ) : null
         ) : (milestone.payment.status === "requested" || milestone.payment.status === "processing") && (
           <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
