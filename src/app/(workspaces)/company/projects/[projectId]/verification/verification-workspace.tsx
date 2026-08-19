@@ -649,11 +649,7 @@ function MilestoneDetail({
         submissionId: latestSubmission.id,
         scope: "milestone",
       });
-      setMessage(
-        result.ok
-          ? "격리 환경에서 검수를 시작했습니다. 잠시 후 진행 상태가 자동으로 갱신됩니다."
-          : result.error.message,
-      );
+      setMessage(result.ok ? "격리 환경에서 검수가 완료됐습니다. 아래에서 결과를 확인하세요." : result.error.message);
     });
   }
 

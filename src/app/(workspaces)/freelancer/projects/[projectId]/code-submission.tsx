@@ -103,7 +103,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
                 setMessage(formatSubmissionError(result.error));
                 return;
               }
-              setMessage(`Submission saved at Commit ${result.data.headCommitSha}. Verification is ${formatStatus(result.data.verificationStatus)}.`);
+              setMessage(`Submission saved at Commit ${result.data.headCommitSha}. Verification ran in the isolated environment — see the result below.`);
               router.refresh();
             })}
           />
