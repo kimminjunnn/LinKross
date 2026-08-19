@@ -4,8 +4,11 @@ import { useState, useTransition } from "react";
 import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
 import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
+import { ReceiptDocument } from "@/components/project/payment/receipt-document";
+import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
+import { paymentMethodLabel, paymentMethods } from "@/config/payment-method";
 import { paymentStatusLabel } from "@/config/payment-status";
-import type { FinancialMilestoneRecord, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
+import type { FinancialMilestoneRecord, PaymentMethod, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
 
 export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFinancialWorkspace }) {
   const [message, setMessage] = useState<string | null>(null);
@@ -27,6 +30,8 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
         ) : workspace.milestones.map((milestone) => (
           <MilestoneFinanceCard
             key={milestone.id}
+            projectId={workspace.projectId}
+            freelancerWalletAddress={workspace.freelancerWalletAddress}
             milestone={milestone}
             pending={pending}
             review={(status, note) => startTransition(async () => {
@@ -34,8 +39,8 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
               const result = await reviewInvoiceAction({ projectId: workspace.projectId, invoiceId: milestone.invoice.id, status, reviewNote: note });
               setMessage(result.ok ? (status === "approved" ? "인보이스를 승인했습니다." : "인보이스를 반려했습니다.") : result.error.message);
             })}
-            requestPayment={() => startTransition(async () => {
-              const result = await requestPaymentAction({ projectId: workspace.projectId, milestoneId: milestone.id });
+            requestPayment={(method) => startTransition(async () => {
+              const result = await requestPaymentAction({ projectId: workspace.projectId, milestoneId: milestone.id, method });
               setMessage(result.ok ? "지급을 요청했습니다." : result.error.message);
             })}
             advancePayment={(status, externalReference) => startTransition(async () => {
@@ -71,15 +76,18 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
   );
 }
 
-function MilestoneFinanceCard({ milestone, pending, review, requestPayment, advancePayment }: {
+function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, pending, review, requestPayment, advancePayment }: {
+  projectId: string;
+  freelancerWalletAddress: string | null;
   milestone: FinancialMilestoneRecord;
   pending: boolean;
   review: (status: "approved" | "rejected", note: string) => void;
-  requestPayment: () => void;
+  requestPayment: (method: PaymentMethod) => void;
   advancePayment: (status: Exclude<PaymentRecordStatus, "requested">, externalReference?: string) => void;
 }) {
   const [note, setNote] = useState("");
   const [reference, setReference] = useState("");
+  const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
   return (
     <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -112,16 +120,46 @@ function MilestoneFinanceCard({ milestone, pending, review, requestPayment, adva
         <div className="flex items-center justify-between text-sm">
           <span className="inline-flex items-center gap-2 font-bold text-app-muted"><Banknote className="size-4" />지급 상태</span>
           <span className="font-black text-app-foreground">
-            {milestone.payment ? `${paymentStatusLabel[milestone.payment.status]} · ${milestone.payment.amount.toLocaleString()} ${milestone.payment.currency}` : "외부 지급 기록 없음"}
+            {milestone.payment
+              ? `${paymentStatusLabel[milestone.payment.status]} · ${paymentMethodLabel[milestone.payment.method]} · ${milestone.payment.amount.toLocaleString()} ${milestone.payment.currency}`
+              : "외부 지급 기록 없음"}
           </span>
         </div>
 
         {!milestone.payment ? (
           milestone.invoice?.status === "approved" && (
-            <button type="button" disabled={pending} onClick={requestPayment} className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
-              {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
-            </button>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+              <select value={method} onChange={(event) => setMethod(event.target.value as PaymentMethod)} className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm">
+                {paymentMethods.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+              <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
+                {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
+              </button>
+              {method === "wallet_testnet" && !freelancerWalletAddress && (
+                <p className="text-xs font-bold text-warning sm:col-span-2">프리랜서가 아직 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다.</p>
+              )}
+            </div>
           )
+        ) : milestone.payment.method === "wallet_testnet" ? (
+          milestone.payment.status === "requested" ? (
+            freelancerWalletAddress ? (
+              <WalletTransferPanel projectId={projectId} paymentId={milestone.payment.id} amountUsdc={milestone.payment.amount} recipientAddress={freelancerWalletAddress} />
+            ) : (
+              <p className="mt-3 text-xs font-bold text-warning">프리랜서의 지갑 주소를 찾을 수 없습니다.</p>
+            )
+          ) : milestone.payment.status === "completed" && milestone.payment.completedAt && milestone.payment.toAddress && milestone.payment.externalReference && milestone.payment.blockNumber ? (
+            <ReceiptDocument
+              projectTitle={milestone.title}
+              milestoneCode={milestone.code}
+              milestoneTitle={milestone.title}
+              amountUsdc={milestone.payment.amount}
+              toAddress={milestone.payment.toAddress}
+              txHash={milestone.payment.externalReference}
+              blockNumber={milestone.payment.blockNumber}
+              completedAt={milestone.payment.completedAt}
+              paymentId={milestone.payment.id}
+            />
+          ) : null
         ) : (milestone.payment.status === "requested" || milestone.payment.status === "processing") && (
           <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
             <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="외부 송금 참조값 (선택)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />

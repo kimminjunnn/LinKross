@@ -511,6 +511,7 @@ export interface DecideMilestoneInput {
 
 export type InvoiceStatus = "submitted" | "approved" | "rejected" | "cancelled";
 export type PaymentRecordStatus = "requested" | "processing" | "completed" | "failed";
+export type PaymentMethod = "wallet_testnet" | "bank_transfer" | "card" | "other";
 
 export interface InvoiceRecord {
   id: string;
@@ -542,9 +543,12 @@ export interface FinancialMilestoneRecord {
   payment: {
     id: string;
     status: PaymentRecordStatus;
+    method: PaymentMethod;
     amount: number;
     currency: string;
     externalReference: string | null;
+    toAddress: string | null;
+    blockNumber: number | null;
     requestedAt: string | null;
     processingAt: string | null;
     completedAt: string | null;
@@ -555,6 +559,7 @@ export interface ProjectFinancialWorkspace {
   projectId: string;
   projectTitle: string;
   lifecycleStage: string;
+  freelancerWalletAddress: string | null;
   milestones: FinancialMilestoneRecord[];
   evidenceBundles: Array<{
     id: string;
@@ -585,6 +590,7 @@ export interface ReviewInvoiceInput {
 export interface RequestPaymentInput {
   projectId: string;
   milestoneId: string;
+  method: PaymentMethod;
 }
 
 export interface AdvancePaymentStatusInput {
@@ -592,6 +598,12 @@ export interface AdvancePaymentStatusInput {
   paymentId: string;
   status: Exclude<PaymentRecordStatus, "requested">;
   externalReference?: string;
+}
+
+export interface VerifyWalletPaymentInput {
+  projectId: string;
+  paymentId: string;
+  txHash: string;
 }
 
 export interface GenerateEvidenceBundleOutput {
@@ -624,4 +636,5 @@ export interface FreelancerProfileSettings {
   headline: string;
   skills: string;
   portfolioUrls: string[];
+  walletAddress: string | null;
 }

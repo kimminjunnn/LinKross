@@ -13,9 +13,9 @@ export async function getCompanyProfileSettings(): Promise<BackendResult<Company
 export async function getFreelancerProfileSettings(): Promise<BackendResult<FreelancerProfileSettings>> {
   const auth = await getAuthenticatedClient();
   if (!auth.ok) return auth;
-  const { data, error } = await auth.data.supabase.from("freelancer_profiles").select("display_name, timezone, headline, skills, portfolio_urls").eq("id", auth.data.userId).maybeSingle();
+  const { data, error } = await auth.data.supabase.from("freelancer_profiles").select("display_name, timezone, headline, skills, portfolio_urls, wallet_address").eq("id", auth.data.userId).maybeSingle();
   if (error) return { ok: false, error: mapBackendError(error, "프로필을 불러오지 못했습니다.") };
-  return { ok: true, data: { displayName: data?.display_name ?? "", timezone: data?.timezone ?? "", headline: data?.headline ?? "", skills: data?.skills ?? "", portfolioUrls: data?.portfolio_urls ?? [] } };
+  return { ok: true, data: { displayName: data?.display_name ?? "", timezone: data?.timezone ?? "", headline: data?.headline ?? "", skills: data?.skills ?? "", portfolioUrls: data?.portfolio_urls ?? [], walletAddress: data?.wallet_address ?? null } };
 }
 
 export async function updateCompanyProfileSettings(input: CompanyProfileSettings): Promise<BackendResult<CompanyProfileSettings>> {
@@ -33,9 +33,11 @@ export async function updateFreelancerProfileSettings(input: FreelancerProfileSe
   if (!auth.ok) return auth;
   const portfolioUrls = input.portfolioUrls.map((url) => url.trim()).filter(Boolean);
   if (portfolioUrls.some((url) => !/^https?:\/\//i.test(url))) return { ok: false, error: { code: "INVALID_INPUT", message: "Portfolio links must start with http:// or https://." } };
-  const { error } = await auth.data.supabase.from("freelancer_profiles").upsert({ id: auth.data.userId, display_name: input.displayName.trim(), timezone: input.timezone.trim(), headline: input.headline.trim(), skills: input.skills.trim(), portfolio_urls: portfolioUrls }, { onConflict: "id" });
+  const walletAddress = input.walletAddress?.trim() || null;
+  if (walletAddress && !/^0x[0-9a-fA-F]{40}$/.test(walletAddress)) return { ok: false, error: { code: "INVALID_INPUT", message: "Wallet address must be a valid 0x-prefixed address." } };
+  const { error } = await auth.data.supabase.from("freelancer_profiles").upsert({ id: auth.data.userId, display_name: input.displayName.trim(), timezone: input.timezone.trim(), headline: input.headline.trim(), skills: input.skills.trim(), portfolio_urls: portfolioUrls, wallet_address: walletAddress }, { onConflict: "id" });
   if (error) return { ok: false, error: mapBackendError(error, "Profile could not be saved.") };
-  return { ok: true, data: { displayName: input.displayName.trim(), timezone: input.timezone.trim(), headline: input.headline.trim(), skills: input.skills.trim(), portfolioUrls } };
+  return { ok: true, data: { displayName: input.displayName.trim(), timezone: input.timezone.trim(), headline: input.headline.trim(), skills: input.skills.trim(), portfolioUrls, walletAddress } };
 }
 
 async function getAuthenticatedClient(): Promise<BackendResult<{ supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>; userId: string }>> {
