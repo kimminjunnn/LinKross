@@ -8,7 +8,6 @@ import {
   Clock3,
   HelpCircle,
   Search,
-  WalletCards,
 } from "lucide-react";
 
 import type { OpportunitySummary } from "@/lib/backend/contracts";
@@ -107,6 +106,7 @@ export function OpportunitiesList({
         {filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opportunity) => {
             const technologies = technologyTags(opportunity.technology);
+            const dday = getDDayLabel(opportunity.recruitmentEndAt);
 
             return (
               <article
@@ -118,12 +118,22 @@ export function OpportunitiesList({
                 <div className="p-6 sm:p-8">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex size-7 items-center justify-center rounded-lg bg-orange-100 text-xs font-black text-brand-700 uppercase">
-                          {opportunity.organizationName.charAt(0)}
-                        </span>
-                        <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                          {opportunity.organizationName}
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex size-7 items-center justify-center rounded-lg bg-orange-100 text-xs font-black text-brand-700 uppercase">
+                            {opportunity.organizationName.charAt(0)}
+                          </span>
+                          <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                            {opportunity.organizationName}
+                          </span>
+                        </div>
+                        {/* D-day badge pill */}
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border ${
+                          dday.isUrgent 
+                            ? "bg-red-50 text-red-700 border-red-200" 
+                            : "bg-amber-50 text-amber-800 border-amber-250/20"
+                        }`}>
+                          {dday.label}
                         </span>
                       </div>
                       <h2 className="mt-3 text-2xl font-black text-slate-900 transition-colors group-hover:text-brand-600">
@@ -172,16 +182,12 @@ export function OpportunitiesList({
 
                   <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-100 pt-5 text-xs font-bold text-slate-450">
                     <div className="flex items-center gap-1.5">
-                      <WalletCards className="size-4 text-slate-400" />
-                      <span>{opportunity.budgetType === "range" ? "Budget Range" : "Fixed Budget"}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
                       <Clock3 className="size-4 text-slate-400" />
-                      <span>{formatProjectPeriod(opportunity.startDate, opportunity.endDate, "en-US")}</span>
+                      <span>Project Period: {formatProjectPeriod(opportunity.startDate, opportunity.endDate, "en-US")}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <CalendarDays className="size-4 text-slate-400" />
-                      <span>Apply by {formatProjectDate(opportunity.recruitmentEndAt, "en-US")}</span>
+                      <span>Apply by: {formatProjectDate(opportunity.recruitmentEndAt, "en-US")}</span>
                     </div>
                   </div>
                 </div>
@@ -198,4 +204,29 @@ export function OpportunitiesList({
       </div>
     </>
   );
+}
+
+function getDDayLabel(deadlineStr: string): { label: string; isUrgent: boolean } {
+  const deadline = new Date(deadlineStr);
+  const today = new Date();
+  
+  deadline.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  const diffTime = deadline.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    return { label: "Bidding Closed", isUrgent: false };
+  }
+  if (diffDays === 0) {
+    return { label: "Closes Today 🔥", isUrgent: true };
+  }
+  if (diffDays === 1) {
+    return { label: "Closes Tomorrow ⏰", isUrgent: true };
+  }
+  if (diffDays <= 3) {
+    return { label: `Due in ${diffDays} days`, isUrgent: true };
+  }
+  return { label: `Due in ${diffDays} days`, isUrgent: false };
 }
