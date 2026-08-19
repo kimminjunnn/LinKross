@@ -434,10 +434,10 @@ function RepositorySummary({
             </div>
             <a
               href={`/api/github/app/install?projectId=${encodeURIComponent(projectId)}`}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-black text-white"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 hover:bg-slate-800 px-4 text-xs font-bold !text-white transition-colors shadow-sm cursor-pointer"
             >
-              <LockKeyhole aria-hidden="true" className="size-4" />
-              GitHub App 설치
+              <LockKeyhole aria-hidden="true" className="size-3.5 !text-white" />
+              <span className="!text-white">GitHub App 설치</span>
             </a>
           </div>
 
