@@ -142,12 +142,12 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Member Selection CTA Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+          {/* Member Selection CTA Cards (3 Columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mb-24">
             {/* 기존 회원 (로그인 화면 /login 으로 이동) */}
             <Link
               href="/login"
-              className="group relative p-8 bg-white border-2 border-slate-200 hover:border-orange-500 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center overflow-hidden text-left"
+              className="group relative p-8 bg-white border-2 border-slate-200 hover:border-orange-500 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
             >
               <div className="w-14 h-14 rounded-2xl bg-slate-100 group-hover:bg-orange-100 text-slate-700 group-hover:text-orange-600 flex items-center justify-center mb-6 transition-colors duration-300 shadow-xs">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,27 +166,192 @@ export default async function HomePage() {
               </div>
             </Link>
 
+            {/* 데모 체험하기 (데모 페이지로 이동 - Highlighted in the middle) */}
+            <Link
+              href="/demo/projects/quarterly-improvement"
+              className="group relative p-8 bg-white border-2 border-orange-500/80 hover:border-orange-500 rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">
+                Recommeded
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-orange-50 group-hover:bg-orange-100 text-orange-600 flex items-center justify-center mb-6 transition-colors duration-300 shadow-xs">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </div>
+
+              <h2 className="text-xl font-extrabold text-slate-900 mb-2">워크스페이스 데모 체험</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed break-keep">
+                회원가입 없이 실제 SOW 계약 및 로그인 검수 대시보드 데모를 바로 체험해 보세요.
+              </p>
+              
+              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-orange-500 text-white font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-orange-500 group-hover:bg-orange-600">
+                <span>대시보드 데모 보기</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </Link>
+
             {/* 신규 회원 (온보딩 역할 선택 화면으로 이동 - White button with black text) */}
             <Link
               href="/onboarding"
-              className="group relative p-8 bg-orange-500 hover:bg-orange-600 text-white rounded-3xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center overflow-hidden border border-orange-400"
+              className="group relative p-8 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 flex flex-col items-center text-center overflow-hidden border border-slate-850"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-6 shadow-xs backdrop-blur-xs">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center mb-6 shadow-xs backdrop-blur-xs">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
 
               <h2 className="text-xl font-extrabold text-white mb-2">신규 회원이신가요?</h2>
-              <p className="text-xs sm:text-sm text-orange-100 mb-6 leading-relaxed break-keep">
+              <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed break-keep">
                 발주자 또는 외주 개발자 맞춤형 역할을 선택하고 3초 만에 시작하세요.
               </p>
               
-              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm border border-white">
+              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-white text-slate-900 font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm border border-white">
                 <span>역할 선택 및 시작하기</span>
-                <span className="text-slate-900 group-hover:translate-x-1 transition-transform">→</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </Link>
+          </div>
+
+          {/* Interactive Web Dashboard Mockup Section */}
+          <div className="w-full max-w-5xl text-left space-y-6 mb-24">
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                비개발자 맞춤형 검수 대시보드 미리보기
+              </h2>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+                복잡한 코드 대신 작동 기준의 성공/실패 여부, 재현 영상 증거로 직관적인 진척도를 확인합니다.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-lg overflow-hidden flex flex-col">
+              {/* Mock Browser Header */}
+              <div className="bg-slate-100 px-5 py-3 flex items-center justify-between border-b border-slate-200">
+                <div className="flex gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-red-400"></span>
+                  <span className="w-3 h-3 rounded-full bg-yellow-450"></span>
+                  <span className="w-3 h-3 rounded-full bg-green-400"></span>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg text-[10px] px-8 py-1 font-bold text-slate-500">
+                  linkross.com/demo/projects/quarterly-improvement
+                </div>
+                <div className="w-12"></div>
+              </div>
+
+              {/* Mock Browser Body */}
+              <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] min-h-[400px]">
+                {/* Mock Sidebar */}
+                <div className="bg-slate-50 border-r border-slate-200 p-4 space-y-6 hidden md:block">
+                  <div className="space-y-2">
+                    <div className="h-6 w-16 bg-slate-200 rounded-md"></div>
+                    <div className="h-4 w-28 bg-slate-200 rounded-md"></div>
+                  </div>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                      <span className="w-3 h-3 rounded-md bg-slate-200" /> Project SOW
+                    </li>
+                    <li className="flex items-center gap-2 text-xs font-black text-orange-600 bg-orange-50 px-2 py-1.5 rounded-lg">
+                      <span className="w-3 h-3 rounded-md bg-orange-500" /> Milestones & Verification
+                    </li>
+                    <li className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                      <span className="w-3 h-3 rounded-md bg-slate-200" /> Payments & Evidence
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Mock Dashboard Content */}
+                <div className="p-6 space-y-6">
+                  {/* Status Headline */}
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <h4 className="font-extrabold text-sm text-slate-400 uppercase">Milestone 1</h4>
+                      <h3 className="font-black text-lg text-slate-900 mt-1">M1 · 웹페이지 로그인 분기 개선 (Login Branching Fix)</h3>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black">Passed</span>
+                  </div>
+
+                  {/* Checklist Summary */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-500 border-b border-slate-200 pb-2">
+                      <span>Verification checklist</span>
+                      <span>Playwright automated run</span>
+                    </div>
+
+                    <ul className="space-y-2.5">
+                      {[
+                        "이메일과 비밀번호를 입력할 수 있다. (Inputs are interactable)",
+                        "정상 로그인 후 /dashboard로 이동한다. (Redirects to dashboard)",
+                        "잘못된 비밀번호 입력 시 오류가 표시된다. (Handles invalid credentials)",
+                        "이메일 미입력 시 로그인이 차단된다. (Validates empty fields)"
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-center justify-between text-xs font-bold bg-white border border-slate-150 rounded-xl p-3 shadow-xs">
+                          <span className="text-slate-800 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> {item}
+                          </span>
+                          <span className="text-green-600">Passed</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Simulator Trigger */}
+                  <div className="flex gap-4">
+                    <div className="inline-flex items-center gap-1.5 text-xs font-black text-orange-600">
+                      <svg className="size-3.5 fill-orange-600" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Watch verification video
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 text-xs font-black text-orange-600">
+                      <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg> View test screenshot
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Integrations Section */}
+          <div className="w-full max-w-5xl text-left border-t border-slate-200 pt-16 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">강력한 개발 도구 연동</h3>
+                <p className="mt-2 text-sm text-slate-500 leading-relaxed break-keep">
+                  GitHub, Slack 등 이미 사용 중인 개발 프로세스에 LinKross의 실시간 검수가 자연스럽게 결합됩니다.
+                </p>
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Integration 1 */}
+                <div className="p-6 rounded-2xl bg-white border border-slate-200 flex gap-4">
+                  <div className="size-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                    <svg className="size-6 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900">GitHub Pull Request 연동</h4>
+                    <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                      개발자가 PR을 제출하고 특정 Commit SHA로 검수를 요청하면, LinKross가 불변의 코드를 스냅샷하여 일회성 환경에서 빌드 및 테스트를 실행합니다.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Integration 2 */}
+                <div className="p-6 rounded-2xl bg-white border border-slate-200 flex gap-4">
+                  <div className="size-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                    <svg className="size-6 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523 2.528 2.528 0 0 1-2.522-2.523 2.528 2.528 0 0 1 2.522-2.52h2.52v2.52zm1.261 0a2.528 2.528 0 0 1 2.52-2.52h5.043a2.528 2.528 0 0 1 2.522 2.52v5.042a2.528 2.528 0 0 1-2.522 2.52H8.823a2.528 2.528 0 0 1-2.52-2.52v-5.042zM8.823 5.043a2.528 2.528 0 0 1 2.52-2.522 2.528 2.528 0 0 1 2.522 2.522v2.52h-2.522a2.528 2.528 0 0 1-2.52-2.52zm0 1.261a2.528 2.528 0 0 1 2.52 2.52v5.043a2.528 2.528 0 0 1-2.52 2.522H3.78a2.528 2.528 0 0 1-2.52-2.522V8.824a2.528 2.528 0 0 1 2.52-2.52h5.043zm10.135 3.738a2.528 2.528 0 0 1 2.522-2.52 2.528 2.528 0 0 1 2.52 2.52 2.528 2.528 0 0 1-2.52 2.522h-2.522v-2.522zm-1.262 0a2.528 2.528 0 0 1-2.52 2.522h-5.043a2.528 2.528 0 0 1-2.522-2.522V3.78a2.528 2.528 0 0 1 2.522-2.52h5.043a2.528 2.528 0 0 1 2.52 2.52v5.043zm-3.78 10.135a2.528 2.528 0 0 1-2.52 2.522 2.528 2.528 0 0 1-2.522-2.522v-2.52h2.522a2.528 2.528 0 0 1 2.52-2.52zm0-1.262a2.528 2.528 0 0 1-2.52-2.52v-5.043a2.528 2.528 0 0 1 2.52-2.522h5.043a2.528 2.528 0 0 1 2.52 2.522v5.043a2.528 2.528 0 0 1-2.52 2.52h-5.043z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900">Slack 실시간 알림 연동</h4>
+                    <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                      자동 검수 시작, 테스트 통과 여부, 발주사 승인 및 수정 요청 상황을 등록한 Slack 채널로 즉시 전달받아 지체 없이 협업을 이어갑니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
