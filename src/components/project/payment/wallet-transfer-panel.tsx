@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BrowserProvider, Contract, type Eip1193Provider, parseUnits } from "ethers";
 import { AlertTriangle, ExternalLink, Loader2, Wallet } from "lucide-react";
 
-import { recordWalletPaymentAction } from "@/app/actions/finance";
+import { verifyWalletPaymentAction } from "@/app/actions/finance";
 import { StatusBadge } from "@/components/project/status-badge";
 import {
   BASE_SEPOLIA_CHAIN_ID_HEX,
@@ -55,12 +55,12 @@ async function ensureBaseSepoliaNetwork(ethereum: Eip1193Provider) {
 
 export function WalletTransferPanel({
   projectId,
-  milestoneId,
+  paymentId,
   amountUsdc,
   recipientAddress,
 }: {
   projectId: string;
-  milestoneId: string;
+  paymentId: string;
   amountUsdc: number;
   recipientAddress: string;
 }) {
@@ -90,7 +90,7 @@ export function WalletTransferPanel({
       await tx.wait();
 
       setState({ step: "verifying", txHash: tx.hash });
-      const result = await recordWalletPaymentAction({ projectId, milestoneId, txHash: tx.hash });
+      const result = await verifyWalletPaymentAction({ projectId, paymentId, txHash: tx.hash });
 
       if (!result.ok) {
         setState({ step: "mismatch", txHash: tx.hash, reason: result.error.message });

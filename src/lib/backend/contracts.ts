@@ -587,12 +587,10 @@ export interface ReviewInvoiceInput {
   reviewNote?: string;
 }
 
-export type ManualPaymentMethod = Exclude<PaymentMethod, "wallet_testnet">;
-
 export interface RequestPaymentInput {
   projectId: string;
   milestoneId: string;
-  method: ManualPaymentMethod;
+  method: PaymentMethod;
 }
 
 export interface AdvancePaymentStatusInput {
@@ -602,9 +600,9 @@ export interface AdvancePaymentStatusInput {
   externalReference?: string;
 }
 
-export interface RecordWalletPaymentInput {
+export interface VerifyWalletPaymentInput {
   projectId: string;
-  milestoneId: string;
+  paymentId: string;
   txHash: string;
 }
 

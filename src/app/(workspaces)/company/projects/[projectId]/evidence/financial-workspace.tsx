@@ -8,7 +8,7 @@ import { ReceiptDocument } from "@/components/project/payment/receipt-document";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
 import { paymentMethodLabel, paymentMethods } from "@/config/payment-method";
 import { paymentStatusLabel } from "@/config/payment-status";
-import type { FinancialMilestoneRecord, ManualPaymentMethod, PaymentMethod, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
+import type { FinancialMilestoneRecord, PaymentMethod, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
 
 export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFinancialWorkspace }) {
   const [message, setMessage] = useState<string | null>(null);
@@ -82,7 +82,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
   milestone: FinancialMilestoneRecord;
   pending: boolean;
   review: (status: "approved" | "rejected", note: string) => void;
-  requestPayment: (method: ManualPaymentMethod) => void;
+  requestPayment: (method: PaymentMethod) => void;
   advancePayment: (status: Exclude<PaymentRecordStatus, "requested">, externalReference?: string) => void;
 }) {
   const [note, setNote] = useState("");
@@ -132,24 +132,22 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
               <select value={method} onChange={(event) => setMethod(event.target.value as PaymentMethod)} className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm">
                 {paymentMethods.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
-              {method === "wallet_testnet" ? (
-                freelancerWalletAddress ? (
-                  <div className="sm:col-span-2">
-                    <WalletTransferPanel projectId={projectId} milestoneId={milestone.id} amountUsdc={milestone.invoice.amount} recipientAddress={freelancerWalletAddress} />
-                  </div>
-                ) : (
-                  <p className="text-xs font-bold text-warning sm:col-span-2">프리랜서가 아직 지갑 주소를 등록하지 않아 지갑 송금을 진행할 수 없습니다.</p>
-                )
-              ) : (
-                <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
-                  {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
-                </button>
+              <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
+                {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
+              </button>
+              {method === "wallet_testnet" && !freelancerWalletAddress && (
+                <p className="text-xs font-bold text-warning sm:col-span-2">프리랜서가 아직 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다.</p>
               )}
             </div>
           )
         ) : milestone.payment.method === "wallet_testnet" ? (
-          // 지갑 송금은 온체인 검증에 성공한 순간에만 payment row가 생기므로 항상 completed다.
-          milestone.payment.completedAt && milestone.payment.toAddress && milestone.payment.externalReference && milestone.payment.blockNumber && (
+          milestone.payment.status === "requested" ? (
+            freelancerWalletAddress ? (
+              <WalletTransferPanel projectId={projectId} paymentId={milestone.payment.id} amountUsdc={milestone.payment.amount} recipientAddress={freelancerWalletAddress} />
+            ) : (
+              <p className="mt-3 text-xs font-bold text-warning">프리랜서의 지갑 주소를 찾을 수 없습니다.</p>
+            )
+          ) : milestone.payment.status === "completed" && milestone.payment.completedAt && milestone.payment.toAddress && milestone.payment.externalReference && milestone.payment.blockNumber ? (
             <ReceiptDocument
               projectTitle={milestone.title}
               milestoneCode={milestone.code}
@@ -161,7 +159,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
               completedAt={milestone.payment.completedAt}
               paymentId={milestone.payment.id}
             />
-          )
+          ) : null
         ) : (milestone.payment.status === "requested" || milestone.payment.status === "processing") && (
           <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
             <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="외부 송금 참조값 (선택)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />

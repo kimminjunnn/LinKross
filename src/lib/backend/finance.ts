@@ -7,10 +7,10 @@ import type {
   GenerateEvidenceBundleOutput,
   InvoiceRecord,
   ProjectFinancialWorkspace,
-  RecordWalletPaymentInput,
   RequestPaymentInput,
   ReviewInvoiceInput,
   SubmitInvoiceInput,
+  VerifyWalletPaymentInput,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { translateToEnglish } from "@/lib/backend/translation";
@@ -197,19 +197,13 @@ export async function reviewInvoice(input: ReviewInvoiceInput): Promise<BackendR
   return { ok: true, data: { invoiceId: data.id } };
 }
 
-const MANUAL_PAYMENT_METHODS = ["bank_transfer", "card", "other"] as const;
+const PAYMENT_METHODS = ["wallet_testnet", "bank_transfer", "card", "other"] as const;
 
-/**
- * 계좌이체/카드/기타처럼 자동 검증 수단이 없는 결제수단만 다룬다.
- * 지갑 송금(wallet_testnet)은 온체인 검증 성공 시에만 payments row가
- * 생기는 별도 경로(recordWalletPayment)를 쓴다 — "완료" 이전 상태를
- * 미리 만들어두지 않는다.
- */
 export async function requestPayment(input: RequestPaymentInput): Promise<BackendResult<{ paymentId: string }>> {
   if (!isUuid(input.projectId) || !isUuid(input.milestoneId)) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트/마일스톤이 아닙니다." } };
   }
-  if (!MANUAL_PAYMENT_METHODS.includes(input.method)) {
+  if (!PAYMENT_METHODS.includes(input.method)) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "지급 수단을 선택해주세요." } };
   }
   const supabase = await createSupabaseServerClient();
@@ -227,6 +221,13 @@ export async function requestPayment(input: RequestPaymentInput): Promise<Backen
 
   const { data: existingPayment } = await supabase.from("payments").select("id").eq("invoice_id", invoice.id).maybeSingle();
   if (existingPayment) return { ok: false, error: { code: "CONFLICT", message: "이미 지급 기록이 있는 인보이스입니다." } };
+
+  if (input.method === "wallet_testnet") {
+    const { data: selection } = await supabase.from("selections").select("proposal_id").eq("project_id", input.projectId).maybeSingle();
+    const proposal = selection ? (await supabase.from("proposals").select("freelancer_id").eq("id", selection.proposal_id).maybeSingle()).data : null;
+    const wallet = proposal ? (await supabase.from("freelancer_profiles").select("wallet_address").eq("id", proposal.freelancer_id).maybeSingle()).data?.wallet_address : null;
+    if (!wallet) return { ok: false, error: { code: "CONFLICT", message: "프리랜서가 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다." } };
+  }
 
   const { data, error } = await supabase.from("payments").insert({
     project_id: input.projectId,
@@ -273,57 +274,44 @@ export async function advancePaymentStatus(input: AdvancePaymentStatusInput): Pr
   return { ok: true, data: { paymentId: data.id } };
 }
 
-/**
- * 온체인 검증에 성공한 지급만 payments row로 존재하게 한다(원래 설계 원칙 복원).
- * "요청/처리중" 같은 중간 상태를 미리 만들지 않고, 검증 실패 시에는 아무 row도
- * 남기지 않는다 — 실패 사유는 응답으로만 알려주고 재시도는 그냥 다시 호출하면 된다.
- */
-export async function recordWalletPayment(input: RecordWalletPaymentInput): Promise<BackendResult<{ paymentId: string | null; verified: boolean; reason?: string }>> {
-  if (!isUuid(input.projectId) || !isUuid(input.milestoneId)) {
-    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트/마일스톤이 아닙니다." } };
+export async function verifyWalletPayment(input: VerifyWalletPaymentInput): Promise<BackendResult<{ paymentId: string; verified: boolean; reason?: string }>> {
+  if (!isUuid(input.projectId) || !isUuid(input.paymentId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 지급 기록이 아닙니다." } };
   }
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
 
-  const { data: invoice, error: invoiceError } = await supabase
-    .from("invoices")
-    .select("id, amount, currency, status")
+  const { data: payment, error: paymentError } = await supabase
+    .from("payments")
+    .select("id, status, payment_method, amount_usdc")
+    .eq("id", input.paymentId)
     .eq("project_id", input.projectId)
-    .eq("milestone_id", input.milestoneId)
-    .eq("status", "approved")
     .maybeSingle();
-  if (invoiceError || !invoice) return { ok: false, error: mapBackendError(invoiceError, "승인된 인보이스가 있는 마일스톤만 지갑 송금을 기록할 수 있습니다.") };
-
-  const { data: existingPayment } = await supabase.from("payments").select("id").eq("invoice_id", invoice.id).maybeSingle();
-  if (existingPayment) return { ok: false, error: { code: "CONFLICT", message: "이미 지급 기록이 있는 인보이스입니다." } };
+  if (paymentError || !payment) return { ok: false, error: mapBackendError(paymentError, "지급 기록을 찾지 못했습니다.") };
+  if (payment.payment_method !== "wallet_testnet") return { ok: false, error: { code: "CONFLICT", message: "지갑 송금 방식의 지급만 온체인으로 검증할 수 있습니다." } };
+  if (payment.status !== "requested") return { ok: false, error: { code: "CONFLICT", message: `${payment.status} 상태에서는 검증할 수 없습니다.` } };
 
   const { data: selection } = await supabase.from("selections").select("proposal_id").eq("project_id", input.projectId).maybeSingle();
   const proposal = selection ? (await supabase.from("proposals").select("freelancer_id").eq("id", selection.proposal_id).maybeSingle()).data : null;
   const walletAddress = proposal ? (await supabase.from("freelancer_profiles").select("wallet_address").eq("id", proposal.freelancer_id).maybeSingle()).data?.wallet_address : null;
-  if (!walletAddress) return { ok: false, error: { code: "CONFLICT", message: "프리랜서가 지갑 주소를 등록하지 않아 지갑 송금을 기록할 수 없습니다." } };
+  if (!walletAddress) return { ok: false, error: { code: "CONFLICT", message: "프리랜서의 지갑 주소를 찾을 수 없습니다." } };
 
-  const result = await verifyOnchainTransfer(input.txHash, String(invoice.amount), walletAddress);
+  const result = await verifyOnchainTransfer(input.txHash, String(payment.amount_usdc), walletAddress);
   if (!result.verified) {
-    return { ok: true, data: { paymentId: null, verified: false, reason: result.reason } };
+    return { ok: true, data: { paymentId: payment.id, verified: false, reason: result.reason } };
   }
 
-  const { data, error } = await supabase.from("payments").insert({
-    project_id: input.projectId,
-    milestone_record_id: input.milestoneId,
-    invoice_id: invoice.id,
+  const { data, error } = await supabase.from("payments").update({
     status: "completed",
-    payment_method: "wallet_testnet",
-    amount_usdc: invoice.amount,
-    currency: invoice.currency,
     tx_hash: result.txHash,
     to_address: result.toAddress,
     block_number: result.blockNumber,
     completed_at: new Date().toISOString(),
     verified_by: authData.user.id,
     verified_at: new Date().toISOString(),
-  }).select("id").single();
-  if (error || !data) return { ok: false, error: mapBackendError(error, "지급 기록을 저장하지 못했습니다.") };
+  }).eq("id", input.paymentId).eq("project_id", input.projectId).select("id").maybeSingle();
+  if (error || !data) return { ok: false, error: mapBackendError(error, "지급 상태를 갱신하지 못했습니다.") };
   return { ok: true, data: { paymentId: data.id, verified: true } };
 }
 
