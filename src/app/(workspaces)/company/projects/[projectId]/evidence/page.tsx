@@ -19,7 +19,7 @@ export default async function EvidencePage({ params }: { params: Promise<{ proje
     <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
       <CompanyFinancialWorkspace workspace={result.data} />
       <div className="space-y-5">
-        <PaymentEvidencePanel milestones={result.data.milestones} />
+        <PaymentEvidencePanel projectId={projectId} milestones={result.data.milestones} />
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-start gap-3">
             <FileArchive className="mt-0.5 size-5 text-brand-600" />

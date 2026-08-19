@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Clock3, ExternalLink, FileArchive, FileText, ReceiptText } from "lucide-react";
+import Link from "next/link";
+import { Clock3, Download, ExternalLink, FileArchive, FileText, ReceiptText } from "lucide-react";
 
 import { ReceiptDocument } from "@/components/project/payment/receipt-document";
 import { StatusBadge } from "@/components/project/status-badge";
@@ -9,7 +10,9 @@ import { BASE_SEPOLIA_EXPLORER_URL } from "@/config/testnet";
 import { paymentMethodLabel } from "@/config/payment-method";
 import type { FinancialMilestoneRecord } from "@/lib/backend";
 
-export function PaymentEvidencePanel({ milestones }: { milestones: FinancialMilestoneRecord[] }) {
+export function PaymentEvidencePanel({ projectId, milestones }: { projectId: string; milestones: FinancialMilestoneRecord[] }) {
+  const hasVerifiedWalletPayment = milestones.some((milestone) => milestone.payment?.method === "wallet_testnet" && milestone.payment.status === "completed");
+
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <div className="flex items-center gap-3">
@@ -27,6 +30,26 @@ export function PaymentEvidencePanel({ milestones }: { milestones: FinancialMile
           milestones.map((milestone) => <PaymentEvidenceCard key={milestone.id} milestone={milestone} />)
         )}
       </div>
+
+      {hasVerifiedWalletPayment ? (
+        <Link
+          href={`/company/projects/${projectId}/evidence/receipt`}
+          target="_blank"
+          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
+        >
+          <Download className="size-4" />
+          지급 증빙 전체 PDF 다운로드
+        </Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="mt-5 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-control border border-app-border bg-app-surface px-4 text-sm font-bold text-app-muted opacity-60"
+        >
+          <Download className="size-4" />
+          지급 증빙 전체 PDF 다운로드
+        </button>
+      )}
     </section>
   );
 }
