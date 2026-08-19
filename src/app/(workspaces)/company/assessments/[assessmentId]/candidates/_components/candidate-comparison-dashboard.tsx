@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { ArrowLeft, CircleAlert, ExternalLink, UserCheck, Users } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, CircleAlert, ExternalLink, UserCheck, Users } from "lucide-react";
 
 import { selectProposalAction } from "@/app/actions/projects";
 import { PageHeader } from "@/components/page/page-header";
@@ -27,6 +27,7 @@ export function CandidateComparisonDashboard({
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isReqExpanded, setIsReqExpanded] = useState(false);
 
   if (!projectDetail.ok) {
     return (
@@ -63,7 +64,7 @@ export function CandidateComparisonDashboard({
 
   return (
     <div className="mx-auto w-full max-w-7xl pb-16">
-      <Link href="/company/assessments" className="inline-flex items-center gap-2 text-sm font-bold text-app-muted hover:text-brand-700">
+      <Link href="/company/assessments" className="inline-flex items-center gap-2 text-sm font-bold text-app-muted hover:text-brand-700 transition-colors">
         <ArrowLeft className="size-4" />진행 전 프로젝트
       </Link>
 
@@ -75,9 +76,25 @@ export function CandidateComparisonDashboard({
         />
       </div>
 
-      <section className="mt-6 rounded-card border border-app-border bg-app-surface-subtle p-5">
-        <h2 className="text-sm font-black text-app-foreground">등록 요구사항</h2>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-app-muted">{project.requirements}</p>
+      <section className="mt-6 rounded-card border border-app-border bg-app-surface shadow-xs transition-all duration-300">
+        <button
+          type="button"
+          onClick={() => setIsReqExpanded(!isReqExpanded)}
+          className="flex w-full items-center justify-between p-5 text-left font-black text-app-foreground hover:bg-slate-50/50 transition-colors rounded-card cursor-pointer"
+        >
+          <span className="text-sm font-black flex items-center gap-2">
+            등록 요구사항
+            <span className="text-xs font-bold text-app-muted font-normal">
+              ({isReqExpanded ? "접기" : "자세히 보기"})
+            </span>
+          </span>
+          {isReqExpanded ? <ChevronUp className="size-4 text-app-muted" /> : <ChevronDown className="size-4 text-app-muted" />}
+        </button>
+        {isReqExpanded && (
+          <div className="border-t border-app-border p-5 bg-app-surface-subtle/50 animate-fadeIn">
+            <p className="whitespace-pre-wrap text-sm leading-6 text-app-muted">{project.requirements}</p>
+          </div>
+        )}
       </section>
 
       {errorMessage ? (
@@ -96,7 +113,7 @@ export function CandidateComparisonDashboard({
           {candidates.map((proposal) => {
             const isSelected = proposal.id === selectedProposalId || proposal.isSelected;
             return (
-              <article key={proposal.id} className={`rounded-card border bg-app-surface p-5 shadow-card ${isSelected ? "border-success/50" : "border-app-border"}`}>
+              <article key={proposal.id} className={`rounded-card border bg-app-surface p-5 shadow-card transition-all duration-300 ${isSelected ? "border-success/50 bg-green-50/5 ring-1 ring-success/10" : "border-app-border"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-black text-app-foreground">{proposal.freelancer.displayName ?? "이름 미등록 지원자"}</h2>
@@ -106,14 +123,31 @@ export function CandidateComparisonDashboard({
                 </div>
 
                 {proposal.freelancer.skills ? (
-                  <p className="mt-4 text-xs font-bold text-brand-700">{proposal.freelancer.skills}</p>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {proposal.freelancer.skills.split(",").map((skill) => {
+                      const trimmed = skill.trim();
+                      if (!trimmed) return null;
+                      return (
+                        <span
+                          key={trimmed}
+                          className="inline-flex items-center rounded-md bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 text-[11px] font-bold text-slate-600"
+                        >
+                          {trimmed}
+                        </span>
+                      );
+                    })}
+                  </div>
                 ) : null}
 
                 <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-4">
                   <h3 className="text-xs font-black uppercase tracking-wider text-app-muted">제출 원문</h3>
-                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-app-foreground">{proposal.content}</p>
+                  <div className="mt-3 max-h-48 overflow-y-auto pr-1 whitespace-pre-wrap text-sm leading-6 text-app-foreground custom-scrollbar">
+                    {proposal.content}
+                  </div>
                   {proposal.optionalNotes ? (
-                    <p className="mt-4 border-t border-app-border pt-4 text-sm text-app-muted">{proposal.optionalNotes}</p>
+                    <div className="mt-4 border-t border-app-border pt-4 text-sm text-app-muted max-h-24 overflow-y-auto custom-scrollbar">
+                      {proposal.optionalNotes}
+                    </div>
                   ) : null}
                 </div>
 
@@ -127,15 +161,45 @@ export function CandidateComparisonDashboard({
                   </div>
                 ) : null}
 
-                <button
-                  type="button"
-                  disabled={isPending || isSelected || Boolean(selectedProposalId)}
-                  onClick={() => chooseCandidate(proposal.id)}
-                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <UserCheck className="size-4" />
-                  {isSelected ? "선정 완료" : isPending ? "선정 저장 중" : "이 프리랜서 선정"}
-                </button>
+                {(() => {
+                  if (isSelected) {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-green-200 bg-green-50 px-4 text-sm font-bold text-green-700 cursor-not-allowed"
+                      >
+                        <Check className="size-4" />
+                        선정 완료
+                      </button>
+                    );
+                  }
+                  
+                  if (selectedProposalId != null) {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-slate-200 bg-slate-100 px-4 text-sm font-bold text-slate-400 cursor-not-allowed"
+                      >
+                        <UserCheck className="size-4" />
+                        이 프리랜서 선정
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => chooseCandidate(proposal.id)}
+                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 active:scale-[0.99] transition-all cursor-pointer shadow-xs disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <UserCheck className="size-4" />
+                      {isPending ? "선정 저장 중..." : "이 프리랜서 선정"}
+                    </button>
+                  );
+                })()}
               </article>
             );
           })}
