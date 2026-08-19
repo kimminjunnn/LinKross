@@ -549,6 +549,7 @@ export interface FinancialMilestoneRecord {
 export interface ProjectFinancialWorkspace {
   projectId: string;
   projectTitle: string;
+  lifecycleStage: string;
   milestones: FinancialMilestoneRecord[];
   evidenceBundles: Array<{
     id: string;

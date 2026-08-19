@@ -62,11 +62,11 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
 
-  const { data: project, error: projectError } = await supabase.from("projects").select("id, title").eq("id", projectId).maybeSingle();
+  const { data: project, error: projectError } = await supabase.from("projects").select("id, title, lifecycle_stage").eq("id", projectId).maybeSingle();
   if (projectError || !project) return { ok: false, error: mapBackendError(projectError, "프로젝트를 찾지 못했습니다.") };
 
   const { data: sow } = await supabase.from("sow_versions").select("id").eq("project_id", projectId).eq("status", "approved").maybeSingle();
-  if (!sow) return { ok: true, data: { projectId, projectTitle: project.title, milestones: [], evidenceBundles: [] } };
+  if (!sow) return { ok: true, data: { projectId, projectTitle: project.title, lifecycleStage: project.lifecycle_stage, milestones: [], evidenceBundles: [] } };
 
   const { data: milestones, error: milestoneError } = await supabase
     .from("milestones")
@@ -94,6 +94,7 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
     data: {
       projectId,
       projectTitle: project.title,
+      lifecycleStage: project.lifecycle_stage,
       milestones: (milestones ?? []).map((milestone) => {
         const invoice = invoiceByMilestone.get(milestone.id);
         const payment = paymentByMilestone.get(milestone.id);
@@ -228,6 +229,38 @@ export async function advancePaymentStatus(input: AdvancePaymentStatusInput): Pr
   }).eq("id", input.paymentId).eq("project_id", input.projectId).select("id").maybeSingle();
   if (error || !data) return { ok: false, error: mapBackendError(error, "지급 상태를 변경하지 못했습니다.") };
   return { ok: true, data: { paymentId: data.id } };
+}
+
+export async function completeProject(projectId: string): Promise<BackendResult<{ projectId: string }>> {
+  if (!isUuid(projectId)) return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트 ID가 아닙니다." } };
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+
+  const { data: project, error: projectError } = await supabase.from("projects").select("id, lifecycle_stage").eq("id", projectId).maybeSingle();
+  if (projectError || !project) return { ok: false, error: mapBackendError(projectError, "프로젝트를 찾지 못했습니다.") };
+  if (project.lifecycle_stage === "completed") return { ok: false, error: { code: "CONFLICT", message: "이미 완료된 프로젝트입니다." } };
+
+  const { data: sow } = await supabase.from("sow_versions").select("id").eq("project_id", projectId).eq("status", "approved").maybeSingle();
+  if (!sow) return { ok: false, error: { code: "CONFLICT", message: "승인된 SOW가 없어 완료 처리할 수 없습니다." } };
+
+  const { data: milestones, error: milestoneError } = await supabase.from("milestones").select("id, status").eq("sow_version_id", sow.id);
+  if (milestoneError) return { ok: false, error: mapBackendError(milestoneError, "마일스톤을 불러오지 못했습니다.") };
+  if (!milestones?.length || milestones.some((milestone) => milestone.status !== "approved")) {
+    return { ok: false, error: { code: "CONFLICT", message: "모든 마일스톤이 최종 승인되어야 완료 처리할 수 있습니다." } };
+  }
+
+  const milestoneIds = milestones.map((milestone) => milestone.id);
+  const { data: payments, error: paymentsError } = await supabase.from("payments").select("milestone_record_id, status").eq("project_id", projectId).in("milestone_record_id", milestoneIds);
+  if (paymentsError) return { ok: false, error: mapBackendError(paymentsError, "지급 기록을 불러오지 못했습니다.") };
+  const completedPaymentMilestoneIds = new Set((payments ?? []).filter((payment) => payment.status === "completed").map((payment) => payment.milestone_record_id));
+  if (!milestoneIds.every((id) => completedPaymentMilestoneIds.has(id))) {
+    return { ok: false, error: { code: "CONFLICT", message: "모든 마일스톤의 지급이 완료되어야 프로젝트를 완료 처리할 수 있습니다." } };
+  }
+
+  const { data, error } = await supabase.from("projects").update({ lifecycle_stage: "completed" }).eq("id", projectId).select("id").maybeSingle();
+  if (error || !data) return { ok: false, error: mapBackendError(error, "프로젝트를 완료 처리하지 못했습니다.") };
+  return { ok: true, data: { projectId: data.id } };
 }
 
 export async function generateEvidenceBundle(projectId: string): Promise<BackendResult<GenerateEvidenceBundleOutput>> {

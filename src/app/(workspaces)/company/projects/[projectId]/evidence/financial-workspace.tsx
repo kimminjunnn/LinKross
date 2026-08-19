@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Banknote, CheckCircle2, Clock3, FileText, Loader2, XCircle } from "lucide-react";
+import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
-import { advancePaymentStatusAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
+import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
 import { paymentStatusLabel } from "@/config/payment-status";
 import type { FinancialMilestoneRecord, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
 
 export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFinancialWorkspace }) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const allMilestonesPaid = workspace.milestones.length > 0
+    && workspace.milestones.every((milestone) => milestone.status === "approved" && milestone.payment?.status === "completed");
 
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
@@ -43,6 +46,27 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
           />
         ))}
       </div>
+
+      {workspace.lifecycleStage === "completed" ? (
+        <div className="mt-5 flex items-center gap-2 rounded-control bg-accent-50 p-4 text-sm font-black text-accent-700">
+          <PartyPopper className="size-5" />프로젝트가 완료 처리되었습니다.
+        </div>
+      ) : allMilestonesPaid && (
+        <div className="mt-5 rounded-control border border-app-border-strong bg-app-surface-subtle p-4">
+          <p className="text-sm font-bold text-app-foreground">모든 마일스톤이 승인되고 지급까지 완료됐습니다.</p>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => startTransition(async () => {
+              const result = await completeProjectAction(workspace.projectId);
+              setMessage(result.ok ? "프로젝트를 완료 처리했습니다." : result.error.message);
+            })}
+            className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-accent-600 px-4 text-sm font-black text-white disabled:opacity-50"
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <PartyPopper className="size-4" />}프로젝트 완료 처리
+          </button>
+        </div>
+      )}
     </section>
   );
 }
