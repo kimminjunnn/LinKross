@@ -29,7 +29,7 @@ const inputClassName =
   "mt-2 min-h-12 w-full rounded-control border border-app-border-strong bg-app-surface px-3.5 text-sm text-app-foreground outline-none transition-colors placeholder:text-app-muted/60 focus:border-brand-500 focus:ring-4 focus:ring-brand-100";
 
 const sectionTitleClassName =
-  "text-lg font-black tracking-tight text-app-foreground";
+  "text-lg font-semibold tracking-tight text-app-foreground";
 
 const steps = [
   { label: "기본 정보", description: "목표와 프로젝트 유형" },
@@ -166,7 +166,7 @@ export function NewProjectForm({
       <header className="border-b border-app-border pb-6">
         <Link
           href="/company/assessments"
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-app-muted transition-colors hover:text-brand-700"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-app-muted transition-colors hover:text-brand-700"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           진행 전 프로젝트
@@ -174,11 +174,11 @@ export function NewProjectForm({
 
         <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-pill bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">
+            <div className="inline-flex items-center gap-2 rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
               <Rocket aria-hidden="true" className="size-3.5" />
               프로젝트 등록
             </div>
-            <h1 className="mt-3 text-2xl font-black tracking-tight text-app-foreground sm:text-3xl">
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-app-foreground sm:text-3xl">
               새 프로젝트 만들기
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-app-muted">
@@ -192,7 +192,7 @@ export function NewProjectForm({
               type="button"
               onClick={handleSaveDraft}
               disabled={draftStatus === "saving"}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-semibold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save aria-hidden="true" className="size-4" />
               {DRAFT_LABEL[draftStatus]}
@@ -201,7 +201,7 @@ export function NewProjectForm({
               type="button"
               onClick={handleReviewClick}
               disabled={isPending}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               프로젝트 만들기
               <ChevronRight aria-hidden="true" className="size-4" />
@@ -213,7 +213,7 @@ export function NewProjectForm({
       {Object.keys(draft).length > 0 ? (
         <div className="mt-6 flex items-start gap-3 rounded-card border border-accent-200 bg-accent-50 p-4">
           <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-accent-700" />
-          <p className="text-sm font-bold text-accent-800">
+          <p className="text-sm text-accent-800">
             임시 저장된 내용을 불러왔습니다. 이어서 작성해주세요.
           </p>
         </div>
@@ -221,7 +221,7 @@ export function NewProjectForm({
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <aside className="rounded-card border border-app-border bg-app-surface p-4 shadow-card lg:sticky lg:top-[calc(var(--app-header-height)+2rem)]">
-          <p className="px-2 text-xs font-black tracking-[0.12em] text-app-muted uppercase">
+          <p className="px-2 text-xs font-semibold tracking-[0.12em] text-app-muted uppercase">
             작성 순서
           </p>
           <ol className="mt-4 space-y-1">
@@ -235,7 +235,7 @@ export function NewProjectForm({
                   }`}
                 >
                   <span
-                    className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-black ${
+                    className={`grid size-7 shrink-0 place-items-center rounded-full text-xs ${
                       isComplete
                         ? "bg-emerald-500 text-white"
                         : "bg-app-surface-subtle text-app-muted"
@@ -244,7 +244,7 @@ export function NewProjectForm({
                     {isComplete ? <Check aria-hidden="true" className="size-3.5" /> : index + 1}
                   </span>
                   <span>
-                    <span className="block text-sm font-black text-app-foreground">
+                    <span className="block text-sm text-app-foreground">
                       {step.label}
                     </span>
                     <span className="mt-0.5 block text-xs text-app-muted">
@@ -257,7 +257,7 @@ export function NewProjectForm({
           </ol>
 
           <div className="mt-5 rounded-xl border border-accent-200 bg-accent-50 p-3.5">
-            <p className="flex items-center gap-2 text-xs font-black text-accent-800">
+            <p className="flex items-center gap-2 text-xs text-accent-800">
               <Info aria-hidden="true" className="size-4" />
               등록 후 진행
             </p>
@@ -278,7 +278,7 @@ export function NewProjectForm({
           {state.status === "error" && state.error ? (
             <div className="flex items-start gap-3 rounded-card border border-red-200 bg-red-50 p-4">
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600" />
-              <p className="text-sm font-bold text-red-800">{state.error}</p>
+              <p className="text-sm text-red-800">{state.error}</p>
             </div>
           ) : null}
 
@@ -296,7 +296,7 @@ export function NewProjectForm({
             </div>
 
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
-              <label className="sm:col-span-2 text-sm font-bold text-app-foreground">
+              <label className="sm:col-span-2 text-sm text-app-foreground">
                 프로젝트명 <span className="text-brand-500">*</span>
                 <input
                   className={inputClassName}
@@ -308,7 +308,7 @@ export function NewProjectForm({
                 <FieldError message={fieldError("title")} />
               </label>
 
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 프로젝트 유형 <span className="text-brand-500">*</span>
                 <select
                   className={inputClassName}
@@ -324,7 +324,7 @@ export function NewProjectForm({
                 </select>
               </label>
 
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 주요 기술 환경
                 <input
                   className={inputClassName}
@@ -334,7 +334,7 @@ export function NewProjectForm({
                 />
               </label>
 
-              <label className="sm:col-span-2 text-sm font-bold text-app-foreground">
+              <label className="sm:col-span-2 text-sm text-app-foreground">
                 프로젝트 목표 <span className="text-brand-500">*</span>
                 <textarea
                   className={`${inputClassName} min-h-32 resize-y py-3`}
@@ -343,7 +343,7 @@ export function NewProjectForm({
                   defaultValue={draftValue("goal")}
                   placeholder="이 프로젝트를 통해 해결하려는 문제와 사용자가 얻게 될 결과를 설명해주세요."
                 />
-                <span className="mt-2 block text-xs font-normal leading-5 text-app-muted">
+                <span className="mt-2 block text-xs leading-5 text-app-muted">
                   구현 방식보다 비즈니스 목표와 핵심 사용자 경험을 먼저 적어주세요.
                 </span>
                 <FieldError message={fieldError("goal")} />
@@ -365,7 +365,7 @@ export function NewProjectForm({
             </div>
 
             <div className="mt-6 space-y-6">
-              <label className="block text-sm font-bold text-app-foreground">
+              <label className="block text-sm text-app-foreground">
                 핵심 요구사항 <span className="text-brand-500">*</span>
                 <textarea
                   className={`${inputClassName} min-h-44 resize-y py-3`}
@@ -378,7 +378,7 @@ export function NewProjectForm({
               </label>
 
               <div className="grid gap-6 sm:grid-cols-2">
-                <label className="text-sm font-bold text-app-foreground">
+                <label className="text-sm text-app-foreground">
                   기대 결과물
                   <textarea
                     className={`${inputClassName} min-h-28 resize-y py-3`}
@@ -387,7 +387,7 @@ export function NewProjectForm({
                     placeholder="예: 배포 가능한 웹앱, 소스 코드, 운영 가이드"
                   />
                 </label>
-                <label className="text-sm font-bold text-app-foreground">
+                <label className="text-sm text-app-foreground">
                   제외 범위
                   <textarea
                     className={`${inputClassName} min-h-28 resize-y py-3`}
@@ -398,7 +398,7 @@ export function NewProjectForm({
                 </label>
               </div>
 
-              <label className="block text-sm font-bold text-app-foreground">
+              <label className="block text-sm text-app-foreground">
                 참고자료 링크·메모
                 <textarea
                   className={`${inputClassName} min-h-20 resize-y py-3`}
@@ -408,21 +408,21 @@ export function NewProjectForm({
                 />
               </label>
 
-              <label className="block text-sm font-bold text-app-foreground">
+              <label className="block text-sm text-app-foreground">
                 참고자료 파일
                 <span className="mt-2 flex min-h-28 flex-col items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center">
                   <Paperclip aria-hidden="true" className="size-5 text-brand-600" />
-                  <span className="mt-2 text-sm font-black text-app-foreground">
+                  <span className="mt-2 text-sm text-app-foreground">
                     요구사항 문서나 화면 자료 첨부
                   </span>
-                  <span className="mt-1 text-xs font-normal text-app-muted">
+                  <span className="mt-1 text-xs text-app-muted">
                     PDF, DOCX, PNG, JPG, WebP, TXT · 최대 20MB
                   </span>
                   <input
                     name="attachment"
                     type="file"
                     accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt"
-                    className="mt-3 max-w-full text-xs font-normal text-app-muted file:mr-3 file:rounded-control file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-bold file:text-brand-700"
+                    className="mt-3 max-w-full text-xs text-app-muted file:mr-3 file:rounded-control file:border-0 file:bg-brand-50 file:px-3 file:py-2 file: file:text-brand-700"
                   />
                 </span>
               </label>
@@ -443,7 +443,7 @@ export function NewProjectForm({
             </div>
 
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 희망 시작일 <span className="text-brand-500">*</span>
                 <input
                   className={inputClassName}
@@ -454,7 +454,7 @@ export function NewProjectForm({
                 />
                 <FieldError message={fieldError("startDate")} />
               </label>
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 희망 완료일 <span className="text-brand-500">*</span>
                 <input
                   className={inputClassName}
@@ -465,10 +465,10 @@ export function NewProjectForm({
                 />
                 <FieldError message={fieldError("endDate")} />
               </label>
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 예산 <span className="text-brand-500">*</span>
                 <span className="relative block">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 mt-1 -translate-y-1/2 text-sm font-bold text-app-muted">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 mt-1 -translate-y-1/2 text-sm text-app-muted">
                     $
                   </span>
                   <input
@@ -499,7 +499,7 @@ export function NewProjectForm({
             </div>
 
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 모집 시작일 <span className="text-brand-500">*</span>
                 <span className="relative block">
                   <CalendarDays
@@ -516,7 +516,7 @@ export function NewProjectForm({
                 </span>
                 <FieldError message={fieldError("recruitmentStartAt")} />
               </label>
-              <label className="text-sm font-bold text-app-foreground">
+              <label className="text-sm text-app-foreground">
                 지원 마감일 <span className="text-brand-500">*</span>
                 <span className="relative block">
                   <CalendarDays
@@ -533,7 +533,7 @@ export function NewProjectForm({
                 </span>
                 <FieldError message={fieldError("recruitmentEndAt")} />
               </label>
-              <label className="sm:col-span-2 text-sm font-bold text-app-foreground">
+              <label className="sm:col-span-2 text-sm text-app-foreground">
                 지원자에게 전달할 안내
                 <textarea
                   className={`${inputClassName} min-h-28 resize-y py-3`}
@@ -548,7 +548,7 @@ export function NewProjectForm({
           <div className="flex flex-col-reverse gap-3 border-t border-app-border pt-6 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/company/assessments"
-              className="inline-flex min-h-11 items-center justify-center rounded-control px-4 text-sm font-bold text-app-muted transition-colors hover:bg-app-surface-subtle hover:text-app-foreground"
+              className="inline-flex min-h-11 items-center justify-center rounded-control px-4 text-sm font-semibold text-app-muted transition-colors hover:bg-app-surface-subtle hover:text-app-foreground"
             >
               취소
             </Link>
@@ -557,7 +557,7 @@ export function NewProjectForm({
                 type="button"
                 onClick={handleSaveDraft}
                 disabled={draftStatus === "saving"}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-5 text-sm font-bold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-5 text-sm font-semibold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Save aria-hidden="true" className="size-4" />
                 {DRAFT_LABEL[draftStatus]}
@@ -566,7 +566,7 @@ export function NewProjectForm({
                 type="button"
                 onClick={handleReviewClick}
                 disabled={isPending}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Plus aria-hidden="true" className="size-4" />
                 프로젝트 만들기
@@ -585,7 +585,7 @@ export function NewProjectForm({
       />
 
       {state.status === "success" ? (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-control bg-app-foreground px-4 py-3 text-sm font-bold text-white shadow-xl">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-control bg-app-foreground px-4 py-3 text-sm font-semibold text-white shadow-xl">
           <CheckCircle2 aria-hidden="true" className="size-4 text-emerald-400" />
           {state.warning ? `공고는 등록됐지만 첨부 실패: ${state.warning}` : "공고가 성공적으로 등록되었습니다."}
         </div>
@@ -596,5 +596,5 @@ export function NewProjectForm({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <span className="mt-1.5 block text-xs font-bold text-red-600">{message}</span>;
+  return <span className="mt-1.5 block text-xs text-red-600">{message}</span>;
 }

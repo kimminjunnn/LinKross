@@ -38,7 +38,7 @@ export function ProjectSummaryModal({
       <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-card bg-app-surface p-6 shadow-xl sm:p-8">
         <div className="flex items-start justify-between gap-4 border-b border-app-border pb-4">
           <div>
-            <h2 className="text-lg font-black text-app-foreground">등록 전 최종 확인</h2>
+            <h2 className="text-lg font-semibold text-app-foreground">등록 전 최종 확인</h2>
             <p className="mt-1 text-sm text-app-muted">
               아래 내용으로 프로젝트 공고가 등록됩니다. 등록 후 요구사항 수정은 별도 화면에서 진행합니다.
             </p>
@@ -79,7 +79,7 @@ export function ProjectSummaryModal({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="inline-flex min-h-11 items-center justify-center rounded-control border border-app-border-strong bg-app-surface px-5 text-sm font-bold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center rounded-control border border-app-border-strong bg-app-surface px-5 text-sm font-semibold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:opacity-60"
           >
             내용 다시 확인
           </button>
@@ -87,7 +87,7 @@ export function ProjectSummaryModal({
             type="button"
             onClick={onConfirm}
             disabled={isSubmitting}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "등록 중..." : "공고 등록하기"}
           </button>
@@ -108,9 +108,9 @@ function SummaryRow({
 }) {
   return (
     <div>
-      <dt className="text-xs font-black tracking-wide text-app-muted uppercase">{label}</dt>
+      <dt className="text-xs font-semibold tracking-wide text-app-muted uppercase">{label}</dt>
       <dd
-        className={`mt-1 font-bold text-app-foreground ${multiline ? "whitespace-pre-wrap leading-6" : ""}`}
+        className={`mt-1 text-app-foreground ${multiline ? "whitespace-pre-wrap leading-6" : ""}`}
       >
         {value}
       </dd>

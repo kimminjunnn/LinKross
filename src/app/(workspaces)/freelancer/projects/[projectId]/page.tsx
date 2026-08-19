@@ -44,7 +44,7 @@ export default async function FreelancerProjectPage({
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
         <div className="flex items-center gap-2">
           <Handshake aria-hidden="true" className="size-5 text-brand-600" />
-          <h2 className="text-lg font-black text-app-foreground">Project overview</h2>
+          <h2 className="text-lg font-semibold text-app-foreground">Project overview</h2>
         </div>
 
         <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -67,8 +67,8 @@ export default async function FreelancerProjectPage({
 
         <div className="mt-5 border-t border-app-border pt-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-black text-app-foreground">My delivery proposal</h3>
-            <span className="text-xs font-bold text-app-muted">
+            <h3 className="text-sm font-semibold text-app-foreground">My delivery proposal</h3>
+            <span className="text-xs text-app-muted">
               Selected {formatDate(project.selectedAt)}
             </span>
           </div>
@@ -79,7 +79,7 @@ export default async function FreelancerProjectPage({
               </p>
               {proposal.optionalNotes ? (
                 <div className="mt-4 border-t border-app-border pt-4">
-                  <p className="text-xs font-black text-app-muted">Additional notes</p>
+                  <p className="text-xs text-app-muted">Additional notes</p>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-app-muted">
                     {proposal.optionalNotes}
                   </p>
@@ -98,7 +98,7 @@ export default async function FreelancerProjectPage({
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2">
             <FileText aria-hidden="true" className="size-5 text-brand-600" />
-            <h2 className="text-lg font-black text-app-foreground">Statement of Work</h2>
+            <h2 className="text-lg font-semibold text-app-foreground">Statement of Work</h2>
           </div>
 
           {!sow ? (
@@ -108,10 +108,10 @@ export default async function FreelancerProjectPage({
           ) : (
             <div className="mt-5 space-y-5">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="rounded-full bg-brand-50 px-3 py-1 font-bold text-brand-700">
+                <span className="rounded-full bg-brand-50 px-3 py-1 text-brand-700">
                   {sow.version}
                 </span>
-                <span className="font-semibold text-app-muted">{formatSowStatus(sow.status)}</span>
+                <span className="text-app-muted">{formatSowStatus(sow.status)}</span>
               </div>
 
               {sow.document.documentSections.map((section) => (
@@ -119,7 +119,7 @@ export default async function FreelancerProjectPage({
                   key={section.title}
                   className="rounded-control border border-app-border bg-app-surface-subtle p-4"
                 >
-                  <h3 className="text-sm font-black text-app-foreground">{section.title}</h3>
+                  <h3 className="text-sm font-semibold text-app-foreground">{section.title}</h3>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-app-muted">
                     {section.body}
                   </p>
@@ -130,10 +130,10 @@ export default async function FreelancerProjectPage({
                 {sow.milestones.map((milestone) => (
                   <article key={milestone.id} className="rounded-control border border-app-border p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="font-black text-app-foreground">
+                      <h3 className="font-semibold text-app-foreground">
                         {milestone.code} · {milestone.title}
                       </h3>
-                      <span className="text-xs font-bold text-app-muted">{milestone.amount}</span>
+                      <span className="text-xs text-app-muted">{milestone.amount}</span>
                     </div>
                     <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-app-muted">
                       {[...milestone.acceptanceCriteria, ...milestone.definitionOfDone].map(
@@ -150,7 +150,7 @@ export default async function FreelancerProjectPage({
         <aside className="h-fit rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2">
             <Handshake aria-hidden="true" className="size-5 text-accent-600" />
-            <h2 className="text-lg font-black text-app-foreground">Dual approval</h2>
+            <h2 className="text-lg font-semibold text-app-foreground">Dual approval</h2>
           </div>
           {sow ? (
             <FreelancerSowApprovalPanel initialState={sow} />
@@ -168,11 +168,11 @@ export default async function FreelancerProjectPage({
 function OverviewField({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="rounded-control border border-app-border bg-app-surface-subtle p-4">
-      <dt className="flex items-center gap-1.5 text-xs font-bold text-app-muted">
+      <dt className="flex items-center gap-1.5 text-xs text-app-muted">
         {icon}
         {label}
       </dt>
-      <dd className="mt-2 text-sm font-black text-app-foreground">{value}</dd>
+      <dd className="mt-2 text-sm text-app-foreground">{value}</dd>
     </div>
   );
 }
@@ -181,7 +181,7 @@ function TabError({ message }: { message: string }) {
   return (
     <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
       <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
-      <p className="text-sm font-bold">{message}</p>
+      <p className="text-sm">{message}</p>
     </div>
   );
 }

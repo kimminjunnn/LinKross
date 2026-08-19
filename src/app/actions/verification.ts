@@ -1,6 +1,9 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import type {
   BackendResult,
@@ -16,6 +19,17 @@ import {
   requestVerificationRun,
   submitMilestonePullRequest,
 } from "@/lib/backend";
+import { executeNextVerificationInVercelSandbox } from "@/lib/verification-runner/vercel-sandbox";
+
+function triggerImmediateVerification() {
+  after(async () => {
+    try {
+      await executeNextVerificationInVercelSandbox(`server-action:${randomUUID()}`);
+    } catch (error) {
+      console.error("[verification] 즉시 검수 실행 트리거가 실패했습니다.", error);
+    }
+  });
+}
 
 function revalidateVerification(projectId: string) {
   revalidatePath(`/company/projects/${projectId}/verification`);
@@ -36,7 +50,10 @@ export async function submitMilestonePullRequestAction(
   input: SubmitMilestonePullRequestInput,
 ): Promise<BackendResult<MilestoneSubmissionReceipt>> {
   const result = await submitMilestonePullRequest(input);
-  if (result.ok) revalidateVerification(input.projectId);
+  if (result.ok) {
+    revalidateVerification(input.projectId);
+    if (result.data.verificationStatus === "queued") triggerImmediateVerification();
+  }
   return result;
 }
 
@@ -44,7 +61,10 @@ export async function requestVerificationRunAction(
   input: RequestVerificationInput,
 ): Promise<BackendResult<{ runId: string; status: string }>> {
   const result = await requestVerificationRun(input);
-  if (result.ok) revalidateVerification(input.projectId);
+  if (result.ok) {
+    revalidateVerification(input.projectId);
+    if (result.data.status === "queued") triggerImmediateVerification();
+  }
   return result;
 }
 

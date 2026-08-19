@@ -51,7 +51,7 @@ function NavigationLink({
       href={item.href}
       onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
-      className={`group flex min-h-11 items-center gap-3 rounded-control px-3 py-2.5 text-sm font-semibold transition-colors ${
+      className={`group flex min-h-11 items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors ${
         isActive
           ? "bg-brand-50 text-brand-700"
           : "text-app-muted hover:bg-app-surface-subtle hover:text-app-foreground"
@@ -96,7 +96,7 @@ export function SidebarNavigation({
     <nav aria-label={ariaLabel} className="flex flex-col gap-6">
       {sections.map((section) => (
         <div key={section.label}>
-          <p className="px-3 text-[0.6875rem] font-bold tracking-[0.14em] text-app-muted uppercase">
+          <p className="px-3 text-xs font-semibold tracking-[0.14em] text-app-muted uppercase">
             {section.label}
           </p>
           <ul className="mt-2 space-y-1">

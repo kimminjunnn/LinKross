@@ -63,12 +63,12 @@ export function NotificationCenter({ result, workspace }: NotificationCenterProp
       {!result.ok ? (
         <div className="mt-8 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
           <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
-          <p className="text-sm font-bold">{result.error.message}</p>
+          <p className="text-sm">{result.error.message}</p>
         </div>
       ) : result.data.length === 0 ? (
         <section className="mt-8 rounded-card border border-dashed border-app-border-strong bg-app-surface p-10 text-center">
           <Bell aria-hidden="true" className="mx-auto size-9 text-app-muted" />
-          <h2 className="mt-4 text-lg font-black text-app-foreground">{copy.emptyTitle}</h2>
+          <h2 className="mt-4 text-lg font-semibold text-app-foreground">{copy.emptyTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-app-muted">{copy.emptyDescription}</p>
         </section>
       ) : (
@@ -96,11 +96,11 @@ export function NotificationCenter({ result, workspace }: NotificationCenterProp
 
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-black text-app-foreground">
+                      <h2 className="text-base font-semibold text-app-foreground">
                         {notification.title}
                       </h2>
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        className={`rounded-full px-2.5 py-1 text-xs ${
                           notification.requiresAction
                             ? "bg-[#F95803] text-white"
                             : "bg-app-surface-subtle text-app-muted"
@@ -109,7 +109,7 @@ export function NotificationCenter({ result, workspace }: NotificationCenterProp
                         {notification.requiresAction ? copy.actionBadge : copy.recordBadge}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs font-bold text-app-muted">
+                    <p className="mt-1 text-xs text-app-muted">
                       {notification.projectTitle} · {formatDateTime(notification.occurredAt)}
                     </p>
                     <p className="mt-3 text-sm leading-6 text-app-muted">
@@ -120,7 +120,7 @@ export function NotificationCenter({ result, workspace }: NotificationCenterProp
 
                 <Link
                   href={notification.href}
-                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle"
+                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-semibold text-app-foreground hover:bg-app-surface-subtle"
                 >
                   {copy.openLabel}
                   <ArrowRight aria-hidden="true" className="size-4" />

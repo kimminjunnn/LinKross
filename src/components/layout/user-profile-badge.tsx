@@ -82,7 +82,7 @@ export function UserProfileBadge({
           <Loader2 aria-hidden="true" className="size-4 animate-spin" />
         </span>
         <div className="hidden leading-tight md:block">
-          <p className="text-sm font-bold text-app-foreground">
+          <p className="text-sm text-app-foreground">
             {workspace === "freelancer" ? "Loading profile" : "정보 불러오는 중"}
           </p>
           <p className="mt-0.5 text-xs text-app-muted">
@@ -97,12 +97,12 @@ export function UserProfileBadge({
     <div className="flex items-center gap-2.5">
       <span
         aria-hidden="true"
-        className="grid size-9 place-items-center rounded-full bg-brand-100 text-xs font-black text-brand-800"
+        className="grid size-9 place-items-center rounded-full bg-brand-100 text-xs text-brand-800"
       >
         {display?.initial ?? "?"}
       </span>
       <div className="hidden leading-tight md:block">
-        <p className="text-sm font-bold text-app-foreground">
+        <p className="text-sm text-app-foreground">
           {display?.name ?? (workspace === "freelancer" ? "Guest" : "게스트")}
         </p>
         <p className="mt-0.5 text-xs text-app-muted">

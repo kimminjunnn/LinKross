@@ -21,7 +21,7 @@ export default async function OpportunitiesPage() {
           <OpportunitiesList opportunities={result.data} />
         ) : (
           <div className="mt-8 rounded-card border border-red-200 bg-red-50 p-6 text-sm text-red-800">
-            <h2 className="font-black">프로젝트를 불러오지 못했습니다.</h2>
+            <h2 className="font-semibold">프로젝트를 불러오지 못했습니다.</h2>
             <p className="mt-2">{result.error.message}</p>
           </div>
         )}

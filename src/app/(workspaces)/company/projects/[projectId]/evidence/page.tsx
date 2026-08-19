@@ -11,7 +11,7 @@ export default async function EvidencePage({ params }: { params: Promise<{ proje
   const result = await getProjectFinancialWorkspace(projectId);
 
   if (!result.ok) {
-    return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm font-bold text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
+    return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
   }
 
   return (
@@ -21,7 +21,7 @@ export default async function EvidencePage({ params }: { params: Promise<{ proje
         <div className="flex items-start gap-3">
           <FileArchive className="mt-0.5 size-5 text-brand-600" />
           <div className="w-full">
-            <h2 className="font-black text-app-foreground">통합 증빙 번들</h2>
+            <h2 className="font-semibold text-app-foreground">통합 증빙 번들</h2>
             <p className="mt-1 text-sm leading-6 text-app-muted">요구사항, 제안서, SOW 승인, 마일스톤 검수 결과, 인보이스와 지급 기록을 하나의 버전으로 묶어 보관합니다.</p>
             {result.data.evidenceBundles.length === 0 ? (
               <p className="mt-3 rounded-control border border-dashed border-app-border-strong p-3 text-sm text-app-muted">아직 생성된 번들이 없습니다.</p>
@@ -30,9 +30,9 @@ export default async function EvidencePage({ params }: { params: Promise<{ proje
                 {result.data.evidenceBundles.map((bundle) => (
                   <Link key={bundle.id} href={`/company/projects/${projectId}/evidence/bundles/${bundle.id}`} className="flex items-center justify-between rounded-control bg-app-surface-subtle p-3 text-sm hover:bg-app-surface">
                     <div>
-                      <span className="font-black">v{bundle.versionNumber} · {bundle.status}</span>
+                      <span>v{bundle.versionNumber} · {bundle.status}</span>
                       {bundle.sha256 && <p className="mt-1 break-all font-mono text-xs text-app-muted">SHA-256 {bundle.sha256}</p>}
-                      {bundle.errorMessage && <p className="mt-1 text-xs font-bold text-danger">{bundle.errorMessage}</p>}
+                      {bundle.errorMessage && <p className="mt-1 text-xs text-danger">{bundle.errorMessage}</p>}
                     </div>
                     <ChevronRight className="size-4 shrink-0 text-app-muted" />
                   </Link>

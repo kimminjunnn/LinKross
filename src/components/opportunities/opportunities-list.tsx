@@ -52,7 +52,7 @@ export function OpportunitiesList({
     return (
       <div className="mt-8 rounded-card border border-slate-200 bg-white py-16 text-center shadow-sm">
         <HelpCircle className="mx-auto size-10 text-slate-300" />
-        <h2 className="mt-4 text-lg font-bold text-slate-900">No projects currently recruiting</h2>
+        <h2 className="mt-4 text-lg font-semibold text-slate-900">No projects currently recruiting</h2>
         <p className="mt-2 text-sm text-slate-500">New projects will appear here once registered.</p>
       </div>
     );
@@ -77,10 +77,10 @@ export function OpportunitiesList({
             <button
               type="button"
               onClick={() => setSelectedTechnology(null)}
-              className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-all ${
+              className={`rounded-pill px-3.5 py-1.5 text-xs transition-all ${
                 selectedTechnology === null
                   ? "bg-brand-500 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-650 hover:bg-slate-200"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
               All Technologies
@@ -90,10 +90,10 @@ export function OpportunitiesList({
                 type="button"
                 key={technology}
                 onClick={() => setSelectedTechnology(technology)}
-                className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-all ${
+                className={`rounded-pill px-3.5 py-1.5 text-xs transition-all ${
                   selectedTechnology === technology
                     ? "bg-brand-500 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-650 hover:bg-slate-200"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {technology}
@@ -119,14 +119,14 @@ export function OpportunitiesList({
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex size-7 items-center justify-center rounded-lg bg-orange-100 text-xs font-black text-brand-700 uppercase">
+                        <span className="inline-flex size-7 items-center justify-center rounded-lg bg-orange-100 text-xs font-semibold text-brand-700 uppercase">
                           {opportunity.organizationName.charAt(0)}
                         </span>
-                        <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                        <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                           {opportunity.organizationName}
                         </span>
                       </div>
-                      <h2 className="mt-3 text-2xl font-black text-slate-900 transition-colors group-hover:text-brand-600">
+                      <h2 className="mt-3 text-2xl font-bold text-slate-900 transition-colors group-hover:text-brand-600">
                         {opportunity.title}
                       </h2>
                       <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
@@ -138,7 +138,7 @@ export function OpportunitiesList({
                           {technologies.map((technology) => (
                             <li
                               key={technology}
-                              className="rounded-pill border border-slate-200/60 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-650"
+                              className="rounded-pill border border-slate-200/60 bg-slate-50 px-3 py-1 text-xs text-slate-600"
                             >
                               {technology}
                             </li>
@@ -149,8 +149,8 @@ export function OpportunitiesList({
 
                     <div className="flex shrink-0 flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
                       <div className="min-w-[220px] rounded-xl border border-slate-105 bg-slate-50 p-4 text-left shadow-sm lg:text-right">
-                        <p className="text-xs font-bold tracking-wider text-slate-400 uppercase">Budget</p>
-                        <p className="mt-1.5 text-lg font-black text-slate-900">
+                        <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Budget</p>
+                        <p className="mt-1.5 text-lg font-semibold text-slate-900">
                           {formatBudget(
                             opportunity.budgetAmount,
                             opportunity.budgetMaxAmount,
@@ -162,7 +162,7 @@ export function OpportunitiesList({
 
                       <Link
                         href={`/opportunities/${opportunity.id}`}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-gradient-to-r from-brand-500 to-orange-600 px-6 text-sm font-bold text-white shadow-md transition-all duration-200 hover:translate-x-1 hover:from-brand-600 hover:to-orange-700"
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-gradient-to-r from-brand-500 to-orange-600 px-6 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:translate-x-1 hover:from-brand-600 hover:to-orange-700"
                       >
                         View Details
                         <ArrowRight className="size-4" />
@@ -170,7 +170,7 @@ export function OpportunitiesList({
                     </div>
                   </div>
 
-                  <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-100 pt-5 text-xs font-bold text-slate-450">
+                  <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-slate-100 pt-5 text-xs text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <WalletCards className="size-4 text-slate-400" />
                       <span>{opportunity.budgetType === "range" ? "Budget Range" : "Fixed Budget"}</span>
@@ -191,7 +191,7 @@ export function OpportunitiesList({
         ) : (
           <div className="rounded-card border border-slate-200 bg-white py-16 text-center shadow-sm">
             <HelpCircle className="mx-auto size-10 text-slate-300" />
-            <h2 className="mt-4 text-lg font-bold text-slate-900">No search results found</h2>
+            <h2 className="mt-4 text-lg font-semibold text-slate-900">No search results found</h2>
             <p className="mt-2 text-sm text-slate-500">Try changing the search query or technology filter.</p>
           </div>
         )}

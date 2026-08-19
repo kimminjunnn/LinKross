@@ -20,7 +20,7 @@ export default async function FreelancerApplicationsPage() {
         title="My Proposals"
         description="Submitted proposal text and selection status are read from the immutable project records."
         actions={
-          <Link href="/opportunities" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-bold text-white hover:bg-brand-600">
+          <Link href="/opportunities" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
             Find projects <ArrowRight className="size-4" />
           </Link>
         }
@@ -29,12 +29,12 @@ export default async function FreelancerApplicationsPage() {
       {!result.ok ? (
         <div className="mt-8 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
           <CircleAlert className="size-5 shrink-0" />
-          <p className="text-sm font-bold">{result.error.message}</p>
+          <p className="text-sm">{result.error.message}</p>
         </div>
       ) : result.data.length === 0 ? (
         <div className="mt-8 rounded-card border border-dashed border-app-border-strong p-10 text-center">
           <FileText className="mx-auto size-9 text-app-muted" />
-          <h2 className="mt-4 font-black text-app-foreground">No proposals yet</h2>
+          <h2 className="mt-4 font-semibold text-app-foreground">No proposals yet</h2>
           <p className="mt-2 text-sm text-app-muted">Open a project and submit your delivery approach to see it here.</p>
         </div>
       ) : (
@@ -51,20 +51,20 @@ export default async function FreelancerApplicationsPage() {
               <article key={application.proposalId} className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${status.className}`}>
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${status.className}`}>
                       {status.label}
                     </span>
-                    <h2 className="mt-3 text-xl font-black text-app-foreground">{application.title}</h2>
+                    <h2 className="mt-3 text-xl font-semibold text-app-foreground">{application.title}</h2>
                     <p className="mt-1 text-sm text-app-muted">{application.organizationName} · {budget}</p>
                   </div>
                   {application.status === "selected" ? (
-                    <Link href={`/freelancer/projects/${application.projectId}`} className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600">
+                    <Link href={`/freelancer/projects/${application.projectId}`} className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600">
                       Open project <ArrowRight className="size-4" />
                     </Link>
                   ) : null}
                 </div>
                 <details className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-4">
-                  <summary className="cursor-pointer text-sm font-bold text-app-foreground">View submitted proposal</summary>
+                  <summary className="cursor-pointer text-sm text-app-foreground">View submitted proposal</summary>
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-app-muted">{application.content}</p>
                   {application.optionalNotes ? (
                     <p className="mt-4 border-t border-app-border pt-4 text-sm text-app-muted">{application.optionalNotes}</p>
