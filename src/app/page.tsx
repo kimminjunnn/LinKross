@@ -323,31 +323,45 @@ export default async function HomePage() {
               <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Integration 1 */}
                 <div className="p-6 rounded-2xl bg-white border border-slate-200 flex gap-4">
-                  <div className="size-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                    <svg className="size-6 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="size-11 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-xs">
+                    <svg className="size-5 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
                     </svg>
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-slate-900">GitHub Pull Request 연동</h4>
-                    <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-                      개발자가 PR을 제출하고 특정 Commit SHA로 검수를 요청하면, LinKross가 불변의 코드를 스냅샷하여 일회성 환경에서 빌드 및 테스트를 실행합니다.
-                    </p>
+                    <ul className="mt-2 space-y-1.5 text-xs text-slate-500 leading-relaxed font-medium">
+                      <li className="flex items-start gap-1 break-keep">
+                        <span className="text-slate-400 select-none">•</span>
+                        <span>PR 제출과 동시에 <strong>불변의 Commit SHA</strong>를 자동으로 고정합니다.</span>
+                      </li>
+                      <li className="flex items-start gap-1 break-keep">
+                        <span className="text-slate-400 select-none">•</span>
+                        <span>독립된 일회성 환경에서 안전하게 빌드 및 자동 테스트를 수행합니다.</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
 
                 {/* Integration 2 */}
                 <div className="p-6 rounded-2xl bg-white border border-slate-200 flex gap-4">
-                  <div className="size-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                    <svg className="size-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="size-11 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-xs">
+                    <svg className="size-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-slate-900">Vercel Sandbox 연동</h4>
-                    <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-                      일회성 샌드박스 프리뷰 배포 연동을 지원하여, 빌드 결과를 브라우저에서 실시간으로 직접 조작하며 시각적 완성도와 성능을 검증할 수 있습니다.
-                    </p>
+                    <ul className="mt-2 space-y-1.5 text-xs text-slate-500 leading-relaxed font-medium">
+                      <li className="flex items-start gap-1 break-keep">
+                        <span className="text-slate-400 select-none">•</span>
+                        <span>일회성 <strong>샌드박스 프리뷰 배포</strong>로 빌드 결과를 즉시 생성합니다.</span>
+                      </li>
+                      <li className="flex items-start gap-1 break-keep">
+                        <span className="text-slate-400 select-none">•</span>
+                        <span>브라우저에서 직접 결과물을 조작하며 시각 완성도를 검증할 수 있습니다.</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
