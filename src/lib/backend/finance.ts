@@ -25,7 +25,7 @@ export async function listFreelancerInvoices(): Promise<BackendResult<InvoiceRec
 
   const { data: invoices, error } = await supabase
     .from("invoices")
-    .select("id, project_id, milestone_id, invoice_number, status, amount, currency, external_reference, submitted_at, reviewed_at, review_note")
+    .select("id, project_id, milestone_id, invoice_number, status, amount, vat_amount, currency, external_reference, submitted_at, reviewed_at, review_note")
     .eq("submitted_by", authData.user.id)
     .order("submitted_at", { ascending: false });
   if (error) return { ok: false, error: mapBackendError(error, "인보이스를 불러오지 못했습니다.") };
@@ -95,7 +95,7 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
 
   const [decisionsResult, invoicesResult, paymentsResult, bundlesResult] = await Promise.all([
     milestoneIds.length ? supabase.from("milestone_decisions").select("milestone_id, decided_at").eq("decision", "approved").in("milestone_id", milestoneIds) : Promise.resolve({ data: [], error: null }),
-    milestoneIds.length ? supabase.from("invoices").select("id, project_id, milestone_id, invoice_number, status, amount, currency, external_reference, submitted_at, reviewed_at, review_note").in("milestone_id", milestoneIds).order("submitted_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+    milestoneIds.length ? supabase.from("invoices").select("id, project_id, milestone_id, invoice_number, status, amount, vat_amount, currency, external_reference, submitted_at, reviewed_at, review_note").in("milestone_id", milestoneIds).order("submitted_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
     milestoneIds.length ? supabase.from("payments").select("id, milestone_record_id, invoice_id, status, payment_method, amount_usdc, currency, tx_hash, to_address, block_number, requested_at, processing_at, completed_at, verified_at").eq("project_id", projectId).in("milestone_record_id", milestoneIds).order("verified_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
     supabase.from("evidence_bundles").select("id, version_number, status, storage_path, sha256, requested_at, completed_at, error_message").eq("project_id", projectId).order("version_number", { ascending: false }),
   ]);
@@ -173,11 +173,14 @@ export async function submitInvoice(input: SubmitInvoiceInput): Promise<BackendR
   const { data: milestone, error: milestoneError } = await supabase.from("milestones").select("id, amount, currency, status").eq("id", input.milestoneId).eq("project_id", input.projectId).maybeSingle();
   if (milestoneError || !milestone) return { ok: false, error: mapBackendError(milestoneError, "마일스톤을 찾지 못했습니다.") };
   if (milestone.status !== "approved") return { ok: false, error: { code: "CONFLICT", message: "발주자가 승인한 마일스톤만 인보이스를 제출할 수 있습니다." } };
+  const vatAmount = input.vatAmount ?? 0;
+  if (vatAmount < 0) return { ok: false, error: { code: "INVALID_INPUT", message: "부가세 금액이 올바르지 않습니다." } };
   const { data, error } = await supabase.from("invoices").insert({
     project_id: input.projectId,
     milestone_id: input.milestoneId,
     invoice_number: input.invoiceNumber.trim(),
     amount: milestone.amount,
+    vat_amount: vatAmount,
     currency: milestone.currency,
     external_reference: input.externalReference?.trim() || null,
     submitted_by: authData.user.id,
@@ -390,7 +393,7 @@ export async function generateEvidenceBundle(projectId: string): Promise<Backend
     milestoneIds.length ? supabase.from("completion_criteria").select("id, milestone_id, kind, description, verification_method, is_required, position").in("milestone_id", milestoneIds) : Promise.resolve({ data: [] }),
     milestoneIds.length ? supabase.from("milestone_submissions").select("id, milestone_id, attempt_number, pull_request_number, pull_request_url, head_branch, head_commit_sha, status, submitted_at").in("milestone_id", milestoneIds).order("attempt_number", { ascending: false }) : Promise.resolve({ data: [] }),
     milestoneIds.length ? supabase.from("milestone_decisions").select("milestone_id, decision, reason, decided_at").in("milestone_id", milestoneIds).order("decided_at", { ascending: false }) : Promise.resolve({ data: [] }),
-    supabase.from("invoices").select("id, milestone_id, invoice_number, status, amount, currency, external_reference, submitted_at, reviewed_at").eq("project_id", projectId),
+    supabase.from("invoices").select("id, milestone_id, invoice_number, status, amount, vat_amount, currency, external_reference, submitted_at, reviewed_at").eq("project_id", projectId),
     supabase.from("payments").select("id, milestone_record_id, invoice_id, status, amount_usdc, currency, tx_hash, requested_at, processing_at, completed_at, verified_at").eq("project_id", projectId),
   ]);
   const submissionIds = (submissionsResult.data ?? []).map((submission) => submission.id);
@@ -474,7 +477,7 @@ function firstBy<T extends Record<string, unknown>>(rows: T[], key: keyof T): Ma
 
 async function toInvoice(row: {
   id: string; project_id: string; milestone_id: string; invoice_number: string; status: InvoiceRecord["status"];
-  amount: number; currency: string; external_reference: string | null; submitted_at: string; reviewed_at: string | null; review_note: string | null;
+  amount: number; vat_amount: number; currency: string; external_reference: string | null; submitted_at: string; reviewed_at: string | null; review_note: string | null;
 }, projectTitle: string, organizationName: string, milestone?: { code: string; title: string }, translate = false): Promise<InvoiceRecord> {
   const milestoneTitle = milestone?.title
     ? (translate ? await translateToEnglish(milestone.title) : milestone.title)
@@ -494,6 +497,7 @@ async function toInvoice(row: {
     invoiceNumber: row.invoice_number,
     status: row.status,
     amount: Number(row.amount),
+    vatAmount: Number(row.vat_amount),
     currency: row.currency,
     externalReference: row.external_reference,
     submittedAt: row.submitted_at,

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
 import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
+import { SimplifiedLedgerButton } from "@/components/project/payment/simplified-ledger-button";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
 import { StatusBadge } from "@/components/project/status-badge";
 import { paymentMethodLabel, paymentMethods } from "@/config/payment-method";
@@ -19,9 +20,14 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
 
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-      <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">Human approval required</p>
-      <h2 className="mt-2 text-xl font-black text-app-foreground">승인, 인보이스 및 지급 상태</h2>
-      <p className="mt-2 text-sm leading-6 text-app-muted">실제 송금은 외부 결제 방식으로 처리하고, LinKross는 승인된 마일스톤과 인보이스 및 지급 참조값을 연결해 보여줍니다.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">Human approval required</p>
+          <h2 className="mt-2 text-xl font-black text-app-foreground">승인, 인보이스 및 지급 상태</h2>
+        </div>
+        <SimplifiedLedgerButton milestones={workspace.milestones} counterparty={workspace.projectTitle} perspective="expense" projectTitle={workspace.projectTitle} />
+      </div>
+      <p className="mt-2 text-sm leading-6 text-app-muted">실제 송금은 외부 결제 방식으로 처리하고, LinKross는 승인된 마일스톤과 인보이스 및 지급 참조값을 연결해 보여줍니다. 인보이스와 영수증은 프로젝트 진행 확인 자료이며 법률·세무 판단이나 정식 세금계산서를 대체하지 않습니다 — 간편장부용 내보내기도 신고 전 반드시 직접 확인해주세요.</p>
       {message && <p className="mt-4 rounded-control bg-app-surface-subtle p-3 text-sm font-bold text-app-muted">{message}</p>}
 
       <div className="mt-6 space-y-3">
@@ -106,6 +112,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
             <p className="inline-flex items-center gap-2 text-sm font-black text-app-foreground"><FileText className="size-4" />{milestone.invoice.invoiceNumber}</p>
             <span className="rounded-full bg-app-surface-subtle px-2.5 py-1 text-xs font-black text-app-muted">{milestone.invoice.status}</span>
           </div>
+          <p className="mt-1 text-xs text-app-muted">공급가액 {milestone.invoice.amount.toLocaleString()} {milestone.invoice.currency}{milestone.invoice.vatAmount > 0 && ` · 부가세 ${milestone.invoice.vatAmount.toLocaleString()} ${milestone.invoice.currency}`}</p>
           {milestone.invoice.status === "submitted" && (
             <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
               <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="검토 메모 (반려 시 필수)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />

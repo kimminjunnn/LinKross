@@ -524,6 +524,7 @@ export interface InvoiceRecord {
   invoiceNumber: string;
   status: InvoiceStatus;
   amount: number;
+  vatAmount: number;
   currency: string;
   externalReference: string | null;
   submittedAt: string;
@@ -578,6 +579,7 @@ export interface SubmitInvoiceInput {
   milestoneId: string;
   invoiceNumber: string;
   externalReference?: string;
+  vatAmount?: number;
 }
 
 export interface ReviewInvoiceInput {
