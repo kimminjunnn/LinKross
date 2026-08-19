@@ -261,6 +261,7 @@ function buildSystemPrompt(): string {
     "- 특정 시각·날짜에 의존하는 조건",
     "",
     "automatable=ui: 브라우저에서 보고 조작해 확인할 수 있는 경우. steps 를 채우고 apiSteps 는 비웁니다.",
+    "- '버튼이 동작하지 않는다', '로그인이 되지 않는다' 등 제출 차단/실패 조건은 버튼 자체의 disabled 속성(expect_disabled)을 함부로 추정하지 마세요. 버튼은 클릭 가능하지만 제출이 차단되는 것이 일반적입니다. click 후 expect_path 유지, expect_form_blocked, 또는 expect_error_feedback을 사용하세요.",
     "automatable=api: HTTP 요청과 응답 상태 코드로 확인하는 것이 더 안정적인 경우(횟수 제한, 중복 차단 등). apiSteps 를 채우고 steps 는 비웁니다.",
     "",
     "사용하지 않는 필드는 빈 문자열(숫자는 0)로 두세요.",

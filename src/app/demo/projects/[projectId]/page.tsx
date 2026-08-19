@@ -156,7 +156,7 @@ export default function DemoProjectPage() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
+                  onClick={() => setActiveTab(item.id as "project" | "milestones" | "payments")}
                   className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs transition-all hover:cursor-pointer ${
                     isActive 
                       ? "bg-slate-950 text-white shadow-sm" 
@@ -205,7 +205,7 @@ export default function DemoProjectPage() {
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
+                      onClick={() => setActiveTab(tab.id as "project" | "milestones" | "payments")}
                       className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-xs font-semibold transition-all hover:cursor-pointer ${
                         isActive ? "bg-white text-slate-950 shadow-xs" : "hover:text-slate-900"
                       }`}
@@ -516,7 +516,7 @@ export default function DemoProjectPage() {
                         <XCircle className="size-4 shrink-0 mt-0.5 text-red-600" />
                         <div>
                           <p>프리랜서에게 수정을 요구했습니다.</p>
-                          <p className="mt-1 text-red-700"><strong>요청 사유:</strong> "{savedRevisionReason}"</p>
+                          <p className="mt-1 text-red-700"><strong>요청 사유:</strong> &quot;{savedRevisionReason}&quot;</p>
                           <p className="mt-2 text-slate-500">프리랜서가 이 요청 사유를 바탕으로 코드를 수정한 후 동일 조건으로 재검수를 신청하게 됩니다.</p>
                         </div>
                       </div>
