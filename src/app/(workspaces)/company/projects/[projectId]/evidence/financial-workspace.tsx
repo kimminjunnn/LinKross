@@ -95,7 +95,7 @@ function MilestoneFinanceCard({ milestone, pending, review, requestPayment, adva
         {!milestone.payment ? (
           milestone.invoice?.status === "approved" && (
             <button type="button" disabled={pending} onClick={requestPayment} className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white disabled:opacity-50">
-              {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급 요청
+              {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급 처리 시작
             </button>
           )
         ) : (milestone.payment.status === "requested" || milestone.payment.status === "processing") && (
