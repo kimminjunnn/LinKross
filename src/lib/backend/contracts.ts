@@ -133,6 +133,11 @@ export interface MilestoneChecklistItem {
   description: string;
   verificationMethod: string;
   isRequired: boolean;
+  manualGuidance?: {
+    location: string;
+    method: string;
+    expected: string;
+  };
 }
 
 export interface ProjectMilestoneSummary {

@@ -43,6 +43,16 @@ export interface ManagedApiCheckTestSpec {
 
 export type ManagedTestSpec = ManagedBrowserTestSpec | ManagedApiCheckTestSpec;
 
+export const MANUAL_GUIDANCE_SPEC_VERSION = 1 as const;
+
+export interface ManualGuidanceSpec {
+  version: typeof MANUAL_GUIDANCE_SPEC_VERSION;
+  kind: "manual_guidance";
+  location: string;
+  method: string;
+  expected: string;
+}
+
 const DEFAULT_CREDENTIALS = {
   email: "test@example.com",
   password: "Test1234!",
@@ -204,6 +214,18 @@ export function parseManagedBrowserTestSpec(value: unknown): ManagedBrowserTestS
     ...(typeof value.expectedPath === "string" ? { expectedPath: value.expectedPath } : {}),
     syntheticCredentials: { email, password, invalidPassword },
   };
+}
+
+export function parseManualGuidanceSpec(value: unknown): ManualGuidanceSpec | null {
+  if (!isRecord(value)) return null;
+  if (value.version !== MANUAL_GUIDANCE_SPEC_VERSION || value.kind !== "manual_guidance") return null;
+
+  const location = boundedText(value.location, 300);
+  const method = boundedText(value.method, 300);
+  const expected = boundedText(value.expected, 300);
+  if (!location || !method || !expected) return null;
+
+  return { version: MANUAL_GUIDANCE_SPEC_VERSION, kind: "manual_guidance", location, method, expected };
 }
 
 function inferLoginPreset(description: string): ManagedBrowserPreset | null {
