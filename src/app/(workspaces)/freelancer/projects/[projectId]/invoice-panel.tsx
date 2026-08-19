@@ -26,7 +26,12 @@ export function FreelancerInvoicePanel({ workspace }: { workspace: ProjectFinanc
               <div><h3 className="font-black text-app-foreground">{milestone.code} · {milestone.title}</h3><p className="mt-1 text-sm text-app-muted">{milestone.amount.toLocaleString()} {milestone.currency}</p></div>
               {milestone.invoice && <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">{milestone.invoice.status}</span>}
             </div>
-            {!milestone.invoice && (
+            {milestone.invoice?.status === "rejected" && (
+              <p className="mt-3 rounded-control bg-danger/10 p-3 text-sm text-danger">
+                Rejected{milestone.invoice.reviewNote ? `: ${milestone.invoice.reviewNote}` : ""} — fix the issue and submit a new invoice number below.
+              </p>
+            )}
+            {(!milestone.invoice || milestone.invoice.status === "rejected") && (
               <form action={(formData) => startTransition(async () => {
                 const result = await submitInvoiceAction({ projectId: workspace.projectId, milestoneId: milestone.id, invoiceNumber: String(formData.get("invoiceNumber") ?? ""), externalReference: String(formData.get("externalReference") ?? "") });
                 setMessage(result.ok ? "Invoice submitted for client review." : result.error.message);
