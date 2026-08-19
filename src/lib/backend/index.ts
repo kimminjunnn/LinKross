@@ -31,11 +31,12 @@ export type {
   ProjectMilestoneSummary,
   ProjectRepositoryRecord,
   ProjectFinancialWorkspace,
+  ManualPaymentMethod,
   PaymentMethod,
   PaymentRecordStatus,
   ReviewInvoiceInput,
   RequestPaymentInput,
-  VerifyWalletPaymentInput,
+  RecordWalletPaymentInput,
   RequestSowRevisionInput,
   ProjectProposal,
   SaveSowVersionInput,
@@ -85,7 +86,7 @@ export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/bac
 export { listFreelancerApplications, listFreelancerProjects } from "@/lib/backend/freelancer";
 export { listCompanyNotifications, listFreelancerNotifications } from "@/lib/backend/notifications";
 export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
-export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, requestPayment, reviewInvoice, submitInvoice, verifyWalletPayment } from "@/lib/backend/finance";
+export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, recordWalletPayment, requestPayment, reviewInvoice, submitInvoice } from "@/lib/backend/finance";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
   connectProjectRepository,
