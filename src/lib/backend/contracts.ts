@@ -197,6 +197,12 @@ export interface SowApprovalRecord {
   approvedAt: string;
 }
 
+export interface SowApprovalParticipant {
+  role: UserRole;
+  roleLabel: string;
+  displayName: string;
+}
+
 export interface SowRevisionRequestRecord {
   id: string;
   projectId: string;
@@ -257,6 +263,10 @@ export interface SowApprovalState {
   contentHash: string;
   submittedForReviewAt: string | null;
   approvedAt: string | null;
+  participants: {
+    company: SowApprovalParticipant;
+    freelancer: SowApprovalParticipant;
+  };
   document: SowApprovalDocument;
   milestones: SowApprovalMilestone[];
   approvals: {

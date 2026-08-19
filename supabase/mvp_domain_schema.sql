@@ -209,6 +209,7 @@ alter table public.projects
   add column if not exists budget_type text not null default 'fixed',
   add column if not exists budget_max_amount numeric,
   add column if not exists applicant_guidance text,
+  add column if not exists company_contact_name_snapshot text,
   add column if not exists lifecycle_stage public.project_lifecycle_stage not null default 'preparing',
   add column if not exists updated_at timestamptz not null default now(),
   add column if not exists archived_at timestamptz;
@@ -1324,10 +1325,14 @@ begin
 
   new.approver_id = (select auth.uid());
 
-  if private.is_project_owner(new.project_id) then
-    new.approver_role = 'company'::public.user_role;
-  elsif private.is_selected_freelancer(new.project_id) then
-    new.approver_role = 'freelancer'::public.user_role;
+  if new.approver_role = 'company'::public.user_role then
+    if not private.is_project_owner(new.project_id) then
+      raise exception 'PROJECT_OWNER_REQUIRED';
+    end if;
+  elsif new.approver_role = 'freelancer'::public.user_role then
+    if not private.is_selected_freelancer(new.project_id) then
+      raise exception 'SELECTED_FREELANCER_REQUIRED';
+    end if;
   else
     raise exception 'PROJECT_PARTICIPANT_REQUIRED';
   end if;
