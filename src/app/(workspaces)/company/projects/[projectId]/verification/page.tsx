@@ -20,7 +20,7 @@ export default async function VerificationPage({
 
   if (!result.ok) {
     return (
-      <div className="flex gap-3 rounded-card border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800">
+      <div className="flex gap-3 rounded-card border border-red-200 bg-red-50 p-5 text-sm text-red-800">
         <AlertCircle className="size-5 shrink-0" />
         {result.error.message}
       </div>
@@ -30,7 +30,7 @@ export default async function VerificationPage({
   if (!result.data.sowVersionId) {
     return (
       <div className="rounded-card border border-dashed border-app-border-strong bg-app-surface-subtle p-10 text-center">
-        <p className="text-sm font-bold text-app-foreground">아직 승인된 업무 명세서가 없습니다.</p>
+        <p className="text-sm text-app-foreground">아직 승인된 업무 명세서가 없습니다.</p>
         <p className="mt-1.5 text-sm text-app-muted">
           발주자와 프리랜서가 같은 SOW 버전을 승인하면 저장소와 검수 제출을 연결할 수 있습니다.
         </p>
@@ -50,7 +50,7 @@ export default async function VerificationPage({
             <TestTube2 className="size-4" />
           </span>
           <div>
-            <h2 className="text-sm font-black text-accent-900">
+            <h2 className="text-sm font-semibold text-accent-900">
               자동 검수 결과는 최종 승인 그 자체가 아닙니다.
             </h2>
             <p className="mt-1 text-sm leading-6 text-accent-800">
