@@ -47,6 +47,24 @@ function computeContentHash(content: unknown): string {
   return createHash("sha256").update(JSON.stringify(content)).digest("hex");
 }
 
+/**
+ * "확인 필요(manual)"로 떨어진 DoD 원문을 갭 로그에 누적한다(설계 §21.3, §21.5).
+ * 판정에는 관여하지 않는 참고 데이터이므로 실패해도 SOW 저장 흐름을 막지 않는다.
+ */
+async function logVerificationAtomGaps(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  projectId: string,
+  dodTexts: string[],
+): Promise<void> {
+  if (dodTexts.length === 0) return;
+  const { error } = await supabase
+    .from("verification_atom_gap_log")
+    .insert(dodTexts.map((dodText) => ({ project_id: projectId, dod_text: dodText })));
+  if (error) {
+    console.error("[verification-atom-gap-log] insert failed", error);
+  }
+}
+
 type SowVersionApprovalRow = {
   id: string;
   project_id: string;
@@ -241,6 +259,11 @@ async function upsertCriteriaForMilestone(
     .map((verification, index) => (verification.verificationMethod === "manual" ? index : -1))
     .filter((index) => index !== -1);
   if (unresolvedIndexes.length > 0) {
+    await logVerificationAtomGaps(
+      supabase,
+      projectId,
+      unresolvedIndexes.map((index) => dods[index]),
+    );
     const guidances = await generateManualCheckGuidance(unresolvedIndexes.map((index) => dods[index]));
     unresolvedIndexes.forEach((dodIndex, guidanceIndex) => {
       const guidance = guidances[guidanceIndex];
