@@ -30,17 +30,19 @@
 
 | Milestone ID | Key Deliverable | Description | Target Date |
 | :--- | :--- | :--- | :--- |
-| **M1** | System Architecture & ERD | Approved Technical Spec Document & DB Schema | YYYY-MM-DD |
-| **M2** | Core API Development | Backend APIs for User & Payment Services | YYYY-MM-DD |
-| **M3** | Final Acceptance Testing | QA Test execution & bug fixes (Defect Rate < 2%) | YYYY-MM-DD |
+| **M1** | 회원 가입 및 로그인 기능 | `/signup`, `/login` 화면 접근 및 권한 분리 처리 | YYYY-MM-DD |
+| **M2** | 예약 목록 및 잔여 슬롯 조회 | `/reservations` 에서 다가오는/지난 예약 분리 노출 | YYYY-MM-DD |
+| **M3** | 예약 접수 및 동시성 예외 처리 | 예약 시간 슬롯 선택 및 중복 신청 차단 기능 | YYYY-MM-DD |
 
 ## 4. Acceptance Criteria & Definition of Done (DoD)
-* **Acceptance Criteria:**
-  * Given valid credentials, when a user logs in, then a JWT token with appropriate RBAC permissions must be returned within 200ms.
-* **Definition of Done (DoD):**
-  * Unit test coverage >= 80%.
-  * All REST APIs documented in OpenAPI Specification (Swagger).
-  * Data encryption (AES-256) applied to PII fields.
+* **Definition of Done (DoD) Examples:**
+  * **[M1]**: `/login`에서 이메일 폼 누락 시 "이메일을 입력해주세요" 에러 메시지 노출 확인 (실패 조건 분리)
+  * **[M1]**: `/login`에서 비밀번호 폼 누락 시 "비밀번호를 입력해주세요" 에러 메시지 노출 확인 (실패 조건 분리)
+  * **[M1]**: 정상 로그인 성공 시 `/dashboard` 로 라우팅됨 (정확한 라우팅 명시)
+  * **[M3]**: 이미 정원이 꽉 찬 시간 슬롯은 버튼이 비활성화됨 (관찰 가능한 UI 상태 변화)
+  * **[M3]**: 정원이 꽉 찬 슬롯의 버튼 텍스트가 '마감'으로 변경됨 (조건별 독립적 분리)
+  * **[M3]**: 중복 예약 시도 시 "이미 예약된 시간입니다" 에러 모달 표시 확인
+  * **[M3]**: 중복 예약 시도 시 전체 예약 신청 카운트가 증가하지 않음 확인
 
 ## 5. Roles & Responsibilities (RACI Matrix)
 * **Client Responsibilities:** Provide API keys, design assets (Figma), and review deliverables within 3 business days.
