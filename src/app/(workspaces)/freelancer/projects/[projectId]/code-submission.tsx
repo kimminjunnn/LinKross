@@ -101,7 +101,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
 
 function formatSubmissionError(error: { message: string; diagnosticCode?: string }) {
   return error.diagnosticCode
-    ? `${error.message} (진단 코드: ${error.diagnosticCode})`
+    ? `${error.message} (Diagnostic code: ${error.diagnosticCode})`
     : error.message;
 }
 

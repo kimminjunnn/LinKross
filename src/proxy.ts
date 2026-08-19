@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/onboarding",
   "/opportunities",
   "/presentation",
+  "/demo",
 ];
 
 function isPublicPath(pathname: string) {

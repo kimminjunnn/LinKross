@@ -12,6 +12,7 @@ import type {
   SubmitInvoiceInput,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
+import { translateToEnglish } from "@/lib/backend/translation";
 import { isUuid } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -45,14 +46,20 @@ export async function listFreelancerInvoices(): Promise<BackendResult<InvoiceRec
   const projectsById = new Map((projects ?? []).map((project) => [project.id, project]));
   const milestonesById = new Map((milestones ?? []).map((milestone) => [milestone.id, milestone]));
   const companiesById = new Map((companies ?? []).map((company) => [company.id, company.organization_name]));
+  const mappedInvoices = await Promise.all(
+    invoices.map((invoice) =>
+      toInvoice(
+        invoice,
+        projectsById.get(invoice.project_id)?.title ?? "접근이 종료된 프로젝트",
+        companiesById.get(projectsById.get(invoice.project_id)?.company_id ?? "") ?? "발주사",
+        milestonesById.get(invoice.milestone_id),
+        true,
+      )
+    )
+  );
   return {
     ok: true,
-    data: invoices.map((invoice) => toInvoice(
-      invoice,
-      projectsById.get(invoice.project_id)?.title ?? "접근이 종료된 프로젝트",
-      companiesById.get(projectsById.get(invoice.project_id)?.company_id ?? "") ?? "발주사",
-      milestonesById.get(invoice.milestone_id),
-    )),
+    data: mappedInvoices,
   };
 }
 
@@ -62,7 +69,7 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
 
-  const { data: project, error: projectError } = await supabase.from("projects").select("id, title, lifecycle_stage").eq("id", projectId).maybeSingle();
+  const { data: project, error: projectError } = await supabase.from("projects").select("id, title, company_id, lifecycle_stage").eq("id", projectId).maybeSingle();
   if (projectError || !project) return { ok: false, error: mapBackendError(projectError, "프로젝트를 찾지 못했습니다.") };
 
   const { data: sow } = await supabase.from("sow_versions").select("id").eq("project_id", projectId).eq("status", "approved").maybeSingle();
@@ -89,36 +96,45 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
   const invoiceByMilestone = firstBy(invoicesResult.data ?? [], "milestone_id");
   const paymentByMilestone = firstBy(paymentsResult.data ?? [], "milestone_record_id");
 
+  const isCompany = project.company_id === authData.user.id;
+  const shouldTranslate = !isCompany;
+
+  const mappedMilestones = await Promise.all(
+    (milestones ?? []).map(async (milestone) => {
+      const invoice = invoiceByMilestone.get(milestone.id);
+      const payment = paymentByMilestone.get(milestone.id);
+      const title = shouldTranslate ? await translateToEnglish(milestone.title) : milestone.title;
+      const mappedInvoice = invoice ? await toInvoice(invoice, project.title, "", milestone, shouldTranslate) : null;
+      return {
+        id: milestone.id,
+        code: milestone.code,
+        title,
+        amount: Number(milestone.amount),
+        currency: milestone.currency,
+        status: milestone.status,
+        approvedAt: decisionByMilestone.get(milestone.id) ?? null,
+        invoice: mappedInvoice,
+        payment: payment ? {
+          id: payment.id,
+          status: payment.status,
+          amount: Number(payment.amount_usdc),
+          currency: payment.currency,
+          externalReference: payment.tx_hash || null,
+          requestedAt: payment.requested_at,
+          processingAt: payment.processing_at,
+          completedAt: payment.completed_at,
+        } : null,
+      };
+    })
+  );
+
   return {
     ok: true,
     data: {
       projectId,
       projectTitle: project.title,
       lifecycleStage: project.lifecycle_stage,
-      milestones: (milestones ?? []).map((milestone) => {
-        const invoice = invoiceByMilestone.get(milestone.id);
-        const payment = paymentByMilestone.get(milestone.id);
-        return {
-          id: milestone.id,
-          code: milestone.code,
-          title: milestone.title,
-          amount: Number(milestone.amount),
-          currency: milestone.currency,
-          status: milestone.status,
-          approvedAt: decisionByMilestone.get(milestone.id) ?? null,
-          invoice: invoice ? toInvoice(invoice, project.title, "", milestone) : null,
-          payment: payment ? {
-            id: payment.id,
-            status: payment.status,
-            amount: Number(payment.amount_usdc),
-            currency: payment.currency,
-            externalReference: payment.tx_hash || null,
-            requestedAt: payment.requested_at,
-            processingAt: payment.processing_at,
-            completedAt: payment.completed_at,
-          } : null,
-        };
-      }),
+      milestones: mappedMilestones,
       evidenceBundles: (bundlesResult.data ?? []).map((bundle) => ({
         id: bundle.id,
         versionNumber: bundle.version_number,
@@ -388,10 +404,17 @@ function firstBy<T extends Record<string, unknown>>(rows: T[], key: keyof T): Ma
   return result;
 }
 
-function toInvoice(row: {
+async function toInvoice(row: {
   id: string; project_id: string; milestone_id: string; invoice_number: string; status: InvoiceRecord["status"];
   amount: number; currency: string; external_reference: string | null; submitted_at: string; reviewed_at: string | null; review_note: string | null;
-}, projectTitle: string, organizationName: string, milestone?: { code: string; title: string }): InvoiceRecord {
+}, projectTitle: string, organizationName: string, milestone?: { code: string; title: string }, translate = false): Promise<InvoiceRecord> {
+  const milestoneTitle = milestone?.title
+    ? (translate ? await translateToEnglish(milestone.title) : milestone.title)
+    : (translate ? "Milestone" : "마일스톤");
+  const reviewNote = translate && row.review_note
+    ? await translateToEnglish(row.review_note)
+    : row.review_note;
+
   return {
     id: row.id,
     projectId: row.project_id,
@@ -399,7 +422,7 @@ function toInvoice(row: {
     organizationName,
     milestoneId: row.milestone_id,
     milestoneCode: milestone?.code ?? "-",
-    milestoneTitle: milestone?.title ?? "마일스톤",
+    milestoneTitle,
     invoiceNumber: row.invoice_number,
     status: row.status,
     amount: Number(row.amount),
@@ -407,6 +430,6 @@ function toInvoice(row: {
     externalReference: row.external_reference,
     submittedAt: row.submitted_at,
     reviewedAt: row.reviewed_at,
-    reviewNote: row.review_note,
+    reviewNote,
   };
 }
