@@ -41,7 +41,80 @@ export interface ManagedApiCheckTestSpec {
   steps: ManagedApiCheckStep[];
 }
 
-export type ManagedTestSpec = ManagedBrowserTestSpec | ManagedApiCheckTestSpec;
+export const MANAGED_BROWSER_SPEC_VERSION_V2 = 2 as const;
+
+const MAX_ATOM_STEPS = 24;
+const MAX_ATOM_TEXT = 200;
+
+export const UI_TARGET_ROLES = [
+  "textbox",
+  "button",
+  "link",
+  "checkbox",
+  "radio",
+  "combobox",
+  "heading",
+  "alert",
+  "img",
+  "list",
+  "listitem",
+  "dialog",
+  "table",
+] as const;
+
+export const UI_PRESS_KEYS = ["Enter", "Tab", "Shift+Tab", "Escape", "Space", "ArrowDown", "ArrowUp"] as const;
+
+export const UI_VIEWPORT_PRESETS = ["mobile", "tablet", "desktop"] as const;
+
+export const UI_SEMANTIC_FIELDS = ["email", "password", "submit"] as const;
+
+export const UI_CREDENTIAL_REFS = ["email", "password", "invalidPassword"] as const;
+
+export type UiTarget =
+  | { field: (typeof UI_SEMANTIC_FIELDS)[number] }
+  | { role: (typeof UI_TARGET_ROLES)[number]; name?: string }
+  | { label: string }
+  | { text: string }
+  | { placeholder: string }
+  | { testId: string };
+
+export type UiValue =
+  | { ref: (typeof UI_CREDENTIAL_REFS)[number] }
+  | { literal: string };
+
+export type UiAtom =
+  | { atom: "goto"; path: string }
+  | { atom: "fill"; target: UiTarget; value: UiValue }
+  | { atom: "click"; target: UiTarget }
+  | { atom: "press"; key: (typeof UI_PRESS_KEYS)[number] }
+  | { atom: "set_viewport"; preset: (typeof UI_VIEWPORT_PRESETS)[number] }
+  | { atom: "expect_visible"; target: UiTarget }
+  | { atom: "expect_hidden"; target: UiTarget }
+  | { atom: "expect_enabled"; target: UiTarget }
+  | { atom: "expect_disabled"; target: UiTarget }
+  | { atom: "expect_focused"; target: UiTarget }
+  | { atom: "expect_text"; contains: string; target?: UiTarget }
+  | { atom: "expect_path"; path: string }
+  | { atom: "expect_within_viewport"; target: UiTarget }
+  | { atom: "expect_error_feedback" }
+  | { atom: "expect_form_blocked"; target: UiTarget };
+
+export interface ManagedBrowserAtomTestSpec {
+  version: typeof MANAGED_BROWSER_SPEC_VERSION_V2;
+  kind: "managed_browser";
+  startPath: string;
+  steps: UiAtom[];
+  syntheticCredentials: {
+    email: string;
+    password: string;
+    invalidPassword: string;
+  };
+}
+
+export type ManagedTestSpec =
+  | ManagedBrowserTestSpec
+  | ManagedBrowserAtomTestSpec
+  | ManagedApiCheckTestSpec;
 
 export const MANUAL_GUIDANCE_SPEC_VERSION = 1 as const;
 
@@ -126,6 +199,11 @@ export function resolveMvpVerificationDefinition(input: {
   const storedApiSpec = parseManagedApiCheckTestSpec(input.testSpec);
   if (storedApiSpec) {
     return { verificationMethod: input.verificationMethod, testSpec: storedApiSpec };
+  }
+
+  const storedAtomSpec = parseManagedBrowserAtomTestSpec(input.testSpec);
+  if (storedAtomSpec) {
+    return { verificationMethod: input.verificationMethod, testSpec: storedAtomSpec };
   }
 
   const storedSpec = parseManagedBrowserTestSpec(input.testSpec);
@@ -213,6 +291,183 @@ export function parseManagedBrowserTestSpec(value: unknown): ManagedBrowserTestS
     startPath: value.startPath,
     ...(typeof value.expectedPath === "string" ? { expectedPath: value.expectedPath } : {}),
     syntheticCredentials: { email, password, invalidPassword },
+  };
+}
+
+export function parseManagedBrowserAtomTestSpec(value: unknown): ManagedBrowserAtomTestSpec | null {
+  if (!isRecord(value)) return null;
+  if (
+    value.version !== MANAGED_BROWSER_SPEC_VERSION_V2 ||
+    value.kind !== "managed_browser" ||
+    !isSafePath(value.startPath) ||
+    !Array.isArray(value.steps) ||
+    value.steps.length === 0 ||
+    value.steps.length > MAX_ATOM_STEPS ||
+    !isRecord(value.syntheticCredentials)
+  ) {
+    return null;
+  }
+
+  const email = boundedText(value.syntheticCredentials.email, 254);
+  const password = boundedText(value.syntheticCredentials.password, 200);
+  const invalidPassword = boundedText(value.syntheticCredentials.invalidPassword, 200);
+  if (!email || !password || !invalidPassword) return null;
+
+  const steps: UiAtom[] = [];
+  for (const rawStep of value.steps) {
+    const step = parseUiAtom(rawStep);
+    if (!step) return null;
+    steps.push(step);
+  }
+
+  return {
+    version: MANAGED_BROWSER_SPEC_VERSION_V2,
+    kind: "managed_browser",
+    startPath: value.startPath,
+    steps,
+    syntheticCredentials: { email, password, invalidPassword },
+  };
+}
+
+function parseUiAtom(value: unknown): UiAtom | null {
+  if (!isRecord(value)) return null;
+
+  switch (value.atom) {
+    case "goto":
+    case "expect_path": {
+      if (!isSafePath(value.path)) return null;
+      return { atom: value.atom, path: value.path };
+    }
+    case "fill": {
+      const target = parseUiTarget(value.target);
+      const fillValue = parseUiValue(value.value);
+      return target && fillValue ? { atom: "fill", target, value: fillValue } : null;
+    }
+    case "press": {
+      return UI_PRESS_KEYS.includes(value.key as never)
+        ? { atom: "press", key: value.key as (typeof UI_PRESS_KEYS)[number] }
+        : null;
+    }
+    case "set_viewport": {
+      return UI_VIEWPORT_PRESETS.includes(value.preset as never)
+        ? { atom: "set_viewport", preset: value.preset as (typeof UI_VIEWPORT_PRESETS)[number] }
+        : null;
+    }
+    case "click":
+    case "expect_visible":
+    case "expect_hidden":
+    case "expect_enabled":
+    case "expect_disabled":
+    case "expect_focused":
+    case "expect_within_viewport":
+    case "expect_form_blocked": {
+      const target = parseUiTarget(value.target);
+      return target ? { atom: value.atom, target } : null;
+    }
+    case "expect_text": {
+      const contains = boundedText(value.contains, MAX_ATOM_TEXT);
+      if (!contains) return null;
+      if (value.target === undefined) return { atom: "expect_text", contains };
+      const target = parseUiTarget(value.target);
+      return target ? { atom: "expect_text", contains, target } : null;
+    }
+    case "expect_error_feedback":
+      return { atom: "expect_error_feedback" };
+    default:
+      return null;
+  }
+}
+
+function parseUiTarget(value: unknown): UiTarget | null {
+  if (!isRecord(value)) return null;
+
+  if (typeof value.field === "string") {
+    return UI_SEMANTIC_FIELDS.includes(value.field as never)
+      ? { field: value.field as (typeof UI_SEMANTIC_FIELDS)[number] }
+      : null;
+  }
+  if (typeof value.role === "string") {
+    if (!UI_TARGET_ROLES.includes(value.role as never)) return null;
+    const role = value.role as (typeof UI_TARGET_ROLES)[number];
+    if (value.name === undefined) return { role };
+    const name = boundedText(value.name, MAX_ATOM_TEXT);
+    return name ? { role, name } : null;
+  }
+  for (const key of ["label", "text", "placeholder", "testId"] as const) {
+    if (typeof value[key] === "string") {
+      const text = boundedText(value[key], MAX_ATOM_TEXT);
+      return text ? ({ [key]: text } as UiTarget) : null;
+    }
+  }
+  return null;
+}
+
+function parseUiValue(value: unknown): UiValue | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.ref === "string") {
+    return UI_CREDENTIAL_REFS.includes(value.ref as never)
+      ? { ref: value.ref as (typeof UI_CREDENTIAL_REFS)[number] }
+      : null;
+  }
+  if (typeof value.literal === "string") {
+    const literal = boundedText(value.literal, MAX_ATOM_TEXT);
+    return literal ? { literal } : null;
+  }
+  return null;
+}
+
+export function compileManagedBrowserSpecToAtoms(
+  spec: ManagedBrowserTestSpec | ManagedBrowserAtomTestSpec,
+): ManagedBrowserAtomTestSpec {
+  if (spec.version === MANAGED_BROWSER_SPEC_VERSION_V2) return spec;
+
+  const email: UiTarget = { field: "email" };
+  const password: UiTarget = { field: "password" };
+  const submit: UiTarget = { field: "submit" };
+
+  const steps: UiAtom[] = (() => {
+    switch (spec.preset) {
+      case "login_fields":
+        return [
+          { atom: "expect_visible", target: email },
+          { atom: "expect_enabled", target: email },
+          { atom: "expect_visible", target: password },
+          { atom: "expect_enabled", target: password },
+          { atom: "expect_visible", target: submit },
+          { atom: "expect_enabled", target: submit },
+        ];
+      case "login_success":
+        return [
+          { atom: "fill", target: email, value: { ref: "email" } },
+          { atom: "fill", target: password, value: { ref: "password" } },
+          { atom: "click", target: submit },
+          { atom: "expect_path", path: spec.expectedPath || "/dashboard" },
+        ];
+      case "login_invalid_password":
+        return [
+          { atom: "fill", target: email, value: { ref: "email" } },
+          { atom: "fill", target: password, value: { ref: "invalidPassword" } },
+          { atom: "click", target: submit },
+          { atom: "expect_path", path: spec.startPath },
+          { atom: "expect_error_feedback" },
+        ];
+      case "login_email_required":
+      default:
+        return [
+          { atom: "fill", target: password, value: { ref: "password" } },
+          { atom: "click", target: submit },
+          { atom: "expect_path", path: spec.startPath },
+          { atom: "expect_form_blocked", target: email },
+        ];
+    }
+  })();
+
+  return {
+    version: MANAGED_BROWSER_SPEC_VERSION_V2,
+    kind: "managed_browser",
+    startPath: spec.startPath,
+    steps,
+    syntheticCredentials: { ...spec.syntheticCredentials },
   };
 }
 
