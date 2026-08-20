@@ -364,6 +364,7 @@ export interface CompanyProposalSummary {
   freelancerHeadline: string | null;
   submittedAt: string;
   status: "submitted" | "withdrawn";
+  isProjectSelected: boolean;
 }
 
 export interface SelectProposalInput {

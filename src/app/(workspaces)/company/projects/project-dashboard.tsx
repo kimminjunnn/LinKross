@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Clock, FileText, FolderKanban, Users2, type LucideIcon } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronRight, Clock, FileText, FolderKanban, Users2, type LucideIcon } from "lucide-react";
 
 import type { CompanyProjectSummary, CompanyProposalSummary } from "@/lib/backend";
 
@@ -86,18 +86,21 @@ export function ProjectDashboard({
   );
 }
 
+type ProposalGroup = { projectTitle: string; isProjectSelected: boolean; items: CompanyProposalSummary[] };
+
 function groupProposalsByProject(proposals: CompanyProposalSummary[]) {
-  const groups = new Map<string, { projectTitle: string; items: CompanyProposalSummary[] }>();
+  const groups = new Map<string, ProposalGroup>();
   for (const proposal of proposals) {
     const group = groups.get(proposal.projectId);
     if (group) group.items.push(proposal);
-    else groups.set(proposal.projectId, { projectTitle: proposal.projectTitle, items: [proposal] });
+    else groups.set(proposal.projectId, { projectTitle: proposal.projectTitle, isProjectSelected: proposal.isProjectSelected, items: [proposal] });
   }
   return groups;
 }
 
 function ProposalList({ proposals }: { proposals: CompanyProposalSummary[] }) {
   const [expandedProjectIds, setExpandedProjectIds] = useState<Set<string>>(new Set());
+  const [showSelected, setShowSelected] = useState(false);
 
   if (proposals.length === 0) {
     return (
@@ -109,7 +112,9 @@ function ProposalList({ proposals }: { proposals: CompanyProposalSummary[] }) {
 
   // proposals는 이미 제출일 최신순으로 정렬돼 있어서, 그룹을 처음 만든 순서가
   // 곧 "가장 최근에 제안서가 들어온 프로젝트 순"이 된다.
-  const groups = groupProposalsByProject(proposals);
+  const groups = [...groupProposalsByProject(proposals).entries()];
+  const openGroups = groups.filter(([, group]) => !group.isProjectSelected);
+  const selectedGroups = groups.filter(([, group]) => group.isProjectSelected);
 
   function toggleProject(projectId: string) {
     setExpandedProjectIds((previous) => {
@@ -122,50 +127,88 @@ function ProposalList({ proposals }: { proposals: CompanyProposalSummary[] }) {
 
   return (
     <div className="space-y-3">
-      {[...groups.entries()].map(([projectId, group]) => {
-        const isOpen = expandedProjectIds.has(projectId);
-        return (
-          <div key={projectId} className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xs">
-            <button
-              type="button"
-              onClick={() => toggleProject(projectId)}
-              aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 p-5 text-left transition-colors hover:bg-app-surface-subtle"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <ChevronRight className={`size-4 shrink-0 text-app-muted transition-transform ${isOpen ? "rotate-90" : ""}`} />
-                <h3 className="truncate text-base font-semibold text-app-foreground">{group.projectTitle}</h3>
-              </div>
-              <span className="shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-600">
-                제안서 {group.items.length}건
-              </span>
-            </button>
+      {openGroups.length === 0 && (
+        <p className="rounded-xl border border-dashed border-app-border-strong bg-app-surface p-10 text-center text-sm text-app-muted">
+          아직 선정하지 않은 프로젝트의 제안서가 없습니다.
+        </p>
+      )}
+      {openGroups.map(([projectId, group]) => (
+        <ProposalGroupCard key={projectId} projectId={projectId} group={group} isOpen={expandedProjectIds.has(projectId)} onToggle={() => toggleProject(projectId)} />
+      ))}
 
-            {isOpen && (
-              <div className="divide-y divide-app-border border-t border-app-border">
-                {group.items.map((proposal) => (
-                  <Link
-                    key={proposal.proposalId}
-                    href={`/company/assessments/${proposal.projectId}/candidates`}
-                    className="group flex items-center justify-between gap-4 p-4 pl-12 transition-colors hover:bg-app-surface-subtle"
-                  >
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="truncate text-sm font-semibold text-app-foreground group-hover:text-brand-600">
-                        {proposal.freelancerDisplayName}
-                      </p>
-                      {proposal.freelancerHeadline && <p className="truncate text-xs text-app-muted">{proposal.freelancerHeadline}</p>}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                      <span className="text-xs text-slate-400">{new Date(proposal.submittedAt).toLocaleDateString()}</span>
-                      <ArrowRight className="size-4 text-app-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" />
-                    </div>
-                  </Link>
-                ))}
+      {selectedGroups.length > 0 && (
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={() => setShowSelected((value) => !value)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-app-muted hover:text-app-foreground"
+          >
+            <ChevronDown className={`size-4 transition-transform ${showSelected ? "rotate-180" : ""}`} />
+            이미 선정된 프로젝트의 제안서 {selectedGroups.length}건 {showSelected ? "숨기기" : "보기"}
+          </button>
+          {showSelected && (
+            <div className="mt-3 space-y-3">
+              {selectedGroups.map(([projectId, group]) => (
+                <ProposalGroupCard key={projectId} projectId={projectId} group={group} isOpen={expandedProjectIds.has(projectId)} onToggle={() => toggleProject(projectId)} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProposalGroupCard({ projectId, group, isOpen, onToggle }: {
+  projectId: string;
+  group: ProposalGroup;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xs">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="flex w-full items-center justify-between gap-4 p-5 text-left transition-colors hover:bg-app-surface-subtle"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <ChevronRight className={`size-4 shrink-0 text-app-muted transition-transform ${isOpen ? "rotate-90" : ""}`} />
+          <h3 className="truncate text-base font-semibold text-app-foreground">{group.projectTitle}</h3>
+          {group.isProjectSelected && (
+            <span className="shrink-0 rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-[11px] font-semibold text-accent-700">
+              선정 완료
+            </span>
+          )}
+        </div>
+        <span className="shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-600">
+          제안서 {group.items.length}건
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="divide-y divide-app-border border-t border-app-border">
+          {group.items.map((proposal) => (
+            <Link
+              key={proposal.proposalId}
+              href={`/company/assessments/${projectId}/candidates`}
+              className="group flex items-center justify-between gap-4 p-4 pl-12 transition-colors hover:bg-app-surface-subtle"
+            >
+              <div className="min-w-0 space-y-0.5">
+                <p className="truncate text-sm font-semibold text-app-foreground group-hover:text-brand-600">
+                  {proposal.freelancerDisplayName}
+                </p>
+                {proposal.freelancerHeadline && <p className="truncate text-xs text-app-muted">{proposal.freelancerHeadline}</p>}
               </div>
-            )}
-          </div>
-        );
-      })}
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-xs text-slate-400">{new Date(proposal.submittedAt).toLocaleDateString()}</span>
+                <ArrowRight className="size-4 text-app-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -161,7 +161,7 @@ export async function listCompanyProposals(): Promise<BackendResult<CompanyPropo
 
   const { data: projects, error: projectsError } = await supabase
     .from("projects")
-    .select("id, current_requirement_version_id")
+    .select("id, current_requirement_version_id, status")
     .eq("company_id", authData.user.id);
   if (projectsError) {
     return { ok: false, error: mapBackendError(projectsError, "프로젝트 목록을 불러오지 못했습니다.") };
@@ -192,6 +192,7 @@ export async function listCompanyProposals(): Promise<BackendResult<CompanyPropo
   const titleByProjectId = new Map(
     projects.map((project) => [project.id, titleByRequirementVersionId.get(project.current_requirement_version_id ?? "") ?? "프로젝트"]),
   );
+  const statusByProjectId = new Map(projects.map((project) => [project.id, project.status]));
 
   return {
     ok: true,
@@ -203,6 +204,7 @@ export async function listCompanyProposals(): Promise<BackendResult<CompanyPropo
       freelancerHeadline: proposal.freelancer_headline_snapshot,
       submittedAt: proposal.submitted_at,
       status: proposal.status,
+      isProjectSelected: statusByProjectId.get(proposal.project_id) === "closed",
     })),
   };
 }
