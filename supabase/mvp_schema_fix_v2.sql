@@ -232,6 +232,9 @@ alter table public.projects
   drop column recruitment_start_at,
   drop column recruitment_end_at;
 
+alter table public.projects
+  add column if not exists company_contact_name_snapshot text;
+
 comment on table public.projects is
   'Project identity, ownership and state. Registration content lives only in project_requirement_versions.';
 
@@ -343,6 +346,7 @@ set search_path = ''
 as $$
 declare
   actor_id uuid := (select auth.uid());
+  company_contact_name text;
   new_project_id uuid;
   new_version_id uuid;
 begin
@@ -354,6 +358,15 @@ begin
     raise exception 'COMPANY_ROLE_REQUIRED';
   end if;
 
+  select nullif(trim(cp.contact_name), '')
+  into company_contact_name
+  from public.company_profiles cp
+  where cp.id = actor_id;
+
+  if company_contact_name is null then
+    raise exception 'COMPANY_PROFILE_REQUIRED';
+  end if;
+
   if length(trim(p_title)) = 0
     or length(trim(p_goal)) = 0
     or length(trim(p_requirements)) = 0 then
@@ -362,10 +375,12 @@ begin
 
   insert into public.projects (
     company_id,
+    company_contact_name_snapshot,
     status,
     lifecycle_stage
   ) values (
     actor_id,
+    company_contact_name,
     'recruiting'::public.project_status,
     'preparing'::public.project_lifecycle_stage
   )

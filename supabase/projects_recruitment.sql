@@ -8,6 +8,7 @@ create type public.project_status as enum ('recruiting', 'closed');
 create table public.projects (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.profiles(id) on delete cascade,
+  company_contact_name_snapshot text,
   title text not null,
   goal text not null,
   requirements text not null,

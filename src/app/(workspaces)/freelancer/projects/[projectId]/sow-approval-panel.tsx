@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, CircleAlert, UserCheck } from "lucide-react";
 
 import { approveSowAsFreelancerAction, requestSowRevisionAction } from "@/app/actions/sow";
 import type { SowApprovalState } from "@/lib/backend";
 
 export function FreelancerSowApprovalPanel({ initialState }: { initialState: SowApprovalState }) {
+  const router = useRouter();
   const [state, setState] = useState(initialState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [revisionReason, setRevisionReason] = useState("");
   const [isPending, startTransition] = useTransition();
-  const isApproved = Boolean(state.approvals.freelancer) || state.status === "approved";
+  const isApproved = Boolean(state.approvals.freelancer);
 
   function approve() {
     setErrorMessage(null);
@@ -26,6 +28,12 @@ export function FreelancerSowApprovalPanel({ initialState }: { initialState: Sow
         return;
       }
       setState(result.data);
+      if (
+        result.data.status === "approved" ||
+        (result.data.approvals.company && result.data.approvals.freelancer)
+      ) {
+        router.push(`/freelancer/projects/${result.data.projectId}/verification`);
+      }
     });
   }
 
@@ -49,8 +57,16 @@ export function FreelancerSowApprovalPanel({ initialState }: { initialState: Sow
 
   return (
     <div className="mt-5 space-y-4">
-      <ApprovalRow label="Client" complete={Boolean(state.approvals.company) || state.status === "approved"} />
-      <ApprovalRow label="Freelancer" complete={isApproved} />
+      <ApprovalRow
+        roleLabel={state.participants.company.roleLabel}
+        displayName={state.participants.company.displayName}
+        complete={Boolean(state.approvals.company)}
+      />
+      <ApprovalRow
+        roleLabel={state.participants.freelancer.roleLabel}
+        displayName={state.participants.freelancer.displayName}
+        complete={isApproved}
+      />
 
       {errorMessage ? (
         <div className="flex gap-2 rounded-control border border-danger/30 bg-danger/10 p-3 text-danger">
@@ -80,10 +96,21 @@ export function FreelancerSowApprovalPanel({ initialState }: { initialState: Sow
   );
 }
 
-function ApprovalRow({ label, complete }: { label: string; complete: boolean }) {
+function ApprovalRow({
+  roleLabel,
+  displayName,
+  complete,
+}: {
+  roleLabel: string;
+  displayName: string;
+  complete: boolean;
+}) {
   return (
     <div className="flex items-center justify-between rounded-control border border-app-border p-3">
-      <span className="text-sm text-app-foreground">{label}</span>
+      <span>
+        <span className="block text-xs font-medium text-app-muted">{roleLabel}</span>
+        <span className="mt-1 block text-sm font-semibold text-app-foreground">{displayName}</span>
+      </span>
       <span className={`inline-flex items-center gap-1 text-xs font-semibold ${complete ? "text-success" : "text-app-muted"}`}>
         <CheckCircle2 className="size-4" />{complete ? "Approved" : "Pending"}
       </span>
