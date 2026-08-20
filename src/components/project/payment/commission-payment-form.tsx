@@ -121,7 +121,10 @@ function CommissionWalletTransferPanel({ chargeId, totalDue }: { chargeId: strin
       const usdc = new Contract(USDC_CONTRACT_ADDRESS, ERC20_TRANSFER_ABI, signer);
 
       setState({ step: "confirming" });
-      const amount = parseUnits(String(totalDue), USDC_DECIMALS);
+      // totalDue는 두 개의 반올림된 숫자(commissionAmount + vatAmount)를 JS에서 더한 값이라
+      // 부동소수점 오차로 소수점이 6자리를 넘을 수 있다(예: 0.38999999999999996) — parseUnits가
+      // 소수 자릿수 초과로 에러를 던지므로 USDC_DECIMALS 자리로 반올림한 문자열을 넘긴다.
+      const amount = parseUnits(totalDue.toFixed(USDC_DECIMALS), USDC_DECIMALS);
       const tx = await usdc.transfer(LINKROSS_TREASURY_WALLET_ADDRESS, amount);
       await tx.wait();
 

@@ -1,4 +1,4 @@
-import { LINKROSS_TREASURY_WALLET_ADDRESS } from "@/config/testnet";
+import { LINKROSS_TREASURY_WALLET_ADDRESS, USDC_DECIMALS } from "@/config/testnet";
 import type { BackendResult, CommissionChargeRecord, MarkCommissionChargePaidInput, VerifyCommissionWalletPaymentInput } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { isUuid } from "@/lib/backend/validation";
@@ -130,8 +130,10 @@ export async function verifyCommissionWalletPayment(
   if (chargeError || !charge) return { ok: false, error: mapBackendError(chargeError, "수수료 청구를 찾지 못했습니다.") };
   if (charge.status !== "pending") return { ok: false, error: { code: "CONFLICT", message: `${charge.status} 상태에서는 검증할 수 없습니다.` } };
 
-  const totalDue = Number(charge.commission_amount) + Number(charge.vat_amount);
-  const result = await verifyOnchainTransfer(input.txHash, String(totalDue), LINKROSS_TREASURY_WALLET_ADDRESS);
+  // 두 개의 반올림된 numeric 컬럼을 JS에서 더하면 부동소수점 오차로 소수점이
+  // 늘어날 수 있어(예: 0.38999999999999996) parseUnits가 실패한다 — 고정 자릿수로 맞춘다.
+  const totalDue = (Number(charge.commission_amount) + Number(charge.vat_amount)).toFixed(USDC_DECIMALS);
+  const result = await verifyOnchainTransfer(input.txHash, totalDue, LINKROSS_TREASURY_WALLET_ADDRESS);
   if (!result.verified) {
     return { ok: true, data: { chargeId: charge.id, verified: false, reason: result.reason } };
   }
