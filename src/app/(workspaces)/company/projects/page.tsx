@@ -2,13 +2,14 @@ import Link from "next/link";
 import { CircleAlert, Plus, FolderKanban } from "lucide-react";
 
 import { PageHeader } from "@/components/page/page-header";
-import { listCompanyWorkspaceProjects } from "@/lib/backend";
+import { listCompanyProposals, listCompanyWorkspaceProjects } from "@/lib/backend";
 
 import { ProjectDashboard } from "./project-dashboard";
 
 export default async function ProjectsPage() {
-  const result = await listCompanyWorkspaceProjects();
+  const [result, proposalsResult] = await Promise.all([listCompanyWorkspaceProjects(), listCompanyProposals()]);
   const activeProjects = (result.ok ? result.data : []).filter((project) => project.lifecycleStage !== "completed");
+  const proposals = proposalsResult.ok ? proposalsResult.data : [];
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
@@ -49,7 +50,7 @@ export default async function ProjectsPage() {
           </Link>
         </div>
       ) : (
-        <ProjectDashboard projects={activeProjects} />
+        <ProjectDashboard projects={activeProjects} proposals={proposals} />
       )}
     </div>
   );

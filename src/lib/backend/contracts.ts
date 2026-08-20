@@ -356,6 +356,16 @@ export interface ProjectProposal {
   isSelected: boolean;
 }
 
+export interface CompanyProposalSummary {
+  proposalId: string;
+  projectId: string;
+  projectTitle: string;
+  freelancerDisplayName: string;
+  freelancerHeadline: string | null;
+  submittedAt: string;
+  status: "submitted" | "withdrawn";
+}
+
 export interface SelectProposalInput {
   projectId: string;
   proposalId: string;

@@ -10,6 +10,7 @@ export type {
   CompanyProjectDetail,
   CompanyProfileSettings,
   CompanyProjectSummary,
+  CompanyProposalSummary,
   ConnectRepositoryInput,
   CreateProjectInput,
   CreateProjectOutput,
@@ -97,7 +98,7 @@ export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyP
 export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, requestPayment, reviewInvoice, submitInvoice, verifyWalletPayment } from "@/lib/backend/finance";
 export { getProjectCommissionChargesByPayment, listFreelancerCommissionCharges, markCommissionChargePaid, verifyCommissionWalletPayment } from "@/lib/backend/commission";
 export { getCompanySubscriptionOverview, upsertCompanySubscription } from "@/lib/backend/subscriptions";
-export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
+export { listCompanyProposals, listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
   connectProjectRepository,
   decideMilestone,
