@@ -39,6 +39,7 @@ export async function syncPendingOnboardingProfileAction(
           headline: pending.data.headline,
           skills: pending.data.skills,
           portfolioUrls: pending.data.portfolio_urls,
+          walletAddress: null,
         });
 
   if (!result.ok) return result;
