@@ -115,6 +115,22 @@ button:not(:disabled) {
   outline-offset: 2px;
 }
 
+@keyframes lk-mark-flow {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@theme inline {
+  --animate-lk-mark-flow: lk-mark-flow 2.4s cubic-bezier(0.45, 0, 0.15, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

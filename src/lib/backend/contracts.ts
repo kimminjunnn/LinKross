@@ -197,6 +197,12 @@ export interface SowApprovalRecord {
   approvedAt: string;
 }
 
+export interface SowApprovalParticipant {
+  role: UserRole;
+  roleLabel: string;
+  displayName: string;
+}
+
 export interface SowRevisionRequestRecord {
   id: string;
   projectId: string;
@@ -257,6 +263,10 @@ export interface SowApprovalState {
   contentHash: string;
   submittedForReviewAt: string | null;
   approvedAt: string | null;
+  participants: {
+    company: SowApprovalParticipant;
+    freelancer: SowApprovalParticipant;
+  };
   document: SowApprovalDocument;
   milestones: SowApprovalMilestone[];
   approvals: {
@@ -511,6 +521,7 @@ export interface DecideMilestoneInput {
 
 export type InvoiceStatus = "submitted" | "approved" | "rejected" | "cancelled";
 export type PaymentRecordStatus = "requested" | "processing" | "completed" | "failed";
+export type PaymentMethod = "wallet_testnet" | "bank_transfer" | "card" | "other";
 
 export interface InvoiceRecord {
   id: string;
@@ -523,6 +534,7 @@ export interface InvoiceRecord {
   invoiceNumber: string;
   status: InvoiceStatus;
   amount: number;
+  vatAmount: number;
   currency: string;
   externalReference: string | null;
   submittedAt: string;
@@ -542,9 +554,12 @@ export interface FinancialMilestoneRecord {
   payment: {
     id: string;
     status: PaymentRecordStatus;
+    method: PaymentMethod;
     amount: number;
     currency: string;
     externalReference: string | null;
+    toAddress: string | null;
+    blockNumber: number | null;
     requestedAt: string | null;
     processingAt: string | null;
     completedAt: string | null;
@@ -555,6 +570,7 @@ export interface ProjectFinancialWorkspace {
   projectId: string;
   projectTitle: string;
   lifecycleStage: string;
+  freelancerWalletAddress: string | null;
   milestones: FinancialMilestoneRecord[];
   evidenceBundles: Array<{
     id: string;
@@ -573,6 +589,7 @@ export interface SubmitInvoiceInput {
   milestoneId: string;
   invoiceNumber: string;
   externalReference?: string;
+  vatAmount?: number;
 }
 
 export interface ReviewInvoiceInput {
@@ -585,6 +602,7 @@ export interface ReviewInvoiceInput {
 export interface RequestPaymentInput {
   projectId: string;
   milestoneId: string;
+  method: PaymentMethod;
 }
 
 export interface AdvancePaymentStatusInput {
@@ -592,6 +610,12 @@ export interface AdvancePaymentStatusInput {
   paymentId: string;
   status: Exclude<PaymentRecordStatus, "requested">;
   externalReference?: string;
+}
+
+export interface VerifyWalletPaymentInput {
+  projectId: string;
+  paymentId: string;
+  txHash: string;
 }
 
 export interface GenerateEvidenceBundleOutput {
@@ -624,4 +648,5 @@ export interface FreelancerProfileSettings {
   headline: string;
   skills: string;
   portfolioUrls: string[];
+  walletAddress: string | null;
 }

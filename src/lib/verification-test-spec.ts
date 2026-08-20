@@ -487,8 +487,12 @@ function inferLoginPreset(description: string): ManagedBrowserPreset | null {
   const normalized = description.toLowerCase().replace(/[`'"“”‘’]/g, "").replace(/\s+/g, " ").trim();
   const mentionsEmail = /이메일|email/.test(normalized);
   const mentionsPassword = /비밀번호|password/.test(normalized);
+  // "이메일/비밀번호 입력"만 언급해도 로그인 성공·실패 같은 결과를 주장하는 문장이
+  // login_fields(입력란 표시 여부만 확인)로 잘못 채가는 걸 막는다. 결과 단어가 있으면
+  // 그 결과를 실제로 검증하는 프리셋이거나, 없으면 atom 컴포저로 넘긴다.
+  const mentionsOutcome = /성공|이동|리다이렉트|redirect|navigat/.test(normalized);
 
-  if (mentionsEmail && mentionsPassword && /입력|enter|fill|type/.test(normalized)) {
+  if (mentionsEmail && mentionsPassword && /입력|enter|fill|type/.test(normalized) && !mentionsOutcome) {
     return "login_fields";
   }
   if (/dashboard|대시보드/.test(normalized) && /로그인|login|sign in/.test(normalized)) {

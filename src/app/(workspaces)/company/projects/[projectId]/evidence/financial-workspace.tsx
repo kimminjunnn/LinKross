@@ -4,8 +4,12 @@ import { useState, useTransition } from "react";
 import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
 import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
+import { SimplifiedLedgerButton } from "@/components/project/payment/simplified-ledger-button";
+import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
+import { StatusBadge } from "@/components/project/status-badge";
+import { paymentMethodLabel, paymentMethods } from "@/config/payment-method";
 import { paymentStatusLabel } from "@/config/payment-status";
-import type { FinancialMilestoneRecord, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
+import type { FinancialMilestoneRecord, PaymentMethod, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
 
 export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFinancialWorkspace }) {
   const [message, setMessage] = useState<string | null>(null);
@@ -16,9 +20,14 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
 
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-      <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">Human approval required</p>
-      <h2 className="mt-2 text-xl font-semibold text-app-foreground">승인, 인보이스 및 지급 상태</h2>
-      <p className="mt-2 text-sm leading-6 text-app-muted">실제 송금은 외부 결제 방식으로 처리하고, LinKross는 승인된 마일스톤과 인보이스 및 지급 참조값을 연결해 보여줍니다.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">Human approval required</p>
+          <h2 className="mt-2 text-xl font-semibold text-app-foreground">승인, 인보이스 및 지급 상태</h2>
+        </div>
+        <SimplifiedLedgerButton milestones={workspace.milestones} counterparty={workspace.projectTitle} perspective="expense" projectTitle={workspace.projectTitle} />
+      </div>
+      <p className="mt-2 text-sm leading-6 text-app-muted">실제 송금은 외부 결제 방식으로 처리하고, LinKross는 승인된 마일스톤과 인보이스 및 지급 참조값을 연결해 보여줍니다. 인보이스와 영수증은 프로젝트 진행 확인 자료이며 법률·세무 판단이나 정식 세금계산서를 대체하지 않습니다 — 간편장부용 내보내기도 신고 전 반드시 직접 확인해주세요.</p>
       {message && <p className="mt-4 rounded-control bg-app-surface-subtle p-3 text-sm text-app-muted">{message}</p>}
 
       <div className="mt-6 space-y-3">
@@ -27,6 +36,8 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
         ) : workspace.milestones.map((milestone) => (
           <MilestoneFinanceCard
             key={milestone.id}
+            projectId={workspace.projectId}
+            freelancerWalletAddress={workspace.freelancerWalletAddress}
             milestone={milestone}
             pending={pending}
             review={(status, note) => startTransition(async () => {
@@ -34,8 +45,8 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
               const result = await reviewInvoiceAction({ projectId: workspace.projectId, invoiceId: milestone.invoice.id, status, reviewNote: note });
               setMessage(result.ok ? (status === "approved" ? "인보이스를 승인했습니다." : "인보이스를 반려했습니다.") : result.error.message);
             })}
-            requestPayment={() => startTransition(async () => {
-              const result = await requestPaymentAction({ projectId: workspace.projectId, milestoneId: milestone.id });
+            requestPayment={(method) => startTransition(async () => {
+              const result = await requestPaymentAction({ projectId: workspace.projectId, milestoneId: milestone.id, method });
               setMessage(result.ok ? "지급을 요청했습니다." : result.error.message);
             })}
             advancePayment={(status, externalReference) => startTransition(async () => {
@@ -71,15 +82,18 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
   );
 }
 
-function MilestoneFinanceCard({ milestone, pending, review, requestPayment, advancePayment }: {
+function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, pending, review, requestPayment, advancePayment }: {
+  projectId: string;
+  freelancerWalletAddress: string | null;
   milestone: FinancialMilestoneRecord;
   pending: boolean;
   review: (status: "approved" | "rejected", note: string) => void;
-  requestPayment: () => void;
+  requestPayment: (method: PaymentMethod) => void;
   advancePayment: (status: Exclude<PaymentRecordStatus, "requested">, externalReference?: string) => void;
 }) {
   const [note, setNote] = useState("");
   const [reference, setReference] = useState("");
+  const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
   return (
     <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -87,7 +101,7 @@ function MilestoneFinanceCard({ milestone, pending, review, requestPayment, adva
           <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-app-foreground">{milestone.code} · {milestone.title}</h3><span className="rounded-full bg-app-surface px-2.5 py-1 text-xs font-semibold text-app-muted">{milestone.status.replaceAll("_", " ")}</span></div>
           <p className="mt-2 text-sm text-app-muted">SOW 금액 {milestone.amount.toLocaleString()} {milestone.currency}</p>
         </div>
-        {milestone.approvedAt ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent-700"><CheckCircle2 className="size-4" />최종 승인</span> : <span className="inline-flex items-center gap-1 text-xs font-semibold text-app-muted"><Clock3 className="size-4" />승인 대기</span>}
+        {milestone.approvedAt ? <StatusBadge tone="success">검수 완료</StatusBadge> : <span className="inline-flex items-center gap-1 text-xs font-semibold text-app-muted"><Clock3 className="size-4" />승인 대기</span>}
       </div>
 
       {!milestone.invoice ? (
@@ -98,6 +112,7 @@ function MilestoneFinanceCard({ milestone, pending, review, requestPayment, adva
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-app-foreground"><FileText className="size-4" />{milestone.invoice.invoiceNumber}</p>
             <span className="rounded-full bg-app-surface-subtle px-2.5 py-1 text-xs text-app-muted">{milestone.invoice.status}</span>
           </div>
+          <p className="mt-1 text-xs text-app-muted">공급가액 {milestone.invoice.amount.toLocaleString()} {milestone.invoice.currency}{milestone.invoice.vatAmount > 0 && ` · 부가세 ${milestone.invoice.vatAmount.toLocaleString()} ${milestone.invoice.currency}`}</p>
           {milestone.invoice.status === "submitted" && (
             <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
               <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="검토 메모 (반려 시 필수)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
@@ -112,16 +127,36 @@ function MilestoneFinanceCard({ milestone, pending, review, requestPayment, adva
         <div className="flex items-center justify-between text-sm">
           <span className="inline-flex items-center gap-2 font-semibold text-app-muted"><Banknote className="size-4" />지급 상태</span>
           <span className="text-app-foreground">
-            {milestone.payment ? `${paymentStatusLabel[milestone.payment.status]} · ${milestone.payment.amount.toLocaleString()} ${milestone.payment.currency}` : "외부 지급 기록 없음"}
+            {milestone.payment
+              ? `${paymentStatusLabel[milestone.payment.status]} · ${paymentMethodLabel[milestone.payment.method]} · ${milestone.payment.amount.toLocaleString()} ${milestone.payment.currency}`
+              : "외부 지급 기록 없음"}
           </span>
         </div>
 
         {!milestone.payment ? (
           milestone.invoice?.status === "approved" && (
-            <button type="button" disabled={pending} onClick={requestPayment} className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
-              {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
-            </button>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+              <select value={method} onChange={(event) => setMethod(event.target.value as PaymentMethod)} className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm">
+                {paymentMethods.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+              <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
+                {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
+              </button>
+              {method === "wallet_testnet" && !freelancerWalletAddress && (
+                <p className="text-xs font-semibold text-warning sm:col-span-2">프리랜서가 아직 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다.</p>
+              )}
+            </div>
           )
+        ) : milestone.payment.method === "wallet_testnet" ? (
+          milestone.payment.status === "requested" ? (
+            freelancerWalletAddress ? (
+              <WalletTransferPanel projectId={projectId} paymentId={milestone.payment.id} amountUsdc={milestone.payment.amount} recipientAddress={freelancerWalletAddress} />
+            ) : (
+              <p className="mt-3 text-xs font-semibold text-warning">프리랜서의 지갑 주소를 찾을 수 없습니다.</p>
+            )
+          ) : milestone.payment.status === "completed" ? (
+            <p className="text-xs font-semibold text-accent-700">온체인 검증 완료 · 자세한 내역은 오른쪽 지급 증빙에서 확인</p>
+          ) : null
         ) : (milestone.payment.status === "requested" || milestone.payment.status === "processing") && (
           <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
             <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="외부 송금 참조값 (선택)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />

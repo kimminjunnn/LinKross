@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -53,6 +53,63 @@ const ACTIVE_RUN_STATUSES: VerificationRunRecord["status"][] = [
   "building",
   "running",
 ];
+
+function LinKrossMark({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="35 25 70 70"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M70 85L93 45" stroke="#F97316" strokeWidth="12" strokeLinecap="round" />
+      <path
+        d="M47 75L70 35L93 75"
+        stroke="#0F172A"
+        strokeWidth="12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M47 45L70 85" stroke="#F97316" strokeWidth="12" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function VerificationLoadingOverlay({
+  milestoneLabel,
+  onDismiss,
+}: {
+  milestoneLabel: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+      onClick={onDismiss}
+    >
+      <div
+        className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <LinKrossMark className="size-14 animate-lk-mark-flow" />
+        <p className="text-xl font-semibold text-slate-900">격리 환경에서 검수 중입니다...</p>
+        <p className="max-w-xs text-center text-sm text-slate-500">
+          {milestoneLabel} 설치·빌드·테스트를 실행하고 있습니다. 완료되면 이 화면이 자동으로 갱신됩니다.
+        </p>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-1 cursor-pointer text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+        >
+          닫고 계속 둘러보기
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function ProjectTimeline({
   milestones,
@@ -161,9 +218,25 @@ export function CompanyVerificationWorkspace({
   );
   const [message, setMessage] = useState<string | null>(initialMessage);
   const [pending, startTransition] = useTransition();
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const [verifyingLabel, setVerifyingLabel] = useState<string | null>(null);
+  const wasRunningRef = useRef(false);
   const selectedMilestone =
     initialWorkspace.milestones.find((milestone) => milestone.id === selectedMilestoneId) ??
     initialWorkspace.milestones[0];
+
+  const runningMilestone = useMemo(
+    () =>
+      initialWorkspace.milestones.find((milestone) => {
+        const latestRunStatus = milestone.submissions[0]?.runs[0]?.status;
+        return latestRunStatus !== undefined && ACTIVE_RUN_STATUSES.includes(latestRunStatus);
+      }) ?? null,
+    [initialWorkspace.milestones],
+  );
+  // 검수를 동기 대기로 처리하므로, 방금 누른 탭 자신은 initialWorkspace가
+  // 갱신되기 전까지 anyRunInProgress를 못 잡는다. verifyingLabel이 그 공백을 메운다.
+  const anyRunInProgress = runningMilestone !== null || verifyingLabel !== null;
+  const overlayLabel = verifyingLabel ?? (runningMilestone ? `${runningMilestone.code} · ${runningMilestone.title}` : "");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -177,17 +250,16 @@ export function CompanyVerificationWorkspace({
   }, [initialWorkspace.projectId, initialWorkspace.repository]);
 
   useEffect(() => {
-    const anyRunInProgress = initialWorkspace.milestones.some((milestone) => {
-      const latestRunStatus = milestone.submissions[0]?.runs[0]?.status;
-      return (
-        latestRunStatus !== undefined && ACTIVE_RUN_STATUSES.includes(latestRunStatus)
-      );
-    });
     if (!anyRunInProgress) return;
 
     const interval = window.setInterval(() => router.refresh(), 4000);
     return () => window.clearInterval(interval);
-  }, [initialWorkspace.milestones, router]);
+  }, [anyRunInProgress, router]);
+
+  useEffect(() => {
+    if (anyRunInProgress && !wasRunningRef.current) setOverlayDismissed(false);
+    wasRunningRef.current = anyRunInProgress;
+  }, [anyRunInProgress]);
 
   function handleDismissWelcome() {
     localStorage.setItem(`lk-welcome-dismissed-${initialWorkspace.projectId}`, "true");
@@ -251,6 +323,13 @@ export function CompanyVerificationWorkspace({
 
   return (
     <>
+      {anyRunInProgress && !overlayDismissed && (
+        <VerificationLoadingOverlay
+          milestoneLabel={overlayLabel}
+          onDismiss={() => setOverlayDismissed(true)}
+        />
+      )}
+
       <ProjectTimeline
         milestones={initialWorkspace.milestones}
         selectedMilestoneId={selectedMilestone.id}
@@ -322,6 +401,8 @@ export function CompanyVerificationWorkspace({
             disabled={pending}
             run={(task) => startTransition(task)}
             setMessage={setMessage}
+            setVerifyingLabel={setVerifyingLabel}
+            onReopenOverlay={() => setOverlayDismissed(false)}
           />
         </div>
       </section>
@@ -549,6 +630,8 @@ function MilestoneDetail({
   disabled,
   run,
   setMessage,
+  setVerifyingLabel,
+  onReopenOverlay,
 }: {
   projectId: string;
   milestone: VerificationMilestoneRecord;
@@ -557,6 +640,8 @@ function MilestoneDetail({
   disabled: boolean;
   run: (task: () => Promise<void>) => void;
   setMessage: (message: string) => void;
+  setVerifyingLabel: (label: string | null) => void;
+  onReopenOverlay: () => void;
 }) {
   const latestSubmission = milestone.submissions[0];
   const latestRun = latestSubmission?.runs[0];
@@ -567,18 +652,22 @@ function MilestoneDetail({
 
   function requestRun() {
     if (!latestSubmission) return;
+    // startTransition 안에서 첫 줄로 set하면 React가 트랜지션 업데이트로 묶어
+    // 즉시 반영하지 않을 수 있다(새로고침해야 보이는 버그). 트랜지션 밖에서
+    // 동기적으로 먼저 켜서 클릭 즉시 뜨게 한다.
+    setVerifyingLabel(`${milestone.code} · ${milestone.title}`);
     run(async () => {
-      const result = await requestVerificationRunAction({
-        projectId,
-        milestoneId: milestone.id,
-        submissionId: latestSubmission.id,
-        scope: "milestone",
-      });
-      setMessage(
-        result.ok
-          ? "격리 환경에서 검수를 시작했습니다. 잠시 후 진행 상태가 자동으로 갱신됩니다."
-          : result.error.message,
-      );
+      try {
+        const result = await requestVerificationRunAction({
+          projectId,
+          milestoneId: milestone.id,
+          submissionId: latestSubmission.id,
+          scope: "milestone",
+        });
+        setMessage(result.ok ? "격리 환경에서 검수가 완료됐습니다. 아래에서 결과를 확인하세요." : result.error.message);
+      } finally {
+        setVerifyingLabel(null);
+      }
     });
   }
 
@@ -786,8 +875,8 @@ function MilestoneDetail({
           </div>
           <button
             type="button"
-            disabled={disabled || !latestSubmission || runInProgress}
-            onClick={requestRun}
+            disabled={runInProgress ? false : disabled || !latestSubmission}
+            onClick={runInProgress ? onReopenOverlay : requestRun}
             className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white disabled:border disabled:border-app-border disabled:bg-app-surface disabled:text-app-muted disabled:opacity-60 cursor-pointer"
           >
             {(disabled || runInProgress) && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}

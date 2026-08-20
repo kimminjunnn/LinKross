@@ -41,7 +41,7 @@ export async function submitSowForReviewAction(
 export async function getSowApprovalStateAction(
   projectId: string,
 ): Promise<BackendResult<SowApprovalState | null>> {
-  return getSowApprovalState(projectId);
+  return getSowApprovalState(projectId, undefined, "company");
 }
 
 export async function approveSowAsCompanyAction(

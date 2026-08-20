@@ -17,7 +17,7 @@ export default async function FreelancerProjectPage({
   const [projectsResult, applicationsResult, sowResult] = await Promise.all([
     listFreelancerProjects(),
     listFreelancerApplications(),
-    getSowApprovalState(projectId),
+    getSowApprovalState(projectId, undefined, "freelancer"),
   ]);
 
   if (!projectsResult.ok || !applicationsResult.ok || !sowResult.ok) {
