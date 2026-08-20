@@ -11,6 +11,7 @@ export function ReceiptDocument({
   blockNumber,
   completedAt,
   paymentId,
+  platformCommission,
 }: {
   projectTitle: string;
   milestoneCode: string;
@@ -21,6 +22,7 @@ export function ReceiptDocument({
   blockNumber: number;
   completedAt: string;
   paymentId: string;
+  platformCommission?: { rate: number; amount: number; vatAmount: number; currency: string } | null;
 }) {
   const confirmedAt = new Date(completedAt).toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" });
   const receiptNumber = `LK-${paymentId.slice(0, 8).toUpperCase()}`;
@@ -42,6 +44,24 @@ export function ReceiptDocument({
         <ReceiptRow label="지급 금액" value={`${amountUsdc.toLocaleString()} USDC`} />
         <ReceiptRow label="지급 수단" value="USDC · Base Sepolia 테스트넷" />
       </dl>
+
+      {platformCommission ? (
+        <div className="mt-4 border-b border-app-border pb-4">
+          <p className="text-xs font-bold tracking-[0.1em] text-app-muted uppercase">플랫폼 수수료 안내</p>
+          <p className="mt-2 text-xs leading-5 text-app-muted">
+            이 지급액에 대해 프리랜서는 LinKross 플랫폼 수수료를 별도로 자진 납부합니다.
+            발주자가 지급한 {amountUsdc.toLocaleString()} USDC에서 추가로 차감되지 않습니다.
+          </p>
+          <dl className="mt-3 grid grid-cols-3 gap-x-4 gap-y-1 text-xs">
+            <ReceiptRow label={`수수료 공급가액 (${(platformCommission.rate * 100).toFixed(0)}%)`} value={`${platformCommission.amount.toLocaleString()} ${platformCommission.currency}`} />
+            <ReceiptRow label="부가세 (10%)" value={`${platformCommission.vatAmount.toLocaleString()} ${platformCommission.currency}`} />
+            <ReceiptRow label="합계" value={`${(platformCommission.amount + platformCommission.vatAmount).toLocaleString()} ${platformCommission.currency}`} />
+          </dl>
+          <p className="mt-2 text-[11px] leading-4 text-app-muted">
+            * 부가세는 일반과세자를 가정한 가안(假案) 표시이며, LinKross는 아직 사업자등록 전으로 실제 세금계산서 발행 근거는 없습니다.
+          </p>
+        </div>
+      ) : null}
 
       <div className="mt-4">
         <p className="text-xs font-bold tracking-[0.1em] text-app-muted uppercase">온체인 검증 정보</p>

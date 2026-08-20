@@ -9,6 +9,7 @@ export type BackendErrorCode =
   | "CONFLICT"
   | "COMPANY_PROFILE_REQUIRED"
   | "FREELANCER_PROFILE_REQUIRED"
+  | "COMMISSION_OVERDUE"
   | "DATABASE_ERROR";
 
 export interface BackendError {
@@ -632,6 +633,48 @@ export interface EvidenceBundleDetail {
   completedAt: string | null;
   errorMessage: string | null;
   payload: Record<string, unknown> | null;
+}
+
+export type CommissionChargeStatus = "pending" | "paid" | "waived";
+export type SubscriptionStatus = "active" | "past_due" | "cancelled";
+
+export interface CommissionChargeRecord {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  milestoneId: string;
+  milestoneTitle: string;
+  paymentId: string;
+  baseAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  vatAmount: number;
+  currency: string;
+  status: CommissionChargeStatus;
+  dueAt: string;
+  paidAt: string | null;
+  paidReference: string | null;
+  createdAt: string;
+}
+
+export interface MarkCommissionChargePaidInput {
+  chargeId: string;
+  paidReference: string;
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  status: SubscriptionStatus;
+  amount: number;
+  currency: string;
+  periodStartAt: string;
+  periodEndAt: string | null;
+}
+
+export interface UpsertSubscriptionInput {
+  amount: number;
+  currency?: string;
+  status?: SubscriptionStatus;
 }
 
 export interface CompanyProfileSettings {
