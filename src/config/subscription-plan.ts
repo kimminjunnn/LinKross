@@ -11,8 +11,8 @@ export interface SubscriptionPlanTier {
 // 프로젝트 개수 기준 구독 티어. 실제 결제 연동 없음 — 참고용 가격이다.
 export const SUBSCRIPTION_PLAN_TIERS: readonly SubscriptionPlanTier[] = [
   { id: "starter", name: "Starter", minProjects: 0, maxProjects: 1, monthlyPrice: 49000 },
-  { id: "growth", name: "Growth", minProjects: 2, maxProjects: 5, monthlyPrice: 99000 },
-  { id: "scale", name: "Scale", minProjects: 6, maxProjects: null, monthlyPrice: 199000 },
+  { id: "growth", name: "Growth", minProjects: 2, maxProjects: 5, monthlyPrice: 79000 },
+  { id: "scale", name: "Scale", minProjects: 6, maxProjects: null, monthlyPrice: 129000 },
 ];
 
 export function resolveSubscriptionPlanTier(projectCount: number): SubscriptionPlanTier {
