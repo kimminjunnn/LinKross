@@ -6,7 +6,7 @@ import { BrowserProvider, Contract, type Eip1193Provider, parseUnits } from "eth
 import { AlertTriangle, ExternalLink, Loader2, Send, Wallet } from "lucide-react";
 
 import { markCommissionChargePaidAction, verifyCommissionWalletPaymentAction } from "@/app/actions/commission";
-import { paymentMethods } from "@/config/payment-method";
+import { PaymentMethodPicker } from "@/components/project/payment/payment-method-picker";
 import {
   BASE_SEPOLIA_CHAIN_ID_HEX,
   BASE_SEPOLIA_EXPLORER_URL,
@@ -33,16 +33,8 @@ export function CommissionPaymentForm({ charge }: { charge: CommissionChargeReco
   }
 
   return (
-    <div className="mt-3 space-y-2">
-      <select
-        value={method}
-        onChange={(event) => setMethod(event.target.value as PaymentMethod)}
-        className="min-h-10 w-full rounded-control border border-app-border-strong px-3 text-sm sm:w-auto"
-      >
-        {paymentMethods.map((option) => (
-          <option key={option.value} value={option.value}>{option.label}</option>
-        ))}
-      </select>
+    <div className="mt-3 space-y-3">
+      <PaymentMethodPicker value={method} onChange={setMethod} disabled={pending} locale="en" />
 
       {method === "wallet_testnet" ? (
         <CommissionWalletTransferPanel chargeId={charge.id} totalDue={charge.commissionAmount + charge.vatAmount} />
