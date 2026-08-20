@@ -12,6 +12,7 @@ import type {
   VerificationRunRecord,
   VerificationWorkspace,
 } from "@/lib/backend/contracts";
+import { COMMISSION_ENFORCEMENT_ENABLED, COMMISSION_GRACE_DAYS } from "@/config/commission-status";
 import { mapBackendError } from "@/lib/backend/errors";
 import { translateToEnglish } from "@/lib/backend/translation";
 import { isUuid } from "@/lib/backend/validation";
@@ -377,6 +378,27 @@ export async function submitMilestonePullRequest(
   if (!access.ok) return access;
   if (!access.data.isSelectedFreelancer) {
     return { ok: false, error: { code: "FORBIDDEN", message: "선정된 프리랜서만 코드를 제출할 수 있습니다." } };
+  }
+
+  if (COMMISSION_ENFORCEMENT_ENABLED) {
+    const graceExpiredAt = new Date(Date.now() - COMMISSION_GRACE_DAYS * 86_400_000).toISOString();
+    const { data: gracedCommissionCharge, error: gracedCommissionChargeError } = await access.data.supabase
+      .from("commission_charges")
+      .select("id")
+      .eq("freelancer_id", access.data.userId)
+      .eq("status", "pending")
+      .lt("due_at", graceExpiredAt)
+      .limit(1)
+      .maybeSingle();
+    if (gracedCommissionChargeError) {
+      return { ok: false, error: mapBackendError(gracedCommissionChargeError, "수수료 납부 상태를 확인하지 못했습니다.") };
+    }
+    if (gracedCommissionCharge) {
+      return {
+        ok: false,
+        error: { code: "FORBIDDEN", message: "미납 수수료 유예기간이 지나 새 마일스톤 제출이 제한되었습니다. 수수료 납부 후 다시 시도해주세요." },
+      };
+    }
   }
 
   const { data: repository, error: repositoryError } = await access.data.supabase
