@@ -5,6 +5,7 @@ import {
   BriefcaseBusiness,
   FolderKanban,
   House,
+  Receipt,
   Search,
   Settings,
   type LucideIcon,
@@ -23,6 +24,7 @@ const navigationIcons: Record<NavigationIconName, LucideIcon> = {
   "briefcase-business": BriefcaseBusiness,
   "folder-kanban": FolderKanban,
   house: House,
+  receipt: Receipt,
   search: Search,
   settings: Settings,
 };

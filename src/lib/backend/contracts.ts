@@ -291,7 +291,8 @@ export type WorkspaceNotificationKind =
   | "proposal_selected"
   | "sow_approval_requested"
   | "sow_revision_requested"
-  | "sow_approved";
+  | "sow_approved"
+  | "commission_overdue";
 
 export interface WorkspaceNotification {
   id: string;

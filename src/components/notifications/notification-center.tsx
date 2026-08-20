@@ -6,6 +6,7 @@ import {
   CircleAlert,
   FileCheck2,
   Handshake,
+  Receipt,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page/page-header";
@@ -140,6 +141,9 @@ function getNotificationIcon(kind: WorkspaceNotification["kind"]) {
   }
   if (kind === "sow_approval_requested") {
     return <FileCheck2 aria-hidden="true" className="size-5" />;
+  }
+  if (kind === "commission_overdue") {
+    return <Receipt aria-hidden="true" className="size-5" />;
   }
   return <CheckCircle2 aria-hidden="true" className="size-5" />;
 }
