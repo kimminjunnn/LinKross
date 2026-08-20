@@ -402,6 +402,7 @@ export function CompanyVerificationWorkspace({
             run={(task) => startTransition(task)}
             setMessage={setMessage}
             setVerifyingLabel={setVerifyingLabel}
+            onReopenOverlay={() => setOverlayDismissed(false)}
           />
         </div>
       </section>
@@ -630,6 +631,7 @@ function MilestoneDetail({
   run,
   setMessage,
   setVerifyingLabel,
+  onReopenOverlay,
 }: {
   projectId: string;
   milestone: VerificationMilestoneRecord;
@@ -639,6 +641,7 @@ function MilestoneDetail({
   run: (task: () => Promise<void>) => void;
   setMessage: (message: string) => void;
   setVerifyingLabel: (label: string | null) => void;
+  onReopenOverlay: () => void;
 }) {
   const latestSubmission = milestone.submissions[0];
   const latestRun = latestSubmission?.runs[0];
@@ -649,8 +652,11 @@ function MilestoneDetail({
 
   function requestRun() {
     if (!latestSubmission) return;
+    // startTransition 안에서 첫 줄로 set하면 React가 트랜지션 업데이트로 묶어
+    // 즉시 반영하지 않을 수 있다(새로고침해야 보이는 버그). 트랜지션 밖에서
+    // 동기적으로 먼저 켜서 클릭 즉시 뜨게 한다.
+    setVerifyingLabel(`${milestone.code} · ${milestone.title}`);
     run(async () => {
-      setVerifyingLabel(`${milestone.code} · ${milestone.title}`);
       try {
         const result = await requestVerificationRunAction({
           projectId,
@@ -869,8 +875,8 @@ function MilestoneDetail({
           </div>
           <button
             type="button"
-            disabled={disabled || !latestSubmission || runInProgress}
-            onClick={requestRun}
+            disabled={runInProgress ? false : disabled || !latestSubmission}
+            onClick={runInProgress ? onReopenOverlay : requestRun}
             className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white disabled:border disabled:border-app-border disabled:bg-app-surface disabled:text-app-muted disabled:opacity-60 cursor-pointer"
           >
             {(disabled || runInProgress) && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
