@@ -11,7 +11,7 @@ import {
 import { PageHeader } from "@/components/page/page-header";
 import { listCompanyWorkspaceProjects } from "@/lib/backend";
 
-import { ProjectListTabs } from "./project-list-tabs";
+import { CompanyProjectList } from "./project-list";
 
 export default async function ProjectsPage() {
   const result = await listCompanyWorkspaceProjects();
@@ -114,7 +114,10 @@ export default async function ProjectsPage() {
           </Link>
         </div>
       ) : (
-        <ProjectListTabs projects={result.data} />
+        <CompanyProjectList
+          projects={result.data.filter((project) => project.lifecycleStage !== "completed")}
+          emptyMessage="진행 중인 프로젝트가 없습니다. 완료된 프로젝트는 프로젝트 히스토리에서 확인할 수 있습니다."
+        />
       )}
     </div>
   );
