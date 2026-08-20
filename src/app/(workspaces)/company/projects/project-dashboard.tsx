@@ -144,7 +144,7 @@ function ProposalList({ proposals }: { proposals: CompanyProposalSummary[] }) {
             className="flex items-center gap-1.5 text-sm font-semibold text-app-muted hover:text-app-foreground"
           >
             <ChevronDown className={`size-4 transition-transform ${showSelected ? "rotate-180" : ""}`} />
-            이미 선정된 프로젝트의 제안서 {selectedGroups.length}건 {showSelected ? "숨기기" : "보기"}
+            이미 선정된 프로젝트 {selectedGroups.length}개 · 제안서 {selectedGroups.reduce((sum, [, group]) => sum + group.items.length, 0)}건 {showSelected ? "숨기기" : "보기"}
           </button>
           {showSelected && (
             <div className="mt-3 space-y-3">
