@@ -70,6 +70,8 @@ export type {
   SubmitProposalOutput,
   SubmitMilestonePullRequestInput,
   SubmitInvoiceInput,
+  CompanySubscriptionOverview,
+  SubscriptionPlanId,
   SubscriptionRecord,
   SubscriptionStatus,
   UpsertSubscriptionInput,
@@ -100,7 +102,7 @@ export { listCompanyNotifications, listFreelancerNotifications } from "@/lib/bac
 export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
 export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, requestPayment, reviewInvoice, submitInvoice, verifyWalletPayment } from "@/lib/backend/finance";
 export { getProjectCommissionChargesByPayment, listFreelancerCommissionCharges, markCommissionChargePaid, verifyCommissionWalletPayment } from "@/lib/backend/commission";
-export { getCompanySubscription, upsertCompanySubscription } from "@/lib/backend/subscriptions";
+export { getCompanySubscriptionOverview, upsertCompanySubscription } from "@/lib/backend/subscriptions";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
   cancelVerificationRun,

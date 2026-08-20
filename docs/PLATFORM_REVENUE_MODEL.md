@@ -52,10 +52,18 @@ LinKross가 에스크로를 쥐고 있지 않아서 실제 입금을 자동으�
 
 ## 3. 기업 구독료
 
-- `subscriptions` 테이블에 회사당 1행(상태 `active`/`past_due`/`cancelled`, 금액)만 추적한다.
-- 플랜 티어(Free/Standard/Pro 등)는 만들지 않았다 — 요청받은 적 없는 기능이라 스코프에서 뺐다.
+- ~~플랜 티어는 안 만든다~~ → **프로젝트 개수 기준 3단계 티어제로 변경** ([`src/config/subscription-plan.ts`](../src/config/subscription-plan.ts)). 처음엔 요청받은 적 없어서 상태/금액만 추적하는 단일 레코드로 시작했는데, 이후에 "구독 저장 화면에 지금 어떤 플랜을 쓰는지 보여달라"는 요청으로 다시 넣었다.
+
+| 플랜 | 기준 | 월 금액 |
+|---|---|---|
+| Starter | 프로젝트 1개 | 49,000원 |
+| Growth | 프로젝트 2~5개 | 99,000원 |
+| Scale | 프로젝트 6개 이상 | 199,000원 |
+
+- 회사의 **현재 프로젝트 개수**를 실시간으로 세서 추천 플랜을 계산하고(`recommendedPlanId`), `/company/settings`에서 3개 플랜 카드와 함께 보여준다. 추천 플랜과 실제 구독 중인 플랜이 다르면(예: 프로젝트를 추가로 만들어서 등급이 바뀜) "추천 플랜으로 갱신" 버튼이 뜬다.
+- `subscriptions` 테이블은 회사당 1행 — 실제로 구독을 "확정"한 시점의 `plan_id`/금액/상태(`active`/`past_due`/`cancelled`)를 스냅샷으로 저장한다. 금액은 항상 플랜별 고정가(`SUBSCRIPTION_PLAN_TIERS`)에서 가져오고, 사용자가 직접 숫자를 입력하지 않는다.
 - **이번 스코프에서는 구독 상태가 아무것도 막지 않는다.** 나중에 "구독 만료 시 접근 제한" 같은 로직을 붙일 확장 지점으로만 존재한다.
-- `/company/settings`에서 회사가 직접 금액을 입력/저장할 수 있는 화면만 있고, 실제 결제 연동은 없다.
+- 여전히 실제 결제 연동은 없다 — "구독 시작하기"를 눌러도 상태값만 기록된다.
 
 ### 3.1 가격을 얼마로 잡을지 (참고용 추천치)
 
@@ -65,10 +73,7 @@ AI 사용 지점 4곳(SOW 초안 생성, 검수 가이드 생성, 완료조건�
 - 안전마진 포함해도 프로젝트당 약 1,500~2,000원 수준
 - 기업이 월 1~2개 프로젝트를 굴린다고 가정하면 **AI 원가는 기업당 월 3,000~5,000원 정도** — 인프라 원가(Supabase, 호스팅 등)를 더해도 월 1만원 안쪽
 
-즉 가격은 원가가 아니라 "PM/QA 인력 없이 외주를 검증하는 가치"로 매기는 게 맞다. COGS 대비 최소 10배 마진이 SaaS 업계 관행인 걸 감안한 추천 구간:
-
-- **월 79,000원 전후** — 원가 대비 충분한 마진이 있으면서, 타겟 세그먼트(예산 빠듯한 5~30인 초기 스타트업)가 부담 없이 시작할 수 있는 선
-- MVP가 아직 시장 검증 전이라, 초기 몇 달은 무료 체험 또는 더 낮은 가격으로 어답션을 우선하는 것도 고려할 만하다
+즉 가격은 원가가 아니라 "PM/QA 인력 없이 외주를 검증하는 가치"로 매기는 게 맞다. COGS 대비 최소 10배 마진이 SaaS 업계 관행인 걸 감안해서, 프로젝트 개수가 늘수록(=플랫폼 의존도가 높아질수록) 가격도 같이 올라가는 3단계 구조(Starter 49,000원 / Growth 99,000원 / Scale 199,000원)로 확정했다. MVP가 아직 시장 검증 전이라, 초기 몇 달은 무료 체험 또는 더 낮은 가격으로 어답션을 우선하는 것도 고려할 만하다.
 
 **이 숫자는 참고치이며 최종 확정은 팀 논의로 결정해야 한다.**
 
@@ -81,8 +86,8 @@ AI 사용 지점 4곳(SOW 초안 생성, 검수 가이드 생성, 완료조건�
 
 새로 추가된 테이블 2개 (자세한 컬럼은 SQL 파일 참고):
 
-- **`commission_charges`** — 마일스톤 지급 1건당 1행. `base_amount`(마일스톤 지급액), `commission_rate`(7%, 스냅샷), `commission_amount`, `vat_amount`, `status`(pending/paid/waived), `due_at`, `paid_at`, `paid_reference`.
-- **`subscriptions`** — 회사당 1행. `status`, `amount`, `currency`, `period_start_at`/`period_end_at`.
+- **`commission_charges`** — 마일스톤 지급 1건당 1행. `base_amount`(마일스톤 지급액), `commission_rate`(7%, 스냅샷), `commission_amount`, `vat_amount`, `status`(pending/paid/waived), `payment_method`(wallet_testnet/bank_transfer/card/other), `tx_hash`/`to_address`/`block_number`(지갑 결제 시 온체인 검증 정보), `due_at`, `paid_at`, `paid_reference`.
+- **`subscriptions`** — 회사당 1행. `plan_id`(starter/growth/scale, 스냅샷), `status`, `amount`, `currency`, `period_start_at`/`period_end_at`.
 
 ## 6. 실행해야 할 SQL (순서대로)
 
@@ -91,11 +96,14 @@ Supabase SQL Editor에서 아래 순서로 실행:
 1. [`supabase/fix_add_commission_and_subscription.sql`](../supabase/fix_add_commission_and_subscription.sql) — 테이블/트리거/RLS 기본 생성
 2. [`supabase/fix_add_commission_vat.sql`](../supabase/fix_add_commission_vat.sql) — VAT 컬럼 추가 + 트리거에 VAT 계산 반영
 3. [`supabase/fix_disable_commission_enforcement.sql`](../supabase/fix_disable_commission_enforcement.sql) — 실제 차단 로직을 원래대로 되돌림(QA 편의)
+4. [`supabase/fix_backfill_commission_charges.sql`](../supabase/fix_backfill_commission_charges.sql) — 트리거 설치 전에 이미 completed였던 결제 건 소급 처리(일회성)
+5. [`supabase/fix_commission_wallet_payment.sql`](../supabase/fix_commission_wallet_payment.sql) — 수수료도 지갑 결제 가능하도록 컬럼 추가
+6. [`supabase/fix_add_subscription_plan.sql`](../supabase/fix_add_subscription_plan.sql) — 구독 플랜 티어(`plan_id`) 컬럼 추가
 
 ## 7. 이번 스코프에서 명시적으로 제외한 것
 
 - 실제 PG(Stripe/토스페이먼츠 등) 연동, 자동 청구/빌링 루프
-- 구독 플랜 티어, 구독 상태에 따른 기능 제한
+- 구독 상태·플랜에 따른 기능 제한(만료 시 접근 제한 등)
 - 회사/관리자의 수수료 납부 확인 리뷰 단계 (컬럼만 존재, 로직 없음)
 - 프로젝트별/프리랜서별 차등 수수료율 (전역 고정 7%만)
 - 미납 제재의 실제 작동 (설계·코드는 있지만 꺼둔 상태)
@@ -103,7 +111,7 @@ Supabase SQL Editor에서 아래 순서로 실행:
 
 ## 8. 팀에서 논의하면 좋을 열린 질문
 
-- 구독료 확정 금액과 결제 주기(월/분기)
+- 구독 결제 주기(월/분기) 및 프로젝트가 "진행 중"에서 빠질 때(완료/취소) 티어를 어떻게 재계산할지
 - LinKross 사업자등록 여부와 시점 — 정해지면 VAT/세금계산서 처리 방식을 다시 설계해야 함
 - 미납 제재를 실제로 언제부터 켤지 (베타 오픈 전? 특정 사용자 규모 이후?)
 - 수수료 자진신고를 계속 신뢰 기반으로 갈지, 회사/관리자 확인 단계를 넣을지
