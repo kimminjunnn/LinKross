@@ -112,7 +112,7 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
           type="button"
           disabled={pending}
           onClick={cancelSubscription}
-          className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-semibold text-app-foreground disabled:opacity-50"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-app-muted hover:text-danger disabled:opacity-50"
         >
           <XCircle className="size-4" />구독 해지
         </button>
