@@ -1,31 +1,17 @@
 import Link from "next/link";
-import {
-  CircleAlert,
-  Plus,
-  FolderKanban,
-  Clock,
-  Users2,
-  FileText
-} from "lucide-react";
+import { CircleAlert, Plus, FolderKanban } from "lucide-react";
 
 import { PageHeader } from "@/components/page/page-header";
 import { listCompanyWorkspaceProjects } from "@/lib/backend";
 
-import { CompanyProjectList } from "./project-list";
+import { ProjectDashboard } from "./project-dashboard";
 
 export default async function ProjectsPage() {
   const result = await listCompanyWorkspaceProjects();
-
-  // Calculate statistics for the top widgets
-  const projects = result.ok ? result.data : [];
-  const totalCount = projects.length;
-  const inProgressCount = projects.filter(p => p.lifecycleStage === "in_progress").length;
-  const preparingCount = projects.filter(p => p.lifecycleStage === "preparing").length;
-  const totalProposals = projects.reduce((sum, p) => sum + (p.proposalCount || 0), 0);
+  const activeProjects = (result.ok ? result.data : []).filter((project) => project.lifecycleStage !== "completed");
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
-      {/* Page Header */}
       <PageHeader
         title="프로젝트"
         description="선정된 개발자와 합의한 업무, 검수 현황과 다음 행동을 실제 프로젝트 기록으로 확인합니다."
@@ -39,63 +25,12 @@ export default async function ProjectsPage() {
         }
       />
 
-      {/* Top Summary Widgets (Deel / Remote style) */}
-      {result.ok && totalCount > 0 && (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 select-none">
-          {[
-            {
-              label: "전체 프로젝트",
-              value: `${totalCount}건`,
-              desc: "등록 및 진행 중인 전체 수",
-              icon: FolderKanban,
-              color: "text-slate-700 bg-slate-100 border-slate-200"
-            },
-            {
-              label: "진행 중인 업무",
-              value: `${inProgressCount}건`,
-              desc: "실시간 빌드 검수 및 실행 중",
-              icon: Clock,
-              color: "text-brand-600 bg-brand-50 border-brand-100"
-            },
-            {
-              label: "착수 준비 중",
-              value: `${preparingCount}건`,
-              desc: "요구사항 및 SOW 합의 대기",
-              icon: FileText,
-              color: "text-amber-600 bg-amber-50 border-amber-100"
-            },
-            {
-              label: "제출된 수행 제안서",
-              value: `${totalProposals}건`,
-              desc: "지원자가 보낸 프로젝트 수행서",
-              icon: Users2,
-              color: "text-indigo-600 bg-indigo-50 border-indigo-100"
-            }
-          ].map((stat, idx) => {
-            const Icon = stat.icon;
-            return (
-              <div key={idx} className="rounded-xl border border-app-border bg-app-surface p-5 shadow-xs flex items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-app-muted">{stat.label}</p>
-                  <p className="text-xl sm:text-2xl font-semibold text-app-foreground leading-none">{stat.value}</p>
-                  <p className="text-xs text-app-muted/80">{stat.desc}</p>
-                </div>
-                <div className={`p-3 rounded-xl border ${stat.color} shrink-0`}>
-                  <Icon className="size-5" />
-                </div>
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      {/* Main Content Area */}
       {!result.ok ? (
         <div className="mt-7 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
           <CircleAlert className="size-5 shrink-0" />
           <p className="text-sm">{result.error.message}</p>
         </div>
-      ) : result.data.length === 0 ? (
+      ) : activeProjects.length === 0 ? (
         <div className="mt-7 rounded-xl border border-dashed border-app-border-strong p-16 text-center bg-white shadow-xs max-w-2xl mx-auto space-y-4">
           <div className="size-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
             <FolderKanban className="size-6" />
@@ -114,10 +49,7 @@ export default async function ProjectsPage() {
           </Link>
         </div>
       ) : (
-        <CompanyProjectList
-          projects={result.data.filter((project) => project.lifecycleStage !== "completed")}
-          emptyMessage="진행 중인 프로젝트가 없습니다. 완료된 프로젝트는 프로젝트 히스토리에서 확인할 수 있습니다."
-        />
+        <ProjectDashboard projects={activeProjects} />
       )}
     </div>
   );
