@@ -1,5 +1,6 @@
 import type {
   BackendResult,
+  CompanyProposalSummary,
   ProjectProposal,
   SelectProposalInput,
   SelectProposalOutput,
@@ -147,6 +148,61 @@ export async function listProjectProposals(
         portfolioUrls: proposal.freelancer_portfolio_urls_snapshot ?? [],
       },
       isSelected: proposal.id === selectedProposalId,
+    })),
+  };
+}
+
+export async function listCompanyProposals(): Promise<BackendResult<CompanyProposalSummary[]>> {
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const { data: projects, error: projectsError } = await supabase
+    .from("projects")
+    .select("id, current_requirement_version_id")
+    .eq("company_id", authData.user.id);
+  if (projectsError) {
+    return { ok: false, error: mapBackendError(projectsError, "프로젝트 목록을 불러오지 못했습니다.") };
+  }
+  if (!projects?.length) return { ok: true, data: [] };
+
+  const projectIds = projects.map((project) => project.id);
+  const requirementVersionIds = projects
+    .map((project) => project.current_requirement_version_id)
+    .filter((id): id is string => Boolean(id));
+
+  const [{ data: proposals, error: proposalsError }, { data: requirementVersions, error: requirementVersionsError }] =
+    await Promise.all([
+      supabase
+        .from("proposals")
+        .select("id, project_id, freelancer_display_name_snapshot, freelancer_headline_snapshot, submitted_at, status")
+        .in("project_id", projectIds)
+        .order("submitted_at", { ascending: false }),
+      requirementVersionIds.length
+        ? supabase.from("project_requirement_versions").select("id, title").in("id", requirementVersionIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+  if (proposalsError || requirementVersionsError) {
+    return { ok: false, error: mapBackendError(proposalsError ?? requirementVersionsError, "수행 제안서 목록을 불러오지 못했습니다.") };
+  }
+
+  const titleByRequirementVersionId = new Map((requirementVersions ?? []).map((version) => [version.id, version.title]));
+  const titleByProjectId = new Map(
+    projects.map((project) => [project.id, titleByRequirementVersionId.get(project.current_requirement_version_id ?? "") ?? "프로젝트"]),
+  );
+
+  return {
+    ok: true,
+    data: (proposals ?? []).map((proposal) => ({
+      proposalId: proposal.id,
+      projectId: proposal.project_id,
+      projectTitle: titleByProjectId.get(proposal.project_id) ?? "프로젝트",
+      freelancerDisplayName: proposal.freelancer_display_name_snapshot ?? "프리랜서",
+      freelancerHeadline: proposal.freelancer_headline_snapshot,
+      submittedAt: proposal.submitted_at,
+      status: proposal.status,
     })),
   };
 }
