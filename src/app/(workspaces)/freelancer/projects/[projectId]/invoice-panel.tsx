@@ -1,14 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Banknote, FileText, Loader2 } from "lucide-react";
+import { Banknote, FileText, Loader2, Receipt, Send } from "lucide-react";
 
 import { submitInvoiceAction } from "@/app/actions/finance";
+import { markCommissionChargePaidAction } from "@/app/actions/commission";
 import { SimplifiedLedgerButton } from "@/components/project/payment/simplified-ledger-button";
 import { paymentStatusLabel } from "@/config/payment-status";
-import type { ProjectFinancialWorkspace } from "@/lib/backend";
+import type { CommissionChargeRecord, ProjectFinancialWorkspace } from "@/lib/backend";
 
-export function FreelancerInvoicePanel({ workspace }: { workspace: ProjectFinancialWorkspace }) {
+export function FreelancerInvoicePanel({
+  workspace,
+  commissionChargesByPaymentId,
+}: {
+  workspace: ProjectFinancialWorkspace;
+  commissionChargesByPaymentId: Record<string, CommissionChargeRecord>;
+}) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const available = workspace.milestones.filter((milestone) => milestone.status === "approved");
@@ -56,9 +63,64 @@ export function FreelancerInvoicePanel({ workspace }: { workspace: ProjectFinanc
                 <span className="text-app-foreground">{paymentStatusLabel[milestone.payment.status]} · {milestone.payment.amount.toLocaleString()} {milestone.payment.currency}</span>
               </div>
             )}
+            {milestone.payment && commissionChargesByPaymentId[milestone.payment.id] && (
+              <CommissionChargeInline charge={commissionChargesByPaymentId[milestone.payment.id]} setMessage={setMessage} />
+            )}
           </article>
         ))}
       </div>
     </section>
+  );
+}
+
+function CommissionChargeInline({
+  charge,
+  setMessage,
+}: {
+  charge: CommissionChargeRecord;
+  setMessage: (message: string | null) => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const totalDue = charge.commissionAmount + charge.vatAmount;
+
+  return (
+    <div className="mt-3 rounded-control border border-app-border p-3">
+      <div className="flex items-center gap-2 text-sm font-semibold text-app-muted">
+        <Receipt className="size-4" />Platform commission
+      </div>
+      <p className="mt-1.5 text-xs text-app-muted">
+        Commission (supply value) {charge.commissionAmount.toLocaleString()} {charge.currency} ({(charge.commissionRate * 100).toFixed(0)}% of {charge.baseAmount.toLocaleString()} {charge.currency})
+        {" · "}VAT (10%) {charge.vatAmount.toLocaleString()} {charge.currency}
+      </p>
+      <p className="mt-1 text-sm font-semibold text-app-foreground">Total due: {totalDue.toLocaleString()} {charge.currency}</p>
+
+      {charge.status === "pending" ? (
+        <form
+          action={(formData) => startTransition(async () => {
+            const result = await markCommissionChargePaidAction({
+              chargeId: charge.id,
+              paidReference: String(formData.get("paidReference") ?? ""),
+            });
+            setMessage(result.ok ? "Commission reported as paid." : result.error.message);
+          })}
+          className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]"
+        >
+          <input
+            name="paidReference"
+            required
+            disabled={pending}
+            placeholder="Transfer memo or receipt number"
+            className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm disabled:opacity-50"
+          />
+          <button disabled={pending} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}Report as paid
+          </button>
+        </form>
+      ) : (
+        <p className="mt-2 text-xs text-app-muted">
+          {charge.status === "paid" && charge.paidAt ? `Paid ${new Date(charge.paidAt).toLocaleDateString("en-US")}` : "Waived"}
+        </p>
+      )}
+    </div>
   );
 }
