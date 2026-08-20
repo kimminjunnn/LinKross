@@ -652,6 +652,10 @@ export interface CommissionChargeRecord {
   vatAmount: number;
   currency: string;
   status: CommissionChargeStatus;
+  paymentMethod: PaymentMethod;
+  txHash: string | null;
+  toAddress: string | null;
+  blockNumber: number | null;
   dueAt: string;
   paidAt: string | null;
   paidReference: string | null;
@@ -660,7 +664,13 @@ export interface CommissionChargeRecord {
 
 export interface MarkCommissionChargePaidInput {
   chargeId: string;
+  method: Exclude<PaymentMethod, "wallet_testnet">;
   paidReference: string;
+}
+
+export interface VerifyCommissionWalletPaymentInput {
+  chargeId: string;
+  txHash: string;
 }
 
 export interface SubscriptionRecord {
