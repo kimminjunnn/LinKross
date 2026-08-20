@@ -4,6 +4,7 @@ export type NavigationIconName =
   | "badge-check"
   | "briefcase-business"
   | "folder-kanban"
+  | "history"
   | "house"
   | "receipt"
   | "search"
@@ -32,6 +33,11 @@ export const workspaceNavigation: Record<
           label: "프로젝트",
           href: "/company/projects",
           icon: "folder-kanban",
+        },
+        {
+          label: "프로젝트 히스토리",
+          href: "/company/project-history",
+          icon: "history",
         },
         {
           label: "진행 전 프로젝트",
