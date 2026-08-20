@@ -1,6 +1,8 @@
-import type { BackendResult, CommissionChargeRecord, MarkCommissionChargePaidInput } from "@/lib/backend/contracts";
+import { LINKROSS_TREASURY_WALLET_ADDRESS } from "@/config/testnet";
+import type { BackendResult, CommissionChargeRecord, MarkCommissionChargePaidInput, VerifyCommissionWalletPaymentInput } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { isUuid } from "@/lib/backend/validation";
+import { verifyOnchainTransfer } from "@/lib/onchain-payment";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function getProjectCommissionChargesByPayment(
@@ -36,7 +38,7 @@ export async function listFreelancerCommissionCharges(): Promise<BackendResult<C
 
   const { data: charges, error } = await supabase
     .from("commission_charges")
-    .select("id, project_id, milestone_record_id, payment_id, base_amount, commission_rate, commission_amount, vat_amount, currency, status, due_at, paid_at, paid_reference, created_at")
+    .select("id, project_id, milestone_record_id, payment_id, base_amount, commission_rate, commission_amount, vat_amount, currency, status, payment_method, tx_hash, to_address, block_number, due_at, paid_at, paid_reference, created_at")
     .eq("freelancer_id", authData.user.id)
     .order("created_at", { ascending: false });
   if (error) return { ok: false, error: mapBackendError(error, "수수료 청구 내역을 불러오지 못했습니다.") };
@@ -68,6 +70,10 @@ export async function listFreelancerCommissionCharges(): Promise<BackendResult<C
       vatAmount: Number(charge.vat_amount),
       currency: charge.currency,
       status: charge.status,
+      paymentMethod: charge.payment_method,
+      txHash: charge.tx_hash,
+      toAddress: charge.to_address,
+      blockNumber: charge.block_number,
       dueAt: charge.due_at,
       paidAt: charge.paid_at,
       paidReference: charge.paid_reference,
@@ -76,10 +82,15 @@ export async function listFreelancerCommissionCharges(): Promise<BackendResult<C
   };
 }
 
+const MANUAL_COMMISSION_METHODS = ["bank_transfer", "card", "other"] as const;
+
 export async function markCommissionChargePaid(
   input: MarkCommissionChargePaidInput,
 ): Promise<BackendResult<{ chargeId: string }>> {
   if (!isUuid(input.chargeId)) return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 수수료 청구가 아닙니다." } };
+  if (!MANUAL_COMMISSION_METHODS.includes(input.method)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "지급 수단을 선택해주세요." } };
+  }
   if (!input.paidReference.trim()) return { ok: false, error: { code: "INVALID_INPUT", message: "납부확인번호(계좌이체 메모, 영수증 번호 등)를 입력해주세요." } };
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
@@ -87,7 +98,12 @@ export async function markCommissionChargePaid(
 
   const { data, error } = await supabase
     .from("commission_charges")
-    .update({ status: "paid", paid_at: new Date().toISOString(), paid_reference: input.paidReference.trim() })
+    .update({
+      status: "paid",
+      payment_method: input.method,
+      paid_at: new Date().toISOString(),
+      paid_reference: input.paidReference.trim(),
+    })
     .eq("id", input.chargeId)
     .eq("freelancer_id", authData.user.id)
     .eq("status", "pending")
@@ -95,4 +111,47 @@ export async function markCommissionChargePaid(
     .maybeSingle();
   if (error || !data) return { ok: false, error: mapBackendError(error, "납부 완료로 표시할 수 있는 청구를 찾지 못했습니다.") };
   return { ok: true, data: { chargeId: data.id } };
+}
+
+export async function verifyCommissionWalletPayment(
+  input: VerifyCommissionWalletPaymentInput,
+): Promise<BackendResult<{ chargeId: string; verified: boolean; reason?: string }>> {
+  if (!isUuid(input.chargeId)) return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 수수료 청구가 아닙니다." } };
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+
+  const { data: charge, error: chargeError } = await supabase
+    .from("commission_charges")
+    .select("id, commission_amount, vat_amount, currency, status")
+    .eq("id", input.chargeId)
+    .eq("freelancer_id", authData.user.id)
+    .maybeSingle();
+  if (chargeError || !charge) return { ok: false, error: mapBackendError(chargeError, "수수료 청구를 찾지 못했습니다.") };
+  if (charge.status !== "pending") return { ok: false, error: { code: "CONFLICT", message: `${charge.status} 상태에서는 검증할 수 없습니다.` } };
+
+  const totalDue = Number(charge.commission_amount) + Number(charge.vat_amount);
+  const result = await verifyOnchainTransfer(input.txHash, String(totalDue), LINKROSS_TREASURY_WALLET_ADDRESS);
+  if (!result.verified) {
+    return { ok: true, data: { chargeId: charge.id, verified: false, reason: result.reason } };
+  }
+
+  const { data, error } = await supabase
+    .from("commission_charges")
+    .update({
+      status: "paid",
+      payment_method: "wallet_testnet",
+      tx_hash: result.txHash,
+      to_address: result.toAddress,
+      block_number: result.blockNumber,
+      paid_at: new Date().toISOString(),
+      paid_reference: result.txHash,
+    })
+    .eq("id", input.chargeId)
+    .eq("freelancer_id", authData.user.id)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+  if (error || !data) return { ok: false, error: mapBackendError(error, "수수료 납부 상태를 갱신하지 못했습니다.") };
+  return { ok: true, data: { chargeId: data.id, verified: true } };
 }

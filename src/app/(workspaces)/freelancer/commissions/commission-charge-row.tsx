@@ -1,9 +1,4 @@
-"use client";
-
-import { useState, useTransition } from "react";
-import { Loader2, Send } from "lucide-react";
-
-import { markCommissionChargePaidAction } from "@/app/actions/commission";
+import { CommissionPaymentForm } from "@/components/project/payment/commission-payment-form";
 import type { CommissionChargeRecord } from "@/lib/backend";
 
 const STATUS_LABEL: Record<CommissionChargeRecord["status"], string> = {
@@ -13,8 +8,6 @@ const STATUS_LABEL: Record<CommissionChargeRecord["status"], string> = {
 };
 
 export function CommissionChargeRow({ charge }: { charge: CommissionChargeRecord }) {
-  const [message, setMessage] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
   const isOverdue = charge.status === "pending" && new Date(charge.dueAt).getTime() < new Date().getTime();
 
   return (
@@ -44,39 +37,8 @@ export function CommissionChargeRow({ charge }: { charge: CommissionChargeRecord
         {charge.paidReference ? <p className="mt-1 text-xs text-app-muted">Reference: {charge.paidReference}</p> : null}
       </div>
 
-      <div className="mt-4 sm:mt-0 sm:w-64 sm:shrink-0">
-        {charge.status === "pending" ? (
-          <form
-            action={(formData) => startTransition(async () => {
-              const result = await markCommissionChargePaidAction({
-                chargeId: charge.id,
-                paidReference: String(formData.get("paidReference") ?? ""),
-              });
-              setMessage(result.ok ? "Reported as paid." : result.error.message);
-            })}
-            className="flex flex-col gap-2"
-          >
-            <input
-              name="paidReference"
-              required
-              disabled={pending}
-              placeholder="Transfer memo or receipt number"
-              className="min-h-9 w-full rounded-control border border-app-border-strong px-3 text-xs disabled:opacity-50"
-            />
-            <button
-              disabled={pending}
-              className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-brand-600 px-3 text-xs font-semibold text-white disabled:opacity-50"
-            >
-              {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-              Report as paid
-            </button>
-            {message ? <p className="text-xs text-app-muted">{message}</p> : null}
-          </form>
-        ) : (
-          <p className="text-xs text-app-muted sm:text-right">
-            {charge.status === "paid" && charge.paidAt ? `Paid ${new Date(charge.paidAt).toLocaleDateString("en-US")}` : null}
-          </p>
-        )}
+      <div className="mt-4 sm:mt-0 sm:w-72 sm:shrink-0">
+        <CommissionPaymentForm charge={charge} />
       </div>
     </article>
   );
