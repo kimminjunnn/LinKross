@@ -10,7 +10,17 @@ import { BASE_SEPOLIA_EXPLORER_URL } from "@/config/testnet";
 import { paymentMethodLabel } from "@/config/payment-method";
 import type { FinancialMilestoneRecord } from "@/lib/backend";
 
-export function PaymentEvidencePanel({ projectId, milestones }: { projectId: string; milestones: FinancialMilestoneRecord[] }) {
+type CommissionByPaymentId = Record<string, { rate: number; amount: number; vatAmount: number; currency: string }>;
+
+export function PaymentEvidencePanel({
+  projectId,
+  milestones,
+  commissionChargesByPaymentId,
+}: {
+  projectId: string;
+  milestones: FinancialMilestoneRecord[];
+  commissionChargesByPaymentId: CommissionByPaymentId;
+}) {
   const hasVerifiedWalletPayment = milestones.some((milestone) => milestone.payment?.method === "wallet_testnet" && milestone.payment.status === "completed");
 
   return (
@@ -27,7 +37,13 @@ export function PaymentEvidencePanel({ projectId, milestones }: { projectId: str
         {milestones.length === 0 ? (
           <p className="rounded-control border border-dashed border-app-border-strong p-3 text-sm text-app-muted">마일스톤이 아직 없습니다.</p>
         ) : (
-          milestones.map((milestone) => <PaymentEvidenceCard key={milestone.id} milestone={milestone} />)
+          milestones.map((milestone) => (
+            <PaymentEvidenceCard
+              key={milestone.id}
+              milestone={milestone}
+              platformCommission={milestone.payment ? commissionChargesByPaymentId[milestone.payment.id] ?? null : null}
+            />
+          ))
         )}
       </div>
 
@@ -54,7 +70,10 @@ export function PaymentEvidencePanel({ projectId, milestones }: { projectId: str
   );
 }
 
-function PaymentEvidenceCard({ milestone }: { milestone: FinancialMilestoneRecord }) {
+function PaymentEvidenceCard({ milestone, platformCommission }: {
+  milestone: FinancialMilestoneRecord;
+  platformCommission: { rate: number; amount: number; vatAmount: number; currency: string } | null;
+}) {
   const [showReceipt, setShowReceipt] = useState(false);
   const payment = milestone.payment;
 
@@ -134,6 +153,7 @@ function PaymentEvidenceCard({ milestone }: { milestone: FinancialMilestoneRecor
           blockNumber={payment.blockNumber}
           completedAt={payment.completedAt}
           paymentId={payment.id}
+          platformCommission={platformCommission}
         />
       )}
     </article>
