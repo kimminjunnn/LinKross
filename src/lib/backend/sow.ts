@@ -291,7 +291,7 @@ async function getSowApprovalParticipantRows(
 }
 
 function buildTempPositionBase(): number {
-  return -Math.floor(Date.now() / 1000);
+  return Math.floor(Date.now() / 1000);
 }
 
 async function upsertMilestonesForDraft(

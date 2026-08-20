@@ -15,6 +15,7 @@ type SowKoreanFormProps = {
   isGenerating: boolean;
   onSaveDraft: () => void;
   isAnalyzing?: boolean;
+  isRevisionMode?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
 };
@@ -29,6 +30,7 @@ export function SowKoreanForm({
   isGenerating,
   onSaveDraft,
   isAnalyzing = false,
+  isRevisionMode = false,
   isExpanded = false,
   onToggleExpand,
 }: SowKoreanFormProps) {
@@ -234,10 +236,16 @@ export function SowKoreanForm({
               type="button"
               onClick={handleAnalyzeClick}
               disabled={isParsing || isAnalyzing}
-              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-brand-500 via-brand-600 to-indigo-600 px-5 text-xs font-black text-white hover:opacity-95 active:scale-[0.98] transition-all shadow-sm shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`inline-flex min-h-10 cursor-pointer items-center justify-center gap-1 rounded-lg px-6 text-[9px] font-black text-white hover:opacity-95 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                isRevisionMode
+                  ? "bg-[#F95803] shadow-[#F95803]/20"
+                  : "bg-gradient-to-r from-brand-500 via-brand-600 to-indigo-600 shadow-brand-500/20"
+              }`}
             >
-              <Sparkles aria-hidden="true" className={`size-3.5 text-brand-300 ${(isParsing || isAnalyzing) ? 'animate-spin' : ''}`} />
-              {isParsing ? "파일 분석 중..." : isAnalyzing ? "LLM 분석 중..." : "AI 분석 실행"}
+              <Sparkles aria-hidden="true" className={`size-3.5 ${isRevisionMode ? "text-white" : "text-brand-300"} ${(isParsing || isAnalyzing) ? 'animate-spin' : ''}`} />
+              <span className="whitespace-nowrap">
+                {isParsing ? "파일 분석 중..." : isAnalyzing ? "LLM 분석 중..." : "AI 분석 실행"}
+              </span>
             </button>
             <span className="text-xs font-medium text-slate-500 leading-relaxed max-w-lg">
               업무 상세와 첨부 문서를 AI가 분석해 마일스톤 개수 · 일정 · 금액 · DoD 초안을 자동 생성합니다.

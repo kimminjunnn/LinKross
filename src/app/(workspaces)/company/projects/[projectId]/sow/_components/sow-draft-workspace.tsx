@@ -84,6 +84,11 @@ function formatRevisionRequestDateTime(value: string) {
   }).format(date);
 }
 
+function getNextSubmittedSowVersion(draft: SowWorkspaceDraft | null) {
+  if (!draft) return null;
+  return draft.status === "draft" ? draft.versionNumber : draft.versionNumber + 1;
+}
+
 function SowDraftWorkspace({
   context,
   isRevisionMode,
@@ -118,6 +123,17 @@ function SowDraftWorkspace({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedPane, setExpandedPane] = useState<"none" | "korean" | "english">("none");
+  const [hasRegeneratedRevisionSow, setHasRegeneratedRevisionSow] = useState(false);
+  const currentRevisionVersion = revisionDraft?.versionNumber ?? null;
+  const nextRevisionVersion = getNextSubmittedSowVersion(revisionDraft);
+  const revisionPreviewVersion =
+    isRevisionMode && currentRevisionVersion != null
+      ? `v${hasRegeneratedRevisionSow && nextRevisionVersion != null ? nextRevisionVersion : currentRevisionVersion}`
+      : undefined;
+  const revisionApprovalRequestLabel =
+    isRevisionMode && hasRegeneratedRevisionSow && nextRevisionVersion != null
+      ? `v${nextRevisionVersion} 수정본 승인 요청`
+      : undefined;
 
   const handleAnalyzeAI = async (fileContent?: string) => {
     let textToAnalyze = workDetail;
@@ -192,6 +208,9 @@ function SowDraftWorkspace({
     try {
       const result = await generateEnglishSowWithLLM({ projectTitle: context.title, assigneeName: context.assigneeName, workDetail: textToAnalyze, startDate: context.startDate, endDate: context.endDate, milestones });
       setEnglishSow(result);
+      if (isRevisionMode) {
+        setHasRegeneratedRevisionSow(true);
+      }
       setStatusMessage("✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!");
     } catch (e) {
       console.error(e);
@@ -238,7 +257,9 @@ function SowDraftWorkspace({
   const handleRequestApproval = async (snapshot: ApprovalSowSnapshot) => {
     setIsSubmitting(true);
     setIsError(false);
-    setStatusMessage("검토 요청을 저장하는 중입니다...");
+    setStatusMessage(
+      isRevisionMode ? "수정본 승인 요청을 보내는 중입니다..." : "검토 요청을 저장하는 중입니다..."
+    );
 
     const result = await submitSowForReviewAction({
       projectId,
@@ -304,13 +325,17 @@ function SowDraftWorkspace({
           className={`flex items-center gap-2 rounded-control border p-3.5 text-xs animate-fade-in ${
             isError
               ? "border-red-200 bg-red-50 text-red-800"
-              : "border-brand-200 bg-brand-50 text-brand-900"
+              : isSubmitting
+                ? "border-brand-200 bg-brand-50 text-brand-900"
+                : "border-emerald-200 bg-emerald-50 text-emerald-900"
           }`}
         >
           {isError ? (
             <CircleAlert className="size-4 text-red-600 shrink-0" />
+          ) : isSubmitting ? (
+            <Loader2 className="size-4 animate-spin text-brand-600 shrink-0" />
           ) : (
-            <CheckCircle2 className="size-4 text-brand-600 shrink-0" />
+            <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
           )}
           <span>{statusMessage}</span>
         </div>
@@ -372,6 +397,7 @@ function SowDraftWorkspace({
               isGenerating={isGenerating}
               onSaveDraft={handleSaveDraft}
               isAnalyzing={isAnalyzing || isSavingDraft}
+              isRevisionMode={isRevisionMode}
               isExpanded={expandedPane === "korean"}
               onToggleExpand={() => setExpandedPane(expandedPane === "korean" ? "none" : "korean")}
             />
@@ -386,7 +412,8 @@ function SowDraftWorkspace({
               sow={englishSow}
               onRequestApproval={handleRequestApproval}
               isSubmitting={isSubmitting}
-              approvalRequestLabel={isRevisionMode && englishSow ? `v${englishSow.version} 수정본 승인 요청` : undefined}
+              displayVersion={revisionPreviewVersion}
+              approvalRequestLabel={revisionApprovalRequestLabel}
               isExpanded={expandedPane === "english"}
               onToggleExpand={() => setExpandedPane(expandedPane === "english" ? "none" : "english")}
             />

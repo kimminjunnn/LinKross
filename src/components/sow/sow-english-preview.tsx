@@ -26,6 +26,7 @@ type SowEnglishPreviewProps = {
   onRequestApproval: (snapshot: ApprovalSowSnapshot) => void;
   isSubmitting?: boolean;
   approvalRequestLabel?: string;
+  displayVersion?: string;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
 };
@@ -36,6 +37,7 @@ export function SowEnglishPreview({
   onRequestApproval,
   isSubmitting = false,
   approvalRequestLabel,
+  displayVersion,
   isExpanded = false,
   onToggleExpand,
 }: SowEnglishPreviewProps) {
@@ -44,6 +46,7 @@ export function SowEnglishPreview({
   const [isEditingSection, setIsEditingSection] = useState(false);
   const [isApprovalConfirmOpen, setIsApprovalConfirmOpen] = useState(false);
   const sowContentRef = useRef<HTMLDivElement>(null);
+  const versionLabel = displayVersion ?? `v${sow?.version}`;
 
   const handleDownloadPdf = () => {
     window.print();
@@ -115,7 +118,7 @@ export function SowEnglishPreview({
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-app-foreground">영어 업무 명세서 (AI 생성)</h2>
             <span className="rounded-pill bg-app-foreground px-2.5 py-0.5 text-xs font-semibold text-white">
-              v{sow.version}
+              {versionLabel}
             </span>
           </div>
           <p className="mt-1 text-xs text-app-muted">
@@ -362,7 +365,7 @@ export function SowEnglishPreview({
             ) : (
               <>
                 <Send className="size-4" />
-                {approvalRequestLabel ?? `v${sow.version} 해외 프리랜서 승인 요청`}
+                {approvalRequestLabel ?? `${versionLabel} 해외 프리랜서 승인 요청`}
               </>
             )}
           </button>

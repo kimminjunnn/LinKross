@@ -186,11 +186,12 @@ export default function ApprovalPage() {
           ? `${documentVersion} 원본 문서가 업무 명세서 탭에서 승인 요청한 버전과 같은지 확인하세요.`
           : "업무 명세서 탭에서 SOW를 생성하고 승인 요청을 진행하세요."),
   };
+  const originalSummary = aiSummary?.english ?? activeSummary;
   const summaryItems = isOriginalSummaryVisible
     ? [
-        { label: "Core Scope", value: activeSummary.coreScope },
-        { label: "Key Acceptance", value: activeSummary.keyAcceptance },
-        { label: "Needs Review", value: activeSummary.needsReview },
+        { label: "Core Scope", value: originalSummary.coreScope },
+        { label: "Key Acceptance", value: originalSummary.keyAcceptance },
+        { label: "Needs Review", value: originalSummary.needsReview },
       ]
     : [
         { label: "핵심 범위", value: translatedSummary.coreScope },
