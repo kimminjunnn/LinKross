@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 import { Banknote, CheckCircle2, Clock3, FileText, Loader2, PartyPopper, XCircle } from "lucide-react";
 
 import { advancePaymentStatusAction, completeProjectAction, requestPaymentAction, reviewInvoiceAction } from "@/app/actions/finance";
+import { PaymentMethodPicker } from "@/components/project/payment/payment-method-picker";
 import { SimplifiedLedgerButton } from "@/components/project/payment/simplified-ledger-button";
 import { WalletTransferPanel } from "@/components/project/payment/wallet-transfer-panel";
 import { StatusBadge } from "@/components/project/status-badge";
-import { paymentMethodLabel, paymentMethods } from "@/config/payment-method";
+import { paymentMethodLabel } from "@/config/payment-method";
 import { paymentStatusLabel } from "@/config/payment-status";
 import type { FinancialMilestoneRecord, PaymentMethod, PaymentRecordStatus, ProjectFinancialWorkspace } from "@/lib/backend";
 
@@ -135,15 +136,13 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
 
         {!milestone.payment ? (
           milestone.invoice?.status === "approved" && (
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-              <select value={method} onChange={(event) => setMethod(event.target.value as PaymentMethod)} className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm">
-                {paymentMethods.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select>
+            <div className="mt-3 space-y-3">
+              <PaymentMethodPicker value={method} onChange={setMethod} disabled={pending} />
               <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
                 {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
               </button>
               {method === "wallet_testnet" && !freelancerWalletAddress && (
-                <p className="text-xs font-semibold text-warning sm:col-span-2">프리랜서가 아직 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다.</p>
+                <p className="text-xs font-semibold text-warning">프리랜서가 아직 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다.</p>
               )}
             </div>
           )
