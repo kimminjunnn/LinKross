@@ -673,8 +673,11 @@ export interface VerifyCommissionWalletPaymentInput {
   txHash: string;
 }
 
+export type SubscriptionPlanId = "starter" | "growth" | "scale";
+
 export interface SubscriptionRecord {
   id: string;
+  planId: SubscriptionPlanId;
   status: SubscriptionStatus;
   amount: number;
   currency: string;
@@ -682,9 +685,14 @@ export interface SubscriptionRecord {
   periodEndAt: string | null;
 }
 
+export interface CompanySubscriptionOverview {
+  subscription: SubscriptionRecord | null;
+  projectCount: number;
+  recommendedPlanId: SubscriptionPlanId;
+}
+
 export interface UpsertSubscriptionInput {
-  amount: number;
-  currency?: string;
+  planId: SubscriptionPlanId;
   status?: SubscriptionStatus;
 }
 
