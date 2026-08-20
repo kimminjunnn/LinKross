@@ -5,6 +5,7 @@ export type NavigationIconName =
   | "briefcase-business"
   | "folder-kanban"
   | "house"
+  | "receipt"
   | "search"
   | "settings";
 
@@ -61,6 +62,7 @@ export const workspaceNavigation: Record<
     {
       label: "Account",
       items: [
+        { label: "Commissions", href: "/freelancer/commissions", icon: "receipt" },
         { label: "Settings", href: "/freelancer/settings", icon: "settings" },
       ],
     },
