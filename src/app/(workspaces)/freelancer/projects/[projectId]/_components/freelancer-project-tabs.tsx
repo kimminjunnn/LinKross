@@ -27,7 +27,7 @@ export function FreelancerProjectTabs({ projectId }: { projectId: string }) {
               <Link
                 href={href}
                 aria-current={isActive ? "page" : undefined}
-                className={`relative flex min-h-14 items-center justify-center px-2 text-center text-xs font-bold leading-4 transition-colors sm:min-w-40 sm:px-5 sm:text-sm ${
+                className={`relative flex min-h-14 items-center justify-center px-2 text-center text-xs leading-4 transition-colors sm:min-w-40 sm:px-5 sm:text-sm ${
                   isActive
                     ? "text-brand-700"
                     : "text-app-muted hover:text-app-foreground"

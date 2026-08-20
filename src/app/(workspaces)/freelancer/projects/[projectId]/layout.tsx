@@ -25,7 +25,7 @@ export default async function FreelancerProjectDetailLayout({
     <div className="mx-auto w-full max-w-6xl pb-16">
       <Link
         href="/freelancer/projects"
-        className="inline-flex items-center gap-2 text-sm font-bold text-app-muted hover:text-brand-700"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-app-muted hover:text-brand-700"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
         My projects
@@ -50,7 +50,7 @@ function ProjectAccessError({ message }: { message: string }) {
     <div className="mx-auto w-full max-w-4xl rounded-card border border-danger/30 bg-danger/10 p-6 text-danger">
       <div className="flex gap-3">
         <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
-        <p className="text-sm font-bold">{message}</p>
+        <p className="text-sm">{message}</p>
       </div>
     </div>
   );

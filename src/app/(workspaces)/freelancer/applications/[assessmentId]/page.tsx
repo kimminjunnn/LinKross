@@ -103,7 +103,7 @@ export default function FreelancerApplicationEditorPage() {
     return (
       <div className="mx-auto w-full max-w-3xl text-center py-20">
         <div className="animate-spin size-8 border-4 border-brand-500 border-t-transparent rounded-full mx-auto" />
-        <p className="text-slate-400 mt-4 text-xs font-semibold">Loading opportunity details...</p>
+        <p className="text-slate-400 mt-4 text-xs">Loading opportunity details...</p>
       </div>
     );
   }
@@ -111,10 +111,10 @@ export default function FreelancerApplicationEditorPage() {
   if (!opportunity) {
     return (
       <div className="mx-auto w-full max-w-3xl rounded-card border border-app-border bg-app-surface p-8 text-center shadow-card">
-        <h1 className="text-2xl font-black">This opportunity is not available.</h1>
+        <h1 className="text-2xl font-bold">This opportunity is not available.</h1>
         <Link
           href="/opportunities"
-          className="mt-5 inline-flex items-center gap-2 font-bold text-brand-700"
+          className="mt-5 inline-flex items-center gap-2 font-semibold text-brand-700"
         >
           <ArrowLeft className="size-4" />
           Browse open opportunities
@@ -129,7 +129,7 @@ export default function FreelancerApplicationEditorPage() {
     <div className="mx-auto w-full max-w-5xl">
       <Link
         href={`/opportunities/${currentOpportunity.id}`}
-        className="inline-flex items-center gap-2 text-sm font-bold text-app-muted hover:text-brand-700"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-app-muted hover:text-brand-700"
       >
         <ArrowLeft className="size-4" />
         Review project details
@@ -140,10 +140,10 @@ export default function FreelancerApplicationEditorPage() {
           onSubmit={submitProposal}
           className="rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8"
         >
-          <p className="text-xs font-black tracking-[0.12em] text-brand-700 uppercase">
+          <p className="text-xs font-semibold tracking-[0.12em] text-brand-700 uppercase">
             Free-form proposal
           </p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight">
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">
             {currentOpportunity.title}
           </h1>
           <p className="mt-3 text-sm leading-6 text-app-muted">
@@ -151,7 +151,7 @@ export default function FreelancerApplicationEditorPage() {
             writing guide is optional and does not affect an automated score.
           </p>
 
-          <label className="mt-8 block text-sm font-black">
+          <label className="mt-8 block text-sm">
             Your proposal
             <textarea
               required
@@ -163,9 +163,9 @@ export default function FreelancerApplicationEditorPage() {
             />
           </label>
 
-          <label className="mt-6 block text-sm font-black">
+          <label className="mt-6 block text-sm">
             Risks, questions, or support you may need
-            <span className="ml-2 font-medium text-app-muted">Optional</span>
+            <span className="ml-2 text-app-muted">Optional</span>
             <textarea
               value={supportNeeded}
               onChange={(event) => setSupportNeeded(event.target.value)}
@@ -176,7 +176,7 @@ export default function FreelancerApplicationEditorPage() {
           </label>
 
           {errorMessage && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-xs font-bold text-red-700 rounded-xl flex items-center gap-2">
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-xs text-red-700 rounded-xl flex items-center gap-2">
               <span className="shrink-0 size-1.5 rounded-full bg-red-500 animate-ping" />
               <span>{errorMessage}</span>
             </div>
@@ -188,7 +188,7 @@ export default function FreelancerApplicationEditorPage() {
                 type="button"
                 onClick={saveDraft}
                 disabled={isSubmitting}
-                className="inline-flex min-h-11 items-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-bold hover:bg-app-surface-subtle disabled:opacity-50"
+                className="inline-flex min-h-11 items-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-semibold hover:bg-app-surface-subtle disabled:opacity-50"
               >
                 <Save className="size-4" />
                 Save draft
@@ -200,7 +200,7 @@ export default function FreelancerApplicationEditorPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Submitting..." : "Submit proposal"}
               <ArrowRight className="size-4" />
@@ -209,7 +209,7 @@ export default function FreelancerApplicationEditorPage() {
         </form>
 
         <aside className="h-fit rounded-card border border-app-border bg-app-surface p-5 shadow-card lg:sticky lg:top-24">
-          <div className="flex items-center gap-2 text-sm font-black">
+          <div className="flex items-center gap-2 text-sm">
             <ShieldCheck className="size-4 text-accent-600" />
             Optional writing guide
           </div>

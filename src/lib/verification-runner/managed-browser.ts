@@ -4,7 +4,11 @@ import type { SandboxUser } from "@vercel/sandbox";
 
 import type { VerificationJobManifest } from "@/lib/verification-runner/contracts";
 import { MANAGED_PLAYWRIGHT_HARNESS } from "@/lib/verification-runner/playwright-harness";
-import type { ManagedBrowserTestSpec } from "@/lib/verification-test-spec";
+import {
+  compileManagedBrowserSpecToAtoms,
+  type ManagedBrowserAtomTestSpec,
+  type ManagedBrowserTestSpec,
+} from "@/lib/verification-test-spec";
 
 const PLAYWRIGHT_ROOT = "/vercel/sandbox/linkross-runner";
 const PLAYWRIGHT_MODULE = `${PLAYWRIGHT_ROOT}/node_modules/playwright/index.mjs`;
@@ -64,8 +68,11 @@ export async function runManagedBrowserCriteria(input: {
   if (criteria.length === 0) return [];
 
   const runnable = criteria.filter(
-    (criterion): criterion is typeof criterion & { testSpec: ManagedBrowserTestSpec } =>
-      Boolean(criterion.testSpec),
+    (
+      criterion,
+    ): criterion is typeof criterion & {
+      testSpec: ManagedBrowserTestSpec | ManagedBrowserAtomTestSpec;
+    } => Boolean(criterion.testSpec),
   );
   const missingSpecs = criteria
     .filter((criterion) => !criterion.testSpec)
@@ -111,7 +118,7 @@ export async function runManagedBrowserCriteria(input: {
       content: JSON.stringify(
         runnable.map((criterion) => ({
           criterionId: criterion.id,
-          testSpec: criterion.testSpec,
+          testSpec: compileManagedBrowserSpecToAtoms(criterion.testSpec),
         })),
       ),
       mode: 0o600,

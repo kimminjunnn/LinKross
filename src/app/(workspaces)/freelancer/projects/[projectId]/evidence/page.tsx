@@ -16,7 +16,7 @@ export default async function FreelancerProjectEvidencePage({
     return (
       <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-danger">
         <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
-        <p className="text-sm font-bold">{result.error.message}</p>
+        <p className="text-sm">{result.error.message}</p>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default async function FreelancerProjectEvidencePage({
         <FreelancerInvoicePanel workspace={workspace} />
       ) : (
         <div className="rounded-card border border-dashed border-app-border-strong bg-app-surface-subtle p-10 text-center">
-          <p className="text-sm font-bold text-app-foreground">No milestones are ready for payment yet.</p>
+          <p className="text-sm text-app-foreground">No milestones are ready for payment yet.</p>
           <p className="mt-1.5 text-sm text-app-muted">
             You can submit an invoice after the client reviews the verification results and approves a milestone.
           </p>
@@ -42,7 +42,7 @@ export default async function FreelancerProjectEvidencePage({
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
         <div className="flex items-center gap-2">
           <FileArchive aria-hidden="true" className="size-5 text-brand-600" />
-          <h2 className="text-lg font-black text-app-foreground">Evidence bundles</h2>
+          <h2 className="text-lg font-semibold text-app-foreground">Evidence bundles</h2>
         </div>
         {workspace.evidenceBundles.length === 0 ? (
           <p className="mt-4 rounded-control border border-dashed border-app-border-strong p-4 text-sm text-app-muted">
@@ -53,10 +53,10 @@ export default async function FreelancerProjectEvidencePage({
             {workspace.evidenceBundles.map((bundle) => (
               <article key={bundle.id} className="rounded-control border border-app-border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-black text-app-foreground">
+                  <h3 className="text-sm font-semibold text-app-foreground">
                     Evidence bundle v{bundle.versionNumber}
                   </h3>
-                  <span className="rounded-full bg-app-surface-subtle px-3 py-1 text-xs font-bold text-app-muted">
+                  <span className="rounded-full bg-app-surface-subtle px-3 py-1 text-xs text-app-muted">
                     {bundle.status.replaceAll("_", " ")}
                   </span>
                 </div>

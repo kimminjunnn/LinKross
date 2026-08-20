@@ -15,11 +15,11 @@ export function PageHeader({
     <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="mb-2 text-xs font-bold tracking-[0.12em] text-brand-700 uppercase">
+          <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-brand-700 uppercase">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-3xl font-black tracking-tight text-app-foreground sm:text-4xl">
+        <h1 className="text-3xl font-bold tracking-tight text-app-foreground sm:text-4xl">
           {title}
         </h1>
         {description ? (

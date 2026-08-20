@@ -277,10 +277,10 @@ function SowDraftWorkspace({
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl">
             <Loader2 className="size-14 animate-spin text-brand-500" />
-            <p className="text-xl font-black text-slate-900">
+            <p className="text-xl font-semibold text-slate-900">
               {isGenerating ? "AI 영문 명세서 생성 중..." : "AI 마일스톤 분석 중..."}
             </p>
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-sm text-slate-500">
               {isGenerating ? "완벽한 번역을 위해 문맥을 분석하고 있습니다." : "최적의 일정과 완료 조건을 구성하고 있습니다."}
             </p>
           </div>
@@ -289,11 +289,11 @@ function SowDraftWorkspace({
 
       {isRevisionMode ? (
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-          <p className="text-xs font-bold tracking-[0.1em] text-[#F95803] uppercase">
+          <p className="text-xs font-semibold tracking-[0.1em] text-[#F95803] uppercase">
             SOW Revision
           </p>
-          <h1 className="mt-2 text-2xl font-black text-app-foreground">업무명세서 수정</h1>
-          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-app-muted">
+          <h1 className="mt-2 text-2xl font-bold text-app-foreground">업무명세서 수정</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-app-muted">
             프리랜서 수정 요청을 반영해 기존 업무명세서를 수정하고, 영어 SOW를 다시 생성한 뒤 수정본 승인 요청을 보냅니다.
           </p>
         </section>
@@ -301,7 +301,7 @@ function SowDraftWorkspace({
       {/* 상태 메시지 알림 바 */}
       {statusMessage && (
         <div
-          className={`flex items-center gap-2 rounded-control border p-3.5 text-xs font-bold animate-fade-in ${
+          className={`flex items-center gap-2 rounded-control border p-3.5 text-xs animate-fade-in ${
             isError
               ? "border-red-200 bg-red-50 text-red-800"
               : "border-brand-200 bg-brand-50 text-brand-900"
@@ -324,11 +324,11 @@ function SowDraftWorkspace({
               <MessageSquareText className="size-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold tracking-[0.1em] text-[#F95803] uppercase">
+              <p className="text-xs font-semibold tracking-[0.1em] text-[#F95803] uppercase">
                 Revision Mode
               </p>
-              <h2 className="mt-1 text-lg font-black text-app-foreground">프리랜서 수정 요청</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-app-muted">
+              <h2 className="mt-1 text-lg font-semibold text-app-foreground">프리랜서 수정 요청</h2>
+              <p className="mt-2 text-sm leading-6 text-app-muted">
                 아래 한국어 업무명세서를 수정한 뒤 영어 SOW를 다시 생성하고 수정본 승인 요청을 보내세요.
               </p>
 
@@ -339,16 +339,16 @@ function SowDraftWorkspace({
                       key={request.id}
                       className="rounded-control border border-[#F95803]/20 bg-white p-4"
                     >
-                      <p className="text-xs font-bold text-app-muted">
+                      <p className="text-xs text-app-muted">
                         {request.requesterName ?? "프리랜서"} · {formatRevisionRequestDateTime(request.requestedAt)}
                       </p>
-                      <p className="mt-2 whitespace-pre-wrap text-sm font-bold leading-6 text-app-foreground">
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-app-foreground">
                         {request.reason}
                       </p>
                     </article>
                   ))
                 ) : (
-                  <div className="rounded-control border border-[#F95803]/20 bg-white p-4 text-sm font-bold text-app-muted">
+                  <div className="rounded-control border border-[#F95803]/20 bg-white p-4 text-sm text-app-muted">
                     현재 불러온 수정 요청이 없습니다. 필요한 경우 승인 탭에서 최신 요청 상태를 다시 확인하세요.
                   </div>
                 )}
@@ -394,7 +394,7 @@ function SowDraftWorkspace({
         )}
       </div>
       {isSubmitting ? (
-        <p className="text-xs font-bold text-app-muted">검토 요청을 저장하는 중입니다...</p>
+        <p className="text-xs text-app-muted">검토 요청을 저장하는 중입니다...</p>
       ) : null}
     </div>
   );

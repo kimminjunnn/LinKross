@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   CheckCircle2,
@@ -45,6 +46,14 @@ import type {
 
 type StatusTone = "neutral" | "brand" | "accent" | "success" | "warning" | "danger";
 
+const ACTIVE_RUN_STATUSES: VerificationRunRecord["status"][] = [
+  "queued",
+  "provisioning",
+  "installing",
+  "building",
+  "running",
+];
+
 function ProjectTimeline({
   milestones,
   selectedMilestoneId,
@@ -54,14 +63,25 @@ function ProjectTimeline({
   selectedMilestoneId: string;
   onSelectMilestone: (id: string) => void;
 }) {
+  const approvedCount = milestones.filter(m => m.decision?.decision === "approved").length;
+  const totalCount = milestones.length;
+  const progressPercent = totalCount > 1 
+    ? (approvedCount / (totalCount - 1)) * 100 
+    : 0;
+
   return (
     <div className="mb-6 rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-      <h3 className="text-xs font-bold tracking-[0.1em] text-app-muted uppercase mb-4">
+      <h3 className="text-xs font-semibold tracking-[0.1em] text-app-muted uppercase mb-4">
         프로젝트 마일스톤 진행상황도
       </h3>
       <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-start md:gap-4">
         {/* 연결 선 (가로) - MD 이상에서만 보임 */}
-        <div className="absolute left-6 right-6 top-6 hidden h-0.5 bg-app-border-strong/50 md:block" />
+        <div className="absolute left-6 right-6 top-6 hidden h-0.5 bg-slate-200 md:block">
+          <div 
+            className="h-full bg-success-500 transition-all duration-500" 
+            style={{ width: `${progressPercent}%` }} 
+          />
+        </div>
 
         {milestones.map((milestone) => {
           const isSelected = milestone.id === selectedMilestoneId;
@@ -70,25 +90,23 @@ function ProjectTimeline({
           const isRevisionRequired = milestone.decision?.decision === "revision_required";
           const latestRunStatus = milestone.submissions[0]?.runs[0]?.status;
           const isRunning =
-            latestRunStatus !== undefined &&
-            ["queued", "provisioning", "installing", "building", "running"].includes(
-              latestRunStatus,
-            );
+            latestRunStatus !== undefined && ACTIVE_RUN_STATUSES.includes(latestRunStatus);
 
           let stepBg = "bg-app-surface border-app-border text-app-muted";
-          let icon = <span className="text-xs font-black">{milestone.code}</span>;
+          let icon = <span className="text-xs">{milestone.code}</span>;
 
           if (isApproved) {
-            stepBg = "bg-success-50 border-success-500 text-success-700";
+            stepBg = "bg-success-500 border-success-600 text-white shadow-sm shadow-success-500/25";
             icon = <Check className="size-4 stroke-[3]" />;
           } else if (isRevisionRequired) {
-            stepBg = "bg-warning-50 border-warning-500 text-warning-700";
+            stepBg = "bg-amber-500 border-amber-600 text-white shadow-sm shadow-amber-500/25";
             icon = <RotateCcw className="size-4" />;
           } else if (isRunning) {
-            stepBg = "bg-brand-50 border-brand-500 text-brand-700 animate-pulse";
-            icon = <Play className="size-4 fill-brand-600 text-brand-600" />;
+            stepBg = "bg-brand-500 border-brand-600 text-white animate-pulse shadow-md shadow-brand-500/30";
+            icon = <Play className="size-4 fill-white text-white" />;
           } else if (isSelected) {
-            stepBg = "bg-app-surface border-brand-600 text-brand-700 ring-2 ring-brand-100";
+            stepBg = "bg-app-surface border-brand-500 text-brand-600 ring-4 ring-brand-500/10 shadow-xs";
+            icon = <span className="text-xs font-black">{milestone.code}</span>;
           }
 
           return (
@@ -99,20 +117,20 @@ function ProjectTimeline({
               className="group relative z-10 flex flex-1 cursor-pointer flex-col items-center text-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600"
             >
               {/* 스텝 서클 */}
-              <div className={`grid size-12 place-items-center rounded-pill border-2 transition-all group-hover:scale-105 ${stepBg}`}>
+              <div className={`grid size-12 place-items-center rounded-pill border-2 transition-all duration-300 group-hover:scale-105 ${stepBg}`}>
                 {icon}
               </div>
 
               {/* 정보 텍스트 */}
               <div className="mt-3">
-                <p className={`text-xs font-black transition-colors ${isSelected ? "text-brand-700" : "text-app-foreground group-hover:text-brand-600"}`}>
+                <p className={`text-xs transition-colors ${isSelected ? "text-brand-700" : "text-app-foreground group-hover:text-brand-600"}`}>
                   {milestone.title}
                 </p>
-                <p className="mt-0.5 text-[0.7rem] font-bold text-app-muted">
+                <p className="mt-0.5 text-xs text-app-muted">
                   {milestone.amount.toLocaleString()} {milestone.currency}
                 </p>
                 <div className="mt-1">
-                  <span className={`inline-flex items-center rounded-pill px-1.5 py-0.5 text-[0.6rem] font-black ${
+                  <span className={`inline-flex items-center rounded-pill px-1.5 py-0.5 text-xs font-semibold ${
                     isApproved ? "bg-success-50 text-success-700" :
                     isRevisionRequired ? "bg-warning-50 text-warning-700" :
                     isRunning ? "bg-brand-50 text-brand-700" : "bg-app-surface-subtle text-app-muted"
@@ -136,6 +154,7 @@ export function CompanyVerificationWorkspace({
   initialWorkspace: VerificationWorkspace;
   initialMessage?: string | null;
 }) {
+  const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(false);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState(
     initialWorkspace.milestones[0]?.id ?? "",
@@ -157,6 +176,19 @@ export function CompanyVerificationWorkspace({
     return () => window.clearTimeout(timer);
   }, [initialWorkspace.projectId, initialWorkspace.repository]);
 
+  useEffect(() => {
+    const anyRunInProgress = initialWorkspace.milestones.some((milestone) => {
+      const latestRunStatus = milestone.submissions[0]?.runs[0]?.status;
+      return (
+        latestRunStatus !== undefined && ACTIVE_RUN_STATUSES.includes(latestRunStatus)
+      );
+    });
+    if (!anyRunInProgress) return;
+
+    const interval = window.setInterval(() => router.refresh(), 4000);
+    return () => window.clearInterval(interval);
+  }, [initialWorkspace.milestones, router]);
+
   function handleDismissWelcome() {
     localStorage.setItem(`lk-welcome-dismissed-${initialWorkspace.projectId}`, "true");
     setShowWelcome(false);
@@ -176,7 +208,7 @@ export function CompanyVerificationWorkspace({
   if (!selectedMilestone) {
     return (
       <div className="rounded-card border border-dashed border-app-border-strong bg-app-surface-subtle p-10 text-center">
-        <p className="text-sm font-bold text-app-foreground">표시할 마일스톤이 없습니다.</p>
+        <p className="text-sm text-app-foreground">표시할 마일스톤이 없습니다.</p>
         <p className="mt-1.5 text-sm text-app-muted">
           승인된 SOW에 마일스톤이 추가되면 이 화면에서 검수할 수 있습니다.
         </p>
@@ -197,17 +229,17 @@ export function CompanyVerificationWorkspace({
             <Sparkles className="size-8 text-brand-600 animate-pulse" />
           </span>
           <div className="flex-1">
-            <div className="inline-flex items-center gap-1.5 rounded-pill bg-brand-100/70 px-3 py-1 text-xs font-black text-brand-800 uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-1.5 rounded-pill bg-brand-100/70 px-3 py-1 text-xs font-semibold text-brand-800 uppercase tracking-wider mb-2">
               🎉 Kickoff Ready
             </div>
-            <h2 className="text-2xl font-black text-app-foreground flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-app-foreground flex items-center gap-2">
               최종 업무명세서(SOW {sowVersion}) 확정 완료!
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-app-muted">
               발주자님과 프리랜서님의 상호 합의 하에 최종 SOW가 공식 승인되었습니다.<br />
               이 카드를 클릭하시면 <strong>업무명세서 확인 및 마일스톤 검수 대시보드</strong>로 이동합니다. 먼저 <strong>GitHub 저장소</strong>를 연결해 프로젝트를 시작해 보세요!
             </p>
-            <div className="mt-5 inline-flex items-center gap-2 text-xs font-black text-brand-700 group-hover:translate-x-1.5 transition-transform duration-300">
+            <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-brand-700 group-hover:translate-x-1.5 transition-transform duration-300">
               대시보드로 진입하여 시작하기
               <ArrowRight className="size-4" />
             </div>
@@ -238,7 +270,7 @@ export function CompanyVerificationWorkspace({
       {message && (
         <p
           role="status"
-          className="rounded-control border border-app-border bg-app-surface-subtle p-3 text-sm font-bold text-app-muted"
+          className="rounded-control border border-app-border bg-app-surface-subtle p-3 text-sm text-app-muted"
         >
           {message}
         </p>
@@ -267,10 +299,10 @@ export function CompanyVerificationWorkspace({
                   }`}
                 >
                   <span className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-black">{milestone.code}</span>
+                    <span className="text-sm">{milestone.code}</span>
                     <StatusBadge tone={statusMeta.tone}>{statusMeta.label}</StatusBadge>
                   </span>
-                  <span className="mt-1.5 block truncate text-xs font-bold">{milestone.title}</span>
+                  <span className="mt-1.5 block truncate text-xs">{milestone.title}</span>
                 </button>
               );
             })}
@@ -317,7 +349,7 @@ function RepositorySummary({
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-black tracking-[0.1em] text-brand-700 uppercase">
+              <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
                 Project repository
               </p>
               <StatusBadge tone={repository ? "success" : "neutral"}>
@@ -329,7 +361,7 @@ function RepositorySummary({
                 href={repository.url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex max-w-full items-center gap-2 truncate text-lg font-black text-app-foreground hover:text-brand-700"
+                className="mt-2 inline-flex max-w-full items-center gap-2 truncate text-lg font-semibold text-app-foreground hover:text-brand-700"
               >
                 {repository.owner}/{repository.name}
                 <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
@@ -337,10 +369,10 @@ function RepositorySummary({
             ) : (
               <>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="inline-flex items-center rounded-pill bg-brand-100 px-2 py-0.5 text-[0.65rem] font-black text-brand-700">
+                  <span className="inline-flex items-center rounded-pill bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
                     Step 1
                   </span>
-                  <h2 className="truncate text-lg font-black text-app-foreground">저장소 연결하기</h2>
+                  <h2 className="truncate text-lg font-semibold text-app-foreground">저장소 연결하기</h2>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-app-muted">
                   프리랜서가 제출할 PR과 Commit SHA를 안전한 가상 환경에서 빌드·검수하기 위해 <strong>GitHub 저장소 링크</strong>를 연결해 주세요.
@@ -352,7 +384,7 @@ function RepositorySummary({
         <button
           type="button"
           disabled
-          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm font-bold text-app-foreground opacity-60"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm font-semibold text-app-foreground opacity-60"
         >
           <Settings2 aria-hidden="true" className="size-4" />
           연결 관리
@@ -362,18 +394,51 @@ function RepositorySummary({
       <dl className="mt-5 grid gap-3 border-t border-app-border pt-4 sm:grid-cols-3">
         <RepositoryField
           label="기본 브랜치"
-          value={repository?.defaultBranch ?? "-"}
-          icon={<GitBranch className="size-4" />}
+          value={
+            repository?.defaultBranch ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-slate-800">
+                {repository.defaultBranch}
+              </span>
+            ) : (
+              "-"
+            )
+          }
+          icon={<GitBranch className="size-3.5 text-slate-400" />}
         />
         <RepositoryField
           label="권한"
-          value={repository?.isPrivate ? "비공개" : "읽기 전용"}
-          icon={<ShieldCheck className="size-4" />}
+          value={
+            repository ? (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+                repository.isPrivate 
+                  ? "bg-amber-50 text-amber-700 border border-amber-250/20" 
+                  : "bg-slate-50 text-slate-600 border border-slate-200/50"
+              }`}>
+                {repository.isPrivate ? "비공개" : "읽기 전용"}
+              </span>
+            ) : (
+              "-"
+            )
+          }
+          icon={<ShieldCheck className="size-3.5 text-slate-400" />}
         />
         <RepositoryField
           label="연결 확인"
-          value={repository?.companyConfirmedAt ? "발주자 확인 완료" : "아직 없음"}
-          icon={<UserRound className="size-4" />}
+          value={
+            repository ? (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+                repository.companyConfirmedAt 
+                  ? "bg-green-50 text-green-700 border border-green-200" 
+                  : "bg-slate-50 text-slate-500 border border-slate-200/50"
+              }`}>
+                <span className={`size-1.5 rounded-full ${repository.companyConfirmedAt ? "bg-green-500" : "bg-slate-450"}`} />
+                {repository.companyConfirmedAt ? "발주자 확인 완료" : "확인 대기"}
+              </span>
+            ) : (
+              "-"
+            )
+          }
+          icon={<UserRound className="size-3.5 text-slate-400" />}
         />
       </dl>
 
@@ -381,17 +446,17 @@ function RepositorySummary({
         <div className="mt-5 space-y-3 border-t border-app-border pt-4">
           <div className="flex flex-col gap-3 rounded-control border border-brand-200 bg-brand-50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-black text-app-foreground">1. GitHub App 설치</p>
+              <p className="text-sm text-app-foreground">1. GitHub App 설치</p>
               <p className="mt-1 text-xs leading-5 text-app-muted">
                 검수할 저장소만 선택하고 Contents와 Pull requests 읽기 권한을 허용합니다.
               </p>
             </div>
             <a
               href={`/api/github/app/install?projectId=${encodeURIComponent(projectId)}`}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-black text-white"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white transition-colors hover:opacity-90 cursor-pointer"
             >
-              <LockKeyhole aria-hidden="true" className="size-4" />
-              GitHub App 설치
+              <LockKeyhole aria-hidden="true" className="size-3.5 !text-white" />
+              <span className="!text-white">GitHub App 설치</span>
             </a>
           </div>
 
@@ -406,7 +471,7 @@ function RepositorySummary({
             />
             <button
               disabled={pending}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-black text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
             >
               {pending && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
               2. 저장소 확인 및 연결
@@ -414,10 +479,10 @@ function RepositorySummary({
           </form>
 
           <div className="rounded-control border border-app-border bg-app-surface-subtle p-4">
-            <h4 className="text-xs font-black text-app-foreground flex items-center gap-1.5">
+            <h4 className="text-xs font-semibold text-app-foreground flex items-center gap-1.5">
               💡 비개발자 PO님을 위한 팁
             </h4>
-            <p className="mt-1 text-[11px] leading-relaxed text-app-muted font-medium">
+            <p className="mt-1 text-xs leading-relaxed text-app-muted">
               GitHub 저장소는 결과물 코드를 보관하고 검수할 대상을 정하는 공간입니다. 위에서
               GitHub App을 설치한 뒤, 설치 대상으로 선택한 저장소 주소를 입력해 주세요.
             </p>
@@ -439,12 +504,12 @@ function VerificationSummary({ milestone }: { milestone: VerificationMilestoneRe
   return (
     <article className="rounded-card border border-brand-200 bg-brand-50 p-5 shadow-card sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold tracking-[0.1em] text-brand-700 uppercase">
+        <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
           Verification summary
         </p>
         <TestTube2 aria-hidden="true" className="size-5 text-brand-700" />
       </div>
-      <h2 className="mt-3 text-xl font-black text-app-foreground">
+      <h2 className="mt-3 text-xl font-semibold text-app-foreground">
         {milestone.code} {statusMeta.label}
       </h2>
       <div className="mt-5 grid grid-cols-3 gap-2 text-center">
@@ -452,22 +517,25 @@ function VerificationSummary({ milestone }: { milestone: VerificationMilestoneRe
           label="완료조건"
           value={String(milestone.checklist.length)}
           tone="text-app-foreground"
+          icon={<Clock className="size-7 stroke-[1]" />}
         />
         <SummaryMetric
           label="제출"
           value={String(submittedCount)}
-          tone={submittedCount ? "text-brand-700" : "text-app-muted"}
+          tone={submittedCount ? "text-brand-600" : "text-app-muted"}
+          icon={<ExternalLink className="size-7 stroke-[1]" />}
         />
         <SummaryMetric
           label="검수"
           value={String(verifiedCount)}
-          tone={verifiedCount ? "text-accent-800" : "text-app-muted"}
+          tone={verifiedCount ? "text-accent-600" : "text-app-muted"}
+          icon={<ShieldCheck className="size-7 stroke-[1]" />}
         />
       </div>
-      <p className="mt-4 text-xs font-semibold leading-5 text-brand-700">
+      <p className="mt-4 text-xs leading-5 text-brand-700">
         {latestSubmission
           ? `PR #${latestSubmission.pullRequestNumber}의 Commit SHA를 기준으로 결과를 확인합니다.`
-          : "PR이 제출되면 최신 전체 Commit SHA를 고정하고 검수 실행을 대기열에 등록합니다."}
+          : "PR이 제출되면 최신 전체 Commit SHA를 고정하고 검수 실행을 바로 시작합니다."}
       </p>
     </article>
   );
@@ -506,7 +574,11 @@ function MilestoneDetail({
         submissionId: latestSubmission.id,
         scope: "milestone",
       });
-      setMessage(result.ok ? "검수 실행 요청을 대기열에 저장했습니다." : result.error.message);
+      setMessage(
+        result.ok
+          ? "격리 환경에서 검수를 시작했습니다. 잠시 후 진행 상태가 자동으로 갱신됩니다."
+          : result.error.message,
+      );
     });
   }
 
@@ -533,11 +605,7 @@ function MilestoneDetail({
     });
   }
 
-  const runInProgress = latestRun
-    ? ["queued", "provisioning", "installing", "building", "running"].includes(
-        latestRun.status,
-      )
-    : false;
+  const runInProgress = latestRun ? ACTIVE_RUN_STATUSES.includes(latestRun.status) : false;
 
   return (
     <section className="bg-app-surface">
@@ -554,7 +622,7 @@ function MilestoneDetail({
           <div className={`rounded-card border p-5 ${latestSubmission ? "border-brand-200 bg-brand-50/20" : "border-dashed border-app-border-strong bg-app-surface-subtle"}`}>
             <div className="flex items-center gap-2 text-brand-700">
               <Link2 aria-hidden="true" className="size-5" />
-              <h3 className="text-sm font-black">프리랜서 작업 제출 현황</h3>
+              <h3 className="text-sm font-semibold">프리랜서 작업 제출 현황</h3>
             </div>
             
             {latestSubmission ? (
@@ -564,7 +632,7 @@ function MilestoneDetail({
                     href={latestSubmission.pullRequestUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 font-black text-brand-700 hover:underline text-sm"
+                    className="inline-flex items-center gap-2 font-semibold text-brand-700 hover:underline text-sm"
                   >
                     PR #{latestSubmission.pullRequestNumber} · {latestSubmission.pullRequestTitle}
                     <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
@@ -573,16 +641,16 @@ function MilestoneDetail({
 
                 <dl className="grid grid-cols-2 gap-3 border-t border-brand-100 pt-3 text-xs">
                   <div>
-                    <dt className="font-semibold text-app-muted">고정된 Commit SHA</dt>
-                    <dd className="mt-1 break-all font-mono font-bold text-app-foreground">
+                    <dt className="text-app-muted">고정된 Commit SHA</dt>
+                    <dd className="mt-1 break-all font-mono text-app-foreground">
                       {shortSha(latestSubmission.headCommitSha)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-semibold text-app-muted">브랜치 / 제출 시각</dt>
-                    <dd className="mt-1 font-bold text-app-foreground">
+                    <dt className="text-app-muted">브랜치 / 제출 시각</dt>
+                    <dd className="mt-1 text-app-foreground">
                       {latestSubmission.headBranch} <br />
-                      <span className="text-[10px] text-app-muted font-medium">
+                      <span className="text-xs text-app-muted">
                         {new Date(latestSubmission.submittedAt).toLocaleString("ko-KR")}
                       </span>
                     </dd>
@@ -591,7 +659,7 @@ function MilestoneDetail({
 
                 {latestSubmission.implementationNote && (
                   <div className="border-t border-brand-100 pt-3">
-                    <p className="text-xs font-semibold text-app-muted mb-1.5">프리랜서 구현 코멘트</p>
+                    <p className="text-xs text-app-muted mb-1.5">프리랜서 구현 코멘트</p>
                     <blockquote className="rounded-control bg-app-surface p-3 border border-app-border text-xs leading-relaxed text-app-foreground">
                       {latestSubmission.implementationNote}
                     </blockquote>
@@ -601,7 +669,7 @@ function MilestoneDetail({
             ) : (
               <div className="mt-6 text-center py-4">
                 <Clock className="size-8 mx-auto text-app-muted/60 animate-pulse" />
-                <p className="mt-3 text-xs font-bold text-app-foreground">프리랜서가 작업을 진행 중입니다</p>
+                <p className="mt-3 text-xs text-app-foreground">프리랜서가 작업을 진행 중입니다</p>
                 <p className="mt-1 text-xs text-app-muted">
                   개발자가 PR을 제출하고 검수를 요청하면 이곳에 제출 상태와 구현 의견이 자동으로 업데이트됩니다.
                 </p>
@@ -613,8 +681,8 @@ function MilestoneDetail({
           <div className="rounded-card border border-app-border bg-app-surface-subtle p-5">
             <div className="flex items-center justify-between gap-3 pb-3 border-b border-app-border">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black text-app-foreground">SOW 완료조건</h3>
-                <span className="text-xs font-black text-app-muted bg-app-surface border border-app-border px-1.5 py-0.5 rounded-pill">
+                <h3 className="text-sm font-semibold text-app-foreground">SOW 완료조건</h3>
+                <span className="text-xs text-app-muted bg-app-surface border border-app-border px-1.5 py-0.5 rounded-pill">
                   {latestSubmission?.claimedCriterionIds.length ?? 0}/{milestone.checklist.length} 제출
                 </span>
               </div>
@@ -622,7 +690,7 @@ function MilestoneDetail({
                 href={`/company/projects/${projectId}/sow`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-black text-brand-700 hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
               >
                 SOW 원본 보기
                 <ExternalLink aria-hidden="true" className="size-3" />
@@ -646,30 +714,30 @@ function MilestoneDetail({
                       key={criterion.id}
                       className="flex items-start gap-3 rounded-control border border-app-border bg-app-surface p-3"
                     >
-                      <span className="grid size-6 shrink-0 place-items-center rounded-pill border border-app-border text-[0.65rem] font-black text-app-muted">
+                      <span className="grid size-6 shrink-0 place-items-center rounded-pill border border-app-border text-xs text-app-muted">
                         {index + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-black leading-relaxed text-app-foreground">
+                        <p className="text-xs leading-relaxed text-app-foreground">
                           {criterion.description}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-app-muted font-medium">
+                        <p className="mt-0.5 text-xs text-app-muted">
                           방법: {criterion.verificationMethod}
                         </p>
                         {criterion.manualGuidance && (
-                          <div className="mt-1.5 space-y-0.5 text-[10px] leading-relaxed text-app-muted bg-app-surface-subtle p-1.5 rounded border border-app-border-strong/50">
-                            <p><span className="font-black text-app-foreground">확인 위치</span> · {criterion.manualGuidance.location}</p>
-                            <p><span className="font-black text-app-foreground">확인 방법</span> · {criterion.manualGuidance.method}</p>
-                            <p><span className="font-black text-app-foreground">기대 결과</span> · {criterion.manualGuidance.expected}</p>
+                          <div className="mt-1.5 space-y-0.5 text-xs leading-relaxed text-app-muted bg-app-surface-subtle p-1.5 rounded border border-app-border-strong/50">
+                            <p><span className="text-app-foreground">확인 위치</span> · {criterion.manualGuidance.location}</p>
+                            <p><span className="text-app-foreground">확인 방법</span> · {criterion.manualGuidance.method}</p>
+                            <p><span className="text-app-foreground">기대 결과</span> · {criterion.manualGuidance.expected}</p>
                           </div>
                         )}
                         {result?.observedResult && (
-                          <p className="mt-1.5 text-[10px] leading-relaxed text-app-muted bg-app-surface-subtle p-1.5 rounded border border-app-border-strong/50 font-mono">
+                          <p className="mt-1.5 text-xs leading-relaxed text-app-muted bg-app-surface-subtle p-1.5 rounded border border-app-border-strong/50 font-mono">
                             {result.observedResult}
                           </p>
                         )}
                         {result?.errorMessage && (
-                          <p className="mt-2 text-xs font-semibold leading-5 text-red-700">
+                          <p className="mt-2 text-xs leading-5 text-red-700">
                             {result.errorMessage}
                           </p>
                         )}
@@ -682,7 +750,7 @@ function MilestoneDetail({
                                   href={artifact.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-1 rounded-pill border border-app-border px-2.5 py-1 text-xs font-bold text-brand-700 hover:border-brand-300 hover:bg-brand-50"
+                                  className="inline-flex items-center gap-1 rounded-pill border border-app-border px-2.5 py-1 text-xs font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-50"
                                 >
                                   {evidenceLabel(artifact.type)}
                                   <ExternalLink aria-hidden="true" className="size-3" />
@@ -713,19 +781,19 @@ function MilestoneDetail({
             {latestSubmission
               ? `Commit ${shortSha(latestSubmission.headCommitSha)} 기준으로 마일스톤 전체를 검수합니다.`
               : repositoryConnected
-                ? "프리랜서가 PR을 제출하면 마일스톤 전체 검수가 자동으로 대기열에 등록됩니다."
+                ? "프리랜서가 PR을 제출하면 마일스톤 전체 검수가 격리 환경에서 자동으로 시작됩니다."
                 : "저장소가 아직 연결되지 않아 PR과 Commit SHA를 제출할 수 없습니다."}
           </div>
           <button
             type="button"
             disabled={disabled || !latestSubmission || runInProgress}
             onClick={requestRun}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-black text-white disabled:border disabled:border-app-border disabled:bg-app-surface disabled:text-app-muted disabled:opacity-60 cursor-pointer"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white disabled:border disabled:border-app-border disabled:bg-app-surface disabled:text-app-muted disabled:opacity-60 cursor-pointer"
           >
-            {disabled && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-            {!disabled && <Play aria-hidden="true" className="size-4" />}
+            {(disabled || runInProgress) && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
+            {!disabled && !runInProgress && <Play aria-hidden="true" className="size-4" />}
             {runInProgress
-              ? "Runner 연결 대기"
+              ? "검수 진행 중"
               : latestRun
                 ? "마일스톤 재검수"
                 : "검수 요청 복구"}
@@ -736,7 +804,7 @@ function MilestoneDetail({
           <div className="mt-5 space-y-5 border-t border-app-border pt-5">
             {latestSubmission.runs.length > 0 && (
               <section aria-label="검수 실행 결과" className="space-y-3">
-                <h3 className="text-sm font-black text-app-foreground">검수 실행 결과</h3>
+                <h3 className="text-sm font-semibold text-app-foreground">검수 실행 결과</h3>
                 {latestSubmission.runs.map((verificationRun) => (
                   <RunResult key={verificationRun.id} run={verificationRun} />
                 ))}
@@ -750,11 +818,11 @@ function MilestoneDetail({
                   <CreditCard className="size-4" />
                 </span>
                 <div className="text-xs">
-                  <h4 className="font-black text-accent-950">대금 정산 및 지급 예정 안내</h4>
-                  <p className="mt-1 text-app-muted leading-relaxed font-semibold">
+                  <h4 className="font-semibold text-accent-950">대금 정산 및 지급 예정 안내</h4>
+                  <p className="mt-1 text-app-muted leading-relaxed">
                     이 마일스톤의 최종 승인 예정 금액은 <strong>{milestone.amount.toLocaleString()} {milestone.currency}</strong> 입니다.
                   </p>
-                  <div className="mt-2.5 flex flex-wrap items-center gap-2 font-bold text-[10px]">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
                     <span className="rounded bg-app-surface border border-app-border px-1.5 py-0.5 text-app-muted">
                       1. 마일스톤 검수 완료
                     </span>
@@ -784,7 +852,7 @@ function MilestoneDetail({
                 name="decision"
                 value="revision_required"
                 disabled={disabled}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-black text-app-foreground disabled:opacity-50 cursor-pointer hover:bg-app-surface transition-colors"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-semibold text-app-foreground disabled:opacity-50 cursor-pointer hover:bg-app-surface transition-colors"
               >
                 <RotateCcw aria-hidden="true" className="size-4" />
                 수정 요청
@@ -797,7 +865,7 @@ function MilestoneDetail({
                   !latestRun ||
                   !["passed", "needs_review"].includes(latestRun.status)
                 }
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-accent-600 px-4 text-sm font-black text-white disabled:opacity-50 cursor-pointer hover:bg-accent-700 transition-colors"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-accent-600 px-4 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer hover:bg-accent-700 transition-colors"
               >
                 <CheckCircle2 aria-hidden="true" className="size-4" />
                 최종 승인
@@ -825,14 +893,14 @@ function MilestoneHeader({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-black text-brand-700">{milestone.code}</span>
+          <span className="text-sm text-brand-700">{milestone.code}</span>
           <StatusBadge tone={statusTone}>{statusLabel}</StatusBadge>
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-app-muted">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-app-muted">
             <LockKeyhole aria-hidden="true" className="size-3.5" />
             SOW {sowVersion} 승인 기준
           </span>
         </div>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-app-foreground">
+        <h2 className="mt-2 text-2xl font-bold tracking-tight text-app-foreground">
           {milestone.title}
         </h2>
         <p className="mt-2 text-sm leading-6 text-app-muted">
@@ -842,14 +910,14 @@ function MilestoneHeader({
       </div>
       <dl className="grid min-w-72 grid-cols-2 gap-4 rounded-control border border-app-border bg-app-surface-subtle p-4 text-xs">
         <div>
-          <dt className="font-semibold text-app-muted">기간</dt>
-          <dd className="mt-1 font-black text-app-foreground">
+          <dt className="text-app-muted">기간</dt>
+          <dd className="mt-1 text-app-foreground">
             {milestone.startDate} ~ {milestone.endDate}
           </dd>
         </div>
         <div>
-          <dt className="font-semibold text-app-muted">승인 예정 금액</dt>
-          <dd className="mt-1 font-black text-app-foreground">
+          <dt className="text-app-muted">승인 예정 금액</dt>
+          <dd className="mt-1 text-app-foreground">
             {milestone.amount.toLocaleString()} {milestone.currency}
           </dd>
         </div>
@@ -864,12 +932,12 @@ function RunResult({ run }: { run: VerificationRunRecord }) {
   return (
     <div className="rounded-control border border-app-border bg-app-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-black text-app-foreground">검수 #{run.attemptNumber}</p>
+        <p className="text-sm text-app-foreground">검수 #{run.attemptNumber}</p>
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
       </div>
-      {run.status === "queued" && (
+      {ACTIVE_RUN_STATUSES.includes(run.status) && (
         <p className="mt-2 text-sm text-app-muted">
-          요청은 저장됐습니다. 격리 Runner가 이 실행을 가져가야 실제 결과가 생성됩니다.
+          격리 환경에서 검수가 진행 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다.
         </p>
       )}
       {run.errorSummary && <p className="mt-2 text-sm text-red-700">{run.errorSummary}</p>}
@@ -878,7 +946,7 @@ function RunResult({ run }: { run: VerificationRunRecord }) {
           href={run.previewUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-brand-700 hover:underline"
+          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
         >
           Preview 열기
           <ExternalLink aria-hidden="true" className="size-3.5" />
@@ -904,12 +972,7 @@ function resolveMilestoneStatus(milestone: VerificationMilestoneRecord): {
   }
 
   const latestRun = latestSubmission?.runs[0];
-  if (
-    latestRun &&
-    ["queued", "provisioning", "installing", "building", "running"].includes(
-      latestRun.status,
-    )
-  ) {
+  if (latestRun && ACTIVE_RUN_STATUSES.includes(latestRun.status)) {
     return milestoneVerificationStatusConfig.verification_running;
   }
   if (milestone.submissions.length > 0) {
@@ -959,16 +1022,16 @@ function RepositoryField({
   icon,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   icon: React.ReactNode;
 }) {
   return (
     <div>
-      <dt className="flex items-center gap-1.5 text-xs font-semibold text-app-muted">
+      <dt className="flex items-center gap-1.5 text-xs text-app-muted">
         {icon}
         {label}
       </dt>
-      <dd className="mt-1.5 text-sm font-black text-app-foreground">{value}</dd>
+      <dd className="mt-1.5 text-sm text-app-foreground">{value}</dd>
     </div>
   );
 }
@@ -977,15 +1040,22 @@ function SummaryMetric({
   label,
   value,
   tone,
+  icon,
 }: {
   label: string;
   value: string;
   tone: string;
+  icon?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-control border border-brand-200 bg-app-surface/80 px-2 py-3">
-      <p className={`text-2xl font-black ${tone}`}>{value}</p>
-      <p className="mt-1 text-[0.7rem] font-bold text-app-muted">{label}</p>
+    <div className="relative overflow-hidden rounded-control border border-brand-200 bg-app-surface/80 px-2 py-3">
+      {icon && (
+        <span aria-hidden="true" className="absolute right-2 top-2 text-app-border-strong">
+          {icon}
+        </span>
+      )}
+      <p className={`text-2xl font-bold ${tone}`}>{value}</p>
+      <p className="mt-1 text-xs text-app-muted">{label}</p>
     </div>
   );
 }

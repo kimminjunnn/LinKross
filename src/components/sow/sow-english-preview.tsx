@@ -77,7 +77,7 @@ export function SowEnglishPreview({
         <div className="rounded-full bg-brand-50 p-4 text-brand-500">
           <BookOpen className="size-8" />
         </div>
-        <h3 className="mt-4 text-base font-bold text-app-foreground">영문 업무 명세서 (AI 생성 대기)</h3>
+        <h3 className="mt-4 text-base font-semibold text-app-foreground">영문 업무 명세서 (AI 생성 대기)</h3>
         <p className="mt-2 max-w-md text-xs leading-5 text-app-muted">
           좌측 Form에서 한국어 업무 상세와 마일스톤 DoD를 작성하신 후<br />
           <strong className="text-app-foreground">[AI 영문 명세 생성 (변환)]</strong> 버튼을 누르면 RAG 엔진이 표준 영문 SOW를 자동으로 생성합니다.
@@ -113,8 +113,8 @@ export function SowEnglishPreview({
       <div className="flex items-start justify-between gap-4 border-b border-app-border pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-black text-app-foreground">영어 업무 명세서 (AI 생성)</h2>
-            <span className="rounded-pill bg-app-foreground px-2.5 py-0.5 text-xs font-bold text-white">
+            <h2 className="text-lg font-semibold text-app-foreground">영어 업무 명세서 (AI 생성)</h2>
+            <span className="rounded-pill bg-app-foreground px-2.5 py-0.5 text-xs font-semibold text-white">
               v{sow.version}
             </span>
           </div>
@@ -126,7 +126,7 @@ export function SowEnglishPreview({
           <button
             type="button"
             onClick={onToggleExpand}
-            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors no-print"
+            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors no-print"
           >
             {isExpanded ? (
               <><Minimize2 className="size-3.5" /> 반으로 접기</>
@@ -140,14 +140,14 @@ export function SowEnglishPreview({
       {/* RAG 추출 전문 용어 태그 */}
       {sow.retrievedTerms && sow.retrievedTerms.length > 0 && (
         <div className="mt-4 rounded-control border border-brand-200 bg-brand-50/60 p-3">
-          <p className="text-[0.7rem] font-bold text-brand-800 uppercase tracking-wide">
+          <p className="text-xs font-semibold text-brand-800 uppercase tracking-wide">
             🔍 RAG 검색으로 정밀 매핑된 표준 용어 ({sow.retrievedTerms.length}건)
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {sow.retrievedTerms.map((term, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 rounded bg-white px-2 py-0.5 text-[0.75rem] font-semibold text-brand-900 shadow-xs border border-brand-200"
+                className="inline-flex items-center gap-1 rounded bg-white px-2 py-0.5 text-xs font-semibold text-brand-900 shadow-xs border border-brand-200"
               >
                 <span>{term?.kr}</span> ➔ <strong className="text-brand-700">{term?.en}</strong>
               </span>
@@ -170,8 +170,8 @@ export function SowEnglishPreview({
       >
         {/* Template Header */}
         <div className="border-b-2 border-app-foreground pb-4 mb-4">
-          <h1 className="text-xl font-black text-app-foreground uppercase mb-4 text-center">STATEMENT OF WORK (SOW)</h1>
-          <ul className="space-y-1.5 text-sm font-semibold text-app-foreground">
+          <h1 className="text-xl font-semibold text-app-foreground uppercase mb-4 text-center">STATEMENT OF WORK (SOW)</h1>
+          <ul className="space-y-1.5 text-sm text-app-foreground">
             <li><strong>Project Name:</strong> {sow.header?.projectName}</li>
             <li className="border-t border-app-border pt-1"><strong>Client:</strong> {sow.header?.client}</li>
             <li className="border-t border-app-border pt-1"><strong>Vendor/Provider:</strong> {sow.header?.vendor}</li>
@@ -181,7 +181,7 @@ export function SowEnglishPreview({
 
         {/* 1. Project Overview & Objectives */}
         <div>
-          <h3 className="text-base font-black text-app-foreground border-b border-app-border pb-1">1. Project Overview & Objectives</h3>
+          <h3 className="text-base font-semibold text-app-foreground border-b border-app-border pb-1">1. Project Overview & Objectives</h3>
           <ul className="mt-2 space-y-1 text-sm text-app-foreground/90 list-disc pl-5">
             <li><strong>Background:</strong> {sow.overview?.background}</li>
             <li><strong>Objective:</strong> {sow.overview?.objective}</li>
@@ -190,9 +190,9 @@ export function SowEnglishPreview({
 
         {/* 2. Scope of Work */}
         <div>
-          <h3 className="text-base font-black text-app-foreground border-b border-app-border pb-1">2. Scope of Work</h3>
+          <h3 className="text-base font-semibold text-app-foreground border-b border-app-border pb-1">2. Scope of Work</h3>
           <div className="mt-2">
-            <h4 className="text-sm font-bold text-app-foreground">2.1 In-Scope (Included)</h4>
+            <h4 className="text-sm font-semibold text-app-foreground">2.1 In-Scope (Included)</h4>
             <ul className="mt-1 space-y-1 text-sm text-app-foreground/90 list-disc pl-5">
               {sow.scopeOfWork?.inScope?.map((item, i) => (
                 <li key={i}>{item}</li>
@@ -201,7 +201,7 @@ export function SowEnglishPreview({
           </div>
           {sow.scopeOfWork?.outOfScope && sow.scopeOfWork.outOfScope.length > 0 && (
             <div className="mt-3">
-              <h4 className="text-sm font-bold text-app-foreground">2.2 Out-of-Scope (Excluded)</h4>
+              <h4 className="text-sm font-semibold text-app-foreground">2.2 Out-of-Scope (Excluded)</h4>
               <ul className="mt-1 space-y-1 text-sm text-app-foreground/90 list-disc pl-5">
                 {sow.scopeOfWork?.outOfScope?.map((item, i) => (
                   <li key={i}>{item}</li>
@@ -213,20 +213,20 @@ export function SowEnglishPreview({
 
         {/* 3. Milestones */}
         <div>
-          <h3 className="text-base font-black text-app-foreground border-b border-app-border pb-1">3. Milestones</h3>
+          <h3 className="text-base font-semibold text-app-foreground border-b border-app-border pb-1">3. Milestones</h3>
           <div className="mt-3 space-y-3">
             {sow.timelineAndMilestones?.map((m, i) => (
               <div key={i} className="rounded border border-app-border bg-app-surface p-3 print:border-app-foreground">
-                <div className="flex items-start justify-between text-sm font-bold text-app-foreground gap-4">
+                <div className="flex items-start justify-between text-sm text-app-foreground gap-4">
                   <span className="pt-0.5">{m?.code}. {m?.titleEn}</span>
                   <div className="flex flex-col items-end gap-0.5 shrink-0 text-right">
-                    <span className="text-[0.75rem] font-semibold text-app-muted print:text-app-foreground">{m?.period}</span>
+                    <span className="text-xs text-app-muted print:text-app-foreground">{m?.period}</span>
                     <span className="text-brand-700 print:text-app-foreground">{m?.amount}</span>
                   </div>
                 </div>
                 {m?.dodsEn && m.dodsEn.length > 0 && (
                   <div className="mt-2 border-t border-app-border/40 pt-2">
-                    <span className="text-xs font-bold text-app-muted uppercase">DoD Criteria:</span>
+                    <span className="text-xs font-semibold text-app-muted uppercase">DoD Criteria:</span>
                     <ul className="mt-1 space-y-1 text-xs text-app-foreground/90 list-disc pl-4">
                       {m.dodsEn.map((d, dIdx) => (
                         <li key={dIdx}>{d}</li>
@@ -241,7 +241,7 @@ export function SowEnglishPreview({
 
         {/* 4. Acceptance Criteria & Definition of Done (DoD) */}
         <div>
-          <h3 className="text-base font-black text-app-foreground border-b border-app-border pb-1">4. Acceptance Criteria & Definition of Done (DoD)</h3>
+          <h3 className="text-base font-semibold text-app-foreground border-b border-app-border pb-1">4. Acceptance Criteria & Definition of Done (DoD)</h3>
           <ul className="mt-2 space-y-2 text-sm text-app-foreground/90 list-disc pl-5">
             <li>
               <strong>Acceptance Criteria:</strong>
@@ -264,7 +264,7 @@ export function SowEnglishPreview({
 
         {/* 5. Roles & Responsibilities */}
         <div>
-          <h3 className="text-base font-black text-app-foreground border-b border-app-border pb-1">5. Roles & Responsibilities (RACI Matrix)</h3>
+          <h3 className="text-base font-semibold text-app-foreground border-b border-app-border pb-1">5. Roles & Responsibilities (RACI Matrix)</h3>
           <ul className="mt-2 space-y-1 text-sm text-app-foreground/90 list-disc pl-5">
             <li><strong>Client Responsibilities:</strong> {sow.rolesAndResponsibilities?.client}</li>
             <li><strong>Vendor Responsibilities:</strong> {sow.rolesAndResponsibilities?.vendor}</li>
@@ -273,7 +273,7 @@ export function SowEnglishPreview({
 
         {/* Signatures */}
         <div className="mt-8 border-t-2 border-app-border pt-4">
-          <h4 className="text-sm font-bold mb-6">Signatures:</h4>
+          <h4 className="text-sm font-semibold mb-6">Signatures:</h4>
           <div className="flex justify-between gap-8 text-sm">
             <div>
               <p className="mb-8">Client Representative: <span className="inline-block w-40 border-b border-app-foreground"></span></p>
@@ -292,7 +292,7 @@ export function SowEnglishPreview({
         <button
           type="button"
           onClick={() => setShowOriginalContrast(!showOriginalContrast)}
-          className="flex items-center gap-1 text-xs font-bold text-app-foreground hover:underline"
+          className="flex items-center gap-1 text-xs text-app-foreground hover:underline"
         >
           <span>영문 템플릿에 부합하지 않는 내용</span>
           {showOriginalContrast ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -300,7 +300,7 @@ export function SowEnglishPreview({
 
         {showOriginalContrast && (
           <div className="mt-2 rounded-control border border-app-border bg-app-surface-subtle p-3 text-xs text-app-muted">
-            <p className="font-semibold text-app-foreground">⚠️ 영문 템플릿에 매핑되지 않은 원문 요청사항:</p>
+            <p className="text-app-foreground">⚠️ 영문 템플릿에 매핑되지 않은 원문 요청사항:</p>
             {sow.unmappedContent && sow.unmappedContent.length > 0 ? (
               <ul className="mt-2 list-inside list-disc space-y-1">
                 {sow.unmappedContent.map((content: string, idx: number) => (
@@ -319,7 +319,7 @@ export function SowEnglishPreview({
         <button
           type="button"
           onClick={() => setIsEditingSection(!isEditingSection)}
-          className={`flex min-h-9 items-center gap-1.5 rounded-control border px-3 text-xs font-bold transition-colors ${
+          className={`flex min-h-9 items-center gap-1.5 rounded-control border px-3 text-xs transition-colors ${
             isEditingSection 
               ? "border-brand-500 bg-brand-50 text-brand-700" 
               : "border-app-border text-app-foreground hover:bg-app-surface-subtle"
@@ -332,7 +332,7 @@ export function SowEnglishPreview({
 
       {/* 한국인 PM 검토 완료 및 최종 승인 하단부 */}
       <div className="mt-6 border-t border-app-border pt-5 no-print">
-        <label htmlFor="pm-verify-checkbox" className="flex items-center gap-2 text-xs font-bold text-app-foreground cursor-pointer">
+        <label htmlFor="pm-verify-checkbox" className="flex items-center gap-2 text-xs text-app-foreground cursor-pointer">
           <input
             id="pm-verify-checkbox"
             type="checkbox"
@@ -342,7 +342,7 @@ export function SowEnglishPreview({
           />
           <span>한국인 PM 검토 완료</span>
         </label>
-        <p className="mt-1.5 flex items-center gap-1 text-[0.75rem] text-app-muted">
+        <p className="mt-1.5 flex items-center gap-1 text-xs text-app-muted">
           <Check className="size-3.5 text-success" />
           검토 완료 체크 후 승인 요청 버튼이 활성화됩니다.
         </p>
@@ -352,7 +352,7 @@ export function SowEnglishPreview({
             type="button"
             disabled={!isPmVerified || isSubmitting}
             onClick={handleRequestApprovalClick}
-            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
@@ -370,13 +370,13 @@ export function SowEnglishPreview({
           <button
             type="button"
             onClick={handleDownloadPdf}
-            className="flex min-h-11 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle"
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm text-app-foreground hover:bg-app-surface-subtle"
           >
             <Download className="size-4" />
             PDF로 인쇄 / 저장
           </button>
         </div>
-        <p className="mt-2 text-[0.7rem] text-app-muted">
+        <p className="mt-2 text-xs text-app-muted">
           승인 요청 시 PDF 저장 없이 같은 SOW 원본 스냅샷이 승인 탭으로 전달됩니다. PDF 저장은 오른쪽 버튼에서 별도로 진행합니다.
         </p>
       </div>
@@ -395,8 +395,8 @@ export function SowEnglishPreview({
                 <Send className="size-5" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase text-app-muted">해외 프리랜서 승인 요청</p>
-                <h3 id="approval-request-title" className="mt-1 text-lg font-black text-app-foreground">
+                <p className="text-xs font-semibold uppercase text-app-muted">해외 프리랜서 승인 요청</p>
+                <h3 id="approval-request-title" className="mt-1 text-lg font-semibold text-app-foreground">
                   승인 요청을 하시겠습니까?
                 </h3>
                 <p id="approval-request-description" className="mt-2 text-sm leading-6 text-app-muted">
@@ -415,7 +415,7 @@ export function SowEnglishPreview({
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleConfirmApprovalRequest}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-app-foreground px-4 text-sm font-bold text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-app-foreground px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 예
@@ -424,7 +424,7 @@ export function SowEnglishPreview({
                 type="button"
                 disabled={isSubmitting}
                 onClick={() => setIsApprovalConfirmOpen(false)}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-app-border-strong px-4 text-sm font-semibold text-app-foreground hover:bg-app-surface-subtle disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <X className="size-4" />
                 아니오

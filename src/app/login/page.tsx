@@ -104,7 +104,7 @@ function LoginForm() {
                 type="button"
                 onClick={() => handleGoogleLogin(role.value)}
                 disabled={pendingRole !== null}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-bold text-app-foreground hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm text-app-foreground hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Icon className="size-4" />
                 {isPending ? "Google로 이동 중..." : roleButtonLabels[role.value]}
@@ -113,7 +113,7 @@ function LoginForm() {
           })}
         </div>
 
-        {errorMessage ? <p className="mt-5 text-center text-xs font-bold text-warning">{errorMessage}</p> : null}
+        {errorMessage ? <p className="mt-5 text-center text-xs text-warning">{errorMessage}</p> : null}
       </div>
     </div>
   );

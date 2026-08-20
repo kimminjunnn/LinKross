@@ -9,7 +9,7 @@ export function ProgressSteps({
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-app-muted">
+      <div className="mb-2 flex items-center justify-between gap-3 text-xs text-app-muted">
         <span>진행도</span>
         <span>{label}</span>
       </div>

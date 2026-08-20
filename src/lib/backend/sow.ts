@@ -32,6 +32,7 @@ import {
   type ManualGuidanceSpec,
 } from "@/lib/verification-test-spec";
 import { generateManualCheckGuidance } from "@/lib/verification-guidance";
+import { composeVerificationAtoms, type ComposeOutcome } from "@/lib/verification-atom-composer";
 
 function parseDateText(value: string): string | null {
   const normalized = value.trim().replace(/\./g, "-").replace(/\s+/g, "");
@@ -54,15 +55,31 @@ function computeContentHash(content: unknown): string {
 async function logVerificationAtomGaps(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   projectId: string,
-  dodTexts: string[],
+  gaps: Array<{ dodText: string; reason: NonNullable<ComposeOutcome["reason"]> }>,
 ): Promise<void> {
-  if (dodTexts.length === 0) return;
-  const { error } = await supabase
+  if (gaps.length === 0) return;
+
+  const withReason = gaps.map((gap) => ({
+    project_id: projectId,
+    dod_text: gap.dodText,
+    reason: gap.reason,
+  }));
+  const { error } = await supabase.from("verification_atom_gap_log").insert(withReason);
+  if (!error) return;
+
+  // reason 컬럼 마이그레이션(supabase/verification_atom_gap_log.sql) 적용 전 배포에서는
+  // 원문만 기록하고 사유는 서버 로그로 남긴다. 갭 수집 자체를 멈추지 않는다.
+  const { error: fallbackError } = await supabase
     .from("verification_atom_gap_log")
-    .insert(dodTexts.map((dodText) => ({ project_id: projectId, dod_text: dodText })));
-  if (error) {
-    console.error("[verification-atom-gap-log] insert failed", error);
+    .insert(gaps.map((gap) => ({ project_id: projectId, dod_text: gap.dodText })));
+  if (fallbackError) {
+    console.error("[verification-atom-gap-log] insert failed", fallbackError);
+    return;
   }
+  console.warn(
+    "[verification-atom-gap-log] reason 컬럼 없이 기록했습니다.",
+    gaps.map((gap) => gap.reason).join(","),
+  );
 }
 
 type SowVersionApprovalRow = {
@@ -258,21 +275,40 @@ async function upsertCriteriaForMilestone(
   const unresolvedIndexes = verifications
     .map((verification, index) => (verification.verificationMethod === "manual" ? index : -1))
     .filter((index) => index !== -1);
+
   if (unresolvedIndexes.length > 0) {
-    await logVerificationAtomGaps(
-      supabase,
-      projectId,
-      unresolvedIndexes.map((index) => dods[index]),
-    );
-    const guidances = await generateManualCheckGuidance(unresolvedIndexes.map((index) => dods[index]));
-    unresolvedIndexes.forEach((dodIndex, guidanceIndex) => {
-      const guidance = guidances[guidanceIndex];
-      if (!guidance) return;
-      verifications[dodIndex] = {
-        ...verifications[dodIndex],
-        testSpec: { version: MANUAL_GUIDANCE_SPEC_VERSION, kind: "manual_guidance", ...guidance },
-      };
+    // 정규식 프리셋이 놓친 DoD는 고정된 atom 어휘의 조합으로 표현해 본다(설계 §21.2).
+    // LLM은 조합만 고르고, 채택 여부는 엄격 파서가 결정한다.
+    const composed = await composeVerificationAtoms(unresolvedIndexes.map((index) => dods[index]));
+    const stillManual: Array<{ dodIndex: number; reason: NonNullable<ComposeOutcome["reason"]> }> = [];
+
+    unresolvedIndexes.forEach((dodIndex, composeIndex) => {
+      const outcome = composed[composeIndex];
+      if (outcome?.spec) {
+        verifications[dodIndex] = { verificationMethod: "automated_e2e", testSpec: outcome.spec };
+        return;
+      }
+      stillManual.push({ dodIndex, reason: outcome?.reason ?? "llm_failed" });
     });
+
+    if (stillManual.length > 0) {
+      await logVerificationAtomGaps(
+        supabase,
+        projectId,
+        stillManual.map((entry) => ({ dodText: dods[entry.dodIndex], reason: entry.reason })),
+      );
+      const guidances = await generateManualCheckGuidance(
+        stillManual.map((entry) => dods[entry.dodIndex]),
+      );
+      stillManual.forEach((entry, guidanceIndex) => {
+        const guidance = guidances[guidanceIndex];
+        if (!guidance) return;
+        verifications[entry.dodIndex] = {
+          ...verifications[entry.dodIndex],
+          testSpec: { version: MANUAL_GUIDANCE_SPEC_VERSION, kind: "manual_guidance", ...guidance },
+        };
+      });
+    }
   }
 
   for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
