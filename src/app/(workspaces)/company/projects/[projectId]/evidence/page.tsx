@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ChevronRight, CircleAlert, FileArchive } from "lucide-react";
+import { ChevronRight, CircleAlert, FileArchive, PartyPopper } from "lucide-react";
 
 import { getProjectCommissionChargesByPayment, getProjectFinancialWorkspace } from "@/lib/backend";
 
 import { GenerateEvidenceBundleButton } from "./bundle-actions";
 import { CompanyFinancialWorkspace } from "./financial-workspace";
 import { PaymentEvidencePanel } from "./payment-evidence-panel";
+import { ProjectCompletionBanner } from "./project-completion-banner";
 
 export default async function EvidencePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -18,10 +19,20 @@ export default async function EvidencePage({ params }: { params: Promise<{ proje
     return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
   }
   const commissionChargesByPaymentId = commissionChargesResult.ok ? commissionChargesResult.data : {};
+  const allMilestonesPaid = result.data.milestones.length > 0
+    && result.data.milestones.every((milestone) => milestone.status === "approved" && milestone.payment?.status === "completed");
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-      <CompanyFinancialWorkspace workspace={result.data} />
+    <div className="space-y-5">
+      {result.data.lifecycleStage === "completed" ? (
+        <div className="flex items-center gap-2 rounded-card border border-accent-200 bg-accent-50 p-4 text-sm font-semibold text-accent-800">
+          <PartyPopper className="size-5 shrink-0" />프로젝트가 완료 처리되었습니다.
+        </div>
+      ) : allMilestonesPaid && (
+        <ProjectCompletionBanner projectId={projectId} />
+      )}
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <CompanyFinancialWorkspace workspace={result.data} />
       <div className="space-y-5">
         <PaymentEvidencePanel projectId={projectId} milestones={result.data.milestones} commissionChargesByPaymentId={commissionChargesByPaymentId} />
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
@@ -50,6 +61,7 @@ export default async function EvidencePage({ params }: { params: Promise<{ proje
             </div>
           </div>
         </section>
+      </div>
       </div>
     </div>
   );
