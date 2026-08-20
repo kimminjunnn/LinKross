@@ -57,8 +57,8 @@ LinKross가 에스크로를 쥐고 있지 않아서 실제 입금을 자동으�
 | 플랜 | 기준 | 월 금액 |
 |---|---|---|
 | Starter | 프로젝트 1개 | 49,000원 |
-| Growth | 프로젝트 2~5개 | 99,000원 |
-| Scale | 프로젝트 6개 이상 | 199,000원 |
+| Growth | 프로젝트 2~5개 | 79,000원 |
+| Scale | 프로젝트 6개 이상 | 129,000원 |
 
 - 회사의 **현재 프로젝트 개수**를 실시간으로 세서 추천 플랜을 계산하고(`recommendedPlanId`), `/company/settings`에서 3개 플랜 카드와 함께 보여준다. 추천 플랜과 실제 구독 중인 플랜이 다르면(예: 프로젝트를 추가로 만들어서 등급이 바뀜) "추천 플랜으로 갱신" 버튼이 뜬다.
 - `subscriptions` 테이블은 회사당 1행 — 실제로 구독을 "확정"한 시점의 `plan_id`/금액/상태(`active`/`past_due`/`cancelled`)를 스냅샷으로 저장한다. 금액은 항상 플랜별 고정가(`SUBSCRIPTION_PLAN_TIERS`)에서 가져오고, 사용자가 직접 숫자를 입력하지 않는다.
@@ -73,7 +73,7 @@ AI 사용 지점 4곳(SOW 초안 생성, 검수 가이드 생성, 완료조건�
 - 안전마진 포함해도 프로젝트당 약 1,500~2,000원 수준
 - 기업이 월 1~2개 프로젝트를 굴린다고 가정하면 **AI 원가는 기업당 월 3,000~5,000원 정도** — 인프라 원가(Supabase, 호스팅 등)를 더해도 월 1만원 안쪽
 
-즉 가격은 원가가 아니라 "PM/QA 인력 없이 외주를 검증하는 가치"로 매기는 게 맞다. COGS 대비 최소 10배 마진이 SaaS 업계 관행인 걸 감안해서, 프로젝트 개수가 늘수록(=플랫폼 의존도가 높아질수록) 가격도 같이 올라가는 3단계 구조(Starter 49,000원 / Growth 99,000원 / Scale 199,000원)로 확정했다. MVP가 아직 시장 검증 전이라, 초기 몇 달은 무료 체험 또는 더 낮은 가격으로 어답션을 우선하는 것도 고려할 만하다.
+즉 가격은 원가가 아니라 "PM/QA 인력 없이 외주를 검증하는 가치"로 매기는 게 맞다. COGS 대비 최소 10배 마진이 SaaS 업계 관행인 걸 감안해서, 프로젝트 개수가 늘수록(=플랫폼 의존도가 높아질수록) 가격도 같이 올라가는 3단계 구조로 만들었다. 구체적 액수(Starter 49,000원 / Growth 79,000원 / Scale 129,000원)는 정교한 산정이라기보다 "이 정도가 익숙한 가격대"라는 감으로 정한 참고치다. MVP가 아직 시장 검증 전이라, 초기 몇 달은 무료 체험 또는 더 낮은 가격으로 어답션을 우선하는 것도 고려할 만하다.
 
 **이 숫자는 참고치이며 최종 확정은 팀 논의로 결정해야 한다.**
 
@@ -99,6 +99,8 @@ Supabase SQL Editor에서 아래 순서로 실행:
 4. [`supabase/fix_backfill_commission_charges.sql`](../supabase/fix_backfill_commission_charges.sql) — 트리거 설치 전에 이미 completed였던 결제 건 소급 처리(일회성)
 5. [`supabase/fix_commission_wallet_payment.sql`](../supabase/fix_commission_wallet_payment.sql) — 수수료도 지갑 결제 가능하도록 컬럼 추가
 6. [`supabase/fix_add_subscription_plan.sql`](../supabase/fix_add_subscription_plan.sql) — 구독 플랜 티어(`plan_id`) 컬럼 추가
+7. [`supabase/fix_backfill_subscription_amount.sql`](../supabase/fix_backfill_subscription_amount.sql) — 티어제 도입 전 저장된 금액을 요금표대로 보정(일회성)
+8. [`supabase/fix_update_subscription_plan_prices.sql`](../supabase/fix_update_subscription_plan_prices.sql) — 요금 개편(49,000/79,000/129,000원) 반영(일회성)
 
 ## 7. 이번 스코프에서 명시적으로 제외한 것
 
