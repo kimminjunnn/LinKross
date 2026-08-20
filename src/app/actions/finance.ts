@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import type { AdvancePaymentStatusInput, BackendResult, GenerateEvidenceBundleOutput, RequestPaymentInput, ReviewInvoiceInput, SubmitInvoiceInput } from "@/lib/backend";
-import { advancePaymentStatus, completeProject, generateEvidenceBundle, requestPayment, reviewInvoice, submitInvoice } from "@/lib/backend";
+import type { AdvancePaymentStatusInput, BackendResult, GenerateEvidenceBundleOutput, RequestPaymentInput, ReviewInvoiceInput, SubmitInvoiceInput, VerifyWalletPaymentInput } from "@/lib/backend";
+import { advancePaymentStatus, completeProject, generateEvidenceBundle, requestPayment, reviewInvoice, submitInvoice, verifyWalletPayment } from "@/lib/backend";
 
 function revalidateFinance(projectId: string) {
   revalidatePath(`/company/projects/${projectId}`);
@@ -35,6 +35,12 @@ export async function requestPaymentAction(input: RequestPaymentInput): Promise<
 export async function advancePaymentStatusAction(input: AdvancePaymentStatusInput): Promise<BackendResult<{ paymentId: string }>> {
   const result = await advancePaymentStatus(input);
   if (result.ok) revalidateFinance(input.projectId);
+  return result;
+}
+
+export async function verifyWalletPaymentAction(input: VerifyWalletPaymentInput): Promise<BackendResult<{ paymentId: string; verified: boolean; reason?: string }>> {
+  const result = await verifyWalletPayment(input);
+  if (result.ok && result.data.verified) revalidateFinance(input.projectId);
   return result;
 }
 

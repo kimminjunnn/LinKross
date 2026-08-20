@@ -10,10 +10,12 @@ import type {
   RequestPaymentInput,
   ReviewInvoiceInput,
   SubmitInvoiceInput,
+  VerifyWalletPaymentInput,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { translateToEnglish } from "@/lib/backend/translation";
 import { isUuid } from "@/lib/backend/validation";
+import { verifyOnchainTransfer } from "@/lib/onchain-payment";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function listFreelancerInvoices(): Promise<BackendResult<InvoiceRecord[]>> {
@@ -23,7 +25,7 @@ export async function listFreelancerInvoices(): Promise<BackendResult<InvoiceRec
 
   const { data: invoices, error } = await supabase
     .from("invoices")
-    .select("id, project_id, milestone_id, invoice_number, status, amount, currency, external_reference, submitted_at, reviewed_at, review_note")
+    .select("id, project_id, milestone_id, invoice_number, status, amount, vat_amount, currency, external_reference, submitted_at, reviewed_at, review_note")
     .eq("submitted_by", authData.user.id)
     .order("submitted_at", { ascending: false });
   if (error) return { ok: false, error: mapBackendError(error, "인보이스를 불러오지 못했습니다.") };
@@ -72,8 +74,16 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
   const { data: project, error: projectError } = await supabase.from("projects").select("id, title, company_id, lifecycle_stage").eq("id", projectId).maybeSingle();
   if (projectError || !project) return { ok: false, error: mapBackendError(projectError, "프로젝트를 찾지 못했습니다.") };
 
+  const { data: selection } = await supabase.from("selections").select("proposal_id").eq("project_id", projectId).maybeSingle();
+  const proposal = selection
+    ? (await supabase.from("proposals").select("freelancer_id").eq("id", selection.proposal_id).maybeSingle()).data
+    : null;
+  const freelancerWalletAddress = proposal
+    ? ((await supabase.from("freelancer_profiles").select("wallet_address").eq("id", proposal.freelancer_id).maybeSingle()).data?.wallet_address ?? null)
+    : null;
+
   const { data: sow } = await supabase.from("sow_versions").select("id").eq("project_id", projectId).eq("status", "approved").maybeSingle();
-  if (!sow) return { ok: true, data: { projectId, projectTitle: project.title, lifecycleStage: project.lifecycle_stage, milestones: [], evidenceBundles: [] } };
+  if (!sow) return { ok: true, data: { projectId, projectTitle: project.title, lifecycleStage: project.lifecycle_stage, freelancerWalletAddress, milestones: [], evidenceBundles: [] } };
 
   const { data: milestones, error: milestoneError } = await supabase
     .from("milestones")
@@ -85,8 +95,8 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
 
   const [decisionsResult, invoicesResult, paymentsResult, bundlesResult] = await Promise.all([
     milestoneIds.length ? supabase.from("milestone_decisions").select("milestone_id, decided_at").eq("decision", "approved").in("milestone_id", milestoneIds) : Promise.resolve({ data: [], error: null }),
-    milestoneIds.length ? supabase.from("invoices").select("id, project_id, milestone_id, invoice_number, status, amount, currency, external_reference, submitted_at, reviewed_at, review_note").in("milestone_id", milestoneIds).order("submitted_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
-    milestoneIds.length ? supabase.from("payments").select("id, milestone_record_id, invoice_id, status, amount_usdc, currency, tx_hash, requested_at, processing_at, completed_at, verified_at").eq("project_id", projectId).in("milestone_record_id", milestoneIds).order("verified_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+    milestoneIds.length ? supabase.from("invoices").select("id, project_id, milestone_id, invoice_number, status, amount, vat_amount, currency, external_reference, submitted_at, reviewed_at, review_note").in("milestone_id", milestoneIds).order("submitted_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+    milestoneIds.length ? supabase.from("payments").select("id, milestone_record_id, invoice_id, status, payment_method, amount_usdc, currency, tx_hash, to_address, block_number, requested_at, processing_at, completed_at, verified_at").eq("project_id", projectId).in("milestone_record_id", milestoneIds).order("verified_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
     supabase.from("evidence_bundles").select("id, version_number, status, storage_path, sha256, requested_at, completed_at, error_message").eq("project_id", projectId).order("version_number", { ascending: false }),
   ]);
   const firstError = decisionsResult.error ?? invoicesResult.error ?? paymentsResult.error ?? bundlesResult.error;
@@ -117,9 +127,12 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
         payment: payment ? {
           id: payment.id,
           status: payment.status,
+          method: payment.payment_method,
           amount: Number(payment.amount_usdc),
           currency: payment.currency,
           externalReference: payment.tx_hash || null,
+          toAddress: payment.to_address || null,
+          blockNumber: payment.block_number ?? null,
           requestedAt: payment.requested_at,
           processingAt: payment.processing_at,
           completedAt: payment.completed_at,
@@ -134,6 +147,7 @@ export async function getProjectFinancialWorkspace(projectId: string): Promise<B
       projectId,
       projectTitle: project.title,
       lifecycleStage: project.lifecycle_stage,
+      freelancerWalletAddress,
       milestones: mappedMilestones,
       evidenceBundles: (bundlesResult.data ?? []).map((bundle) => ({
         id: bundle.id,
@@ -159,11 +173,14 @@ export async function submitInvoice(input: SubmitInvoiceInput): Promise<BackendR
   const { data: milestone, error: milestoneError } = await supabase.from("milestones").select("id, amount, currency, status").eq("id", input.milestoneId).eq("project_id", input.projectId).maybeSingle();
   if (milestoneError || !milestone) return { ok: false, error: mapBackendError(milestoneError, "마일스톤을 찾지 못했습니다.") };
   if (milestone.status !== "approved") return { ok: false, error: { code: "CONFLICT", message: "발주자가 승인한 마일스톤만 인보이스를 제출할 수 있습니다." } };
+  const vatAmount = input.vatAmount ?? 0;
+  if (vatAmount < 0) return { ok: false, error: { code: "INVALID_INPUT", message: "부가세 금액이 올바르지 않습니다." } };
   const { data, error } = await supabase.from("invoices").insert({
     project_id: input.projectId,
     milestone_id: input.milestoneId,
     invoice_number: input.invoiceNumber.trim(),
     amount: milestone.amount,
+    vat_amount: vatAmount,
     currency: milestone.currency,
     external_reference: input.externalReference?.trim() || null,
     submitted_by: authData.user.id,
@@ -183,9 +200,14 @@ export async function reviewInvoice(input: ReviewInvoiceInput): Promise<BackendR
   return { ok: true, data: { invoiceId: data.id } };
 }
 
+const PAYMENT_METHODS = ["wallet_testnet", "bank_transfer", "card", "other"] as const;
+
 export async function requestPayment(input: RequestPaymentInput): Promise<BackendResult<{ paymentId: string }>> {
   if (!isUuid(input.projectId) || !isUuid(input.milestoneId)) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트/마일스톤이 아닙니다." } };
+  }
+  if (!PAYMENT_METHODS.includes(input.method)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "지급 수단을 선택해주세요." } };
   }
   const supabase = await createSupabaseServerClient();
   const { data: authData } = await supabase.auth.getUser();
@@ -203,11 +225,19 @@ export async function requestPayment(input: RequestPaymentInput): Promise<Backen
   const { data: existingPayment } = await supabase.from("payments").select("id").eq("invoice_id", invoice.id).maybeSingle();
   if (existingPayment) return { ok: false, error: { code: "CONFLICT", message: "이미 지급 기록이 있는 인보이스입니다." } };
 
+  if (input.method === "wallet_testnet") {
+    const { data: selection } = await supabase.from("selections").select("proposal_id").eq("project_id", input.projectId).maybeSingle();
+    const proposal = selection ? (await supabase.from("proposals").select("freelancer_id").eq("id", selection.proposal_id).maybeSingle()).data : null;
+    const wallet = proposal ? (await supabase.from("freelancer_profiles").select("wallet_address").eq("id", proposal.freelancer_id).maybeSingle()).data?.wallet_address : null;
+    if (!wallet) return { ok: false, error: { code: "CONFLICT", message: "프리랜서가 지갑 주소를 등록하지 않아 지갑 송금을 요청할 수 없습니다." } };
+  }
+
   const { data, error } = await supabase.from("payments").insert({
     project_id: input.projectId,
     milestone_record_id: input.milestoneId,
     invoice_id: invoice.id,
     status: "requested",
+    payment_method: input.method,
     amount_usdc: invoice.amount,
     currency: invoice.currency,
     requested_at: new Date().toISOString(),
@@ -245,6 +275,47 @@ export async function advancePaymentStatus(input: AdvancePaymentStatusInput): Pr
   }).eq("id", input.paymentId).eq("project_id", input.projectId).select("id").maybeSingle();
   if (error || !data) return { ok: false, error: mapBackendError(error, "지급 상태를 변경하지 못했습니다.") };
   return { ok: true, data: { paymentId: data.id } };
+}
+
+export async function verifyWalletPayment(input: VerifyWalletPaymentInput): Promise<BackendResult<{ paymentId: string; verified: boolean; reason?: string }>> {
+  if (!isUuid(input.projectId) || !isUuid(input.paymentId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 지급 기록이 아닙니다." } };
+  }
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+
+  const { data: payment, error: paymentError } = await supabase
+    .from("payments")
+    .select("id, status, payment_method, amount_usdc")
+    .eq("id", input.paymentId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (paymentError || !payment) return { ok: false, error: mapBackendError(paymentError, "지급 기록을 찾지 못했습니다.") };
+  if (payment.payment_method !== "wallet_testnet") return { ok: false, error: { code: "CONFLICT", message: "지갑 송금 방식의 지급만 온체인으로 검증할 수 있습니다." } };
+  if (payment.status !== "requested") return { ok: false, error: { code: "CONFLICT", message: `${payment.status} 상태에서는 검증할 수 없습니다.` } };
+
+  const { data: selection } = await supabase.from("selections").select("proposal_id").eq("project_id", input.projectId).maybeSingle();
+  const proposal = selection ? (await supabase.from("proposals").select("freelancer_id").eq("id", selection.proposal_id).maybeSingle()).data : null;
+  const walletAddress = proposal ? (await supabase.from("freelancer_profiles").select("wallet_address").eq("id", proposal.freelancer_id).maybeSingle()).data?.wallet_address : null;
+  if (!walletAddress) return { ok: false, error: { code: "CONFLICT", message: "프리랜서의 지갑 주소를 찾을 수 없습니다." } };
+
+  const result = await verifyOnchainTransfer(input.txHash, String(payment.amount_usdc), walletAddress);
+  if (!result.verified) {
+    return { ok: true, data: { paymentId: payment.id, verified: false, reason: result.reason } };
+  }
+
+  const { data, error } = await supabase.from("payments").update({
+    status: "completed",
+    tx_hash: result.txHash,
+    to_address: result.toAddress,
+    block_number: result.blockNumber,
+    completed_at: new Date().toISOString(),
+    verified_by: authData.user.id,
+    verified_at: new Date().toISOString(),
+  }).eq("id", input.paymentId).eq("project_id", input.projectId).select("id").maybeSingle();
+  if (error || !data) return { ok: false, error: mapBackendError(error, "지급 상태를 갱신하지 못했습니다.") };
+  return { ok: true, data: { paymentId: data.id, verified: true } };
 }
 
 export async function completeProject(projectId: string): Promise<BackendResult<{ projectId: string }>> {
@@ -322,7 +393,7 @@ export async function generateEvidenceBundle(projectId: string): Promise<Backend
     milestoneIds.length ? supabase.from("completion_criteria").select("id, milestone_id, kind, description, verification_method, is_required, position").in("milestone_id", milestoneIds) : Promise.resolve({ data: [] }),
     milestoneIds.length ? supabase.from("milestone_submissions").select("id, milestone_id, attempt_number, pull_request_number, pull_request_url, head_branch, head_commit_sha, status, submitted_at").in("milestone_id", milestoneIds).order("attempt_number", { ascending: false }) : Promise.resolve({ data: [] }),
     milestoneIds.length ? supabase.from("milestone_decisions").select("milestone_id, decision, reason, decided_at").in("milestone_id", milestoneIds).order("decided_at", { ascending: false }) : Promise.resolve({ data: [] }),
-    supabase.from("invoices").select("id, milestone_id, invoice_number, status, amount, currency, external_reference, submitted_at, reviewed_at").eq("project_id", projectId),
+    supabase.from("invoices").select("id, milestone_id, invoice_number, status, amount, vat_amount, currency, external_reference, submitted_at, reviewed_at").eq("project_id", projectId),
     supabase.from("payments").select("id, milestone_record_id, invoice_id, status, amount_usdc, currency, tx_hash, requested_at, processing_at, completed_at, verified_at").eq("project_id", projectId),
   ]);
   const submissionIds = (submissionsResult.data ?? []).map((submission) => submission.id);
@@ -406,7 +477,7 @@ function firstBy<T extends Record<string, unknown>>(rows: T[], key: keyof T): Ma
 
 async function toInvoice(row: {
   id: string; project_id: string; milestone_id: string; invoice_number: string; status: InvoiceRecord["status"];
-  amount: number; currency: string; external_reference: string | null; submitted_at: string; reviewed_at: string | null; review_note: string | null;
+  amount: number; vat_amount: number; currency: string; external_reference: string | null; submitted_at: string; reviewed_at: string | null; review_note: string | null;
 }, projectTitle: string, organizationName: string, milestone?: { code: string; title: string }, translate = false): Promise<InvoiceRecord> {
   const milestoneTitle = milestone?.title
     ? (translate ? await translateToEnglish(milestone.title) : milestone.title)
@@ -426,6 +497,7 @@ async function toInvoice(row: {
     invoiceNumber: row.invoice_number,
     status: row.status,
     amount: Number(row.amount),
+    vatAmount: Number(row.vat_amount),
     currency: row.currency,
     externalReference: row.external_reference,
     submittedAt: row.submitted_at,
