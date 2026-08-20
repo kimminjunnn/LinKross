@@ -1,28 +1,35 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Save, XCircle } from "lucide-react";
+import { Check, Loader2, XCircle } from "lucide-react";
 
 import { upsertCompanySubscriptionAction } from "@/app/actions/subscriptions";
 import { formatProjectRange, getSubscriptionPlanTier, SUBSCRIPTION_PLAN_TIERS } from "@/config/subscription-plan";
 import { subscriptionStatusLabel } from "@/config/subscription-status";
-import type { CompanySubscriptionOverview } from "@/lib/backend";
+import type { CompanySubscriptionOverview, SubscriptionPlanId } from "@/lib/backend";
 
 export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOverview }) {
   const [message, setMessage] = useState<string | null>(null);
+  const [pendingPlanId, setPendingPlanId] = useState<SubscriptionPlanId | null>(null);
   const [pending, startTransition] = useTransition();
   const { subscription, projectCount, recommendedPlanId } = overview;
-  const isSubscribedToRecommended = subscription?.planId === recommendedPlanId && subscription.status === "active";
+  const activePlanId = subscription?.status === "active" ? subscription.planId : null;
+  // amount는 저장 시점 스냅샷이라 플랜 요금표가 바뀌면 옛 값이 남을 수 있다 —
+  // 화면에는 항상 현재 요금표 기준 금액을 보여준다.
+  const currentTier = subscription ? getSubscriptionPlanTier(subscription.planId) : null;
 
-  function subscribeToRecommended() {
+  function subscribeTo(planId: SubscriptionPlanId) {
+    setPendingPlanId(planId);
     startTransition(async () => {
-      const result = await upsertCompanySubscriptionAction({ planId: recommendedPlanId, status: "active" });
+      const result = await upsertCompanySubscriptionAction({ planId, status: "active" });
       setMessage(result.ok ? "구독 정보를 갱신했습니다." : result.error.message);
+      setPendingPlanId(null);
     });
   }
 
   function cancelSubscription() {
     if (!subscription) return;
+    setPendingPlanId(null);
     startTransition(async () => {
       const result = await upsertCompanySubscriptionAction({ planId: subscription.planId, status: "cancelled" });
       setMessage(result.ok ? "구독을 해지했습니다." : result.error.message);
@@ -33,15 +40,15 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
     <section className="mt-5 rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <h2 className="font-semibold text-app-foreground">구독 플랜</h2>
       <p className="mt-2 text-sm leading-6 text-app-muted">
-        구독 플랜 정보 (결제 연동 없음 — 추후 안내 예정). 진행 중인 프로젝트 개수에 따라 플랜과 금액이 달라집니다.
+        구독 플랜 정보 (결제 연동 없음 — 추후 안내 예정). 진행 중인 프로젝트 개수에 따라 추천 플랜이 달라지며, 원하는 플랜을 직접 선택해 구독할 수 있습니다.
       </p>
 
       <div className="mt-4 rounded-control border border-app-border-strong bg-app-surface-subtle p-4">
         <p className="text-xs font-semibold tracking-wide text-app-muted uppercase">현재 구독 중인 상품</p>
-        {subscription ? (
+        {subscription && currentTier ? (
           <>
             <p className="mt-1 text-lg font-semibold text-app-foreground">
-              {getSubscriptionPlanTier(subscription.planId).name} · {subscription.amount.toLocaleString()}원/월
+              {currentTier.name} · {currentTier.monthlyPrice.toLocaleString()}원/월
             </p>
             <p className="mt-1 text-sm text-app-muted">상태: {subscriptionStatusLabel[subscription.status]}</p>
           </>
@@ -50,58 +57,66 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
         )}
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      {message && <p className="mt-4 text-sm text-app-muted">{message}</p>}
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {SUBSCRIPTION_PLAN_TIERS.map((tier) => {
           const isRecommended = tier.id === recommendedPlanId;
-          const isCurrent = subscription?.planId === tier.id && subscription.status === "active";
+          const isActive = activePlanId === tier.id;
+          const isBusy = pending && pendingPlanId === tier.id;
           return (
             <div
               key={tier.id}
-              className={`rounded-control border p-4 ${isRecommended ? "border-brand-500 bg-brand-50" : "border-app-border-strong bg-app-surface"}`}
+              className={`flex flex-col rounded-control border p-5 ${
+                isRecommended ? "border-brand-500 ring-1 ring-brand-500" : "border-app-border-strong"
+              } bg-app-surface`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-semibold text-app-foreground">{tier.name}</p>
-                {isCurrent ? (
-                  <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[11px] font-semibold text-accent-700">이용 중</span>
-                ) : null}
-              </div>
+              {isRecommended ? (
+                <span className="mb-2 inline-flex w-fit items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700">
+                  프로젝트 {projectCount}개 기준 추천
+                </span>
+              ) : null}
+              <p className="font-semibold text-app-foreground">{tier.name}</p>
               <p className="mt-1 text-xs text-app-muted">{formatProjectRange(tier)}</p>
-              <p className="mt-2 text-lg font-bold text-app-foreground">
+              <p className="mt-3 text-2xl font-bold text-app-foreground">
                 {tier.monthlyPrice.toLocaleString()}원<span className="text-xs font-normal text-app-muted">/월</span>
               </p>
-              {isRecommended ? (
-                <p className="mt-1 text-[11px] font-semibold text-brand-700">현재 프로젝트 {projectCount}개 기준 추천</p>
-              ) : null}
+              <ul className="mt-4 space-y-1.5 text-xs text-app-muted">
+                <li className="flex items-center gap-1.5">
+                  <Check className="size-3.5 shrink-0 text-accent-600" />동시 진행 가능 · {formatProjectRange(tier)}
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="size-3.5 shrink-0 text-accent-600" />검수·SOW·증빙 전체 기능
+                </li>
+              </ul>
+              <button
+                type="button"
+                disabled={pending || isActive}
+                onClick={() => subscribeTo(tier.id)}
+                className={`mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold disabled:cursor-not-allowed ${
+                  isActive
+                    ? "border border-app-border-strong bg-app-surface-subtle text-app-muted"
+                    : "bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
+                }`}
+              >
+                {isBusy ? <Loader2 className="size-4 animate-spin" /> : null}
+                {isActive ? "이용 중" : "이 플랜 구독하기"}
+              </button>
             </div>
           );
         })}
       </div>
 
-      {message && <p className="mt-4 text-sm text-app-muted">{message}</p>}
-
-      <div className="mt-5 flex flex-wrap gap-2">
-        {!isSubscribedToRecommended && (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={subscribeToRecommended}
-            className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-600 px-5 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            {subscription ? "추천 플랜으로 갱신" : "구독 시작하기"}
-          </button>
-        )}
-        {subscription?.status === "active" && (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={cancelSubscription}
-            className="inline-flex min-h-11 items-center gap-2 rounded-control border border-app-border-strong px-5 text-sm font-semibold text-app-foreground disabled:opacity-50"
-          >
-            <XCircle className="size-4" />해지
-          </button>
-        )}
-      </div>
+      {subscription?.status === "active" && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={cancelSubscription}
+          className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-semibold text-app-foreground disabled:opacity-50"
+        >
+          <XCircle className="size-4" />구독 해지
+        </button>
+      )}
     </section>
   );
 }
