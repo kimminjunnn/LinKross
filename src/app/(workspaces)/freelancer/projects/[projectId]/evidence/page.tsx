@@ -1,6 +1,6 @@
 import { CircleAlert, FileArchive } from "lucide-react";
 
-import { getProjectFinancialWorkspace } from "@/lib/backend";
+import { getProjectFinancialWorkspace, listFreelancerCommissionCharges } from "@/lib/backend";
 
 import { FreelancerInvoicePanel } from "../invoice-panel";
 
@@ -10,7 +10,10 @@ export default async function FreelancerProjectEvidencePage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const result = await getProjectFinancialWorkspace(projectId);
+  const [result, commissionChargesResult] = await Promise.all([
+    getProjectFinancialWorkspace(projectId),
+    listFreelancerCommissionCharges(),
+  ]);
 
   if (!result.ok) {
     return (
@@ -25,11 +28,14 @@ export default async function FreelancerProjectEvidencePage({
   const hasApprovedMilestone = workspace.milestones.some(
     (milestone) => milestone.status === "approved",
   );
+  const commissionChargesByPaymentId = Object.fromEntries(
+    (commissionChargesResult.ok ? commissionChargesResult.data : []).map((charge) => [charge.paymentId, charge]),
+  );
 
   return (
     <div className="space-y-6">
       {hasApprovedMilestone ? (
-        <FreelancerInvoicePanel workspace={workspace} />
+        <FreelancerInvoicePanel workspace={workspace} commissionChargesByPaymentId={commissionChargesByPaymentId} />
       ) : (
         <div className="rounded-card border border-dashed border-app-border-strong bg-app-surface-subtle p-10 text-center">
           <p className="text-sm text-app-foreground">No milestones are ready for payment yet.</p>
