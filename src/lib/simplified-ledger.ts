@@ -1,13 +1,32 @@
-import { paymentMethodLabel } from "@/config/payment-method";
-import { paymentStatusLabel } from "@/config/payment-status";
+import type { PaymentMethod } from "@/lib/backend/contracts";
 import type { FinancialMilestoneRecord } from "@/lib/backend";
 
 export type LedgerPerspective = "income" | "expense";
 
-const LEDGER_HEADERS = ["일자", "계정과목", "거래내용", "거래처", "수입(금액)", "수입(부가세)", "비용(금액)", "비용(부가세)", "비고"] as const;
+const LEDGER_HEADERS = [
+  "일자",
+  "계정과목",
+  "거래내용",
+  "거래처",
+  "수입(금액)",
+  "수입(부가세)",
+  "비용(금액)",
+  "비용(부가세)",
+  "고정자산증감(매매)(금액)",
+  "고정자산증감(매매)(부가세)",
+  "비고",
+] as const;
+
+const EVIDENCE_TYPE_LABEL: Record<PaymentMethod, string> = {
+  wallet_testnet: "기타(온체인 송금내역)",
+  bank_transfer: "계좌이체 영수증",
+  card: "신용카드매출전표",
+  other: "기타",
+};
 
 /**
- * 소득세법 시행규칙 별지 간편장부 서식(일자/계정과목/거래내용/거래처/수입·비용 금액·부가세/비고) 컬럼에 맞춘 CSV를 만든다.
+ * 소득세법 시행규칙 별지 제82호서식(간편장부) 컬럼 구성(일자/계정과목/거래내용/거래처/수입·비용·고정자산증감 금액·부가세/비고-증빙종류)에 맞춘 CSV를 만든다.
+ * LinKross는 사업용 유형·무형자산 매입을 다루지 않으므로 고정자산증감 칸은 항상 비워 서식만 맞춘다.
  * 실제 신고 반영 여부는 사용자 책임이며, 이 데이터는 참고용 초안이다.
  */
 export function buildSimplifiedLedgerCsv(
@@ -21,9 +40,7 @@ export function buildSimplifiedLedgerCsv(
       const invoice = milestone.invoice!;
       const date = milestone.payment?.completedAt ?? invoice.reviewedAt ?? invoice.submittedAt;
       const description = `${milestone.code} ${milestone.title}`;
-      const note = milestone.payment
-        ? `지급수단 ${paymentMethodLabel[milestone.payment.method]} · ${paymentStatusLabel[milestone.payment.status]}`
-        : "지급 전";
+      const note = milestone.payment ? EVIDENCE_TYPE_LABEL[milestone.payment.method] : "지급 전";
       const income = perspective === "income" ? [invoice.amount, invoice.vatAmount] : ["", ""];
       const expense = perspective === "expense" ? [invoice.amount, invoice.vatAmount] : ["", ""];
       return [
@@ -33,6 +50,8 @@ export function buildSimplifiedLedgerCsv(
         counterparty,
         ...income,
         ...expense,
+        "",
+        "",
         note,
       ];
     });
