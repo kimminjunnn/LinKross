@@ -1,8 +1,14 @@
 import {
   MANAGED_API_CHECK_SPEC_VERSION,
   MANAGED_BROWSER_SPEC_VERSION_V3,
+  MAX_ATOM_STEPS,
+  UI_CREDENTIAL_REFS,
+  UI_SEMANTIC_FIELDS,
+  UI_TARGET_ROLES,
+  isSafePath,
   parseManagedApiCheckTestSpec,
   parseManagedBrowserAtomTestSpec,
+  parseUiAtom,
   type ManagedApiCheckTestSpec,
   type ManagedBrowserAtomTestSpec,
 } from "@/lib/verification-test-spec";
@@ -47,12 +53,26 @@ export const DEFAULT_CREDENTIALS = {
   invalidPassword: "wrong-password",
 } as const;
 
-/** LLM이 반환하는 평면 구조. 실행 코드나 selector 문자열은 받지 않는다. */
+/**
+ * LLM이 반환하는 평면 구조. 실행 코드나 selector 문자열은 받지 않는다.
+ *
+ * 대상 지정은 종류별로 필드를 나눈다. 예전에는 `targetValue` 하나에 의미가
+ * 다른 값을 모두 담게 해서, 모델이 `targetKind=field`에 역할 이름(`textbox`)이나
+ * 임의의 입력란 이름(`companyName`)을 넣었다. `field`는 로그인 요소 세 개만
+ * 뜻하므로 그런 조합은 엄격 파서에서 전부 버려졌고, 실측에서 자동화 실패의
+ * 가장 큰 원인이었다. 필드를 나누면 스키마 단계에서 열거값으로 막을 수 있다.
+ */
 export interface FlatStep {
   atom: string;
   targetKind: string;
-  targetValue: string;
+  /** targetKind=field일 때만. 로그인 화면의 의미 요소 세 가지. */
+  targetField: string;
+  /** targetKind=role일 때만. 접근성 역할. */
+  targetRole: string;
+  /** targetKind=role일 때 요소에 보이는 이름. */
   targetName: string;
+  /** targetKind=label|text|placeholder|testId일 때 찾을 문자열. */
+  targetText: string;
   valueKind: string;
   value: string;
   path: string;
@@ -90,6 +110,14 @@ export interface ComposeOutcome {
   spec: ComposedSpec | null;
   /** null 사유. 갭 로그에 남겨 어휘 부족과 스키마 오류를 구분한다(§21.5). */
   reason?: ComposeRejectionReason;
+  /**
+   * 거부된 지점을 사람이 읽을 수 있게 남긴다.
+   *
+   * `schema_rejected`는 원인이 여러 가지다(대상 없는 동작, 단언 누락, 엄격 파서
+   * 불통과 등). 사유만으로는 무엇을 고쳐야 할지 알 수 없어 자동화율을 올릴 수
+   * 없었다. 판정에는 쓰지 않고 진단에만 쓴다.
+   */
+  detail?: string;
 }
 
 /**
@@ -120,10 +148,12 @@ export function normalizeComposedItem(
       kind: "api_check",
       steps,
     });
-    return spec ? { spec } : { spec: null, reason: "schema_rejected" };
+    return spec ? { spec } : { spec: null, reason: "schema_rejected", detail: "api_check 엄격 파서 불통과" };
   }
 
-  if (item.automatable !== "ui") return { spec: null, reason: "schema_rejected" };
+  if (item.automatable !== "ui") {
+    return { spec: null, reason: "schema_rejected", detail: `automatable=${item.automatable}` };
+  }
 
   // 변환에 실패한 step을 버리고 나머지로 조합을 만들면 단언이 사라진 채
   // 무조건 통과하는 시나리오가 될 수 있다. 하나라도 실패하면 조합 전체를 버린다.
@@ -131,17 +161,27 @@ export function normalizeComposedItem(
   const steps: object[] = [];
   for (const rawStep of item.steps ?? []) {
     const atom = toAtom(rawStep);
-    if (!atom) return { spec: null, reason: "schema_rejected" };
+    if (!atom) {
+      return {
+        spec: null,
+        reason: "schema_rejected",
+        detail: `atom 변환 실패: atom=${rawStep.atom} ${describeFlatTarget(rawStep)}${rawStep.atom === "fill" ? ` valueKind=${truncate(rawStep.valueKind)} value=${truncate(rawStep.value)}` : ""}`,
+      };
+    }
     // 완료조건에 없는 문구를 기대 결과로 지어내면 멀쩡한 결과물이 "실패"로
     // 잘못 판정된다. 근거가 없는 단언은 조합 전체를 버리고 사람 확인으로 넘긴다.
     if (grounding && !isGroundedTextAssertion(atom, grounding)) {
-      return { spec: null, reason: "ungrounded_text" };
+      return {
+        spec: null,
+        reason: "ungrounded_text",
+        detail: `근거 없는 문구: ${truncate(ungroundedClaim(atom, grounding))}`,
+      };
     }
     steps.push(atom);
   }
   // 동작만 있고 확인이 없는 조합은 무엇도 검증하지 못하므로 채택하지 않는다.
   if (!steps.some((atom) => String((atom as { atom: string }).atom).startsWith("expect_"))) {
-    return { spec: null, reason: "schema_rejected" };
+    return { spec: null, reason: "schema_rejected", detail: "확인 단계(expect_*)가 하나도 없음" };
   }
 
   const startPath = normalizePath(item.startPath) ?? normalizePath(fallbackStartPath);
@@ -152,7 +192,61 @@ export function normalizeComposedItem(
     steps,
     syntheticCredentials: { ...DEFAULT_CREDENTIALS },
   });
-  return spec ? { spec } : { spec: null, reason: "schema_rejected" };
+  return spec ? { spec } : { spec: null, reason: "schema_rejected", detail: diagnoseSpecRejection(startPath, steps) };
+}
+
+/**
+ * 스펙 전체가 버려졌을 때 원인이 된 지점을 짚는다.
+ *
+ * `toAtom`은 평면 응답을 atom 모양으로 옮기기만 하고, 값이 허용된 어휘인지는
+ * 엄격 파서가 따로 본다. 그래서 역할 이름이 목록에 없거나 대상 문자열이 비어
+ * 있는 step 하나 때문에 조합 전체가 사라지는데, 사유만으로는 그 사실을 알 수
+ * 없었다. 같은 파서를 step 하나에 다시 적용해 무엇이 걸렸는지 남긴다.
+ */
+function diagnoseSpecRejection(startPath: string | undefined, steps: object[]): string {
+  if (!isSafePath(startPath)) return `시작 경로가 유효하지 않음: ${truncate(startPath)}`;
+  if (steps.length === 0) return "동작이 하나도 없음";
+  if (steps.length > MAX_ATOM_STEPS) return `동작이 상한(${MAX_ATOM_STEPS})을 넘음: ${steps.length}개`;
+  for (const [index, step] of steps.entries()) {
+    if (parseUiAtom(step) !== null) continue;
+    const named = step as { atom?: string; target?: Record<string, unknown>; path?: unknown };
+    const targetKey = named.target ? Object.keys(named.target)[0] : undefined;
+    const targetValue = targetKey ? named.target?.[targetKey] : undefined;
+    return targetKey
+      ? `${index + 1}번째 동작 거부: atom=${named.atom} 대상 ${targetKey}=${truncate(String(targetValue ?? ""))}`
+      : `${index + 1}번째 동작 거부: atom=${named.atom} path=${truncate(String(named.path ?? ""))}`;
+  }
+  return "managed_browser 엄격 파서 불통과 (지점 특정 실패)";
+}
+
+/** 어떤 대상 지정이 어휘를 벗어났는지 진단에 남긴다. */
+function describeFlatTarget(step: FlatStep): string {
+  switch (step.targetKind) {
+    case "field": return `field=${truncate(step.targetField)}`;
+    case "role": return `role=${truncate(step.targetRole)} name=${truncate(step.targetName)}`;
+    case "label":
+    case "text":
+    case "placeholder":
+    case "testId": return `${step.targetKind}=${truncate(step.targetText)}`;
+    case "none": return "대상 없음";
+    default: return `targetKind=${truncate(step.targetKind)}`;
+  }
+}
+
+function truncate(value: string | undefined): string {
+  const text = (value ?? "").trim();
+  return text.length > 60 ? `${text.slice(0, 60)}…` : text || "(빈 값)";
+}
+
+/** 어떤 문구가 근거 없이 등장했는지 찾아 진단에 남긴다. */
+function ungroundedClaim(atom: object, grounding: string): string {
+  const step = atom as { contains?: string; target?: Record<string, unknown> };
+  const claims = [step.contains, step.target?.name, step.target?.text, step.target?.label];
+  for (const claim of claims) {
+    if (typeof claim !== "string" || claim.length === 0) continue;
+    if (!grounding.includes(normalizeForGrounding(claim))) return claim;
+  }
+  return "(확인 불가)";
 }
 
 function normalizePath(value: string | undefined): string | undefined {
@@ -184,8 +278,11 @@ export function toAtom(step: FlatStep): object | null {
         ? { atom: "expect_text", contains: step.contains, target: scoped }
         : { atom: "expect_text", contains: step.contains };
     }
-    case "fill":
-      return target ? { atom: "fill", target, value: toValue(step) } : null;
+    case "fill": {
+      if (!target) return null;
+      const value = toValue(step);
+      return value ? { atom: "fill", target, value } : null;
+    }
     case "expect_count": {
       if (!target || !Number.isInteger(step.count) || step.count < 0) return null;
       return { atom: "expect_count", target, count: step.count };
@@ -212,27 +309,40 @@ export function toAtom(step: FlatStep): object | null {
   }
 }
 
+/**
+ * 허용된 어휘만 대상으로 옮긴다.
+ *
+ * 값이 어휘에 없으면 여기서 null을 돌려 조합 전체를 버린다. 비슷한 것으로
+ * 바꿔치기하지 않는다. 예를 들어 `field=companyName`을 `label="companyName"`으로
+ * 고쳐 쓰면 한국어 라벨("회사명")과 맞지 않아 정상 앱을 실패로 판정한다.
+ * 판정하지 못하는 것보다 잘못 판정하는 것이 나쁘다(CLAUDE.md §11).
+ */
 function toTarget(step: FlatStep): object | null {
   switch (step.targetKind) {
     case "field":
-      return { field: step.targetValue };
-    case "role":
-      return step.targetName ? { role: step.targetValue, name: step.targetName } : { role: step.targetValue };
+      return UI_SEMANTIC_FIELDS.includes(step.targetField as never) ? { field: step.targetField } : null;
+    case "role": {
+      if (!UI_TARGET_ROLES.includes(step.targetRole as never)) return null;
+      const name = step.targetName?.trim();
+      return name ? { role: step.targetRole, name } : { role: step.targetRole };
+    }
     case "label":
-      return { label: step.targetValue };
     case "text":
-      return { text: step.targetValue };
     case "placeholder":
-      return { placeholder: step.targetValue };
-    case "testId":
-      return { testId: step.targetValue };
+    case "testId": {
+      const text = step.targetText?.trim();
+      return text ? { [step.targetKind]: text } : null;
+    }
     default:
       return null;
   }
 }
 
-function toValue(step: FlatStep): object {
-  return step.valueKind === "ref" ? { ref: step.value } : { literal: step.value };
+function toValue(step: FlatStep): object | null {
+  if (step.valueKind === "ref") {
+    return UI_CREDENTIAL_REFS.includes(step.value as never) ? { ref: step.value } : null;
+  }
+  return step.value.length > 0 ? { literal: step.value } : null;
 }
 
 function parseBody(bodyJson: string): Record<string, string> | undefined {

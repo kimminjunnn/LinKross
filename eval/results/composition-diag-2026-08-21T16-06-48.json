@@ -1,0 +1,847 @@
+{
+  "report": {
+    "label": "diag",
+    "total": 20,
+    "automationReady": 12,
+    "automationReadyRate": 60,
+    "byOutcome": {
+      "composed": 10,
+      "preset": 2,
+      "rejected": 8
+    },
+    "byRejectionReason": {
+      "schema_rejected": 8
+    },
+    "byRejectionDetail": {
+      "managed_browser 엄격 파서 불통과": 8
+    },
+    "avgQuestionsPerDod": 0.4
+  },
+  "records": [
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/signup에서 이메일과 비밀번호 입력 후 회원가입 시 성공 메시지 표시 확인",
+      "revisedDod": "/signup에서 이메일과 비밀번호 입력 후 회원가입 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/signup",
+        "action": "회원가입",
+        "target": "성공 메시지",
+        "input": "이메일과 비밀번호",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/signup에서 이메일과 비밀번호 입력 후 회원가입 시 성공 메시지 표시 확인",
+      "startPath": "/signup",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/signup",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/signup"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button",
+              "name": "회원가입"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "성공 메시지"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /dashboard로 이동 확인",
+      "revisedDod": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /dashboard로 이동 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/login",
+        "action": "로그인",
+        "target": "대시보드",
+        "input": "이메일과 비밀번호",
+        "expected": "/dashboard로 이동"
+      },
+      "description": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /dashboard로 이동 확인",
+      "startPath": "/login",
+      "outcome": "preset",
+      "spec": {
+        "version": 1,
+        "kind": "managed_browser",
+        "preset": "login_success",
+        "startPath": "/login",
+        "expectedPath": "/dashboard",
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "revisedDod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/login",
+        "action": "로그인 시도",
+        "target": "오류 메시지",
+        "input": "잘못된 비밀번호",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "startPath": "/login",
+      "outcome": "preset",
+      "spec": {
+        "version": 1,
+        "kind": "managed_browser",
+        "preset": "login_invalid_password",
+        "startPath": "/login",
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login에서 존재하지 않는 이메일 입력 시 오류 메시지 표시 확인",
+      "revisedDod": "/login에서 존재하지 않는 이메일 입력 시 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/login",
+        "action": "로그인 시도",
+        "target": "오류 메시지",
+        "input": "존재하지 않는 이메일",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/login에서 존재하지 않는 이메일 입력 시 오류 메시지 표시 확인",
+      "startPath": "/login",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login 상태에서 새로고침 시 세션 유지 확인",
+      "revisedDod": "/login 상태에서 새로고침 시 세션 유지 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "로그인 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "사용자가 로그인한 상태",
+          "answer": "사용자가 로그인한 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "로그인에 사용할 데이터는 무엇인가요?",
+          "suggestions": [
+            "이메일과 비밀번호",
+            "사용자 ID와 비밀번호"
+          ],
+          "recommendedSuggestion": "이메일과 비밀번호",
+          "answer": "이메일과 비밀번호"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "state_persistence",
+        "startPath": "/login",
+        "action": "페이지 새로고침",
+        "target": "로그인 상태",
+        "expected": "세션 유지",
+        "precondition": "사용자가 로그인한 상태",
+        "fixture": "이메일과 비밀번호"
+      },
+      "description": "/login 상태에서 새로고침 시 세션 유지 확인",
+      "startPath": "/login",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/login",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/login"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button",
+              "name": "로그인"
+            }
+          },
+          {
+            "atom": "press",
+            "key": "Enter"
+          },
+          {
+            "atom": "expect_path",
+            "path": "/login"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/logout 시 세션 종료 및 /login으로 이동 확인",
+      "revisedDod": "/logout 시 세션 종료 및 /login으로 이동 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/logout",
+        "action": "로그아웃",
+        "target": "로그인 페이지",
+        "expected": "/login으로 이동"
+      },
+      "description": "/logout 시 세션 종료 및 /login으로 이동 확인",
+      "startPath": "/logout",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/logout",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/logout"
+          },
+          {
+            "atom": "expect_path",
+            "path": "/login"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace/create에서 회사명과 워크스페이스 이름 입력 후 생성 시 성공 메시지 표시 확인",
+      "revisedDod": "/workspace/create에서 회사명과 워크스페이스 이름 입력 후 생성 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/workspace/create",
+        "action": "워크스페이스 생성",
+        "target": "성공 메시지",
+        "input": "회사명과 워크스페이스 이름",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/workspace/create에서 회사명과 워크스페이스 이름 입력 후 생성 시 성공 메시지 표시 확인",
+      "startPath": "/workspace/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace/invite에서 팀원 초대 시 초대 이메일 발송 확인",
+      "revisedDod": "/workspace/invite에서 팀원 초대 시 초대 이메일 발송 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/workspace/invite",
+        "action": "팀원 초대",
+        "target": "초대 이메일",
+        "input": "팀원 이메일",
+        "expected": "초대 이메일 발송"
+      },
+      "description": "/workspace/invite에서 팀원 초대 시 초대 이메일 발송 확인",
+      "startPath": "/workspace/invite",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace에서 초대 링크 클릭 시 워크스페이스 참여 가능 확인",
+      "revisedDod": "/workspace에서 초대 링크 클릭 시 워크스페이스 참여 가능 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "워크스페이스 참여 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "사용자가 초대 링크를 가지고 있는 상태",
+          "answer": "사용자가 초대 링크를 가지고 있는 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "워크스페이스 참여에 사용할 데이터는 무엇인가요?",
+          "suggestions": [
+            "초대 링크",
+            "워크스페이스 ID"
+          ],
+          "recommendedSuggestion": "초대 링크",
+          "answer": "초대 링크"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "access_control",
+        "startPath": "/workspace",
+        "action": "초대 링크 클릭",
+        "target": "워크스페이스 참여",
+        "expected": "워크스페이스 참여 가능",
+        "precondition": "사용자가 초대 링크를 가지고 있는 상태",
+        "fixture": "초대 링크"
+      },
+      "description": "/workspace에서 초대 링크 클릭 시 워크스페이스 참여 가능 확인",
+      "startPath": "/workspace",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/workspace",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/workspace"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "link",
+              "name": "초대 링크"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "워크스페이스 참여 가능"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace에서 관리자만 팀원 비활성화 시도 시 변경 거부 및 오류 메시지 표시 확인",
+      "revisedDod": "/workspace에서 관리자만 팀원 비활성화 시도 시 변경 거부 및 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/workspace",
+        "action": "팀원 비활성화 시도",
+        "target": "오류 메시지",
+        "input": "팀원 ID",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/workspace에서 관리자만 팀원 비활성화 시도 시 변경 거부 및 오류 메시지 표시 확인",
+      "startPath": "/workspace",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/workspace",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/workspace"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button",
+              "name": "팀원 비활성화"
+            }
+          },
+          {
+            "atom": "expect_error_feedback"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/create에서 고객 정보 입력 후 등록 시 성공 메시지 표시 확인",
+      "revisedDod": "/customers/create에서 고객 정보 입력 후 등록 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/customers/create",
+        "action": "고객 등록",
+        "target": "성공 메시지",
+        "input": "고객 정보",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/customers/create에서 고객 정보 입력 후 등록 시 성공 메시지 표시 확인",
+      "startPath": "/customers/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/list에서 고객 목록 검색 시 검색 결과 확인",
+      "revisedDod": "/customers/list에서 고객 목록 검색 시 검색 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "고객 목록 검색 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "사용자가 로그인한 상태",
+          "answer": "사용자가 로그인한 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "고객 목록 검색에 사용할 데이터는 무엇인가요?",
+          "suggestions": [
+            "검색어",
+            "고객 이름"
+          ],
+          "recommendedSuggestion": "검색어",
+          "answer": "검색어"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/customers/list",
+        "action": "고객 목록 검색",
+        "target": "검색 결과",
+        "input": "검색어",
+        "expected": "검색 결과 확인",
+        "precondition": "사용자가 로그인한 상태",
+        "fixture": "검색어"
+      },
+      "description": "/customers/list에서 고객 목록 검색 시 검색 결과 확인",
+      "startPath": "/customers/list",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/detail에서 고객의 문의 목록과 처리 이력 확인 가능 확인",
+      "revisedDod": "/customers/detail에서 고객의 문의 목록과 처리 이력 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/customers/detail",
+        "action": "고객 문의 목록 확인",
+        "target": "문의 목록과 처리 이력",
+        "expected": "문의 목록과 처리 이력 확인 가능"
+      },
+      "description": "/customers/detail에서 고객의 문의 목록과 처리 이력 확인 가능 확인",
+      "startPath": "/customers/detail",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/customers/detail",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/customers/detail"
+          },
+          {
+            "atom": "expect_text",
+            "contains": "문의 목록과 처리 이력"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/create에서 동일한 이메일로 고객 등록 시 오류 메시지 표시 확인",
+      "revisedDod": "/customers/create에서 동일한 이메일로 고객 등록 시 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/customers/create",
+        "action": "고객 등록 시도",
+        "target": "오류 메시지",
+        "input": "동일한 이메일",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/customers/create에서 동일한 이메일로 고객 등록 시 오류 메시지 표시 확인",
+      "startPath": "/customers/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/create에서 티켓 제목과 내용을 입력 후 등록 시 성공 메시지 표시 확인",
+      "revisedDod": "/tickets/create에서 티켓 제목과 내용을 입력 후 등록 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/tickets/create",
+        "action": "티켓 등록",
+        "target": "성공 메시지",
+        "input": "티켓 제목과 내용",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/tickets/create에서 티켓 제목과 내용을 입력 후 등록 시 성공 메시지 표시 확인",
+      "startPath": "/tickets/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/detail에서 티켓 상태 변경 시 변경 사항 반영 확인",
+      "revisedDod": "/tickets/detail에서 티켓 상태 변경 시 변경 사항 반영 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/tickets/detail",
+        "action": "티켓 상태 변경",
+        "target": "변경 사항",
+        "input": "새로운 상태",
+        "expected": "변경 사항 반영"
+      },
+      "description": "/tickets/detail에서 티켓 상태 변경 시 변경 사항 반영 확인",
+      "startPath": "/tickets/detail",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/tickets/detail",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/tickets/detail"
+          },
+          {
+            "atom": "expect_text",
+            "contains": "변경 사항"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/detail에서 고객 답변과 내부 메모 구분 확인",
+      "revisedDod": "/tickets/detail에서 고객 답변과 내부 메모 구분 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/tickets/detail",
+        "action": "답변과 메모 확인",
+        "target": "답변과 메모 구분",
+        "expected": "답변과 메모 구분 확인 가능"
+      },
+      "description": "/tickets/detail에서 고객 답변과 내부 메모 구분 확인",
+      "startPath": "/tickets/detail",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/tickets/detail",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/tickets/detail"
+          },
+          {
+            "atom": "expect_text",
+            "contains": "답변과 메모 구분"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/create에서 첨부파일 업로드 시 성공 메시지 표시 확인",
+      "revisedDod": "/tickets/create에서 첨부파일 업로드 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/tickets/create",
+        "action": "첨부파일 업로드",
+        "target": "성공 메시지",
+        "input": "첨부파일",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/tickets/create에서 첨부파일 업로드 시 성공 메시지 표시 확인",
+      "startPath": "/tickets/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "managed_browser 엄격 파서 불통과",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/detail에서 티켓 생성 이력 확인 가능 확인",
+      "revisedDod": "/tickets/detail에서 티켓 생성 이력 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/tickets/detail",
+        "action": "티켓 생성 이력 확인",
+        "target": "생성 이력",
+        "expected": "티켓 생성 이력 확인 가능"
+      },
+      "description": "/tickets/detail에서 티켓 생성 이력 확인 가능 확인",
+      "startPath": "/tickets/detail",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/tickets/detail",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/tickets/detail"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "heading",
+              "name": "생성 이력"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "티켓 생성 이력 확인 가능"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "티켓 목록 및 검색 기능 구현",
+      "dod": "/tickets/list에서 전체 티켓과 나에게 배정된 티켓 구분 확인",
+      "revisedDod": "/tickets/list에서 전체 티켓과 나에게 배정된 티켓 구분 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "티켓 목록 확인 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "사용자가 로그인한 상태",
+          "answer": "사용자가 로그인한 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "티켓 목록 확인에 사용할 데이터는 무엇인가요?",
+          "suggestions": [
+            "티켓 ID",
+            "사용자 ID"
+          ],
+          "recommendedSuggestion": "사용자 ID",
+          "answer": "사용자 ID"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/tickets/list",
+        "action": "티켓 목록 확인",
+        "target": "전체 티켓과 나에게 배정된 티켓 구분",
+        "expected": "티켓 구분 확인",
+        "precondition": "사용자가 로그인한 상태",
+        "fixture": "사용자 ID"
+      },
+      "description": "/tickets/list에서 전체 티켓과 나에게 배정된 티켓 구분 확인",
+      "startPath": "/tickets/list",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/tickets/list",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/tickets/list"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list",
+              "name": "전체 티켓과 나에게 배정된 티켓 구분"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "티켓 구분 확인"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    }
+  ]
+}

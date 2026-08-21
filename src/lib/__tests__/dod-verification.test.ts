@@ -39,7 +39,7 @@ const req = (key: string, answer?: string) => ({
 });
 
 const step = (over: Partial<FlatStep>): FlatStep => ({
-  atom: "click", targetKind: "none", targetValue: "", targetName: "",
+  atom: "click", targetKind: "none", targetField: "", targetRole: "", targetName: "", targetText: "",
   valueKind: "none", value: "", path: "", contains: "", key: "", viewport: "", count: 0,
   ...over,
 });
@@ -166,21 +166,21 @@ test("구조화된 브리프가 라벨을 유지한다", () => {
 
 // ── 실행 불가능한 조합을 채택하지 않는다 ────────────────────────────────────
 test("단언이 하나도 없는 조합은 거부한다", () => {
-  const outcome = normalizeComposedItem(uiItem([step({ atom: "click", targetKind: "field", targetValue: "submit" })]));
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "click", targetKind: "field", targetField: "submit" })]));
   assert.equal(outcome.spec, null);
   assert.equal(outcome.reason, "schema_rejected");
 });
 
 test("변환 실패한 step이 하나라도 있으면 조합 전체를 버린다", () => {
   const outcome = normalizeComposedItem(uiItem([
-    step({ atom: "expect_visible", targetKind: "field", targetValue: "email" }),
+    step({ atom: "expect_visible", targetKind: "field", targetField: "email" }),
     step({ atom: "click", targetKind: "none" }),   // 대상 없음 → 변환 실패
   ]));
   assert.equal(outcome.spec, null, "단언만 남기고 조용히 통과시키면 안 된다");
 });
 
 test("알 수 없는 atom은 거부한다", () => {
-  const outcome = normalizeComposedItem(uiItem([step({ atom: "run_shell", targetKind: "text", targetValue: "x" })]));
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "run_shell", targetKind: "text", targetText: "x" })]));
   assert.equal(outcome.spec, null);
 });
 
@@ -192,9 +192,9 @@ test("automatable=none은 자동화 포기로 기록된다", () => {
 
 test("유효한 UI 조합은 실행 가능한 스펙이 된다", () => {
   const outcome = normalizeComposedItem(uiItem([
-    step({ atom: "fill", targetKind: "field", targetValue: "email", valueKind: "ref", value: "email" }),
-    step({ atom: "fill", targetKind: "field", targetValue: "password", valueKind: "ref", value: "password" }),
-    step({ atom: "click", targetKind: "field", targetValue: "submit" }),
+    step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "email" }),
+    step({ atom: "fill", targetKind: "field", targetField: "password", valueKind: "ref", value: "password" }),
+    step({ atom: "click", targetKind: "field", targetField: "submit" }),
     step({ atom: "expect_path", path: "/dashboard" }),
   ]));
   assert.ok(outcome.spec, "유효한 조합은 채택되어야 한다");
@@ -204,7 +204,7 @@ test("유효한 UI 조합은 실행 가능한 스펙이 된다", () => {
 
 test("확정된 계약의 시작 URL이 LLM이 비워둔 경로를 대신한다", () => {
   const outcome = normalizeComposedItem(
-    uiItem([step({ atom: "expect_visible", targetKind: "field", targetValue: "email" })], ""),
+    uiItem([step({ atom: "expect_visible", targetKind: "field", targetField: "email" })], ""),
     "/signin",
   );
   assert.equal((outcome.spec as { startPath: string } | null)?.startPath, "/signin");
@@ -279,7 +279,7 @@ test("완료조건에 있는 문구는 띄어쓰기가 달라도 통과한다", 
 test("지어낸 버튼 이름도 거부한다", () => {
   const outcome = normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "지금 결제하기" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "지금 결제하기" }),
       step({ atom: "expect_path", path: "/done" }),
     ]),
     undefined,
@@ -293,7 +293,7 @@ test("expect_text의 요소 설명 대상은 떼어내고 화면 전체에서 �
   // `{text: "빈 상태 화면"}`을 그대로 두면 그 문구를 가진 요소를 먼저 찾다가
   // 항상 실패한다. contains 단언만 남겨야 한다.
   const outcome = normalizeComposedItem(
-    uiItem([step({ atom: "expect_text", contains: "마감", targetKind: "text", targetValue: "예약 버튼" })]),
+    uiItem([step({ atom: "expect_text", contains: "마감", targetKind: "text", targetText: "예약 버튼" })]),
     undefined,
     "완료조건: 마감된 수업의 예약 버튼이 마감으로 표시됨",
   );
@@ -316,9 +316,9 @@ test("로그인 준비 단계는 field 대상이라 근거 문구 검사에 걸�
   const outcome = normalizeComposedItem(
     uiItem([
       step({ atom: "goto", path: "/login" }),
-      step({ atom: "fill", targetKind: "field", targetValue: "email", valueKind: "ref", value: "email" }),
-      step({ atom: "fill", targetKind: "field", targetValue: "password", valueKind: "ref", value: "password" }),
-      step({ atom: "click", targetKind: "field", targetValue: "submit" }),
+      step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "email" }),
+      step({ atom: "fill", targetKind: "field", targetField: "password", valueKind: "ref", value: "password" }),
+      step({ atom: "click", targetKind: "field", targetField: "submit" }),
       step({ atom: "goto", path: "/todos" }),
       // 같은 경로로 다시 이동하는 것이 재접속이다. 별도 새로고침 atom은 없다.
       step({ atom: "goto", path: "/todos" }),
@@ -338,8 +338,8 @@ test("계약의 준비 답변에 적힌 이름은 준비 단계에서 쓸 수 �
   );
   const outcome = normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "할 일 추가" }),
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "진행중" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "진행중" }),
       step({ atom: "expect_text", contains: "진행중" }),
     ], "/todos"),
     "/todos",
@@ -355,7 +355,7 @@ test("준비 단계라도 계약에 없는 이름을 지어내면 거부한다",
   );
   const outcome = normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "샘플 데이터 생성" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "샘플 데이터 생성" }),
       step({ atom: "expect_text", contains: "진행중" }),
     ], "/todos"),
     "/todos",
@@ -386,8 +386,8 @@ test("새 조합은 v3으로 기록하고 기존 v2 조합도 그대로 실행�
 test("체크 상태 확인을 조합에 담을 수 있다", () => {
   const spec = specOf(normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "checkbox" }),
-      step({ atom: "expect_checked", targetKind: "role", targetValue: "checkbox" }),
+      step({ atom: "click", targetKind: "role", targetRole: "checkbox" }),
+      step({ atom: "expect_checked", targetKind: "role", targetRole: "checkbox" }),
     ], "/todos"),
   ));
   assert.deepEqual(spec?.steps[1], { atom: "expect_checked", target: { role: "checkbox" } });
@@ -395,12 +395,12 @@ test("체크 상태 확인을 조합에 담을 수 있다", () => {
 
 test("개수 확인은 정수만 받고 음수는 거부한다", () => {
   const ok = specOf(normalizeComposedItem(
-    uiItem([step({ atom: "expect_count", targetKind: "role", targetValue: "listitem", count: 1 })], "/todos"),
+    uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: 1 })], "/todos"),
   ));
   assert.deepEqual(ok?.steps[0], { atom: "expect_count", target: { role: "listitem" }, count: 1 });
 
   const bad = normalizeComposedItem(
-    uiItem([step({ atom: "expect_count", targetKind: "role", targetValue: "listitem", count: -1 })], "/todos"),
+    uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: -1 })], "/todos"),
   );
   assert.equal(bad.spec, null);
   assert.equal(bad.reason, "schema_rejected");
@@ -408,14 +408,14 @@ test("개수 확인은 정수만 받고 음수는 거부한다", () => {
 
 test("목록 내용 단언도 완료조건에 있는 문구만 허용한다", () => {
   const grounded = normalizeComposedItem(
-    uiItem([step({ atom: "expect_none_text", targetKind: "role", targetValue: "listitem", contains: "완료" })], "/todos"),
+    uiItem([step({ atom: "expect_none_text", targetKind: "role", targetRole: "listitem", contains: "완료" })], "/todos"),
     undefined,
     "완료조건: /todos에서 '진행중' 필터 선택 시 완료되지 않은 할 일만 표시 확인",
   );
   assert.ok(grounded.spec, `거부됨: ${grounded.reason}`);
 
   const invented = normalizeComposedItem(
-    uiItem([step({ atom: "expect_every_text", targetKind: "role", targetValue: "listitem", contains: "보관됨" })], "/todos"),
+    uiItem([step({ atom: "expect_every_text", targetKind: "role", targetRole: "listitem", contains: "보관됨" })], "/todos"),
     undefined,
     "완료조건: /todos에서 '진행중' 필터 선택 시 완료되지 않은 할 일만 표시 확인",
   );
@@ -480,4 +480,68 @@ test("프리셋에 매칭되지 않는 표현은 조합 단계로 넘긴다", ()
   // HTML5 checkValidity에 의존해 자체 검증을 쓰는 앱을 실패로 찍는다.
   const result = createMvpVerificationDefinition("이메일을 입력하지 않으면 로그인이 되지 않는다.");
   assert.equal(result.verificationMethod, "manual");
+});
+
+// ── 대상 어휘를 벗어난 조합은 바꿔치기하지 않고 거부한다 ──────────────────────
+// 실측에서 자동화 실패의 가장 큰 원인이었다. 모델이 targetKind=field 에 역할
+// 이름(textbox)이나 임의의 입력란 이름(companyName)을 넣으면 로그인 요소 세
+// 가지가 아니므로 실행할 수 없다. 비슷한 대상으로 고쳐 쓰면 한국어 라벨과
+// 맞지 않아 정상 앱을 실패로 판정하므로, 조합 전체를 버리고 사람 확인으로 넘긴다.
+
+test("field 자리에 역할 이름이 오면 조합을 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "textbox", valueKind: "literal", value: "x" })]),
+  );
+  assert.equal(outcome.spec, null);
+  assert.equal(outcome.reason, "schema_rejected");
+  assert.match(outcome.detail ?? "", /field=textbox/);
+});
+
+test("로그인 요소가 아닌 입력란 이름은 field로 받지 않는다", () => {
+  for (const name of ["companyName", "inviteEmail", "file"]) {
+    const outcome = normalizeComposedItem(
+      uiItem([step({ atom: "fill", targetKind: "field", targetField: name, valueKind: "literal", value: "x" })]),
+    );
+    assert.equal(outcome.spec, null, name);
+    assert.equal(outcome.reason, "schema_rejected", name);
+  }
+});
+
+test("허용된 역할과 라벨은 그대로 조합에 담긴다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([
+      step({ atom: "fill", targetKind: "label", targetText: "회사명", valueKind: "literal", value: "테스트회사" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "저장" }),
+      step({ atom: "expect_visible", targetKind: "role", targetRole: "alert" }),
+    ]),
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("목록에 없는 역할은 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "click", targetKind: "role", targetRole: "menuitem", targetName: "저장" })]),
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /role=menuitem/);
+});
+
+test("fill의 입력값이 비었거나 허용되지 않은 참조면 거부한다", () => {
+  const emptyLiteral = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "literal", value: "" })]),
+  );
+  assert.equal(emptyLiteral.spec, null);
+
+  const badRef = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "username" })]),
+  );
+  assert.equal(badRef.spec, null);
+});
+
+test("시작 경로가 없으면 거부 사유에 그 사실이 남는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_visible", targetKind: "field", targetField: "email" })], ""),
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /시작 경로/);
 });
