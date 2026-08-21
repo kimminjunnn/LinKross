@@ -1,27 +1,36 @@
 import Link from "next/link";
-import { ArrowRight, CircleAlert, FileText, FolderKanban, Search, Send } from "lucide-react";
+import { ArrowRight, CircleAlert, FileText, FolderKanban, Receipt, Search, Send } from "lucide-react";
 
-import { listFreelancerApplications, listFreelancerInvoices, listFreelancerProjects } from "@/lib/backend";
+import { COMMISSION_ENFORCEMENT_ENABLED, COMMISSION_GRACE_DAYS } from "@/config/commission-status";
+import { listFreelancerApplications, listFreelancerCommissionCharges, listFreelancerInvoices, listFreelancerProjects } from "@/lib/backend";
 import { getCurrentUserDisplay } from "@/lib/profile-display";
 
 export default async function FreelancerHomePage() {
-  const [applications, projects, invoices, display] = await Promise.all([
+  const [applications, projects, invoices, commissionCharges, display] = await Promise.all([
     listFreelancerApplications(),
     listFreelancerProjects(),
     listFreelancerInvoices(),
+    listFreelancerCommissionCharges(),
     getCurrentUserDisplay("freelancer"),
   ]);
-  const error = !applications.ok ? applications.error : !projects.ok ? projects.error : !invoices.ok ? invoices.error : null;
+  const error = !applications.ok ? applications.error : !projects.ok ? projects.error : !invoices.ok ? invoices.error : !commissionCharges.ok ? commissionCharges.error : null;
 
   if (error) return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm font-bold text-danger"><CircleAlert className="size-5 shrink-0" />{error.message}</div>;
-  if (!applications.ok || !projects.ok || !invoices.ok) return null;
+  if (!applications.ok || !projects.ok || !invoices.ok || !commissionCharges.ok) return null;
 
   const pendingApplications = applications.data.filter((item) => item.status === "submitted").length;
   const pendingInvoices = invoices.data.filter((item) => item.status === "submitted").length;
+  const now = new Date().getTime();
+  const overdueCharges = commissionCharges.data.filter((charge) => charge.status === "pending" && new Date(charge.dueAt).getTime() < now);
+  const graceExpired = overdueCharges.some((charge) => new Date(charge.dueAt).getTime() < now - COMMISSION_GRACE_DAYS * 86_400_000);
+  const unpaidCommissionTotal = commissionCharges.data
+    .filter((charge) => charge.status === "pending")
+    .reduce((sum, charge) => sum + charge.commissionAmount + charge.vatAmount, 0);
   const stats = [
     { label: "Proposals submitted", value: applications.data.length, detail: `${pendingApplications} under review`, icon: Send, href: "/freelancer/applications" },
     { label: "Selected projects", value: projects.data.length, detail: `${projects.data.reduce((sum, project) => sum + project.milestoneCount, 0)} milestones`, icon: FolderKanban, href: "/freelancer/projects" },
     { label: "Invoices submitted", value: invoices.data.length, detail: `${pendingInvoices} awaiting review`, icon: FileText, href: "/freelancer/invoices" },
+    { label: "Commission owed", value: unpaidCommissionTotal.toLocaleString(), detail: `${commissionCharges.data.filter((charge) => charge.status === "pending").length} unpaid`, icon: Receipt, href: "/freelancer/commissions" },
   ];
 
   return (
@@ -36,7 +45,23 @@ export default async function FreelancerHomePage() {
         Your actual proposals, selected projects, and invoice records are summarized here.
       </p>
 
-      <section className="mt-8 grid gap-4 md:grid-cols-3">
+      {overdueCharges.length > 0 ? (
+        <div className="mt-6 flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm text-danger">
+          <CircleAlert className="size-5 shrink-0" />
+          <div>
+            {COMMISSION_ENFORCEMENT_ENABLED ? (
+              <>
+                <p>You have unpaid platform commission. New project applications are blocked until it is paid.</p>
+                {graceExpired ? <p className="mt-1">The {COMMISSION_GRACE_DAYS}-day grace period has passed — submitting new milestone work on existing projects is blocked as well.</p> : null}
+              </>
+            ) : (
+              <p>You have unpaid platform commission. Please report payment on the commissions page.</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (

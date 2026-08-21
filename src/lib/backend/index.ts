@@ -5,6 +5,8 @@ export type {
   BackendErrorCode,
   BackendResult,
   BudgetType,
+  CommissionChargeRecord,
+  CommissionChargeStatus,
   CompanyProjectDetail,
   CompanyProfileSettings,
   CompanyProjectSummary,
@@ -24,6 +26,8 @@ export type {
   MilestoneSubmissionRecord,
   MilestoneSubmissionReceipt,
   MilestoneChecklistItem,
+  MarkCommissionChargePaidInput,
+  VerifyCommissionWalletPaymentInput,
   MarkSowRevisionRequestsReadInput,
   OpportunityDetail,
   OpportunitySummary,
@@ -66,6 +70,9 @@ export type {
   SubmitProposalOutput,
   SubmitMilestonePullRequestInput,
   SubmitInvoiceInput,
+  SubscriptionRecord,
+  SubscriptionStatus,
+  UpsertSubscriptionInput,
   UserRole,
   VerificationMethod,
   VerificationMilestoneRecord,
@@ -92,6 +99,8 @@ export { listFreelancerApplications, listFreelancerProjects } from "@/lib/backen
 export { listCompanyNotifications, listFreelancerNotifications } from "@/lib/backend/notifications";
 export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
 export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, requestPayment, reviewInvoice, submitInvoice, verifyWalletPayment } from "@/lib/backend/finance";
+export { getProjectCommissionChargesByPayment, listFreelancerCommissionCharges, markCommissionChargePaid, verifyCommissionWalletPayment } from "@/lib/backend/commission";
+export { getCompanySubscription, upsertCompanySubscription } from "@/lib/backend/subscriptions";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
   connectProjectRepository,

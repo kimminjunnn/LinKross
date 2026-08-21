@@ -3,15 +3,19 @@ import { CircleAlert } from "lucide-react";
 
 import { ReceiptDocument } from "@/components/project/payment/receipt-document";
 import { ReceiptPrintButton } from "@/components/project/payment/receipt-print-button";
-import { getProjectFinancialWorkspace } from "@/lib/backend";
+import { getProjectCommissionChargesByPayment, getProjectFinancialWorkspace } from "@/lib/backend";
 
 export default async function AllPaymentReceiptsPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const result = await getProjectFinancialWorkspace(projectId);
+  const [result, commissionResult] = await Promise.all([
+    getProjectFinancialWorkspace(projectId),
+    getProjectCommissionChargesByPayment(projectId),
+  ]);
 
   if (!result.ok) {
     return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm font-bold text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
   }
+  const commissionByPaymentId = commissionResult.ok ? commissionResult.data : {};
 
   const verifiedEntries = result.data.milestones.filter(
     (milestone): milestone is typeof milestone & {
@@ -59,6 +63,7 @@ export default async function AllPaymentReceiptsPage({ params }: { params: Promi
               blockNumber={milestone.payment.blockNumber}
               completedAt={milestone.payment.completedAt}
               paymentId={milestone.payment.id}
+              platformCommission={commissionByPaymentId[milestone.payment.id] ?? null}
             />
           </div>
         ))}

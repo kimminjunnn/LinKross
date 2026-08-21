@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, CircleAlert, FileArchive } from "lucide-react";
 
-import { getProjectFinancialWorkspace } from "@/lib/backend";
+import { getProjectCommissionChargesByPayment, getProjectFinancialWorkspace } from "@/lib/backend";
 
 import { GenerateEvidenceBundleButton } from "./bundle-actions";
 import { CompanyFinancialWorkspace } from "./financial-workspace";
@@ -9,17 +9,21 @@ import { PaymentEvidencePanel } from "./payment-evidence-panel";
 
 export default async function EvidencePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const result = await getProjectFinancialWorkspace(projectId);
+  const [result, commissionChargesResult] = await Promise.all([
+    getProjectFinancialWorkspace(projectId),
+    getProjectCommissionChargesByPayment(projectId),
+  ]);
 
   if (!result.ok) {
     return <div className="flex gap-3 rounded-card border border-danger/30 bg-danger/10 p-5 text-sm text-danger"><CircleAlert className="size-5 shrink-0" />{result.error.message}</div>;
   }
+  const commissionChargesByPaymentId = commissionChargesResult.ok ? commissionChargesResult.data : {};
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
       <CompanyFinancialWorkspace workspace={result.data} />
       <div className="space-y-5">
-        <PaymentEvidencePanel projectId={projectId} milestones={result.data.milestones} />
+        <PaymentEvidencePanel projectId={projectId} milestones={result.data.milestones} commissionChargesByPaymentId={commissionChargesByPaymentId} />
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-start gap-3">
             <FileArchive className="mt-0.5 size-5 text-brand-600" />

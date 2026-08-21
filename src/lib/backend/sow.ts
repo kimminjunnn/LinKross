@@ -426,10 +426,8 @@ async function getSowApprovalParticipantRows(
   };
 }
 
-function buildTempPositionBase(existingPositions: number[]): number {
-  // position은 DB에서 0보다 커야 한다. 재정렬 중 unique 충돌을 피하기 위해
-  // 음수가 아닌, 현재 범위 밖의 임시 양수 위치를 사용한다.
-  return Math.max(0, ...existingPositions) + existingPositions.length + 1;
+function buildTempPositionBase(): number {
+  return Math.floor(Date.now() / 1000);
 }
 
 async function upsertMilestonesForDraft(
@@ -451,7 +449,7 @@ async function upsertMilestonesForDraft(
 
   const existingByCode = new Map((existingRows ?? []).map((row) => [row.code, row.id]));
 
-  const tempBase = buildTempPositionBase((existingRows ?? []).map((row) => row.position));
+  const tempBase = buildTempPositionBase();
   for (let index = 0; index < (existingRows?.length ?? 0); index += 1) {
     const { error } = await supabase
       .from("milestones")
@@ -535,7 +533,7 @@ async function upsertCriteriaForMilestone(
     return { ok: false, error: mapBackendError(existingError, "기존 완료 조건을 확인하지 못했습니다.") };
   }
 
-  const tempBase = buildTempPositionBase((existingRows ?? []).map((row) => row.position));
+  const tempBase = buildTempPositionBase();
   for (let index = 0; index < (existingRows?.length ?? 0); index += 1) {
     const { error } = await supabase
       .from("completion_criteria")

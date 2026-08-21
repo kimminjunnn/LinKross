@@ -380,6 +380,31 @@ export async function listFreelancerNotifications(): Promise<
     }
   }
 
+  const { data: overdueCharges, error: overdueChargesError } = await supabase
+    .from("commission_charges")
+    .select("id, project_id, base_amount, commission_amount, vat_amount, currency, due_at")
+    .eq("freelancer_id", authData.user.id)
+    .eq("status", "pending")
+    .lt("due_at", new Date().toISOString());
+  if (overdueChargesError) {
+    return { ok: false, error: mapBackendError(overdueChargesError, "Could not load commission notifications.") };
+  }
+  for (const charge of overdueCharges ?? []) {
+    const project = projectById.get(charge.project_id);
+    const projectTitle = getProjectTitle(project, titleByRequirementId);
+    const totalDue = Number(charge.commission_amount) + Number(charge.vat_amount);
+    notifications.push({
+      id: `freelancer-commission-overdue-${charge.id}`,
+      kind: "commission_overdue",
+      title: "Platform commission is unpaid",
+      description: `${totalDue.toLocaleString()} ${charge.currency} platform commission is overdue. Pay it via your own means, then report it on the commissions page.`,
+      projectTitle,
+      occurredAt: charge.due_at,
+      href: "/freelancer/commissions",
+      requiresAction: true,
+    });
+  }
+
   return { ok: true, data: sortNotifications(notifications) };
 }
 

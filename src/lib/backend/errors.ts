@@ -29,6 +29,10 @@ export function mapBackendError(
     return { code: "RECRUITMENT_CLOSED", message: "현재 제안서를 제출할 수 없는 모집입니다." };
   }
 
+  if (message.includes("COMMISSION_OVERDUE")) {
+    return { code: "COMMISSION_OVERDUE", message: "미납된 플랫폼 수수료가 있어 새 프로젝트에 지원할 수 없습니다." };
+  }
+
   if (message.includes("FREELANCER_PROFILE_REQUIRED")) {
     return {
       code: "FREELANCER_PROFILE_REQUIRED",

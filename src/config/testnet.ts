@@ -16,3 +16,6 @@ export const BASE_SEPOLIA_NETWORK_PARAMS = {
 
 export const USDC_CONTRACT_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 export const USDC_DECIMALS = 6;
+
+// LinKross가 플랫폼 수수료를 수령하는 테스트넷 지갑 주소 (팀 전용, Base Sepolia).
+export const LINKROSS_TREASURY_WALLET_ADDRESS = "0xC9a33ad08d9cBcc5F733B069A77ae784483B0122";

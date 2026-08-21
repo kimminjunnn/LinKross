@@ -9,6 +9,7 @@ export type BackendErrorCode =
   | "CONFLICT"
   | "COMPANY_PROFILE_REQUIRED"
   | "FREELANCER_PROFILE_REQUIRED"
+  | "COMMISSION_OVERDUE"
   | "DATABASE_ERROR";
 
 export interface BackendError {
@@ -359,7 +360,8 @@ export type WorkspaceNotificationKind =
   | "proposal_selected"
   | "sow_approval_requested"
   | "sow_revision_requested"
-  | "sow_approved";
+  | "sow_approved"
+  | "commission_overdue";
 
 export interface WorkspaceNotification {
   id: string;
@@ -701,6 +703,58 @@ export interface EvidenceBundleDetail {
   completedAt: string | null;
   errorMessage: string | null;
   payload: Record<string, unknown> | null;
+}
+
+export type CommissionChargeStatus = "pending" | "paid" | "waived";
+export type SubscriptionStatus = "active" | "past_due" | "cancelled";
+
+export interface CommissionChargeRecord {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  milestoneId: string;
+  milestoneTitle: string;
+  paymentId: string;
+  baseAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  vatAmount: number;
+  currency: string;
+  status: CommissionChargeStatus;
+  paymentMethod: PaymentMethod;
+  txHash: string | null;
+  toAddress: string | null;
+  blockNumber: number | null;
+  dueAt: string;
+  paidAt: string | null;
+  paidReference: string | null;
+  createdAt: string;
+}
+
+export interface MarkCommissionChargePaidInput {
+  chargeId: string;
+  method: Exclude<PaymentMethod, "wallet_testnet">;
+  paidReference: string;
+}
+
+export interface VerifyCommissionWalletPaymentInput {
+  chargeId: string;
+  txHash: string;
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  status: SubscriptionStatus;
+  amount: number;
+  currency: string;
+  periodStartAt: string;
+  periodEndAt: string | null;
+}
+
+export interface UpsertSubscriptionInput {
+  amount: number;
+  currency?: string;
+  status?: SubscriptionStatus;
 }
 
 export interface CompanyProfileSettings {

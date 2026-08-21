@@ -6,6 +6,7 @@ import type {
   SubmitProposalInput,
   SubmitProposalOutput,
 } from "@/lib/backend/contracts";
+import { COMMISSION_ENFORCEMENT_ENABLED } from "@/config/commission-status";
 import { mapBackendError } from "@/lib/backend/errors";
 import { validateSelectProposal, validateSubmitProposal } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -55,6 +56,26 @@ export async function submitProposal(
         message: "제안서를 제출하려면 먼저 프리랜서 프로필(이름, 소개 등)을 등록해주세요.",
       },
     };
+  }
+
+  if (COMMISSION_ENFORCEMENT_ENABLED) {
+    const { data: overdueCharge, error: overdueChargeError } = await supabase
+      .from("commission_charges")
+      .select("id")
+      .eq("freelancer_id", authData.user.id)
+      .eq("status", "pending")
+      .lt("due_at", new Date().toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (overdueChargeError) {
+      return { ok: false, error: mapBackendError(overdueChargeError, "수수료 납부 상태를 확인하지 못했습니다.") };
+    }
+    if (overdueCharge) {
+      return {
+        ok: false,
+        error: { code: "COMMISSION_OVERDUE", message: "미납된 플랫폼 수수료가 있어 새 프로젝트에 지원할 수 없습니다." },
+      };
+    }
   }
 
   const { data, error } = await supabase
