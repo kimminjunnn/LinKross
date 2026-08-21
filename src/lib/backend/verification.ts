@@ -22,6 +22,7 @@ import {
   getInstalledGitHubRepository,
   GitHubAppError,
 } from "@/lib/github/app";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ACTIVE_RUN_STATUSES } from "@/lib/verification-runner/contracts";
 import { parseManualGuidanceSpec, resolveMvpVerificationDefinition } from "@/lib/verification-test-spec";
@@ -718,6 +719,61 @@ async function queueSubmissionVerification(
       verificationStatus: verification.data.status,
     },
   };
+}
+
+/**
+ * 진행 중인 검수 실행을 사용자가 중단한다.
+ *
+ * 조정기가 끊기면 실행은 진행 중 상태로 남고 화면은 계속 "검수 중"을 표시한다.
+ * 자동 복구(멈춘 실행 재선점)만으로는 사용자가 지금 당장 멈출 방법이 없어,
+ * 명시적인 중단 경로를 둔다.
+ *
+ * verification_runs에는 UPDATE 정책이 없어 사용자 세션으로는 상태를 바꿀 수
+ * 없다. 프로젝트 접근 권한을 먼저 확인한 뒤 서버 권한으로 기록한다.
+ */
+export async function cancelVerificationRun(input: {
+  projectId: string;
+  runId: string;
+}): Promise<BackendResult<{ runId: string; status: VerificationRunRecord["status"] }>> {
+  if (!isUuid(input.projectId) || !isUuid(input.runId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 검수 실행이 아닙니다." } };
+  }
+
+  const access = await getProjectAccess(input.projectId);
+  if (!access.ok) return access;
+
+  const { data: run, error: runError } = await access.data.supabase
+    .from("verification_runs")
+    .select("id, status, project_id")
+    .eq("id", input.runId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (runError || !run) {
+    return { ok: false, error: mapBackendError(runError, "검수 실행을 찾을 수 없습니다.") };
+  }
+  if (!ACTIVE_RUN_STATUSES.includes(run.status as never)) {
+    return {
+      ok: false,
+      error: { code: "CONFLICT", message: "이미 끝난 검수는 중단할 수 없습니다." },
+    };
+  }
+
+  // 조정기가 아직 살아 있다면 완료 기록이 거부되고 격리 환경은 스스로 정리된다.
+  const { data: cancelled, error: cancelError } = await createSupabaseAdminClient()
+    .from("verification_runs")
+    .update({
+      status: "cancelled",
+      completed_at: new Date().toISOString(),
+      error_summary: "발주자 또는 프리랜서가 검수를 중단했습니다.",
+    })
+    .eq("id", input.runId)
+    .in("status", [...ACTIVE_RUN_STATUSES])
+    .select("id, status")
+    .maybeSingle();
+  if (cancelError || !cancelled) {
+    return { ok: false, error: mapBackendError(cancelError, "검수를 중단하지 못했습니다.") };
+  }
+  return { ok: true, data: { runId: cancelled.id, status: cancelled.status } };
 }
 
 export async function decideMilestone(

@@ -14,6 +14,7 @@ import {
   Play,
   RotateCcw,
   Settings2,
+  Square,
   ShieldCheck,
   TestTube2,
   UserRound,
@@ -27,6 +28,7 @@ import {
 import {
   connectProjectRepositoryAction,
   decideMilestoneAction,
+  cancelVerificationRunAction,
   requestVerificationRunAction,
 } from "@/app/actions/verification";
 import { StatusBadge } from "@/components/project/status-badge";
@@ -79,9 +81,13 @@ function LinKrossMark({ className = "" }: { className?: string }) {
 function VerificationLoadingOverlay({
   milestoneLabel,
   onDismiss,
+  onCancel,
+  cancelling,
 }: {
   milestoneLabel: string;
   onDismiss: () => void;
+  onCancel?: () => void;
+  cancelling: boolean;
 }) {
   return (
     <div
@@ -99,13 +105,26 @@ function VerificationLoadingOverlay({
         <p className="max-w-xs text-center text-sm text-slate-500">
           {milestoneLabel} 설치·빌드·테스트를 실행하고 있습니다. 완료되면 이 화면이 자동으로 갱신됩니다.
         </p>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="mt-1 cursor-pointer text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
-        >
-          닫고 계속 둘러보기
-        </button>
+        <div className="mt-1 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="cursor-pointer text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+          >
+            닫고 계속 둘러보기
+          </button>
+          {onCancel && (
+            <button
+              type="button"
+              disabled={cancelling}
+              onClick={onCancel}
+              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-control border border-app-border-strong px-3 text-xs font-semibold text-app-foreground hover:bg-app-surface-subtle disabled:opacity-50"
+            >
+              {cancelling ? <Loader2 aria-hidden="true" className="size-3.5 animate-spin" /> : <Square aria-hidden="true" className="size-3.5" />}
+              검수 중단
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -220,6 +239,7 @@ export function CompanyVerificationWorkspace({
   const [pending, startTransition] = useTransition();
   const [overlayDismissed, setOverlayDismissed] = useState(false);
   const [verifyingLabel, setVerifyingLabel] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const wasRunningRef = useRef(false);
   const selectedMilestone =
     initialWorkspace.milestones.find((milestone) => milestone.id === selectedMilestoneId) ??
@@ -236,6 +256,7 @@ export function CompanyVerificationWorkspace({
   // 검수를 동기 대기로 처리하므로, 방금 누른 탭 자신은 initialWorkspace가
   // 갱신되기 전까지 anyRunInProgress를 못 잡는다. verifyingLabel이 그 공백을 메운다.
   const anyRunInProgress = runningMilestone !== null || verifyingLabel !== null;
+  const runningRunId = runningMilestone?.submissions[0]?.runs[0]?.id ?? null;
   const overlayLabel = verifyingLabel ?? (runningMilestone ? `${runningMilestone.code} · ${runningMilestone.title}` : "");
 
   useEffect(() => {
@@ -264,6 +285,25 @@ export function CompanyVerificationWorkspace({
   function handleDismissWelcome() {
     localStorage.setItem(`lk-welcome-dismissed-${initialWorkspace.projectId}`, "true");
     setShowWelcome(false);
+  }
+
+  function cancelRun(runId: string) {
+    setCancelling(true);
+    startTransition(async () => {
+      try {
+        const result = await cancelVerificationRunAction({
+          projectId: initialWorkspace.projectId,
+          runId,
+        });
+        setMessage(result.ok ? "검수를 중단했습니다." : result.error.message);
+        if (result.ok) {
+          setVerifyingLabel(null);
+          setOverlayDismissed(true);
+        }
+      } finally {
+        setCancelling(false);
+      }
+    });
   }
 
   function connectRepository(formData: FormData) {
@@ -327,6 +367,8 @@ export function CompanyVerificationWorkspace({
         <VerificationLoadingOverlay
           milestoneLabel={overlayLabel}
           onDismiss={() => setOverlayDismissed(true)}
+          onCancel={runningRunId ? () => cancelRun(runningRunId) : undefined}
+          cancelling={cancelling}
         />
       )}
 

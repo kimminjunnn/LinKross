@@ -13,6 +13,7 @@ import type {
   SubmitMilestonePullRequestInput,
 } from "@/lib/backend";
 import {
+  cancelVerificationRun,
   connectProjectRepository,
   decideMilestone,
   requestVerificationRun,
@@ -81,6 +82,14 @@ export async function requestVerificationRunAction(
     if (result.data.retriable) await triggerImmediateVerification(result.data.runId);
     revalidateVerification(input.projectId);
   }
+  return result;
+}
+
+export async function cancelVerificationRunAction(
+  input: { projectId: string; runId: string },
+): Promise<BackendResult<{ runId: string; status: string }>> {
+  const result = await cancelVerificationRun(input);
+  if (result.ok) revalidateVerification(input.projectId);
   return result;
 }
 

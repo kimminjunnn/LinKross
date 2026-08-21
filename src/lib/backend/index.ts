@@ -103,6 +103,7 @@ export { getProjectCommissionChargesByPayment, listFreelancerCommissionCharges, 
 export { getCompanySubscription, upsertCompanySubscription } from "@/lib/backend/subscriptions";
 export { listProjectProposals, selectProposal, submitProposal } from "@/lib/backend/proposals";
 export {
+  cancelVerificationRun,
   connectProjectRepository,
   decideMilestone,
   getVerificationWorkspace,
