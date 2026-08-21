@@ -17,6 +17,17 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const MAX_ANALYSIS_BATCH = 100;
 
+/**
+ * 한 번의 LLM 호출에 담는 완료조건 수.
+ *
+ * 예전에는 요청 전체를 한 호출에 담고, 응답 개수가 맞지 않으면 배치 전체를
+ * 실패시켰다. 그래서 출력 한도에 걸린 응답 하나로 완료조건 수십 개가 한꺼번에
+ * 분석을 잃었다. 실측에서 같은 입력을 세 번 돌렸을 때 한 회차만 40개 중 20개를
+ * 통째로 잃어 자동화율이 92.5%에서 47.5%로 떨어졌다. 조합 단계가 이미 쓰고 있는
+ * 방식(작게 나눠 담고, 잘리면 절반으로 다시 시도)을 여기에도 적용한다.
+ */
+const ANALYSIS_CHUNK_SIZE = 12;
+
 export const TEST_SCENARIOS: DodTestScenario[] = [
   "navigation",
   "form_submission",
@@ -70,31 +81,59 @@ export async function analyzeDodContracts(
     throw new Error(`한 번에 분석할 완료조건은 ${MAX_ANALYSIS_BATCH}개 이하여야 합니다.`);
   }
 
-  const completion = await openai.chat.completions.parse({
-    model: process.env.OPENAI_MODEL ?? "gpt-4o",
-    messages: [
-      { role: "system", content: buildSystemPrompt() },
-      {
-        role: "user",
-        content: JSON.stringify({
-          items: items.map((item, itemIndex) => ({
-            itemIndex,
-            milestoneTitle: item.milestoneTitle,
-            dod: item.dod,
-          })),
-        }),
-      },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: { name: "dod_verification_analysis", strict: true, schema: buildSchema() },
-    },
-    temperature: 0.1,
-  });
+  const results: DodContractAnalysis[] = [];
+  for (let index = 0; index < items.length; index += ANALYSIS_CHUNK_SIZE) {
+    results.push(...(await analyzeChunk(items.slice(index, index + ANALYSIS_CHUNK_SIZE))));
+  }
+  return results;
+}
 
-  const parsed = completion.choices[0].message.parsed as { items: RawAnalysis[] } | null;
-  if (!parsed || parsed.items.length !== items.length) {
-    throw new Error("AI가 완료조건 분석 결과를 정확히 반환하지 못했습니다.");
+/**
+ * 한 묶음을 분석한다. 응답이 잘려 개수가 맞지 않으면 절반으로 나눠 다시 시도해,
+ * 완료조건 하나 때문에 같은 호출에 실린 나머지까지 분석을 잃지 않게 한다.
+ */
+async function analyzeChunk(items: DodContractAnalysisItem[]): Promise<DodContractAnalysis[]> {
+  if (items.length === 0) return [];
+
+  let parsed: { items: RawAnalysis[] } | null;
+  try {
+    const completion = await openai.chat.completions.parse({
+      model: process.env.OPENAI_MODEL ?? "gpt-4o",
+      messages: [
+        { role: "system", content: buildSystemPrompt() },
+        {
+          role: "user",
+          content: JSON.stringify({
+            items: items.map((item, itemIndex) => ({
+              itemIndex,
+              milestoneTitle: item.milestoneTitle,
+              dod: item.dod,
+            })),
+          }),
+        },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "dod_verification_analysis", strict: true, schema: buildSchema() },
+      },
+      temperature: 0.1,
+    });
+    parsed = completion.choices[0].message.parsed as { items: RawAnalysis[] } | null;
+  } catch (error) {
+    // 인증·과금·네트워크 실패는 나눠도 똑같이 실패한다. 여기서 끝낸다.
+    console.error("[dod-contract-analyzer] 분석 호출 실패", error);
+    throw error;
+  }
+
+  if (!parsed || !Array.isArray(parsed.items) || parsed.items.length !== items.length) {
+    if (items.length <= 1) {
+      throw new Error("AI가 완료조건 분석 결과를 정확히 반환하지 못했습니다.");
+    }
+    const middle = Math.ceil(items.length / 2);
+    return [
+      ...(await analyzeChunk(items.slice(0, middle))),
+      ...(await analyzeChunk(items.slice(middle))),
+    ];
   }
 
   const byIndex = new Map(parsed.items.map((analysis) => [analysis.itemIndex, analysis]));
