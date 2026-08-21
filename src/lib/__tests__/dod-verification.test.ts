@@ -9,6 +9,7 @@ import {
   isCompleteTestContract,
   missingContractFields,
   normalizeContractRequirements,
+  targetSuggestionsFrom,
 } from "@/lib/dod-test-contract";
 import {
   conversationFromRequirements,
@@ -787,4 +788,54 @@ test("확인 동작은 이름 없는 역할을 그대로 허용한다", () => {
     uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: 1 })], "/todos"),
   );
   assert.notEqual(outcome.spec, null);
+});
+
+// ── 선택지는 지시문이 아니라 실제 값이어야 한다 ──────────────────────────────
+// 선택지는 그대로 계약 필드 값이 되고, 조합 단계에서 화면 요소 이름으로 쓰인다.
+// 예전 target 기본값("화면에 표시된 버튼 이름 사용")이 그대로 이름이 되어
+// 정상 앱에서 요소를 찾지 못하고 실패로 판정됐다.
+
+test("완료조건의 따옴표 안 이름을 대상 선택지로 뽑는다", () => {
+  assert.deepEqual(
+    targetSuggestionsFrom("/todos에서 할 일 입력 후 '할 일 추가' 버튼 클릭 시 목록에 표시 확인"),
+    ["할 일 추가"],
+  );
+  assert.deepEqual(
+    targetSuggestionsFrom("“픽업 대기” 상태에서 \"배송 완료\"로 직접 변경 시도 시 변경 거부 확인"),
+    ["픽업 대기", "배송 완료"],
+  );
+  assert.deepEqual(targetSuggestionsFrom("/todos에서 목록 표시 확인"), []);
+});
+
+test("대상 질문의 선택지가 완료조건에서 온다", () => {
+  const requirements = normalizeContractRequirements(
+    contract({ scenario: "state_change", startPath: "/todos", precondition: "로그인한 상태", expected: "표시" }),
+    [],
+    "/todos에서 '할 일 추가' 버튼 클릭 시 목록에 표시 확인",
+  );
+  const target = requirements.find((requirement) => requirement.key === "target");
+  assert.deepEqual(target?.suggestions, ["할 일 추가"]);
+  assert.equal(target?.recommendedSuggestion, "할 일 추가");
+});
+
+test("뽑을 이름이 없으면 지시문을 선택지로 주지 않는다", () => {
+  const requirements = normalizeContractRequirements(
+    contract({ scenario: "state_change", startPath: "/todos", precondition: "로그인한 상태", expected: "표시" }),
+    [],
+    "/todos에서 목록 표시 확인",
+  );
+  const target = requirements.find((requirement) => requirement.key === "target");
+  assert.deepEqual(target?.suggestions, [], "그럴듯한 지시문이 이름으로 쓰이면 안 된다");
+});
+
+test("제출 버튼에는 입력 검증 차단을 확인하지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_form_blocked", targetKind: "field", targetField: "submit" })], "/login"),
+  );
+  assert.equal(outcome.spec, null);
+
+  const onInput = normalizeComposedItem(
+    uiItem([step({ atom: "expect_form_blocked", targetKind: "field", targetField: "email" })], "/login"),
+  );
+  assert.notEqual(onInput.spec, null);
 });

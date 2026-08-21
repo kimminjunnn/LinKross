@@ -144,7 +144,7 @@ async function analyzeChunk(items: DodContractAnalysisItem[]): Promise<DodContra
     return {
       revisedDod: analysis.revisedDod?.trim() || item.dod,
       testContract,
-      requirements: normalizeContractRequirements(testContract, analysis.requirements ?? []),
+      requirements: normalizeContractRequirements(testContract, analysis.requirements ?? [], item.dod),
     };
   });
 }

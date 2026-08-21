@@ -399,7 +399,12 @@ export function toAtom(step: FlatStep): object | null {
     case "expect_disabled":
     case "expect_focused":
     case "expect_within_viewport":
-    case "expect_form_blocked":
+    case "expect_form_blocked": {
+      // 제출이 막히는 것은 입력값 검증의 결과이므로 그 입력란에서 확인해야 한다.
+      // 제출 버튼 자체는 언제나 유효하므로 이 확인이 항상 실패한다.
+      if (target && (target as { field?: string }).field === "submit") return null;
+      return target ? { atom: "expect_form_blocked", target } : null;
+    }
     case "expect_checked":
     case "expect_unchecked":
       return target ? { atom: step.atom, target } : null;

@@ -55,16 +55,44 @@ const FIELD_QUESTIONS: Record<DodTestContractField, string> = {
   cleanup: "다음 테스트에 영향을 주지 않도록 데이터를 어떻게 정리하나요?",
 };
 
+/**
+ * 답변이 없을 때 쓰는 기본 선택지.
+ *
+ * 선택지는 그대로 계약 필드 값이 되므로 "무엇을 하라"는 지시문이 아니라 실제
+ * 값이어야 한다. 예전 `target` 기본값은 "화면에 표시된 버튼 이름 사용"이었는데,
+ * 이것이 그대로 계약의 `target`이 되고 조합 단계에서 요소 이름으로 쓰였다.
+ * 실측에서 모델이 `대상 버튼`, `로그아웃 버튼`, `할 일 체크박스` 같은 이름으로
+ * 요소를 찾으려 했고(실제 화면 문구는 각각 없음/`로그아웃`/할 일 제목),
+ * 정상 앱이 실패로 판정됐다.
+ *
+ * `target`은 화면마다 달라 일반적인 기본값이 존재하지 않는다. 완료조건에 적힌
+ * 이름을 뽑아 쓰고(`targetSuggestionsFrom`), 뽑을 수 없으면 사용자가 직접
+ * 적도록 안내 문구만 남긴다.
+ */
 const FIELD_SUGGESTIONS: Record<DodTestContractField, string[]> = {
   startPath: ["/login", "/todos"],
   precondition: ["로그아웃 상태에서 시작", "테스트 계정으로 로그인한 상태에서 시작"],
   fixture: ["테스트 계정에 필요한 데이터를 화면에서 미리 생성", "새 테스트 계정의 초기 상태 사용"],
-  action: ["대상 버튼을 한 번 클릭", "값을 입력한 뒤 제출 버튼 클릭"],
-  target: ["화면에 표시된 버튼 이름 사용", "입력란의 라벨 이름 사용"],
+  action: ["클릭", "값 입력 후 제출"],
+  target: [],
   input: ["고정된 합성 테스트 값 사용", "AI 추천 테스트 값 사용"],
   expected: ["이동한 URL로 확인", "화면에 표시되는 문구와 상태로 확인"],
   cleanup: ["테스트에서 만든 데이터를 화면에서 삭제", "격리된 테스트 계정을 매 실행마다 초기화"],
 };
+
+/**
+ * 완료조건 문장에서 화면 요소 이름 후보를 뽑는다.
+ *
+ * CLAUDE.md의 작성 규칙상 버튼·문구 이름은 따옴표로 감싸 적는다
+ * (예: `'할 일 추가' 버튼 클릭`). 그 따옴표 안이 실제 화면에 보이는 이름이므로
+ * 지어낸 이름 대신 이것을 선택지로 준다.
+ */
+export function targetSuggestionsFrom(dod: string): string[] {
+  const found = [...dod.matchAll(/['"“”‘’「」『』]([^'"“”‘’「」『』]{1,40})['"“”‘’「」『』]/g)]
+    .map((match) => match[1].trim())
+    .filter((name) => name.length > 0);
+  return [...new Set(found)].slice(0, 3);
+}
 
 /**
  * `precondition`은 시나리오와 무관하게 항상 필요하다.
@@ -93,22 +121,27 @@ export function missingContractFields(contract: DodTestContract): DodTestContrac
 export function normalizeContractRequirements(
   contract: DodTestContract,
   proposed: DodClarificationRequirement[],
+  dod?: string,
 ): DodClarificationRequirement[] {
   const proposedByKey = new Map(proposed.map((item) => [item.key, item]));
   return missingContractFields(contract).map((field) => {
     const candidate = proposedByKey.get(field);
-    const suggestions = (candidate?.suggestions ?? FIELD_SUGGESTIONS[field])
+    const fallback =
+      field === "target" && dod ? targetSuggestionsFrom(dod) : FIELD_SUGGESTIONS[field];
+    const suggestions = (candidate?.suggestions ?? fallback)
       .map((value) => value.trim().slice(0, 120))
       .filter((value, index, all) => Boolean(value) && all.indexOf(value) === index)
       .slice(0, 3);
     return {
       key: field,
       question: candidate?.question?.trim().slice(0, 500) || FIELD_QUESTIONS[field],
-      suggestions: suggestions.length >= 2 ? suggestions : FIELD_SUGGESTIONS[field],
+      // 후보가 없으면 빈 목록을 남긴다. 그럴듯한 지시문을 선택지로 주면 그것이
+      // 그대로 계약 값이 되고 요소 이름으로 쓰여 정상 앱을 실패로 만든다.
+      suggestions: suggestions.length >= 2 ? suggestions : (suggestions.length > 0 ? suggestions : fallback),
       recommendedSuggestion:
         candidate?.recommendedSuggestion && suggestions.includes(candidate.recommendedSuggestion)
           ? candidate.recommendedSuggestion
-          : suggestions[0] ?? FIELD_SUGGESTIONS[field][0],
+          : suggestions[0] ?? fallback[0] ?? "",
       ...(candidate?.answer?.trim() ? { answer: candidate.answer.trim().slice(0, 1000) } : {}),
     };
   });
