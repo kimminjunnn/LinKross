@@ -17,7 +17,12 @@ import {
   summarizeDesigns,
   unansweredRequirements,
 } from "@/lib/dod-verification-state";
-import { normalizeComposedItem, type FlatItem, type FlatStep } from "@/lib/dod-atom-composition";
+import {
+  normalizeComposedItem,
+  requiresLoginState,
+  type FlatItem,
+  type FlatStep,
+} from "@/lib/dod-atom-composition";
 import {
   MANAGED_BROWSER_SPEC_VERSION_V2,
   MANAGED_BROWSER_SPEC_VERSION_V3,
@@ -50,7 +55,7 @@ const uiItem = (steps: FlatStep[], startPath = "/login"): FlatItem =>
 // ── 완료 상태를 오판하지 않는다 ──────────────────────────────────────────────
 test("실행 가능한 스펙이 없으면 계약이 완성돼도 준비 완료가 되지 않는다", () => {
   const full = contract({
-    startPath: "/login", action: "클릭", target: "로그인 버튼",
+    startPath: "/login", precondition: "로그아웃 상태에서 시작", action: "클릭", target: "로그인 버튼",
     input: "test@example.com", expected: "/dashboard로 이동",
   });
   assert.equal(isCompleteTestContract(full), true);
@@ -126,12 +131,14 @@ test("문장이 바뀌거나 스펙이 없으면 재사용하지 않는다", () 
 test("답변이 같은 이름의 계약 필드에 그대로 들어간다", () => {
   const merged = applyAnswersToContract(contract(), [
     req("startPath", "/orders 화면에서"),
+    req("precondition", "테스트 계정으로 로그인한 상태에서 시작"),
     req("action", "픽업 요청 버튼 클릭"),
     req("target", "픽업 요청"),
     req("expected", "목록에 1건 표시"),
     req("input", "회의 준비"),
   ]);
   assert.equal(merged.startPath, "/orders");           // 한국어 조사 제거
+  assert.equal(merged.precondition, "테스트 계정으로 로그인한 상태에서 시작");
   assert.equal(merged.action, "픽업 요청 버튼 클릭");
   assert.equal(merged.target, "픽업 요청");
   assert.equal(merged.expected, "목록에 1건 표시");
@@ -544,4 +551,107 @@ test("시작 경로가 없으면 거부 사유에 그 사실이 남는다", () =
   );
   assert.equal(outcome.spec, null);
   assert.match(outcome.detail ?? "", /시작 경로/);
+});
+
+// ── 계약이 요구한 전제를 만들지 않은 조합은 채택하지 않는다 ────────────────────
+// 실측에서 이 누락 하나가 두 가지 오판을 동시에 만들었다. 로그인이 필요한 화면에
+// 로그인 없이 접근하면 정상 앱은 로그인 화면으로 리다이렉트되어 실패하고(False FAIL),
+// 권한 검사가 빠진 고장 앱은 오히려 열려서 통과한다(False PASS).
+
+test("로그인 전제를 요구하는데 로그인 단계가 없으면 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_path", path: "/todos" })], "/todos"),
+    "/todos",
+    undefined,
+    "로그인한 상태",
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /전제 미이행/);
+});
+
+test("로그인 단계를 포함하면 같은 조합이 채택된다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem(
+      [
+        step({ atom: "goto", path: "/login" }),
+        step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "email" }),
+        step({ atom: "fill", targetKind: "field", targetField: "password", valueKind: "ref", value: "password" }),
+        step({ atom: "click", targetKind: "field", targetField: "submit" }),
+        step({ atom: "goto", path: "/todos" }),
+        step({ atom: "expect_path", path: "/todos" }),
+      ],
+      "/login",
+    ),
+    "/login",
+    undefined,
+    "로그인한 상태",
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("비로그인 전제에는 로그인 단계를 요구하지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_path", path: "/login" })], "/todos"),
+    "/todos",
+    undefined,
+    "로그인하지 않은 상태",
+  );
+  assert.notEqual(outcome.spec, null, "비로그인 조건은 로그인 없이 확인하는 것이 맞다");
+});
+
+test("전제가 없으면 로그인 여부를 따지지 않는다", () => {
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "expect_path", path: "/todos" })], "/todos"), "/todos");
+  assert.notEqual(outcome.spec, null);
+});
+
+test("전제 판정은 부정형 표현을 로그인 요구로 읽지 않는다", () => {
+  assert.equal(requiresLoginState("로그인한 상태에서 시작"), true);
+  assert.equal(requiresLoginState("테스트 계정으로 로그인한 상태"), true);
+  assert.equal(requiresLoginState("로그인하지 않은 상태에서 시작"), false);
+  assert.equal(requiresLoginState("비로그인 상태"), false);
+  assert.equal(requiresLoginState("로그아웃 상태에서 시작"), false);
+  assert.equal(requiresLoginState(""), false);
+  assert.equal(requiresLoginState(undefined), false);
+});
+
+test("문구 확인에서 빠진 필드를 대상이 아니라 문구로 짚는다", () => {
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "expect_text", contains: "" })]));
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /문구/);
+});
+
+// ── 사전 상태는 시나리오와 무관하게 항상 확인한다 ────────────────────────────
+// 로그인이 필요한 화면인지 아무도 확인하지 않으면, 조합이 로그인 없이 화면을 열어
+// 정상 앱이 로그인 화면으로 리다이렉트되며 실패로 판정된다(False FAIL).
+
+test("폼 제출 시나리오도 사전 상태를 필수로 묻는다", () => {
+  const incomplete = contract({
+    scenario: "form_submission",
+    startPath: "/todos", action: "추가 버튼 클릭", target: "할 일 추가",
+    input: "우유 사기", expected: "목록에 표시",
+  });
+  assert.deepEqual(missingContractFields(incomplete), ["precondition"]);
+  assert.equal(isCompleteTestContract(incomplete), false);
+});
+
+test("사전 상태 질문에는 로그인 여부를 고를 선택지가 붙는다", () => {
+  const requirements = normalizeContractRequirements(
+    contract({ scenario: "form_submission", startPath: "/todos", action: "클릭", target: "버튼", input: "값", expected: "표시" }),
+    [],
+  );
+  const precondition = requirements.find((requirement) => requirement.key === "precondition");
+  assert.notEqual(precondition, undefined);
+  const suggestions = precondition?.suggestions ?? [];
+  assert.equal(suggestions.length >= 2, true);
+  assert.equal(
+    suggestions.some((suggestion) => suggestion.includes("로그인")),
+    true,
+  );
+});
+
+test("제출 버튼에는 값을 넣지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "submit", valueKind: "literal", value: "x" })]),
+  );
+  assert.equal(outcome.spec, null);
 });

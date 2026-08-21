@@ -106,6 +106,7 @@ function normalizeFor(request: CompositionRequest | undefined, item: FlatItem): 
     item,
     request?.contract?.startPath,
     request ? contractToCompositionBrief(request.description, request.contract) : undefined,
+    request?.contract?.precondition,
   );
 }
 
@@ -205,6 +206,14 @@ function buildSystemPrompt(): string {
     "targetKind 를 골랐으면 그에 대응하는 값을 빈 문자열로 두면 안 됩니다. 값이 비면 그 동작은 아무 요소도 가리키지 못해 조합 전체가 버려집니다.",
     "  targetKind=field → targetField, targetKind=role → targetRole, targetKind=label|text|placeholder|testId → targetText",
     "확인 동작(expect_error_feedback 을 제외한 expect_*)에는 대상이 반드시 필요합니다. targetKind=none 으로 두지 마세요.",
+    "",
+    "[무엇이 보이는지는 알지만 어느 요소인지 모를 때]",
+    "expect_visible 은 가리킬 요소의 이름을 알아야 쓸 수 있습니다. '오류 메시지가 표시된다'처럼 문구는 알지만 요소를 특정할 수 없을 때 expect_visible 에 빈 대상을 넣는 실수가 가장 많습니다. 그 조합은 아무것도 가리키지 못해 통째로 버려집니다.",
+    "그런 경우에는 다음을 쓰세요.",
+    "- 완료조건에 화면 문구가 적혀 있다 → expect_text 와 contains 에 그 문구를 그대로",
+    "- 서버 응답에 따른 오류 표시다 → expect_error_feedback (대상이 필요 없습니다)",
+    "- 특정 경로로 이동하거나 머무는 것으로 확인된다 → expect_path",
+    "셋 다 해당하지 않고 요소 이름도 모른다면 automatable=none 입니다.",
     "가리킬 요소를 특정할 수 없다면 그때는 automatable=none 입니다.",
     "",
     "[fill 과 click 을 구분하세요]",

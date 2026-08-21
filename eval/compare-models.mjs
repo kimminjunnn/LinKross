@@ -27,6 +27,8 @@ const args = parseArgs(process.argv.slice(2));
 const INPUT = args.input ?? "eval/fixtures-laundry-input.txt";
 const RUNS = Number(args.runs ?? 2);
 const MODELS = (args.models ?? "gpt-4o,gpt-4o-mini").split(",");
+// 프로덕션 analyze.ts 는 0.2를 쓴다. 커버리지 변동의 원인인지 보려면 바꿔 볼 수 있어야 한다.
+const TEMPERATURES = (args.temperatures ?? "0.2").split(",").map(Number);
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const workDetail = fs.readFileSync(path.join(ROOT, INPUT), "utf8");
@@ -35,6 +37,7 @@ const rows = [];
 const samples = {};
 
 for (const model of MODELS) {
+  for (const temperature of TEMPERATURES) {
   for (let run = 1; run <= RUNS; run += 1) {
     const started = Date.now();
     try {
@@ -48,18 +51,19 @@ for (const model of MODELS) {
           type: "json_schema",
           json_schema: { name: "sow_analysis", schema: SOW_RESPONSE_SCHEMA, strict: true },
         },
-        temperature: 0.2,
+        temperature,
       });
       const milestones = completion.choices[0].message.parsed?.milestones ?? [];
       const dods = milestones.flatMap((milestone) => milestone.dods ?? []);
       const metrics = measureDods(dods);
-      rows.push({ model, run, ms: Date.now() - started, milestones: milestones.length, ...metrics });
+      rows.push({ model, temperature, run, ms: Date.now() - started, milestones: milestones.length, ...metrics });
       // 판정을 사람이 직접 검증할 수 있도록 URL 없는 문장을 남긴다.
-      samples[`${model}#${run}`] = dods.filter((dod) => !metrics.total || !hasPath(dod)).slice(0, 8);
-      console.log(`${model} run${run}: DoD ${metrics.total}개 · URL ${metrics.urlPathRate}% · 역량서술 ${metrics.capabilityRate}% · 원자성 ${metrics.atomicRate}%`);
+      samples[`${model}@${temperature}#${run}`] = dods.filter((dod) => !metrics.total || !hasPath(dod)).slice(0, 8);
+      console.log(`${model} T=${temperature} run${run}: DoD ${metrics.total}개 · URL ${metrics.urlPathRate}% · 역량서술 ${metrics.capabilityRate}% · 원자성 ${metrics.atomicRate}%`);
     } catch (error) {
-      console.error(`${model} run${run} 실패: ${error.message}`);
+      console.error(`${model} T=${temperature} run${run} 실패: ${error.message}`);
     }
+  }
   }
 }
 
@@ -68,12 +72,22 @@ function hasPath(dod) {
 }
 
 console.log(`\n프롬프트 판본: ${SOW_PROMPT_VERSION} · 입력: ${INPUT}\n`);
-console.log("| 모델 | 회차 | DoD | URL 명시율 | 역량서술 | 체언종결 | 원자성 |");
-console.log("| --- | ---: | ---: | ---: | ---: | ---: | ---: |");
+console.log("| 모델 | 온도 | 회차 | DoD | URL 명시율 | 역량서술 | 체언종결 | 원자성 |");
+console.log("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
 for (const row of rows) {
   console.log(
-    `| ${row.model} | ${row.run} | ${row.total} | ${row.urlPathRate}% | ${row.capabilityRate}% | ${row.nounTerminationRate}% | ${row.atomicRate}% |`,
+    `| ${row.model} | ${row.temperature} | ${row.run} | ${row.total} | ${row.urlPathRate}% | ${row.capabilityRate}% | ${row.nounTerminationRate}% | ${row.atomicRate}% |`,
   );
+}
+
+console.log("\n=== 재현성: 같은 입력에서 DoD 개수 변동 ===");
+const groups = {};
+for (const row of rows) (groups[`${row.model}@${row.temperature}`] ??= []).push(row.total);
+for (const [key, counts] of Object.entries(groups)) {
+  const min = Math.min(...counts);
+  const max = Math.max(...counts);
+  const swing = max === 0 ? 0 : Math.round(((max - min) / max) * 1000) / 10;
+  console.log(`  ${key}: ${counts.join(" / ")} → 변동폭 ${swing}%`);
 }
 
 console.log("\n=== URL 없는 DoD 표본 ===");

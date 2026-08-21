@@ -46,7 +46,7 @@ const INPUT_SCENARIOS = new Set<DodTestScenario>([
 
 const FIELD_QUESTIONS: Record<DodTestContractField, string> = {
   startPath: "이 완료조건을 시작할 정확한 URL은 무엇인가요?",
-  precondition: "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+  precondition: "이 완료조건을 확인하려면 시작할 때 어떤 로그인 상태여야 하나요?",
   fixture: "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
   action: "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
   target: "사용자가 누르거나 입력할 화면 요소의 이름은 무엇인가요?",
@@ -66,9 +66,22 @@ const FIELD_SUGGESTIONS: Record<DodTestContractField, string[]> = {
   cleanup: ["테스트에서 만든 데이터를 화면에서 삭제", "격리된 테스트 계정을 매 실행마다 초기화"],
 };
 
+/**
+ * `precondition`은 시나리오와 무관하게 항상 필요하다.
+ *
+ * 예전에는 상태형 시나리오에만 물었다. 그래서 `form_submission`으로 분류된
+ * "/todos에서 할 일 추가" 같은 완료조건은 사전 상태를 아무도 확인하지 않았고,
+ * 분석기가 채운 값("할 일 입력란에 텍스트 입력" — 사전 상태가 아니라 행동)이
+ * 검증 없이 그대로 쓰였다. 그 결과 로그인이 필요한 화면인 줄 모른 채 조합이
+ * 만들어져, 정상 앱이 로그인 화면으로 리다이렉트되며 실패로 판정됐다.
+ *
+ * 화면을 열 때 어떤 로그인 상태여야 하는지는 완료조건 문장만으로 알 수 없는
+ * 경우가 많고, 발주자는 화면을 보고 바로 답할 수 있다. 질문 하나를 더 하는
+ * 비용보다 잘못된 판정의 비용이 크다(CLAUDE.md §11).
+ */
 export function requiredContractFields(contract: DodTestContract): DodTestContractField[] {
-  const fields: DodTestContractField[] = ["startPath", "action", "target", "expected"];
-  if (STATEFUL_SCENARIOS.has(contract.scenario)) fields.splice(1, 0, "precondition", "fixture");
+  const fields: DodTestContractField[] = ["startPath", "precondition", "action", "target", "expected"];
+  if (STATEFUL_SCENARIOS.has(contract.scenario)) fields.splice(2, 0, "fixture");
   if (INPUT_SCENARIOS.has(contract.scenario)) fields.splice(fields.length - 1, 0, "input");
   return fields;
 }

@@ -130,6 +130,7 @@ export function normalizeComposedItem(
   item: FlatItem,
   fallbackStartPath?: string,
   groundingText?: string,
+  precondition?: string,
 ): ComposeOutcome {
   if (item.automatable === "none") return { spec: null, reason: "llm_declined" };
 
@@ -184,6 +185,20 @@ export function normalizeComposedItem(
     return { spec: null, reason: "schema_rejected", detail: "확인 단계(expect_*)가 하나도 없음" };
   }
 
+  // 계약이 로그인한 상태를 요구하는데 조합이 로그인을 하지 않으면, 그 조합은
+  // 확인하려는 화면에 닿지도 못한 채 실패한다. 실측에서 이것이 정상 앱을 실패로
+  // 판정하는 원인이었고(False FAIL), 동시에 권한 검사가 없는 고장 앱은 오히려
+  // 통과시켰다(False PASS). 로그인 단계를 여기서 임의로 끼워 넣지는 않는다.
+  // 어떤 화면에서 어떻게 로그인하는지는 앱마다 다르고, 틀린 전제를 만들면
+  // 오판이 늘어난다. 조합을 버려 사람 확인으로 넘기고, 교정 요청에 이유를 남긴다.
+  if (requiresLoginState(precondition) && !buildsLoginState(steps)) {
+    return {
+      spec: null,
+      reason: "schema_rejected",
+      detail: `전제 미이행: 계약이 "${truncate(precondition)}"를 요구하는데 로그인 단계가 없음`,
+    };
+  }
+
   const startPath = normalizePath(item.startPath) ?? normalizePath(fallbackStartPath);
   const spec = parseManagedBrowserAtomTestSpec({
     version: MANAGED_BROWSER_SPEC_VERSION_V3,
@@ -219,8 +234,26 @@ function diagnoseSpecRejection(startPath: string | undefined, steps: object[]): 
   return "managed_browser 엄격 파서 불통과 (지점 특정 실패)";
 }
 
-/** 어떤 대상 지정이 어휘를 벗어났는지 진단에 남긴다. */
+/**
+ * 어느 필드 때문에 변환이 실패했는지 짚는다.
+ *
+ * 동작마다 필수 필드가 다르다. `expect_text`는 대상이 없어도 되지만 `contains`가
+ * 비면 안 된다. 무조건 대상만 보고하면 "대상 없음"이라는 엉뚱한 진단이 남아
+ * 무엇을 고쳐야 할지 잘못 알려 준다.
+ */
 function describeFlatTarget(step: FlatStep): string {
+  if (step.atom === "expect_text" && !step.contains.trim()) return "확인할 문구(contains)가 비어 있음";
+  if ((step.atom === "expect_every_text" || step.atom === "expect_none_text") && !step.contains.trim()) {
+    return "확인할 문구(contains)가 비어 있음";
+  }
+  if (step.atom === "goto" || step.atom === "expect_path") return `path=${truncate(step.path)}`;
+  if (step.atom === "press") return `key=${truncate(step.key)}`;
+  if (step.atom === "set_viewport") return `viewport=${truncate(step.viewport)}`;
+  if (step.atom === "expect_count" && !Number.isInteger(step.count)) return `count=${step.count}`;
+  return describeTargetKind(step);
+}
+
+function describeTargetKind(step: FlatStep): string {
   switch (step.targetKind) {
     case "field": return `field=${truncate(step.targetField)}`;
     case "role": return `role=${truncate(step.targetRole)} name=${truncate(step.targetName)}`;
@@ -231,6 +264,28 @@ function describeFlatTarget(step: FlatStep): string {
     case "none": return "대상 없음";
     default: return `targetKind=${truncate(step.targetKind)}`;
   }
+}
+
+/**
+ * 계약의 사전 상태가 "로그인한 상태"를 뜻하는지 본다.
+ * "로그인하지 않은 상태"처럼 부정형은 로그인을 요구하지 않으므로 제외한다.
+ */
+export function requiresLoginState(precondition?: string): boolean {
+  const text = (precondition ?? "").replace(/\s/g, "");
+  if (!text) return false;
+  if (/로그인하지않|로그인되지않|비로그인|미로그인|로그아웃/.test(text)) return false;
+  return /로그인/.test(text);
+}
+
+/**
+ * 조합이 로그인 상태를 실제로 만드는지 본다.
+ * 비밀번호 입력란에 값을 넣는 단계가 있으면 로그인을 수행한 것으로 본다.
+ */
+export function buildsLoginState(steps: object[]): boolean {
+  return steps.some((step) => {
+    const target = (step as { target?: Record<string, unknown> }).target;
+    return target?.field === "password";
+  });
 }
 
 function truncate(value: string | undefined): string {
@@ -280,6 +335,9 @@ export function toAtom(step: FlatStep): object | null {
     }
     case "fill": {
       if (!target) return null;
+      // 제출 버튼은 값을 넣는 대상이 아니다. 실제로 모델이 여기에 fill 을 골라
+      // 하네스가 버튼에 입력을 시도하다 실패했고, 정상 앱이 오류로 판정됐다.
+      if ((target as { field?: string }).field === "submit") return null;
       const value = toValue(step);
       return value ? { atom: "fill", target, value } : null;
     }
