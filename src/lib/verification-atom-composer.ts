@@ -12,8 +12,9 @@ import {
   type ComposedSpec,
   type FlatItem,
 } from "@/lib/dod-atom-composition";
-import { contractToCompositionBrief } from "@/lib/dod-test-contract";
+import { contractToCompositionBrief, contractToGroundingText } from "@/lib/dod-test-contract";
 import type { DodTestContract } from "@/lib/backend/contracts";
+import type { DodTestContractField } from "@/lib/dod-test-contract";
 import {
   MAX_ATOM_STEPS,
   UI_CREDENTIAL_REFS,
@@ -36,6 +37,14 @@ export interface CompositionRequest {
   description: string;
   /** 질문·답변으로 확정된 검수 계약. 있으면 구조 그대로 전달한다. */
   contract?: DodTestContract;
+  /**
+   * 발주자가 질문에 실제로 답해 확정한 계약 필드 이름.
+   *
+   * 모델에게는 계약 전체를 맥락으로 넘기지만, 화면 문구 단언의 근거로는 이
+   * 필드들만 인정한다. 분석기가 스스로 채운 값은 질문이 만들어지지 않아 아무도
+   * 확인하지 않으므로, 근거로 인정하면 상류의 창작이 그대로 통과한다.
+   */
+  answeredFields?: readonly DodTestContractField[];
 }
 
 /**
@@ -120,7 +129,7 @@ function normalizeFor(request: CompositionRequest | undefined, item: FlatItem): 
   return normalizeComposedItem(
     item,
     request?.contract?.startPath,
-    request ? contractToCompositionBrief(request.description, request.contract) : undefined,
+    request ? contractToGroundingText(request.description, request.contract, request.answeredFields) : undefined,
     request?.contract?.precondition,
   );
 }
@@ -160,6 +169,7 @@ async function requestComposition(
                 "- 'atom=fill field=submit' → 제출 버튼에는 값을 넣지 않습니다. click 으로 바꾸세요.\n" +
                 "- 'atom=fill field=(그 밖의 이름)' → 로그인 요소가 아닌 입력란입니다. targetKind=label 과 targetText 에 화면에 보이는 라벨을 쓰세요.\n" +
                 "- '대상 없음' 또는 '(빈 값)' → 고른 targetKind 에 대응하는 값을 채우거나, 문구 확인이면 expect_text 와 contains 를 쓰세요.\n" +
+                "- 누르거나 입력하는 단계에 role 만 있고 이름이 없음 → targetName 에 화면에 보이는 이름을 넣으세요. 이름을 모르면 automatable=none 입니다.\n" +
                 "고칠 수 없다면 automatable=none 을 고르세요. 없는 화면 요소를 지어내서는 안 됩니다.\n\n"
               : "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n") +
             "각 항목의 라벨(시작 URL, 사전 상태, 사용자 행동, 기대 결과 등)은 발주자가 질문에 답해 확정한 값입니다. 그 값을 그대로 사용하고 다시 추측하지 마세요.\n\n" +
@@ -227,6 +237,8 @@ function buildSystemPrompt(): string {
     `targetKind=field 는 로그인 화면의 세 요소(${UI_SEMANTIC_FIELDS.join(", ")})에만 쓸 수 있습니다. 값은 targetField 에 넣습니다.`,
     "회사명·초대 이메일·파일 첨부처럼 그 밖의 입력란에는 field 를 쓸 수 없습니다. 화면에 보이는 라벨을 targetKind=label 과 targetText 로 지정하세요.",
     "textbox·button 같은 접근성 역할은 targetKind=role 과 targetRole 에 넣습니다. field 에 역할 이름을 넣으면 조합 전체가 버려집니다.",
+    "누르거나 입력하는 대상에 targetKind=role 을 쓸 때는 targetName 에 화면에 보이는 이름을 반드시 함께 적으세요. 이름이 없으면 화면의 첫 번째 요소를 누르게 되어 무엇을 눌렀는지 정해지지 않고, 조합은 버려집니다.",
+    "이름을 완료조건이나 계약에서 확인할 수 없다면 지어내지 말고 automatable=none 을 고르세요.",
     "라벨을 완료조건이나 계약에서 확인할 수 없다면 지어내지 말고 automatable=none 을 고르세요.",
     "",
     "[고른 대상 종류의 값을 반드시 채우세요]",

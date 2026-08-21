@@ -9,7 +9,8 @@
  * 한쪽만 고쳐져 서로 다른 앱이 되어 버리므로, 결함을 환경변수 플래그로 켜는
  * 한 벌로 유지한다. `DEFECTS=all`이면 아래 표의 결함이 모두 켜진다.
  *
- * 결함과 완료조건의 대응은 `defects.json`에 있으며, 그 표가 곧 채점 기준이다.
+ * 결함과 완료조건의 대응은 `dods.json`의 `brokenBy`에 있으며, 그 표가 곧 채점
+ * 기준이다. 결함이 대응되지 않은 완료조건은 대조군이며 두 판 모두 통과해야 한다.
  *
  * 실행: PORT=3100 DEFECTS=none node eval/fixtures/todo-app/server.mjs
  *
@@ -37,6 +38,16 @@ export const DEFECT_NAMES = [
   "no_auth_guard",
   /** 재접속하면 세션이 풀린다. */
   "session_lost",
+  /** 회원가입에 성공해도 /login 으로 보내지 않는다. */
+  "signup_no_redirect",
+  /** 이미 가입된 이메일로 다시 가입해도 막지 않는다. */
+  "signup_allows_duplicate",
+  /** 완료 필터를 눌러도 완료되지 않은 항목까지 보여준다. */
+  "filter_shows_all",
+  /** 로그아웃해도 세션이 남는다. */
+  "logout_keeps_session",
+  /** 할 일이 없어도 빈 상태 안내를 보여주지 않는다. */
+  "empty_state_missing",
 ];
 
 const requested = (process.env.DEFECTS ?? "none").trim();
@@ -47,10 +58,12 @@ for (const name of DEFECTS) {
   if (!DEFECT_NAMES.includes(name)) throw new Error(`알 수 없는 결함 이름: ${name}`);
 }
 
-const VALID_EMAIL = "test@example.com";
-const VALID_PASSWORD = "Test1234!";
+const SEED_EMAIL = "test@example.com";
+const SEED_PASSWORD = "Test1234!";
 
-/** 세션토큰 → 할 일 목록. 프로세스 메모리에만 둔다. */
+/** 이메일 → 비밀번호. 프로세스 메모리에만 둔다. */
+const accounts = new Map([[SEED_EMAIL, SEED_PASSWORD]]);
+/** 세션토큰 → { email, todos }. */
 const sessions = new Map();
 
 const server = http.createServer((request, response) => {
@@ -58,22 +71,23 @@ const server = http.createServer((request, response) => {
   const token = readCookie(request, "sid");
   const session = token ? sessions.get(token) : undefined;
 
-  if (request.method === "POST") return handlePost(request, response, url, session);
+  if (request.method === "POST") return handlePost(request, response, url, session, token);
 
   switch (url.pathname) {
     case "/":
-      return html(response, page("홈", `<h1>할 일 관리</h1><p><a href="/login">로그인</a></p>`));
+      return html(response, page("홈", `<h1>할 일 관리</h1><p><a href="/login">로그인</a> · <a href="/signup">회원가입</a></p>`));
+    case "/signup":
+      return html(response, signupPage(url.searchParams.get("error")));
     case "/login":
       return html(response, loginPage(url.searchParams.get("error")));
     case "/todos": {
-      // 로그인하지 않은 사용자는 로그인 화면으로 보낸다.
       if (!session && !DEFECTS.has("no_auth_guard")) return redirect(response, "/login");
-      // 세션이 풀리는 결함: 재접속마다 목록을 잃는다.
       if (session && DEFECTS.has("session_lost")) {
         sessions.delete(token);
         return redirect(response, "/login");
       }
-      return html(response, todosPage(session?.todos ?? []));
+      const onlyDone = url.searchParams.get("filter") === "done";
+      return html(response, todosPage(session?.todos ?? [], onlyDone));
     }
     default:
       response.writeHead(404, { "content-type": "text/html; charset=utf-8" });
@@ -81,7 +95,7 @@ const server = http.createServer((request, response) => {
   }
 });
 
-function handlePost(request, response, url, session) {
+function handlePost(request, response, url, session, token) {
   let body = "";
   request.on("data", (chunk) => {
     body += chunk;
@@ -90,25 +104,43 @@ function handlePost(request, response, url, session) {
   request.on("end", () => {
     const form = new URLSearchParams(body);
 
+    if (url.pathname === "/signup") {
+      const email = (form.get("email") ?? "").trim();
+      const password = form.get("password") ?? "";
+      if (!email || !password) return html(response, signupPage("이메일과 비밀번호를 입력해 주세요."));
+      if (accounts.has(email) && !DEFECTS.has("signup_allows_duplicate")) {
+        return html(response, signupPage("이미 가입된 이메일입니다."));
+      }
+      // 결함은 "중복을 막지 않는다"까지다. 기존 계정의 비밀번호까지 덮어쓰면
+      // 그 뒤의 모든 로그인이 깨져 무관한 완료조건까지 실패한다. 결함 하나가
+      // 대응된 완료조건만 깨뜨려야 채점 기준이 성립한다.
+      if (!accounts.has(email)) accounts.set(email, password);
+      return redirect(response, DEFECTS.has("signup_no_redirect") ? "/signup" : "/login");
+    }
+
     if (url.pathname === "/login") {
       const email = (form.get("email") ?? "").trim();
       const password = form.get("password") ?? "";
 
-      // 이메일이 비면 제출을 막는다. 브라우저의 required 속성과 서버 확인을 모두 둔다.
       if (!email && !DEFECTS.has("allow_empty_email")) {
         return html(response, loginPage("이메일을 입력해 주세요."));
       }
-      if (email !== VALID_EMAIL || password !== VALID_PASSWORD) {
+      if (accounts.get(email) !== password) {
         return html(
           response,
           loginPage(DEFECTS.has("no_error_on_bad_password") ? null : "이메일 또는 비밀번호가 올바르지 않습니다."),
         );
       }
 
-      const token = randomUUID();
-      sessions.set(token, { email, todos: [] });
-      response.setHeader("set-cookie", `sid=${token}; Path=/; HttpOnly`);
+      const newToken = randomUUID();
+      sessions.set(newToken, { email, todos: [] });
+      response.setHeader("set-cookie", `sid=${newToken}; Path=/; HttpOnly`);
       return redirect(response, DEFECTS.has("wrong_redirect") ? "/" : "/todos");
+    }
+
+    if (url.pathname === "/logout") {
+      if (token && !DEFECTS.has("logout_keeps_session")) sessions.delete(token);
+      return redirect(response, "/login");
     }
 
     if (url.pathname === "/todos/add") {
@@ -120,14 +152,31 @@ function handlePost(request, response, url, session) {
 
     if (url.pathname === "/todos/toggle") {
       if (!session) return redirect(response, "/login");
-      const index = Number(form.get("index"));
-      const todo = session.todos[index];
+      const todo = session.todos[Number(form.get("index"))];
       if (todo && !DEFECTS.has("checkbox_not_checked")) todo.done = !todo.done;
       return redirect(response, "/todos");
     }
 
     return redirect(response, "/");
   });
+}
+
+function signupPage(error) {
+  return page(
+    "회원가입",
+    `
+    <h1>회원가입</h1>
+    <form method="post" action="/signup">
+      <label for="email">이메일</label>
+      <input id="email" name="email" type="email" autocomplete="username" required />
+      <label for="password">비밀번호</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required />
+      <button type="submit">가입하기</button>
+    </form>
+    ${error ? `<p role="alert" class="error">${escapeHtml(error)}</p>` : ""}
+    <p><a href="/login">로그인</a></p>
+  `,
+  );
 }
 
 function loginPage(error) {
@@ -145,14 +194,21 @@ function loginPage(error) {
       <button type="submit">로그인</button>
     </form>
     ${error ? `<p role="alert" class="error">${escapeHtml(error)}</p>` : ""}
+    <p><a href="/signup">회원가입</a></p>
   `,
   );
 }
 
-function todosPage(todos) {
-  const items = todos
+function todosPage(todos, onlyDone) {
+  // 완료 필터: 결함을 켜면 거르지 않고 전부 보여준다.
+  const visible =
+    onlyDone && !DEFECTS.has("filter_shows_all")
+      ? todos.map((todo, index) => ({ todo, index })).filter((entry) => entry.todo.done)
+      : todos.map((todo, index) => ({ todo, index }));
+
+  const items = visible
     .map(
-      (todo, index) => `
+      ({ todo, index }) => `
       <li>
         <form method="post" action="/todos/toggle" class="inline">
           <input type="hidden" name="index" value="${index}" />
@@ -164,16 +220,24 @@ function todosPage(todos) {
     )
     .join("");
 
+  const emptyNotice =
+    visible.length === 0 && !DEFECTS.has("empty_state_missing") ? `<p>등록된 할 일이 없습니다.</p>` : "";
+
   return page(
     "할 일",
     `
     <h1>할 일 목록</h1>
+    <form method="post" action="/logout" class="inline">
+      <button type="submit">로그아웃</button>
+    </form>
     <form method="post" action="/todos/add">
       <label for="title">할 일</label>
       <input id="title" name="title" type="text" />
       <button type="submit">할 일 추가</button>
     </form>
-    ${todos.length === 0 ? `<p>등록된 할 일이 없습니다.</p>` : `<ul>${items}</ul>`}
+    <p><a href="/todos">전체</a> · <a href="/todos?filter=done">완료</a></p>
+    ${emptyNotice}
+    ${visible.length > 0 ? `<ul>${items}</ul>` : ""}
   `,
   );
 }

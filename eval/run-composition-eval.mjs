@@ -124,7 +124,15 @@ async function runOnce() {
 
   if (needsComposition.length > 0) {
     const composed = await composeVerificationAtoms(
-      needsComposition.map((record) => ({ description: record.description, contract: record.contract })),
+      needsComposition.map((record) => ({
+        description: record.description,
+        contract: record.contract,
+        // 질문이 만들어져 답을 받은 필드만 근거로 인정한다. 분석기가 스스로 채운
+        // 값은 아무도 확인하지 않았으므로 화면 문구의 근거가 될 수 없다.
+        answeredFields: (record.requirements ?? [])
+          .filter((requirement) => requirement.answer?.trim())
+          .map((requirement) => requirement.key),
+      })),
     );
     needsComposition.forEach((record, index) => {
       const outcome = composed[index];

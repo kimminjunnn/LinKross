@@ -5,6 +5,7 @@ import {
   applyAnswersToContract,
   contractToCompositionBrief,
   contractToDodSentence,
+  contractToGroundingText,
   isCompleteTestContract,
   missingContractFields,
   normalizeContractRequirements,
@@ -392,13 +393,17 @@ test("새 조합은 v3으로 기록하고 기존 v2 조합도 그대로 실행�
 });
 
 test("체크 상태 확인을 조합에 담을 수 있다", () => {
+  // 목록에는 체크박스가 여럿이므로 누를 대상은 이름으로 특정해야 한다.
+  // 이름 없이 누르면 첫 번째 항목을 누르게 되어 무엇을 확인했는지 정해지지 않는다.
   const spec = specOf(normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetRole: "checkbox" }),
-      step({ atom: "expect_checked", targetKind: "role", targetRole: "checkbox" }),
+      step({ atom: "click", targetKind: "role", targetRole: "checkbox", targetName: "우유 사기" }),
+      step({ atom: "expect_checked", targetKind: "role", targetRole: "checkbox", targetName: "우유 사기" }),
     ], "/todos"),
+    undefined,
+    "우유 사기",
   ));
-  assert.deepEqual(spec?.steps[1], { atom: "expect_checked", target: { role: "checkbox" } });
+  assert.deepEqual(spec?.steps[1], { atom: "expect_checked", target: { role: "checkbox", name: "우유 사기" } });
 });
 
 test("개수 확인은 정수만 받고 음수는 거부한다", () => {
@@ -705,4 +710,81 @@ test("데이터 전제 판정은 부정형을 요구로 읽지 않는다", () =>
   assert.equal(requiresExistingData("목록이 비어 있는 상태"), false);
   assert.equal(requiresExistingData("로그인한 상태"), false);
   assert.equal(requiresExistingData(undefined), false);
+});
+
+// ── 근거는 사람이 승인한 것만 인정한다 ────────────────────────────────────────
+// 분석기가 스스로 채운 계약 필드는 질문이 만들어지지 않아 아무도 확인하지 않는다.
+// 그 값을 근거로 인정하면 상류의 창작이 하류에서 "근거 있음"으로 세탁된다.
+// 실측에서 분석기가 target에 "할 일 내용"을 채웠고(실제 라벨은 "할 일"), 그 이름으로
+// 요소를 찾으려던 조합이 정상 앱을 실패로 판정했다.
+
+test("근거 텍스트에는 답변한 계약 필드만 들어간다", () => {
+  const full = contract({ target: "할 일 내용", expected: "목록에 표시", precondition: "로그인한 상태" });
+  const dod = "/todos에서 할 일 입력 후 추가 시 목록에 표시 확인";
+
+  const narrow = contractToGroundingText(dod, full, ["precondition"]);
+  assert.equal(narrow.includes("로그인한 상태"), true);
+  assert.equal(narrow.includes("할 일 내용"), false, "답변하지 않은 필드는 근거가 아니다");
+
+  const wide = contractToGroundingText(dod, full, ["precondition", "target"]);
+  assert.equal(wide.includes("할 일 내용"), true, "답변한 필드는 근거로 인정한다");
+});
+
+test("답변한 필드가 없으면 완료조건 문장만 근거가 된다", () => {
+  const dod = "/todos에서 할 일 표시 확인";
+  assert.equal(contractToGroundingText(dod, contract({ target: "지어낸 이름" }), []), dod);
+  assert.equal(contractToGroundingText(dod, undefined, ["target"]), dod);
+});
+
+test("분석기가 채운 이름으로 요소를 찾는 조합은 거부한다", () => {
+  const dod = "/todos에서 할 일 입력 후 '할 일 추가' 버튼 클릭 시 목록에 표시 확인";
+  const outcome = normalizeComposedItem(
+    uiItem(
+      [
+        step({ atom: "fill", targetKind: "label", targetText: "할 일 내용", valueKind: "literal", value: "우유" }),
+        step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+        step({ atom: "expect_text", contains: "우유" }),
+      ],
+      "/todos",
+    ),
+    "/todos",
+    contractToGroundingText(dod, contract({ target: "할 일 내용" }), []),
+  );
+  assert.equal(outcome.spec, null, "완료조건에 없는 라벨이므로 거부해야 한다");
+  assert.equal(outcome.reason, "ungrounded_text");
+});
+
+// ── 이름 없는 역할을 조작 대상으로 삼지 않는다 ────────────────────────────────
+// "화면의 첫 번째 버튼을 누른다"는 무엇을 눌렀는지 정해지지 않아 검증으로 성립하지
+// 않는다. 실측에서 로그아웃 버튼이 먼저 있는 화면에 대해 조합이 이름 없는
+// click(role=button)을 골랐고, 세션이 끊긴 채 확인이 진행돼 정상 앱이 실패로 찍혔다.
+
+test("이름 없는 역할을 누르는 조합은 거부한다", () => {
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "click", targetKind: "role", targetRole: "button" })]));
+  assert.equal(outcome.spec, null);
+});
+
+test("이름 없는 역할에 값을 넣는 조합도 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "role", targetRole: "textbox", valueKind: "literal", value: "x" })]),
+  );
+  assert.equal(outcome.spec, null);
+});
+
+test("이름이 있으면 역할 대상을 그대로 쓴다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+      step({ atom: "expect_visible", targetKind: "role", targetRole: "listitem" }),
+    ]),
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("확인 동작은 이름 없는 역할을 그대로 허용한다", () => {
+  // expect_count(role=listitem) 처럼 같은 역할을 한꺼번에 세는 것이 목적일 수 있다.
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: 1 })], "/todos"),
+  );
+  assert.notEqual(outcome.spec, null);
 });

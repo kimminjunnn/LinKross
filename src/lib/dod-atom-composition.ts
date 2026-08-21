@@ -368,6 +368,7 @@ export function toAtom(step: FlatStep): object | null {
     }
     case "fill": {
       if (!target) return null;
+      if (isUnnamedRole(target)) return null;
       // 제출 버튼은 값을 넣는 대상이 아니다. 실제로 모델이 여기에 fill 을 골라
       // 하네스가 버튼에 입력을 시도하다 실패했고, 정상 앱이 오류로 판정됐다.
       if ((target as { field?: string }).field === "submit") return null;
@@ -384,7 +385,14 @@ export function toAtom(step: FlatStep): object | null {
       if (!target || !step.contains.trim()) return null;
       return { atom: step.atom, contains: step.contains, target };
     }
-    case "click":
+    case "click": {
+      // 이름 없는 역할 대상은 화면의 첫 번째 요소를 누른다. 버튼이 둘 이상인
+      // 화면에서는 무엇을 눌렀는지 정해지지 않으므로 검증으로 성립하지 않는다.
+      // 실측에서 로그아웃 버튼이 먼저 있는 화면에 대해 조합이 `click(role=button)`
+      // 을 골랐고, 세션이 끊긴 채로 확인이 진행돼 정상 앱이 실패로 판정됐다.
+      if (target && isUnnamedRole(target)) return null;
+      return target ? { atom: "click", target } : null;
+    }
     case "expect_visible":
     case "expect_hidden":
     case "expect_enabled":
@@ -408,6 +416,18 @@ export function toAtom(step: FlatStep): object | null {
  * 고쳐 쓰면 한국어 라벨("회사명")과 맞지 않아 정상 앱을 실패로 판정한다.
  * 판정하지 못하는 것보다 잘못 판정하는 것이 나쁘다(CLAUDE.md §11).
  */
+/**
+ * 이름 없이 역할만 지정한 대상인지 본다.
+ *
+ * 조작(누르기·입력)에는 무엇을 조작하는지가 정해져야 한다. 확인 동작은 다르다.
+ * `expect_count(role=listitem)`처럼 같은 역할의 요소를 한꺼번에 세는 것이 목적일
+ * 수 있으므로 이름 없는 역할을 그대로 허용한다.
+ */
+function isUnnamedRole(target: object): boolean {
+  const typed = target as { role?: string; name?: string };
+  return typeof typed.role === "string" && !typed.name?.trim();
+}
+
 function toTarget(step: FlatStep): object | null {
   switch (step.targetKind) {
     case "field":

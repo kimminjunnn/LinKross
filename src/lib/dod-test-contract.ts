@@ -257,6 +257,39 @@ export function contractToCompositionBrief(dod: string, contract?: DodTestContra
 }
 
 /**
+ * 화면 문구 단언의 근거로 쓸 텍스트를 만든다.
+ *
+ * 조합 단계에 넘기는 브리프(`contractToCompositionBrief`)와 목적이 다르다.
+ * 브리프는 모델이 조합을 만들 때 참고할 맥락이므로 계약 전체를 담지만, 근거는
+ * "이 문구가 화면에 있다고 주장해도 되는가"의 기준이므로 **사람이 승인한 것만**
+ * 담아야 한다.
+ *
+ * 두 가지를 한 텍스트로 묶었더니 상류의 창작이 하류에서 근거로 세탁됐다. 실측에서
+ * 분석기가 계약의 `target`에 "할 일 내용"을 채웠고(실제 화면 라벨은 "할 일"),
+ * 아무도 그 값을 확인하지 않았는데도 조합이 그 이름으로 요소를 찾으려 해서 정상
+ * 앱이 실패로 판정됐다. 분석기가 스스로 채운 필드는 질문이 만들어지지 않으므로
+ * 사람의 검토를 거치지 않는다.
+ *
+ * 근거로 인정하는 것은 두 가지뿐이다.
+ *   - 발주자가 승인한 완료조건 문장
+ *   - 발주자가 질문에 실제로 답해 확정한 계약 필드
+ */
+export function contractToGroundingText(
+  dod: string,
+  contract?: DodTestContract,
+  answeredFields?: readonly DodTestContractField[],
+): string {
+  if (!contract || !answeredFields || answeredFields.length === 0) return dod;
+  const lines = [dod];
+  for (const field of CONTRACT_FIELDS) {
+    if (!answeredFields.includes(field)) continue;
+    const value = contract[field]?.trim();
+    if (value) lines.push(value);
+  }
+  return lines.join("\n").slice(0, 2000);
+}
+
+/**
  * 계약만으로 확정 DoD 문장을 만든다.
  *
  * LLM 문장 다듬기가 실패해도 확정된 답변이 사라지지 않도록 하는 대체 경로다.

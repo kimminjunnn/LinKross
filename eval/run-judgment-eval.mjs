@@ -77,7 +77,24 @@ async function runOnce() {
   if (automated.length === 0) return { specs, ok: [], broken: [] };
 
   const ok = await runAgainst(automated, OK_PORT, "none");
-  const broken = await runAgainst(automated, BROKEN_PORT, "all");
+
+  // 결함을 한꺼번에 켜면 서로를 가린다. 예를 들어 "할 일이 추가되지 않는" 결함이
+  // 켜져 있으면 체크박스 조건은 확인할 대상 자체가 없어 실패하는데, 그 실패는
+  // 체크박스 결함을 잡아낸 것이 아니다. 완료조건마다 자기 결함 하나만 켠 앱에
+  // 실행해야 "이 검수가 이 결함을 잡아내는가"를 정확히 판정할 수 있다.
+  const byDefect = new Map();
+  for (const entry of automated) {
+    const key = entry.brokenBy ?? "__control__";
+    if (!byDefect.has(key)) byDefect.set(key, []);
+    byDefect.get(key).push(entry);
+  }
+
+  const broken = [];
+  for (const [defect, entries] of byDefect) {
+    // 대조군은 대응된 결함이 없다. 모든 결함을 켠 앱에서도 통과해야 하므로
+    // 그쪽에 실행해 무관한 실패가 옮지 않는지 본다.
+    broken.push(...(await runAgainst(entries, BROKEN_PORT, defect === "__control__" ? "all" : defect)));
+  }
   return { specs, ok, broken };
 }
 
@@ -94,10 +111,11 @@ async function buildSpecs() {
       answer: requirement.answer?.trim() || requirement.recommendedSuggestion || requirement.suggestions?.[0] || "",
     }));
     const contract = analysis ? applyAnswersToContract(analysis.testContract, answered) : undefined;
+    const answeredFields = answered.filter((item) => item.answer?.trim()).map((item) => item.key);
     const startPath = contract?.startPath ?? extractContractPath(fixture.dod) ?? undefined;
     const description =
       extractContractPath(fixture.dod) || !startPath ? fixture.dod : `\`${startPath}\`에서 ${fixture.dod}`;
-    return { ...fixture, contract, description };
+    return { ...fixture, contract, description, answeredFields };
   });
 
   const needsComposition = [];
@@ -113,7 +131,11 @@ async function buildSpecs() {
 
   if (needsComposition.length > 0) {
     const composed = await composeVerificationAtoms(
-      needsComposition.map((entry) => ({ description: entry.description, contract: entry.contract })),
+      needsComposition.map((entry) => ({
+        description: entry.description,
+        contract: entry.contract,
+        answeredFields: (entry.answeredFields ?? []),
+      })),
     );
     needsComposition.forEach((entry, index) => {
       const outcome = composed[index];
@@ -163,7 +185,7 @@ async function runAgainst(entries, port, defects) {
 
     const outcomes = JSON.parse(fs.readFileSync(outputPath, "utf8"));
     console.log(
-      `    ${defects === "none" ? "정상판" : "고장판"}(:${port}) 통과 ${outcomes.filter((o) => o.status === "passed").length}/${outcomes.length}`,
+      `    ${defects === "none" ? "정상판" : `고장판[${defects}]`}(:${port}) 통과 ${outcomes.filter((o) => o.status === "passed").length}/${outcomes.length}`,
     );
     return outcomes;
   } finally {
