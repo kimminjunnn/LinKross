@@ -23,7 +23,11 @@ import {
   GitHubAppError,
 } from "@/lib/github/app";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ACTIVE_RUN_STATUSES } from "@/lib/verification-runner/contracts";
 import { parseManualGuidanceSpec, resolveMvpVerificationDefinition } from "@/lib/verification-test-spec";
+
+// lease 갱신 주기(300초)의 두 배. 이만큼 진척이 없으면 조정기가 끊긴 것으로 본다.
+const STALLED_RUN_THRESHOLD_MS = 10 * 60 * 1_000;
 
 const GITHUB_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/#?]+?)(?:\.git)?\/?$/i;
 const GITHUB_PR_URL_PATTERN = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)\/?$/i;
@@ -550,7 +554,7 @@ export async function submitMilestonePullRequest(
 
 export async function requestVerificationRun(
   input: RequestVerificationInput,
-): Promise<BackendResult<{ runId: string; status: string }>> {
+): Promise<BackendResult<{ runId: string; status: string; retriable: boolean }>> {
   if (![input.projectId, input.milestoneId, input.submissionId].every(isUuid)) {
     return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 검수 요청 대상이 아닙니다." } };
   }
@@ -566,7 +570,12 @@ export async function requestVerificationRun(
 async function requestVerificationRunForAccess(
   access: AccessContext,
   input: RequestVerificationInput,
-): Promise<BackendResult<{ runId: string; status: VerificationRunRecord["status"] }>> {
+): Promise<BackendResult<{
+  runId: string;
+  status: VerificationRunRecord["status"];
+  /** 지금 실행을 걸어도 되는지. 대기 중이거나, 진행 중인데 멈춰 버린 실행이다. */
+  retriable: boolean;
+}>> {
   const { data: submission, error: submissionError } = await access.supabase
     .from("milestone_submissions")
     .select("id")
@@ -592,7 +601,7 @@ async function requestVerificationRunForAccess(
 
   let latestQuery = access.supabase
     .from("verification_runs")
-    .select("id, status, attempt_number")
+    .select("id, status, attempt_number, started_at")
     .eq("submission_id", input.submissionId)
     .eq("scope", input.scope)
     .order("attempt_number", { ascending: false })
@@ -603,8 +612,19 @@ async function requestVerificationRunForAccess(
   const { data: latestRows, error: latestError } = await latestQuery;
   if (latestError) return { ok: false, error: mapBackendError(latestError, "이전 검수 요청을 확인하지 못했습니다.") };
   const previousRun = latestRows?.[0];
-  if (previousRun && ["queued", "provisioning", "installing", "building", "running"].includes(previousRun.status)) {
-    return { ok: true, data: { runId: previousRun.id, status: previousRun.status } };
+  if (previousRun && ACTIVE_RUN_STATUSES.includes(previousRun.status)) {
+    // 조정기가 함수 실행시간 한도에 잘리면 실행은 진행 중 상태로 남고 lease만
+    // 만료된다. 그 상태에서 재검수를 눌러도 아무 일도 일어나지 않아 화면이
+    // 영원히 "검수 중"에 머물렀다. 멈춘 실행은 다시 걸 수 있게 표시한다.
+    // 실제 재선점은 lease가 만료된 실행만 가져가므로 살아 있는 실행은 안전하다.
+    return {
+      ok: true,
+      data: {
+        runId: previousRun.id,
+        status: previousRun.status,
+        retriable: previousRun.status === "queued" || isStalledRun(previousRun.started_at),
+      },
+    };
   }
   const nextAttempt = (previousRun?.attempt_number ?? 0) + 1;
   const idempotencyKey = [input.submissionId, input.scope, input.criterionId ?? "all", nextAttempt].join(":");
@@ -632,11 +652,27 @@ async function requestVerificationRunForAccess(
         .select("id, status")
         .eq("idempotency_key", idempotencyKey)
         .maybeSingle();
-      if (concurrentRun) return { ok: true, data: { runId: concurrentRun.id, status: concurrentRun.status } };
+      if (concurrentRun) {
+        return { ok: true, data: { runId: concurrentRun.id, status: concurrentRun.status, retriable: false } };
+      }
     }
     return { ok: false, error: mapBackendError(runError, "검수 요청을 저장하지 못했습니다.") };
   }
-  return { ok: true, data: { runId: run.id, status: run.status } };
+  return { ok: true, data: { runId: run.id, status: run.status, retriable: true } };
+}
+
+/**
+ * 진행 중으로 보이지만 실제로는 끊긴 실행인지 판단한다.
+ *
+ * Runner lease는 300초마다 갱신된다. 그보다 넉넉히 지나도록 진척이 없으면
+ * 조정기가 죽은 것이다. 살아 있는 실행을 성급히 멈춘 것으로 보지 않도록
+ * 여유를 둔다.
+ */
+function isStalledRun(startedAt: string | null): boolean {
+  if (!startedAt) return true;
+  const started = new Date(startedAt).getTime();
+  if (!Number.isFinite(started)) return true;
+  return Date.now() - started > STALLED_RUN_THRESHOLD_MS;
 }
 
 async function saveSubmissionCriteria(

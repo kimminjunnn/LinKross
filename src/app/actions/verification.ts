@@ -73,10 +73,12 @@ export async function submitMilestonePullRequestAction(
 
 export async function requestVerificationRunAction(
   input: RequestVerificationInput,
-): Promise<BackendResult<{ runId: string; status: string }>> {
+): Promise<BackendResult<{ runId: string; status: string; retriable: boolean }>> {
   const result = await requestVerificationRun(input);
   if (result.ok) {
-    if (result.data.status === "queued") await triggerImmediateVerification(result.data.runId);
+    // 대기 중이거나, 진행 중으로 보이지만 조정기가 끊겨 멈춘 실행이면 다시 건다.
+    // 멈춘 실행을 되살릴 수단이 없어 화면이 영원히 "검수 중"에 머무르던 문제를 막는다.
+    if (result.data.retriable) await triggerImmediateVerification(result.data.runId);
     revalidateVerification(input.projectId);
   }
   return result;
