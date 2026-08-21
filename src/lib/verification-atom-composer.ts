@@ -85,10 +85,19 @@ async function composeChunk(bounded: CompositionRequest[]): Promise<ComposeOutco
   );
   if (repairIndexes.length === 0) return outcomes;
 
+  console.info(
+    `[verification-atom-composer] 형식 오류 ${repairIndexes.length}건에 교정을 요청합니다: ${repairIndexes
+      .map((index) => outcomes[index].detail ?? outcomes[index].reason)
+      .join(" | ")}`,
+  );
   const repairRequests = repairIndexes.map((index) => bounded[index]);
   const notes = repairIndexes.map((index) => outcomes[index].detail ?? "형식이 실행 가능한 조합이 아닙니다.");
   const repaired = await requestComposition(repairRequests, notes);
-  if (repaired === null || repaired === "failed") return outcomes;
+  if (repaired === null || repaired === "failed") {
+    console.info("[verification-atom-composer] 교정 응답을 받지 못했습니다.");
+    return outcomes;
+  }
+  let repaired_ok = 0;
 
   repairIndexes.forEach((index, repairIndex) => {
     const item = repaired[repairIndex];
@@ -96,8 +105,14 @@ async function composeChunk(bounded: CompositionRequest[]): Promise<ComposeOutco
     const retry = normalizeFor(bounded[index], item);
     // 교정본이 통과했을 때만 바꾼다. 실패했다면 첫 진단을 남겨 두는 편이
     // 무엇을 고쳐야 하는지 알려 준다.
-    if (retry.spec) outcomes[index] = retry;
+    if (retry.spec) {
+      repaired_ok += 1;
+      outcomes[index] = retry;
+    }
   });
+  console.info(
+    `[verification-atom-composer] 교정 결과 ${repaired_ok}/${repairIndexes.length}건이 실행 가능한 조합이 되었습니다.`,
+  );
   return outcomes;
 }
 
@@ -123,6 +138,12 @@ async function requestComposition(
   bounded: CompositionRequest[],
   repairNotes?: string[],
 ): Promise<FlatItem[] | null | "failed"> {
+  // 첫 시도는 온도 0으로 가장 그럴듯한 조합을 받는다. 교정은 다르다: 온도가 0이면
+  // 입력이 거의 같으므로 모델이 방금 거부된 것과 같은 구조를 그대로 재생산한다.
+  // 실측에서 교정 성공률이 0/4였고, 로그를 보면 같은 실수를 반복하고 있었다.
+  // 다른 구조를 시도할 여지를 주되, 채택 기준은 그대로다 — 교정본도 엄격 파서와
+  // 근거 검사를 통과해야 하므로 온도를 올려도 잘못된 판정이 늘지 않는다.
+  const temperature = repairNotes ? 0.4 : 0;
   try {
     const completion = await openai.chat.completions.parse({
       model: process.env.OPENAI_MODEL || "gpt-4o",
@@ -132,7 +153,13 @@ async function requestComposition(
           role: "user",
           content:
             (repairNotes
-              ? "아래 조합은 직전 시도에서 실행 가능한 형태가 아니어서 거부되었습니다. 지적된 부분만 고쳐 다시 작성하세요.\n" +
+              ? "아래 조합은 직전 시도에서 실행 가능한 형태가 아니어서 거부되었습니다. 같은 구조를 다시 내지 말고 지적된 부분을 실제로 고치세요.\n" +
+                "자주 나오는 거부와 고치는 방법:\n" +
+                "- '전제 미이행: 로그인한 상태' → steps 맨 앞에 로그인을 직접 넣으세요: goto(/login) → fill(targetKind=field, targetField=email, valueKind=ref, value=email) → fill(targetKind=field, targetField=password, valueKind=ref, value=password) → click(targetKind=field, targetField=submit) → goto(확인할 경로)\n" +
+                "- '전제 미이행: 데이터를 만드는 단계가 없음' → 확인 전에 그 데이터를 화면에서 직접 만드세요: 입력란에 fill 한 뒤 추가·저장 버튼을 click. 입력란과 버튼 이름은 완료조건이나 계약에 적힌 것만 쓰세요.\n" +
+                "- 'atom=fill field=submit' → 제출 버튼에는 값을 넣지 않습니다. click 으로 바꾸세요.\n" +
+                "- 'atom=fill field=(그 밖의 이름)' → 로그인 요소가 아닌 입력란입니다. targetKind=label 과 targetText 에 화면에 보이는 라벨을 쓰세요.\n" +
+                "- '대상 없음' 또는 '(빈 값)' → 고른 targetKind 에 대응하는 값을 채우거나, 문구 확인이면 expect_text 와 contains 를 쓰세요.\n" +
                 "고칠 수 없다면 automatable=none 을 고르세요. 없는 화면 요소를 지어내서는 안 됩니다.\n\n"
               : "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n") +
             "각 항목의 라벨(시작 URL, 사전 상태, 사용자 행동, 기대 결과 등)은 발주자가 질문에 답해 확정한 값입니다. 그 값을 그대로 사용하고 다시 추측하지 마세요.\n\n" +
@@ -149,7 +176,7 @@ async function requestComposition(
         type: "json_schema",
         json_schema: { name: "verification_atom_composition", schema: buildSchema(), strict: true },
       },
-      temperature: 0,
+      temperature,
     });
 
     const parsed = completion.choices[0].message.parsed as { items: FlatItem[] } | null;

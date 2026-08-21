@@ -198,6 +198,15 @@ export function normalizeComposedItem(
       detail: `전제 미이행: 계약이 "${truncate(precondition)}"를 요구하는데 로그인 단계가 없음`,
     };
   }
+  // 데이터가 이미 있어야 하는 조건도 같은 원리다. 테스트가 그 데이터를 만들지
+  // 않으면 빈 화면에서 시작하므로, 정상 앱에서도 확인할 대상을 찾지 못해 실패한다.
+  if (requiresExistingData(precondition) && !buildsData(steps)) {
+    return {
+      spec: null,
+      reason: "schema_rejected",
+      detail: `전제 미이행: 계약이 "${truncate(precondition)}"를 요구하는데 데이터를 만드는 단계가 없음`,
+    };
+  }
 
   const startPath = normalizePath(item.startPath) ?? normalizePath(fallbackStartPath);
   const spec = parseManagedBrowserAtomTestSpec({
@@ -286,6 +295,30 @@ export function buildsLoginState(steps: object[]): boolean {
     const target = (step as { target?: Record<string, unknown> }).target;
     return target?.field === "password";
   });
+}
+
+/**
+ * 계약의 사전 상태가 "데이터가 이미 있는 상태"를 요구하는지 본다.
+ * 비어 있어야 하는 조건(빈 상태 확인)은 데이터를 만들면 안 되므로 제외한다.
+ */
+export function requiresExistingData(precondition?: string): boolean {
+  const text = (precondition ?? "").replace(/\s/g, "");
+  if (!text) return false;
+  if (/없는상태|없음|비어있|하나도없/.test(text)) return false;
+  return /존재|있는상태|등록된|생성된|추가된|담긴/.test(text);
+}
+
+/**
+ * 조합이 화면에서 데이터를 직접 만드는지 본다.
+ * 로그인 자격증명이 아닌 값을 입력한 뒤 누르는 단계가 있으면 만든 것으로 본다.
+ */
+export function buildsData(steps: object[]): boolean {
+  const fillIndex = steps.findIndex((step) => {
+    const typed = step as { atom: string; target?: Record<string, unknown> };
+    return typed.atom === "fill" && typed.target?.field === undefined;
+  });
+  if (fillIndex < 0) return false;
+  return steps.slice(fillIndex + 1).some((step) => (step as { atom: string }).atom === "click");
 }
 
 function truncate(value: string | undefined): string {

@@ -19,6 +19,7 @@ import {
 } from "@/lib/dod-verification-state";
 import {
   normalizeComposedItem,
+  requiresExistingData,
   requiresLoginState,
   type FlatItem,
   type FlatStep,
@@ -654,4 +655,54 @@ test("제출 버튼에는 값을 넣지 않는다", () => {
     uiItem([step({ atom: "fill", targetKind: "field", targetField: "submit", valueKind: "literal", value: "x" })]),
   );
   assert.equal(outcome.spec, null);
+});
+
+// ── 데이터 전제도 로그인 전제와 같은 원리로 확인한다 ──────────────────────────
+// 확인할 데이터가 없으면 정상 앱에서도 대상을 찾지 못해 실패한다.
+
+test("데이터 존재 전제인데 만드는 단계가 없으면 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_visible", targetKind: "role", targetRole: "listitem" })], "/todos"),
+    "/todos",
+    undefined,
+    "할 일 목록에 할 일 존재",
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /데이터를 만드는 단계가 없음/);
+});
+
+test("화면에서 데이터를 만들면 같은 조합이 채택된다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem(
+      [
+        step({ atom: "fill", targetKind: "label", targetText: "할 일", valueKind: "literal", value: "우유 사기" }),
+        step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+        step({ atom: "expect_visible", targetKind: "role", targetRole: "listitem" }),
+      ],
+      "/todos",
+    ),
+    "/todos",
+    undefined,
+    "할 일 목록에 할 일 존재",
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("빈 상태 확인에는 데이터 생성을 요구하지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_text", contains: "등록된 할 일이 없습니다" })], "/todos"),
+    "/todos",
+    "등록된 할 일이 없습니다",
+    "할 일이 하나도 없는 상태",
+  );
+  assert.notEqual(outcome.spec, null, "빈 상태는 데이터를 만들면 안 된다");
+});
+
+test("데이터 전제 판정은 부정형을 요구로 읽지 않는다", () => {
+  assert.equal(requiresExistingData("할 일 목록에 할 일 존재"), true);
+  assert.equal(requiresExistingData("등록된 주문이 있는 상태"), true);
+  assert.equal(requiresExistingData("할 일이 하나도 없는 상태"), false);
+  assert.equal(requiresExistingData("목록이 비어 있는 상태"), false);
+  assert.equal(requiresExistingData("로그인한 상태"), false);
+  assert.equal(requiresExistingData(undefined), false);
 });
