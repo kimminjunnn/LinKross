@@ -43,8 +43,20 @@ export interface ManagedApiCheckTestSpec {
 
 export const MANAGED_BROWSER_SPEC_VERSION_V2 = 2 as const;
 
-const MAX_ATOM_STEPS = 24;
+/**
+ * 어휘 세대 v3: 선택 상태·개수·목록 내용 확인을 추가했다(설계 §21.3).
+ * 새 조합은 v3으로 기록하고, 이미 저장된 v2 조합도 그대로 실행한다.
+ */
+export const MANAGED_BROWSER_SPEC_VERSION_V3 = 3 as const;
+
+const SUPPORTED_ATOM_SPEC_VERSIONS = [
+  MANAGED_BROWSER_SPEC_VERSION_V2,
+  MANAGED_BROWSER_SPEC_VERSION_V3,
+] as const;
+
+export const MAX_ATOM_STEPS = 24;
 const MAX_ATOM_TEXT = 200;
+const MAX_ATOM_COUNT = 100;
 
 export const UI_TARGET_ROLES = [
   "textbox",
@@ -97,10 +109,15 @@ export type UiAtom =
   | { atom: "expect_path"; path: string }
   | { atom: "expect_within_viewport"; target: UiTarget }
   | { atom: "expect_error_feedback" }
-  | { atom: "expect_form_blocked"; target: UiTarget };
+  | { atom: "expect_form_blocked"; target: UiTarget }
+  | { atom: "expect_checked"; target: UiTarget }
+  | { atom: "expect_unchecked"; target: UiTarget }
+  | { atom: "expect_count"; target: UiTarget; count: number }
+  | { atom: "expect_every_text"; contains: string; target: UiTarget }
+  | { atom: "expect_none_text"; contains: string; target: UiTarget };
 
 export interface ManagedBrowserAtomTestSpec {
-  version: typeof MANAGED_BROWSER_SPEC_VERSION_V2;
+  version: typeof MANAGED_BROWSER_SPEC_VERSION_V2 | typeof MANAGED_BROWSER_SPEC_VERSION_V3;
   kind: "managed_browser";
   startPath: string;
   steps: UiAtom[];
@@ -297,7 +314,7 @@ export function parseManagedBrowserTestSpec(value: unknown): ManagedBrowserTestS
 export function parseManagedBrowserAtomTestSpec(value: unknown): ManagedBrowserAtomTestSpec | null {
   if (!isRecord(value)) return null;
   if (
-    value.version !== MANAGED_BROWSER_SPEC_VERSION_V2 ||
+    !SUPPORTED_ATOM_SPEC_VERSIONS.includes(value.version as never) ||
     value.kind !== "managed_browser" ||
     !isSafePath(value.startPath) ||
     !Array.isArray(value.steps) ||
@@ -321,7 +338,7 @@ export function parseManagedBrowserAtomTestSpec(value: unknown): ManagedBrowserA
   }
 
   return {
-    version: MANAGED_BROWSER_SPEC_VERSION_V2,
+    version: value.version as ManagedBrowserAtomTestSpec["version"],
     kind: "managed_browser",
     startPath: value.startPath,
     steps,
@@ -360,9 +377,29 @@ function parseUiAtom(value: unknown): UiAtom | null {
     case "expect_disabled":
     case "expect_focused":
     case "expect_within_viewport":
-    case "expect_form_blocked": {
+    case "expect_form_blocked":
+    case "expect_checked":
+    case "expect_unchecked": {
       const target = parseUiTarget(value.target);
       return target ? { atom: value.atom, target } : null;
+    }
+    case "expect_count": {
+      const target = parseUiTarget(value.target);
+      if (!target) return null;
+      // 개수는 판정을 좌우하므로 정수와 상한을 엄격히 본다.
+      if (
+        typeof value.count !== "number" ||
+        !Number.isInteger(value.count) ||
+        value.count < 0 ||
+        value.count > MAX_ATOM_COUNT
+      ) return null;
+      return { atom: "expect_count", target, count: value.count };
+    }
+    case "expect_every_text":
+    case "expect_none_text": {
+      const contains = boundedText(value.contains, MAX_ATOM_TEXT);
+      const target = parseUiTarget(value.target);
+      return contains && target ? { atom: value.atom, contains, target } : null;
     }
     case "expect_text": {
       const contains = boundedText(value.contains, MAX_ATOM_TEXT);
@@ -419,7 +456,7 @@ function parseUiValue(value: unknown): UiValue | null {
 export function compileManagedBrowserSpecToAtoms(
   spec: ManagedBrowserTestSpec | ManagedBrowserAtomTestSpec,
 ): ManagedBrowserAtomTestSpec {
-  if (spec.version === MANAGED_BROWSER_SPEC_VERSION_V2) return spec;
+  if (spec.version !== MANAGED_BROWSER_SPEC_VERSION) return spec;
 
   const email: UiTarget = { field: "email" };
   const password: UiTarget = { field: "password" };

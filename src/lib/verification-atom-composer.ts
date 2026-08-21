@@ -3,87 +3,39 @@ import "server-only";
 import OpenAI from "openai";
 
 import {
-  MANAGED_API_CHECK_SPEC_VERSION,
-  MANAGED_BROWSER_SPEC_VERSION_V2,
-  parseManagedApiCheckTestSpec,
-  parseManagedBrowserAtomTestSpec,
+  ATOM_NAMES,
+  DEFAULT_CREDENTIALS,
+  TARGET_KINDS,
+  VALUE_KINDS,
+  normalizeComposedItem,
+  type ComposeOutcome,
+  type ComposedSpec,
+  type FlatItem,
+} from "@/lib/dod-atom-composition";
+import { contractToCompositionBrief } from "@/lib/dod-test-contract";
+import type { DodTestContract } from "@/lib/backend/contracts";
+import {
+  MAX_ATOM_STEPS,
   UI_CREDENTIAL_REFS,
   UI_PRESS_KEYS,
   UI_SEMANTIC_FIELDS,
   UI_TARGET_ROLES,
   UI_VIEWPORT_PRESETS,
-  type ManagedApiCheckTestSpec,
-  type ManagedBrowserAtomTestSpec,
 } from "@/lib/verification-test-spec";
+
+export type { ComposeOutcome, ComposedSpec };
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const MAX_COMPOSE_BATCH = 20;
+// 한 번의 LLM 호출에 담는 완료조건 수. 너무 크면 응답이 출력 한도에 걸려
+// 파싱에 실패하고, 그러면 그 호출에 실린 완료조건이 한꺼번에 자동화를 잃는다.
+const COMPOSE_CHUNK_SIZE = 8;
 
-const ATOM_NAMES = [
-  "goto",
-  "fill",
-  "click",
-  "press",
-  "set_viewport",
-  "expect_visible",
-  "expect_hidden",
-  "expect_enabled",
-  "expect_disabled",
-  "expect_focused",
-  "expect_text",
-  "expect_path",
-  "expect_within_viewport",
-  "expect_error_feedback",
-  "expect_form_blocked",
-] as const;
-
-const TARGET_KINDS = ["field", "role", "label", "text", "placeholder", "testId", "none"] as const;
-const VALUE_KINDS = ["ref", "literal", "none"] as const;
-
-const DEFAULT_CREDENTIALS = {
-  email: "test@example.com",
-  password: "Test1234!",
-  invalidPassword: "wrong-password",
-} as const;
-
-/**
- * LLM이 고른 atom 조합. 판정 로직은 고정된 코드(하네스)에 있고, 여기서는
- * "어떤 atom을 어떤 순서로 쓸지"만 받는다. 실행 코드나 selector는 받지 않는다.
- */
-interface FlatStep {
-  atom: string;
-  targetKind: string;
-  targetValue: string;
-  targetName: string;
-  valueKind: string;
-  value: string;
-  path: string;
-  contains: string;
-  key: string;
-  viewport: string;
-}
-
-interface FlatApiStep {
-  method: string;
-  path: string;
-  bodyJson: string;
-  expectStatus: number;
-}
-
-interface FlatItem {
-  automatable: string;
-  startPath: string;
-  steps: FlatStep[];
-  apiSteps: FlatApiStep[];
-}
-
-export type ComposedSpec = ManagedBrowserAtomTestSpec | ManagedApiCheckTestSpec;
-
-export interface ComposeOutcome {
-  spec: ComposedSpec | null;
-  /** null 사유. 갭 로그에 남겨 어휘 부족과 스키마 오류를 구분한다. */
-  reason?: "no_api_key" | "llm_failed" | "llm_declined" | "schema_rejected";
+export interface CompositionRequest {
+  /** 확정된 DoD 문장. */
+  description: string;
+  /** 질문·답변으로 확정된 검수 계약. 있으면 구조 그대로 전달한다. */
+  contract?: DodTestContract;
 }
 
 /**
@@ -92,14 +44,28 @@ export interface ComposeOutcome {
  * 기존대로 manual + 사람 확인 안내로 처리하게 한다.
  */
 export async function composeVerificationAtoms(
-  descriptions: string[],
+  requests: CompositionRequest[],
 ): Promise<ComposeOutcome[]> {
-  if (descriptions.length === 0) return [];
+  if (requests.length === 0) return [];
   if (!process.env.OPENAI_API_KEY) {
-    return descriptions.map(() => ({ spec: null, reason: "no_api_key" as const }));
+    return requests.map(() => ({ spec: null, reason: "no_api_key" as const }));
   }
 
-  const bounded = descriptions.slice(0, MAX_COMPOSE_BATCH);
+  // 요청을 잘라 버리지 않는다. 예전에는 상한을 넘는 완료조건이 조용히 사라져
+  // 자동화 가능한 항목까지 사람 확인으로 떨어졌다.
+  const outcomes: ComposeOutcome[] = [];
+  for (let index = 0; index < requests.length; index += COMPOSE_CHUNK_SIZE) {
+    outcomes.push(...(await composeChunk(requests.slice(index, index + COMPOSE_CHUNK_SIZE))));
+  }
+  return outcomes;
+}
+
+/**
+ * 한 번의 LLM 호출로 조합을 받는다. 호출이 통째로 실패하면 절반으로 나눠 다시
+ * 시도해, 항목 하나 때문에 같은 호출에 실린 나머지까지 자동화를 잃지 않게 한다.
+ */
+async function composeChunk(bounded: CompositionRequest[]): Promise<ComposeOutcome[]> {
+  if (bounded.length === 0) return [];
 
   let items: FlatItem[];
   try {
@@ -110,8 +76,14 @@ export async function composeVerificationAtoms(
         {
           role: "user",
           content:
-            "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n\n" +
-            bounded.map((description, index) => `${index + 1}. ${description}`).join("\n"),
+            "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n" +
+            "각 항목의 라벨(시작 URL, 사전 상태, 사용자 행동, 기대 결과 등)은 발주자가 질문에 답해 확정한 값입니다. 그 값을 그대로 사용하고 다시 추측하지 마세요.\n\n" +
+            bounded
+              .map(
+                (request, index) =>
+                  `[${index + 1}]\n${contractToCompositionBrief(request.description, request.contract)}`,
+              )
+              .join("\n\n"),
         },
       ],
       response_format: {
@@ -123,131 +95,39 @@ export async function composeVerificationAtoms(
 
     const parsed = completion.choices[0].message.parsed as { items: FlatItem[] } | null;
     if (!parsed || !Array.isArray(parsed.items) || parsed.items.length !== bounded.length) {
-      return descriptions.map(() => ({ spec: null, reason: "llm_failed" as const }));
+      // 응답이 출력 한도에 걸려 잘린 경우다. 나눠 담으면 통과할 수 있다.
+      return splitAndRetry(bounded);
     }
     items = parsed.items;
   } catch (error) {
+    // 인증·과금·네트워크 실패는 나눠도 똑같이 실패한다. 재시도하면 실패한
+    // 호출만 배로 늘어나므로 여기서 끝낸다.
     console.error("[verification-atom-composer] LLM composition failed", error);
-    return descriptions.map(() => ({ spec: null, reason: "llm_failed" as const }));
+    return bounded.map(() => ({ spec: null, reason: "llm_failed" as const }));
   }
 
-  const outcomes = items.map((item) => normalizeAndValidate(item));
-  return descriptions.map((_, index) => outcomes[index] ?? { spec: null, reason: "llm_failed" as const });
-}
-
-function normalizeAndValidate(item: FlatItem): ComposeOutcome {
-  if (item.automatable === "none") return { spec: null, reason: "llm_declined" };
-
-  if (item.automatable === "api") {
-    const steps = (item.apiSteps ?? []).map((step) => ({
-      method: step.method,
-      path: step.path,
-      expectStatus: step.expectStatus,
-      ...(parseBody(step.bodyJson) ? { body: parseBody(step.bodyJson) } : {}),
-    }));
-    const spec = parseManagedApiCheckTestSpec({
-      version: MANAGED_API_CHECK_SPEC_VERSION,
-      kind: "api_check",
-      steps,
-    });
-    return spec ? { spec } : { spec: null, reason: "schema_rejected" };
-  }
-
-  if (item.automatable !== "ui") return { spec: null, reason: "schema_rejected" };
-
-  // 변환에 실패한 step을 버리고 나머지로 조합을 만들면 단언이 사라진 채
-  // 무조건 통과하는 시나리오가 될 수 있다. 하나라도 실패하면 조합 전체를 버린다.
-  const steps: object[] = [];
-  for (const rawStep of item.steps ?? []) {
-    const atom = toAtom(rawStep);
-    if (!atom) return { spec: null, reason: "schema_rejected" };
-    steps.push(atom);
-  }
-  // 동작만 있고 확인이 없는 조합은 무엇도 검증하지 못하므로 채택하지 않는다.
-  if (!steps.some((atom) => String((atom as { atom: string }).atom).startsWith("expect_"))) {
-    return { spec: null, reason: "schema_rejected" };
-  }
-
-  const spec = parseManagedBrowserAtomTestSpec({
-    version: MANAGED_BROWSER_SPEC_VERSION_V2,
-    kind: "managed_browser",
-    startPath: item.startPath,
-    steps,
-    syntheticCredentials: { ...DEFAULT_CREDENTIALS },
+  // 확정된 계약의 시작 URL이 LLM이 다시 고른 경로보다 우선한다. 화면 문구 단언은
+  // 완료조건과 확정된 계약에 실제로 등장하는 표현만 허용한다.
+  return items.map((item, index) => {
+    const request = bounded[index];
+    return normalizeComposedItem(
+      item,
+      request?.contract?.startPath,
+      request ? contractToCompositionBrief(request.description, request.contract) : undefined,
+    );
   });
-  return spec ? { spec } : { spec: null, reason: "schema_rejected" };
 }
 
-function toAtom(step: FlatStep): object | null {
-  const target = toTarget(step);
-
-  switch (step.atom) {
-    case "goto":
-    case "expect_path":
-      return { atom: step.atom, path: step.path };
-    case "press":
-      return { atom: "press", key: step.key };
-    case "set_viewport":
-      return { atom: "set_viewport", preset: step.viewport };
-    case "expect_error_feedback":
-      return { atom: "expect_error_feedback" };
-    case "expect_text":
-      return target
-        ? { atom: "expect_text", contains: step.contains, target }
-        : { atom: "expect_text", contains: step.contains };
-    case "fill":
-      return target ? { atom: "fill", target, value: toValue(step) } : null;
-    case "click":
-    case "expect_visible":
-    case "expect_hidden":
-    case "expect_enabled":
-    case "expect_disabled":
-    case "expect_focused":
-    case "expect_within_viewport":
-    case "expect_form_blocked":
-      return target ? { atom: step.atom, target } : null;
-    default:
-      return null;
+async function splitAndRetry(bounded: CompositionRequest[]): Promise<ComposeOutcome[]> {
+  if (bounded.length <= 1) {
+    console.error("[verification-atom-composer] 완료조건 1건도 응답을 받지 못해 조합을 포기했습니다.");
+    return bounded.map(() => ({ spec: null, reason: "llm_failed" as const }));
   }
-}
-
-function toTarget(step: FlatStep): object | null {
-  switch (step.targetKind) {
-    case "field":
-      return { field: step.targetValue };
-    case "role":
-      return step.targetName ? { role: step.targetValue, name: step.targetName } : { role: step.targetValue };
-    case "label":
-      return { label: step.targetValue };
-    case "text":
-      return { text: step.targetValue };
-    case "placeholder":
-      return { placeholder: step.targetValue };
-    case "testId":
-      return { testId: step.targetValue };
-    default:
-      return null;
-  }
-}
-
-function toValue(step: FlatStep): object {
-  return step.valueKind === "ref" ? { ref: step.value } : { literal: step.value };
-}
-
-function parseBody(bodyJson: string): Record<string, string> | undefined {
-  if (!bodyJson || bodyJson.trim() === "" || bodyJson.trim() === "{}") return undefined;
-  try {
-    const parsed = JSON.parse(bodyJson) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return undefined;
-    const body: Record<string, string> = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      if (typeof value !== "string") return undefined;
-      body[key] = value;
-    }
-    return Object.keys(body).length > 0 ? body : undefined;
-  } catch {
-    return undefined;
-  }
+  const middle = Math.ceil(bounded.length / 2);
+  return [
+    ...(await composeChunk(bounded.slice(0, middle))),
+    ...(await composeChunk(bounded.slice(middle))),
+  ];
 }
 
 function buildSystemPrompt(): string {
@@ -264,13 +144,47 @@ function buildSystemPrompt(): string {
     "틀린 조합은 멀쩡한 결과물을 '실패'로 잘못 판정해 프리랜서에게 부당한 수정 요청을 만듭니다.",
     "판정을 못 내리는 것보다 잘못 내리는 것이 훨씬 나쁩니다.",
     "",
+    "다만 '시작 URL', '사전 상태', '테스트 데이터 준비', '사용자 행동', '행동 대상', '입력값', '기대 결과'가 라벨로 함께 주어졌다면 그것은 발주자가 질문에 직접 답해 확정한 값입니다.",
+    "그 경우에는 추측이 아니므로 none 으로 회피하지 말고 주어진 값을 그대로 써서 조합을 작성하세요.",
+    "'행동 대상'은 화면에 보이는 이름이므로 targetKind=role 과 targetName, 또는 targetKind=label|text|placeholder 로 옮기세요.",
+    "",
     "automatable=none 을 선택해야 하는 경우:",
     "- 주관적 판단(디자인이 깔끔하다, 색상이 브랜드와 어울린다)",
     "- 성능·속도(응답이 1초 이내다) — 이 도구는 시간을 측정하지 않습니다",
     "- 서버 로그·내부 저장 상태(비밀번호가 로그에 남지 않는다)",
     "- 외부 발송(이메일·SMS가 실제로 도착한다) — 격리 환경은 외부 통신이 차단됩니다",
-    "- 미리 심어둔 데이터가 있어야 확인 가능한 조건(오늘 접수된 목록이 보인다)",
+    "- 테스트가 화면에서 직접 만들 수 없는 데이터가 이미 있어야 하는 조건(예: 어제 다른 사람이 남긴 내역, 관리자가 미리 등록해 둔 정산 자료)",
     "- 특정 시각·날짜에 의존하는 조건",
+    "",
+    "[테스트 시작 상태는 직접 만드세요]",
+    "각 완료조건은 로그인도 데이터도 없는 새 브라우저에서 시작합니다. 필요한 상태는 steps 앞부분에서 직접 만들 수 있으므로, 상태가 필요하다는 이유만으로 none 을 고르지 마세요.",
+    "- 로그인한 상태가 필요하면 steps 앞에 로그인을 직접 수행하세요: goto(/login) → fill(field=email, valueKind=ref, value=email) → fill(field=password, valueKind=ref, value=password) → click(field=submit) → goto(확인할 경로).",
+    "- '새로고침 후에도 유지되는지'를 확인하려면 같은 경로로 goto 를 한 번 더 호출하세요. 그것이 재접속이며 별도의 새로고침 동작은 필요하지 않습니다.",
+    "- 목록·필터·빈 상태처럼 데이터가 있어야 하는 조건은, 그 데이터를 화면에서 만들 수 있다면 만드는 동작(입력 후 추가·저장 버튼 클릭)을 먼저 넣고 확인하세요.",
+    "- 준비 단계에서 누를 버튼·입력란의 이름은 완료조건이나 '사전 상태'·'테스트 데이터 준비' 답변에 적혀 있는 이름만 쓰세요. 거기 없는 이름을 지어내면 조합 전체가 버려집니다.",
+    "- 로그인 화면의 이메일·비밀번호·제출 버튼은 예외입니다. 이름 대신 targetKind=field 와 targetValue=email|password|submit 을 쓰면 어느 앱에서나 동작합니다.",
+    "- 반대로 '비로그인 상태에서 접근 시 차단' 같은 조건에는 로그인 단계를 절대 넣지 마세요. 곧바로 goto 한 뒤 expect_path 로 리다이렉트를 확인합니다.",
+    "- 상태를 만드는 단계에는 단언을 넣지 말고, 확인하려는 조건 자체에만 단언을 넣으세요. 준비 단계에 단언을 넣으면 로그인 화면 구조 차이만으로 실패합니다.",
+    "- 로그인이 필요한데 완료조건에 로그인 화면 경로가 없으면 /login 을 쓰세요. 그마저 확신이 없으면 none 입니다. 로그인 단계를 통째로 생략하고 대상 화면만 확인하면 아무것도 검증하지 못합니다.",
+    "",
+    "[전제를 만들 수 없으면 none 입니다]",
+    "앞의 안내는 '만들 수 있는 상태'에만 해당합니다. 완료조건이 말하는 상황 자체를 테스트가 일으킬 수 없다면, 단언을 쓸 수 있더라도 automatable=none 입니다.",
+    "정상 동작하는 앱에서는 그 상황이 오지 않으므로, 조합을 만들면 멀쩡한 결과물이 매번 '실패'로 찍힙니다.",
+    "- 서버 오류·장애·네트워크 실패를 일부러 일으켜야 하는 조건 ('조회 중 오류 발생 시 재시도 버튼 표시') — 오류를 일으킬 수단이 없습니다",
+    "- 이미 비정상 상태여야 하는 조건 ('계정이 잠긴 상태에서 로그인 시도', '정원이 찬 슬롯') — 화면에서 그 상태를 만들 수 없다면 none 입니다",
+    "- 연타·동시 요청으로 생기는 중복 ('버튼을 빠르게 여러 번 클릭해도 1건만 생성') — 이 도구는 동시 클릭을 만들지 못합니다",
+    "- 빈 상태 확인이라도 '데이터가 하나도 없어야' 하는데 기존 데이터를 지울 수 없다면 none 입니다",
+    "",
+    "[없는 동작을 비슷한 것으로 대체하지 마세요]",
+    "expect_visible 와 expect_enabled 는 '그 요소가 화면에 있다'만 증명합니다. 상태가 바뀌었는지, 개수가 맞는지는 증명하지 못합니다.",
+    "상태·개수·목록 내용에는 전용 동작이 있습니다. expect_visible 로 대신하지 말고 아래를 쓰세요:",
+    "- 체크박스·라디오가 선택된 상태인지: expect_checked / expect_unchecked",
+    "- 항목이 정확히 몇 개 보이는지: expect_count 와 count 값 (예: '할 일이 1건만 생성' → expect_count(role=listitem, count=1))",
+    "- 목록에 특정 종류만 보이는지: expect_every_text / expect_none_text (예: '완료된 것만 표시' → 모든 항목에 '완료' 문구, '완료되지 않은 것만 표시' → 어떤 항목에도 '완료' 문구 없음)",
+    "expect_count 는 정확히 일치해야 통과합니다. 기대 개수를 확신할 수 없으면 쓰지 마세요.",
+    "expect_every_text·expect_none_text 의 contains 에도 완료조건에 적힌 표현만 쓰세요. 지어내면 조합 전체가 버려집니다.",
+    "그래도 표현할 수 없는 것(정렬 순서 등)은 여전히 automatable=none 입니다. expect_visible(role=listitem) 같은 존재 확인으로 대체하면 고장난 앱도 통과하므로 채택되지 않습니다.",
+    `- steps 는 최대 ${MAX_ATOM_STEPS}개입니다. 준비 단계를 포함해 이 안에 담기지 않으면 none 을 고르세요.`,
     "",
     "automatable=ui: 브라우저에서 보고 조작해 확인할 수 있는 경우. steps 를 채우고 apiSteps 는 비웁니다.",
     "- '버튼이 동작하지 않는다', '로그인이 되지 않는다' 등 제출 차단/실패 조건은 버튼 자체의 disabled 속성(expect_disabled)을 함부로 추정하지 마세요. 버튼은 클릭 가능하지만 제출이 차단되는 것이 일반적입니다.",
@@ -281,7 +195,11 @@ function buildSystemPrompt(): string {
     "automatable=api: HTTP 요청과 응답 상태 코드로 확인하는 것이 더 안정적인 경우(횟수 제한, 중복 차단 등). apiSteps 를 채우고 steps 는 비웁니다.",
     "",
     "사용하지 않는 필드는 빈 문자열(숫자는 0)로 두세요.",
-    "expect_text 의 contains 에는 화면에 실제로 보일 문구만 넣으세요. 확실하지 않으면 automatable=none 입니다.",
+    "expect_text 의 contains 와 targetName 에는 완료조건·계약에 이미 적혀 있는 표현을 그대로 옮겨 쓰세요.",
+    "완료조건이 문구를 언급했다면 그대로 쓰면 됩니다. 예를 들어 '권한 오류 안내 표시'라면 contains 에 '권한 오류'를, \"버튼이 '마감'으로 표시\"라면 contains 에 '마감'을 쓰세요. 이때는 automatable=none 이 아닙니다.",
+    "완료조건에 화면 문구가 전혀 없다면 문구를 지어내지 말고, 대신 관찰 가능한 다른 단언(expect_path·expect_visible·expect_hidden·expect_disabled·expect_error_feedback)을 쓰세요. 그것도 불가능할 때만 automatable=none 입니다.",
+    "지어낸 문구는 정상 결과물을 '실패'로 잘못 판정하므로 채택되지 않고 버려집니다.",
+    "expect_text 의 대상에는 화면 요소 설명('빈 상태 화면', '완료 문구')을 넣지 마세요. 확인할 문구는 contains 에만 넣습니다.",
   ].join("\n");
 }
 
@@ -306,6 +224,7 @@ function buildSchema(): Record<string, unknown> {
       contains: { type: "string", description: "expect_text에서 화면에 보여야 할 문구" },
       key: { type: "string", enum: ["", ...UI_PRESS_KEYS], description: "press에서 누를 키" },
       viewport: { type: "string", enum: ["", ...UI_VIEWPORT_PRESETS], description: "set_viewport에서 쓸 화면 크기" },
+      count: { type: "integer", description: "expect_count에서 기대하는 개수. 그 외에는 0" },
     },
     required: [
       "atom",
@@ -318,6 +237,7 @@ function buildSchema(): Record<string, unknown> {
       "contains",
       "key",
       "viewport",
+      "count",
     ],
     additionalProperties: false,
   };
@@ -346,7 +266,7 @@ function buildSchema(): Record<string, unknown> {
             automatable: {
               type: "string",
               enum: ["ui", "api", "none"],
-              description: "확신이 없으면 반드시 none",
+              description: "확신이 없으면 반드시 none. 단, 시작 URL·행동·기대 결과가 라벨로 확정되어 있으면 none 으로 회피하지 말 것",
             },
             startPath: { type: "string", description: "automatable=ui일 때 시작 화면 경로. 그 외에는 빈 문자열" },
             steps: { type: "array", items: stepSchema },

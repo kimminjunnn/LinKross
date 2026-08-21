@@ -22,16 +22,20 @@ const SEMANTIC_FIELD_SELECTORS = {
   submit: 'button[type="submit"],input[type="submit"],form button',
 };
 
-function resolveTarget(page, target) {
-  if (target.field) return page.locator(SEMANTIC_FIELD_SELECTORS[target.field]).first();
+function resolveTargetAll(page, target) {
+  if (target.field) return page.locator(SEMANTIC_FIELD_SELECTORS[target.field]);
   if (target.role) {
-    return (target.name ? page.getByRole(target.role, { name: target.name }) : page.getByRole(target.role)).first();
+    return target.name ? page.getByRole(target.role, { name: target.name }) : page.getByRole(target.role);
   }
-  if (target.label) return page.getByLabel(target.label).first();
-  if (target.text) return page.getByText(target.text).first();
-  if (target.placeholder) return page.getByPlaceholder(target.placeholder).first();
-  if (target.testId) return page.getByTestId(target.testId).first();
+  if (target.label) return page.getByLabel(target.label);
+  if (target.text) return page.getByText(target.text);
+  if (target.placeholder) return page.getByPlaceholder(target.placeholder);
+  if (target.testId) return page.getByTestId(target.testId);
   throw new Error("Unsupported target descriptor.");
+}
+
+function resolveTarget(page, target) {
+  return resolveTargetAll(page, target).first();
 }
 
 function describeTarget(target) {
@@ -63,6 +67,11 @@ function describeAtom(step) {
     case "expect_within_viewport": return describeTarget(step.target) + "이 화면 안에 온전히 보임";
     case "expect_error_feedback": return "사용자에게 오류 피드백이 표시됨";
     case "expect_form_blocked": return describeTarget(step.target) + " 검증으로 제출이 차단됨";
+    case "expect_checked": return describeTarget(step.target) + "이 선택된 상태임";
+    case "expect_unchecked": return describeTarget(step.target) + "이 선택되지 않은 상태임";
+    case "expect_count": return describeTarget(step.target) + "이 정확히 " + step.count + "개 표시됨";
+    case "expect_every_text": return "표시된 모든 " + describeTarget(step.target) + '에 "' + step.contains + '" 문구가 있음';
+    case "expect_none_text": return "표시된 어떤 " + describeTarget(step.target) + '에도 "' + step.contains + '" 문구가 없음';
     default: return "알 수 없는 동작";
   }
 }
@@ -171,6 +180,48 @@ async function runAtom(page, step, credentials) {
         })
         .catch(() => false);
       if (!blocked) throw stepFailure(step, "입력값 검증으로 제출이 차단되는 것을 확인하지 못했습니다.");
+      return;
+    }
+    case "expect_checked": {
+      const checked = await resolveTarget(page, step.target).isChecked().catch(() => false);
+      if (!checked) throw stepFailure(step, describeTarget(step.target) + "이 선택된 상태가 아닙니다.");
+      return;
+    }
+    case "expect_unchecked": {
+      const checked = await resolveTarget(page, step.target).isChecked().catch(() => true);
+      if (checked) throw stepFailure(step, describeTarget(step.target) + "이 선택된 상태로 남아 있습니다.");
+      return;
+    }
+    case "expect_count": {
+      const actual = await resolveTargetAll(page, step.target).count().catch(() => -1);
+      if (actual !== step.count) {
+        throw stepFailure(
+          step,
+          describeTarget(step.target) + "이 " + step.count + "개여야 하는데 " +
+            (actual < 0 ? "개수를 확인하지 못했습니다" : actual + "개입니다") + ".",
+        );
+      }
+      return;
+    }
+    case "expect_every_text":
+    case "expect_none_text": {
+      const texts = await resolveTargetAll(page, step.target).allInnerTexts().catch(() => []);
+      // 대상이 하나도 없으면 "모두 그렇다"도 "아무것도 아니다"도 증명되지 않는다.
+      // 빈 화면을 통과로 처리하면 목록이 깨진 앱이 통과해 버린다.
+      if (texts.length === 0) {
+        throw stepFailure(step, describeTarget(step.target) + "을 화면에서 찾지 못해 목록 내용을 확인할 수 없습니다.");
+      }
+      const index = step.atom === "expect_every_text"
+        ? texts.findIndex((text) => !text.includes(step.contains))
+        : texts.findIndex((text) => text.includes(step.contains));
+      if (index >= 0) {
+        throw stepFailure(
+          step,
+          (index + 1) + "번째 " + describeTarget(step.target) + '에 "' + step.contains + '" 문구가 ' +
+            (step.atom === "expect_every_text" ? "없습니다." : "남아 있습니다.") +
+            " (전체 " + texts.length + "개)",
+        );
+      }
       return;
     }
     default:
