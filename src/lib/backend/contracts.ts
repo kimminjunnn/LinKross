@@ -108,6 +108,69 @@ export interface SowMilestoneInput {
   period: string;
   amount: string;
   dods: string[];
+  verificationDesigns?: DodVerificationDesign[];
+}
+
+export type VerificationDesignStatus =
+  | "dod_ready"
+  | "contract_ready"
+  | "automation_ready"
+  | "clarification_required"
+  | "human_review_required";
+
+export type DodTestScenario =
+  | "navigation"
+  | "form_submission"
+  | "validation_error"
+  | "state_change"
+  | "state_persistence"
+  | "duplicate_prevention"
+  | "list_filter"
+  | "empty_state"
+  | "error_recovery"
+  | "access_control"
+  | "generic_ui";
+
+export interface DodTestContract {
+  version: 1;
+  scenario: DodTestScenario;
+  startPath?: string;
+  precondition?: string;
+  fixture?: string;
+  action?: string;
+  target?: string;
+  input?: string;
+  expected?: string;
+  cleanup?: string;
+}
+
+export interface DodClarificationRequirement {
+  key: string;
+  question: string;
+  suggestions?: string[];
+  recommendedSuggestion?: string;
+  answer?: string;
+}
+
+export interface DodVerificationDesign {
+  startPath?: string;
+  testHint?: string;
+  question?: string;
+  suggestions?: string[];
+  recommendedSuggestion?: string;
+  conversation?: DodVerificationConversationMessage[];
+  requirements?: DodClarificationRequirement[];
+  testContract?: DodTestContract;
+  questionSetLocked?: boolean;
+  humanReviewAccepted?: boolean;
+  status?: VerificationDesignStatus;
+  message?: string;
+  verificationMethod?: VerificationMethod;
+}
+
+export interface DodVerificationConversationMessage {
+  role: "assistant" | "user";
+  content: string;
 }
 
 export interface SaveSowVersionInput {
@@ -126,6 +189,12 @@ export interface SaveSowVersionOutput {
   sowVersionId: string;
   versionNumber: number;
   status: string;
+  verificationDesigns: Array<{
+    milestoneCode: string;
+    dodIndex: number;
+    description: string;
+    design: DodVerificationDesign;
+  }>;
 }
 
 export interface MilestoneChecklistItem {

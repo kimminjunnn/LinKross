@@ -1,0 +1,210 @@
+import "server-only";
+
+import OpenAI from "openai";
+
+import type {
+  DodClarificationRequirement,
+  DodTestContract,
+  DodTestScenario,
+} from "@/lib/backend/contracts";
+import {
+  DOD_TEST_CONTRACT_VERSION,
+  extractContractPath,
+  normalizeContractRequirements,
+} from "@/lib/dod-test-contract";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const MAX_ANALYSIS_BATCH = 100;
+
+export const TEST_SCENARIOS: DodTestScenario[] = [
+  "navigation",
+  "form_submission",
+  "validation_error",
+  "state_change",
+  "state_persistence",
+  "duplicate_prevention",
+  "list_filter",
+  "empty_state",
+  "error_recovery",
+  "access_control",
+  "generic_ui",
+];
+
+export interface DodContractAnalysisItem {
+  milestoneTitle: string;
+  dod: string;
+}
+
+export interface DodContractAnalysis {
+  /** 원문 범위 안에서 다듬은 DoD 문장. */
+  revisedDod: string;
+  /** 원문만으로 확정한 검수 계약. 확정할 수 없는 필드는 비어 있다. */
+  testContract: DodTestContract;
+  /** 계약의 빈 필수 필드에 1:1 대응하는 질문. 이후 새 질문을 만들지 않는다. */
+  requirements: DodClarificationRequirement[];
+}
+
+type RawAnalysis = {
+  itemIndex: number;
+  revisedDod: string;
+  testContract: Record<string, string> & { scenario: DodTestScenario };
+  requirements: DodClarificationRequirement[];
+};
+
+/**
+ * 각 DoD를 읽어 Playwright 검수 계약으로 옮기고, 원문만으로 확정할 수 없는
+ * 필드에 대한 질문 세트를 "한 번에" 만든다.
+ *
+ * 질문은 이 호출에서만 생성된다. 이후 저장·재저장 과정에서 새 질문을 만들지
+ * 않으므로 사용자는 DoD마다 한 번의 질문·답변만 거친다.
+ */
+export async function analyzeDodContracts(
+  items: DodContractAnalysisItem[],
+): Promise<DodContractAnalysis[]> {
+  if (items.length === 0) return [];
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
+  }
+  if (items.length > MAX_ANALYSIS_BATCH) {
+    throw new Error(`한 번에 분석할 완료조건은 ${MAX_ANALYSIS_BATCH}개 이하여야 합니다.`);
+  }
+
+  const completion = await openai.chat.completions.parse({
+    model: process.env.OPENAI_MODEL ?? "gpt-4o",
+    messages: [
+      { role: "system", content: buildSystemPrompt() },
+      {
+        role: "user",
+        content: JSON.stringify({
+          items: items.map((item, itemIndex) => ({
+            itemIndex,
+            milestoneTitle: item.milestoneTitle,
+            dod: item.dod,
+          })),
+        }),
+      },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: { name: "dod_verification_analysis", strict: true, schema: buildSchema() },
+    },
+    temperature: 0.1,
+  });
+
+  const parsed = completion.choices[0].message.parsed as { items: RawAnalysis[] } | null;
+  if (!parsed || parsed.items.length !== items.length) {
+    throw new Error("AI가 완료조건 분석 결과를 정확히 반환하지 못했습니다.");
+  }
+
+  const byIndex = new Map(parsed.items.map((analysis) => [analysis.itemIndex, analysis]));
+  return items.map((item, itemIndex) => {
+    const analysis = byIndex.get(itemIndex);
+    if (!analysis) throw new Error("일부 완료조건의 분석 결과가 누락되었습니다.");
+    const testContract = normalizeTestContract(analysis.testContract);
+    return {
+      revisedDod: analysis.revisedDod?.trim() || item.dod,
+      testContract,
+      requirements: normalizeContractRequirements(testContract, analysis.requirements ?? []),
+    };
+  });
+}
+
+export function normalizeTestContract(raw: Record<string, string> & { scenario: DodTestScenario }): DodTestContract {
+  const read = (field: string): string | undefined => {
+    const value = raw[field];
+    return typeof value === "string" ? value.trim().slice(0, 1000) || undefined : undefined;
+  };
+  const startPath = read("startPath");
+  return {
+    version: DOD_TEST_CONTRACT_VERSION,
+    scenario: TEST_SCENARIOS.includes(raw.scenario) ? raw.scenario : "generic_ui",
+    ...(startPath ? { startPath: extractContractPath(startPath) ?? startPath } : {}),
+    ...(read("precondition") ? { precondition: read("precondition") } : {}),
+    ...(read("fixture") ? { fixture: read("fixture") } : {}),
+    ...(read("action") ? { action: read("action") } : {}),
+    ...(read("target") ? { target: read("target") } : {}),
+    ...(read("input") ? { input: read("input") } : {}),
+    ...(read("expected") ? { expected: read("expected") } : {}),
+    ...(read("cleanup") ? { cleanup: read("cleanup") } : {}),
+  };
+}
+
+function buildSystemPrompt(): string {
+  return [
+    "당신은 비개발 발주자와 함께 완료조건(DoD)을 자동 검수 가능한 문장으로 구체화하는 QA 설계 도우미입니다.",
+    "목표는 문장이 그럴듯해 보이는지가 아니라, 실제 Playwright 자동 테스트 한 개를 반복 실행할 수 있는지입니다.",
+    "각 DoD를 독립적으로 읽고 testContract 구조로 옮기세요: 정확한 시작 URL, 테스트 시작 전 필요한 로그인·화면 상태, 반복 가능한 테스트 데이터 준비 방법, 사용자의 한 가지 행동, 행동 대상의 화면상 이름, 입력값, 관찰 가능한 기대 결과, 정리 방법.",
+    "원문에서 확정할 수 없는 값은 절대 추측하지 말고 빈 문자열로 두세요. 추측한 값은 잘못된 자동 판정으로 이어집니다.",
+    "",
+    "질문은 이번 한 번만 만들 수 있습니다. 이후 단계에서는 새 질문을 만들 수 없습니다.",
+    "따라서 비어 있는 필수 계약 필드 전부에 대한 질문을 requirements에 누락 없이 한 번에 담으세요.",
+    "requirements.key는 반드시 startPath, precondition, fixture, action, target, input, expected, cleanup 중 해당 필드명을 그대로 사용하세요. 사용자의 답변이 그 필드에 그대로 들어갑니다.",
+    "따라서 질문은 그 필드 하나만 묻고, 답변이 곧 그 필드의 값이 되도록 작성하세요. 여러 필드를 한 질문에 섞지 마세요.",
+    "각 질문에는 사용자가 바로 고를 수 있는 실행 가능한 선택지 2~3개와 recommendedSuggestion을 반드시 제공하세요.",
+    "선택지는 그대로 필드 값으로 쓸 수 있는 형태여야 합니다(예: startPath 질문의 선택지는 `/login`처럼 경로 자체).",
+    "test id, CSS selector, 함수명 같은 구현 세부사항은 묻지 마세요. 비개발자가 화면을 보고 답할 수 있는 것만 물으세요.",
+    "",
+    "revisedDod는 원문과 같은 범위만 사용하고 새 기능을 창작하지 마세요.",
+    "원문에 없는 기능(비밀번호 재설정, 소셜 로그인, 수정·삭제 등)은 상식적으로 필요해 보여도 절대 추가하지 마세요.",
+    "여러 상태나 결과를 한 문장에 합치지 말고, 문장 끝은 확인·표시·이동·차단·노출 같은 명사형으로 끝내세요.",
+  ].join("\n");
+}
+
+function buildSchema(): Record<string, unknown> {
+  const contractFields = [
+    "startPath",
+    "precondition",
+    "fixture",
+    "action",
+    "target",
+    "input",
+    "expected",
+    "cleanup",
+  ];
+
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            itemIndex: { type: "integer" },
+            revisedDod: { type: "string" },
+            testContract: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                scenario: { type: "string", enum: TEST_SCENARIOS },
+                ...Object.fromEntries(
+                  contractFields.map((field) => [field, { type: "string" } as Record<string, unknown>]),
+                ),
+              },
+              required: ["scenario", ...contractFields],
+            },
+            requirements: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  key: { type: "string", enum: contractFields },
+                  question: { type: "string" },
+                  suggestions: { type: "array", minItems: 2, maxItems: 3, items: { type: "string" } },
+                  recommendedSuggestion: { type: "string" },
+                },
+                required: ["key", "question", "suggestions", "recommendedSuggestion"],
+              },
+            },
+          },
+          required: ["itemIndex", "revisedDod", "testContract", "requirements"],
+        },
+      },
+    },
+    required: ["items"],
+  };
+}

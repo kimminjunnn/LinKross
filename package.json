@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "sandbox:snapshot": "node scripts/create-verification-sandbox-snapshot.mjs"
+    "sandbox:snapshot": "node scripts/create-verification-sandbox-snapshot.mjs",
+    "test": "node --experimental-strip-types --import ./scripts/register-test-hooks.mjs --test src/lib/__tests__/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

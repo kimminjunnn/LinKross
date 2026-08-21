@@ -7,6 +7,7 @@ export type MilestoneInput = {
   period: string;
   amount: string;
   dods: string[];
+  verificationDesigns?: import("@/lib/backend/contracts").DodVerificationDesign[];
 };
 
 export type EnglishSOWResult = {

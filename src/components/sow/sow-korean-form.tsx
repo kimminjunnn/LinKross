@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Plus, Sparkles, Trash2, UploadCloud, X, ToggleLeft, ToggleRight, Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { MilestoneInput } from "@/lib/rag-translator";
 import { parseDocumentAction } from "@/app/actions/parse-document";
+import { DodDesignPanel } from "@/components/sow/dod-design-panel";
 
 type SowKoreanFormProps = {
   workDetail: string;
@@ -17,6 +18,15 @@ type SowKoreanFormProps = {
   isAnalyzing?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  onAnswerDodClarification?: (
+    milestoneId: string,
+    dodIndex: number,
+    answers: Record<string, string>,
+  ) => Promise<boolean>;
+  onAcceptHumanReview?: (milestoneId: string, dodIndex: number) => Promise<boolean>;
+  clarifyingDodKeys?: string[];
+  validatingDodKeys?: string[];
+  isDesigningVerification?: boolean;
 };
 
 export function SowKoreanForm({
@@ -31,6 +41,11 @@ export function SowKoreanForm({
   isAnalyzing = false,
   isExpanded = false,
   onToggleExpand,
+  onAnswerDodClarification,
+  onAcceptHumanReview,
+  clarifyingDodKeys = [],
+  validatingDodKeys = [],
+  isDesigningVerification = false,
 }: SowKoreanFormProps) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -66,7 +81,13 @@ export function SowKoreanForm({
   const handleAddDoD = (mId: string) => {
     setMilestones((prev) =>
       prev.map((m) =>
-        m.id === mId ? { ...m, dods: [...m.dods, ""] } : m
+        m.id === mId
+          ? {
+              ...m,
+              dods: [...m.dods, ""],
+              verificationDesigns: [...(m.verificationDesigns ?? []), {}],
+            }
+          : m
       )
     );
   };
@@ -77,7 +98,10 @@ export function SowKoreanForm({
         if (m.id !== mId) return m;
         const newDods = [...m.dods];
         newDods[index] = value;
-        return { ...m, dods: newDods };
+        const verificationDesigns = [...(m.verificationDesigns ?? [])];
+        // DoD 원문을 수정하면 이전 질문·답변·완료 상태는 더 이상 유효하지 않다.
+        verificationDesigns[index] = {};
+        return { ...m, dods: newDods, verificationDesigns };
       })
     );
   };
@@ -87,7 +111,8 @@ export function SowKoreanForm({
       prev.map((m) => {
         if (m.id !== mId) return m;
         const newDods = m.dods.filter((_, i) => i !== index);
-        return { ...m, dods: newDods };
+        const verificationDesigns = (m.verificationDesigns ?? []).filter((_, i) => i !== index);
+        return { ...m, dods: newDods, verificationDesigns };
       })
     );
   };
@@ -329,27 +354,48 @@ export function SowKoreanForm({
               {/* DoD 목록 */}
               <div className="mt-3 space-y-2">
                 <span className="text-[0.7rem] font-bold text-app-muted uppercase">DoD (Definition of Done)</span>
-                {m.dods.map((dod, dIdx) => (
-                  <div key={dIdx} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={dod}
-                      placeholder="완료 조건 입력"
-                      onChange={(e) => handleUpdateDoD(m.id, dIdx, e.target.value)}
-                      className="min-h-9 flex-1 rounded-control border border-app-border bg-app-surface px-3 text-xs text-app-foreground outline-none focus:border-brand-500"
-                    />
-                    {m.dods.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveDoD(m.id, dIdx)}
-                        className="text-app-muted hover:text-danger"
-                        aria-label="DoD 삭제"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {m.dods.map((dod, dIdx) => {
+                  const design = m.verificationDesigns?.[dIdx];
+                  const dialogueKey = `${m.id}:${dIdx}`;
+                  return (
+                    <div key={dIdx} className="rounded-control border border-app-border bg-app-surface-subtle p-2.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={dod}
+                          placeholder="완료 조건 입력"
+                          onChange={(e) => handleUpdateDoD(m.id, dIdx, e.target.value)}
+                          className="min-h-9 flex-1 rounded-control border border-app-border bg-app-surface px-3 text-xs text-app-foreground outline-none focus:border-brand-500"
+                        />
+                        {m.dods.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDoD(m.id, dIdx)}
+                            className="text-app-muted hover:text-danger"
+                            aria-label="DoD 삭제"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <DodDesignPanel
+                        design={design}
+                        dialogueKey={dialogueKey}
+                        isAnswering={clarifyingDodKeys.includes(dialogueKey)}
+                        isValidating={validatingDodKeys.includes(dialogueKey)}
+                        isDesigningVerification={isDesigningVerification}
+                        onSubmitAnswers={
+                          onAnswerDodClarification
+                            ? (answers) => onAnswerDodClarification(m.id, dIdx, answers)
+                            : undefined
+                        }
+                        onAcceptHumanReview={
+                          onAcceptHumanReview ? () => onAcceptHumanReview(m.id, dIdx) : undefined
+                        }
+                      />
+                    </div>
+                  );
+                })}
                 <button
                   type="button"
                   onClick={() => handleAddDoD(m.id)}

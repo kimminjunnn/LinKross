@@ -5,6 +5,9 @@ import type {
   ApprovedSowMilestones,
   BackendResult,
   CriterionKind,
+  DodVerificationDesign,
+  DodClarificationRequirement,
+  DodTestContract,
   MarkSowRevisionRequestsReadInput,
   MilestoneChecklistItem,
   ProjectMilestoneSummary,
@@ -20,6 +23,7 @@ import type {
   SowRevisionRequestRecord,
   UserRole,
   VerificationMethod,
+  VerificationDesignStatus,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { translateToEnglish } from "@/lib/backend/translation";
@@ -28,11 +32,142 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   MANUAL_GUIDANCE_SPEC_VERSION,
   createMvpVerificationDefinition,
+  parseManagedApiCheckTestSpec,
+  parseManagedBrowserAtomTestSpec,
+  parseManagedBrowserTestSpec,
+  parseManualGuidanceSpec,
   type ManagedTestSpec,
   type ManualGuidanceSpec,
 } from "@/lib/verification-test-spec";
 import { generateManualCheckGuidance } from "@/lib/verification-guidance";
 import { composeVerificationAtoms, type ComposeOutcome } from "@/lib/verification-atom-composer";
+import { analyzeDodContracts } from "@/lib/dod-contract-analyzer";
+import {
+  DOD_TEST_CONTRACT_VERSION,
+  applyAnswersToContract,
+  parseDodTestContract,
+} from "@/lib/dod-test-contract";
+import {
+  resolveDesign,
+  shouldReuseExistingSpec,
+  summarizeDesigns,
+  unansweredRequirements,
+} from "@/lib/dod-verification-state";
+
+const VERIFICATION_DESIGN_VERSION = 1 as const;
+
+type PersistedVerificationDesign = {
+  version: typeof VERIFICATION_DESIGN_VERSION;
+  status: VerificationDesignStatus;
+  startPath?: string;
+  testHint?: string;
+  question?: string;
+  suggestions?: string[];
+  recommendedSuggestion?: string;
+  conversation?: DodVerificationDesign["conversation"];
+  requirements?: DodClarificationRequirement[];
+  testContract?: DodTestContract;
+  questionSetLocked?: boolean;
+  humanReviewAccepted: boolean;
+  message: string;
+};
+
+function normalizeStartPath(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return /^\/(?!\/)[^\s?#]{0,500}$/.test(trimmed) ? trimmed : null;
+}
+
+function extractStartPath(description: string): string | null {
+  // `/login에서`처럼 한국어 조사가 붙은 표현은 `/login`으로만 해석한다.
+  const match = description.match(/(?:^|[\s`'"(])(\/[A-Za-z0-9._~!$&'()*+,;=:@%\/-]{0,500})/);
+  return normalizeStartPath(match?.[1]);
+}
+
+/**
+ * 저장된 test_spec이 실제로 실행 가능한 스펙인지 엄격 파서로 확인한다.
+ * 파싱에 실패한 값은 실행할 수 없으므로 준비 완료로 취급하지 않는다.
+ */
+function parseStoredExecutableSpec(value: unknown): ManagedTestSpec | null {
+  return (
+    parseManagedApiCheckTestSpec(value)
+    ?? parseManagedBrowserAtomTestSpec(value)
+    ?? parseManagedBrowserTestSpec(value)
+  );
+}
+
+
+function readPersistedVerificationDesign(value: unknown): DodVerificationDesign | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const record = value as Record<string, unknown>;
+  const raw = record.verificationDesign;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const design = raw as Record<string, unknown>;
+  if (
+    design.status !== "dod_ready" &&
+    design.status !== "contract_ready" &&
+    design.status !== "automation_ready" &&
+    design.status !== "clarification_required" &&
+    design.status !== "human_review_required"
+  ) return undefined;
+  return {
+    status: design.status,
+    ...(normalizeStartPath(design.startPath) ? { startPath: normalizeStartPath(design.startPath)! } : {}),
+    ...(typeof design.testHint === "string" && design.testHint.trim()
+      ? { testHint: design.testHint.trim().slice(0, 1000) }
+      : {}),
+    ...(typeof design.question === "string" && design.question.trim()
+      ? { question: design.question.trim().slice(0, 500) }
+      : {}),
+    ...(Array.isArray(design.suggestions)
+      ? {
+          suggestions: design.suggestions
+            .filter((suggestion): suggestion is string => typeof suggestion === "string")
+            .map((suggestion) => suggestion.trim().slice(0, 120))
+            .filter(Boolean)
+            .slice(0, 3),
+        }
+      : {}),
+    ...(typeof design.recommendedSuggestion === "string" && design.recommendedSuggestion.trim()
+      ? { recommendedSuggestion: design.recommendedSuggestion.trim().slice(0, 120) }
+      : {}),
+    ...(Array.isArray(design.conversation)
+      ? {
+          conversation: design.conversation.slice(-8).flatMap((message) => {
+            if (!message || typeof message !== "object" || Array.isArray(message)) return [];
+            const row = message as Record<string, unknown>;
+            if ((row.role !== "assistant" && row.role !== "user") || typeof row.content !== "string") return [];
+            return [{ role: row.role, content: row.content.slice(0, 1000) }];
+          }),
+        }
+      : {}),
+    ...(Array.isArray(design.requirements)
+      ? {
+          requirements: design.requirements.slice(0, 8).flatMap((requirement) => {
+            if (!requirement || typeof requirement !== "object" || Array.isArray(requirement)) return [];
+            const row = requirement as Record<string, unknown>;
+            if (typeof row.key !== "string" || typeof row.question !== "string") return [];
+            return [{
+              key: row.key.slice(0, 80),
+              question: row.question.slice(0, 500),
+              ...(Array.isArray(row.suggestions) ? { suggestions: row.suggestions.filter((value): value is string => typeof value === "string").slice(0, 3) } : {}),
+              ...(typeof row.recommendedSuggestion === "string" ? { recommendedSuggestion: row.recommendedSuggestion.slice(0, 120) } : {}),
+              ...(typeof row.answer === "string" ? { answer: row.answer.slice(0, 1000) } : {}),
+            }];
+          }),
+        }
+      : {}),
+    ...(parseDodTestContract(design.testContract)
+      ? { testContract: parseDodTestContract(design.testContract)! }
+      : {}),
+    questionSetLocked: design.questionSetLocked === true,
+    humanReviewAccepted: design.humanReviewAccepted === true,
+    ...(typeof design.message === "string" ? { message: design.message } : {}),
+    ...(typeof record.verification_method === "string"
+      ? { verificationMethod: record.verification_method as VerificationMethod }
+      : {}),
+  };
+}
 
 function parseDateText(value: string): string | null {
   const normalized = value.trim().replace(/\./g, "-").replace(/\s+/g, "");
@@ -115,6 +250,7 @@ type CompletionCriteriaApprovalRow = {
   description: string;
   verification_method: VerificationMethod;
   position: number;
+  test_spec?: unknown;
 };
 
 type SowApprovalRow = {
@@ -290,8 +426,10 @@ async function getSowApprovalParticipantRows(
   };
 }
 
-function buildTempPositionBase(): number {
-  return -Math.floor(Date.now() / 1000);
+function buildTempPositionBase(existingPositions: number[]): number {
+  // position은 DB에서 0보다 커야 한다. 재정렬 중 unique 충돌을 피하기 위해
+  // 음수가 아닌, 현재 범위 밖의 임시 양수 위치를 사용한다.
+  return Math.max(0, ...existingPositions) + existingPositions.length + 1;
 }
 
 async function upsertMilestonesForDraft(
@@ -304,7 +442,7 @@ async function upsertMilestonesForDraft(
 ): Promise<BackendResult<Map<string, string>>> {
   const { data: existingRows, error: existingError } = await supabase
     .from("milestones")
-    .select("id, code")
+    .select("id, code, position")
     .eq("sow_version_id", sowVersionId);
 
   if (existingError) {
@@ -313,11 +451,11 @@ async function upsertMilestonesForDraft(
 
   const existingByCode = new Map((existingRows ?? []).map((row) => [row.code, row.id]));
 
-  const tempBase = buildTempPositionBase();
+  const tempBase = buildTempPositionBase((existingRows ?? []).map((row) => row.position));
   for (let index = 0; index < (existingRows?.length ?? 0); index += 1) {
     const { error } = await supabase
       .from("milestones")
-      .update({ position: tempBase - index })
+      .update({ position: tempBase + index })
       .eq("id", existingRows![index].id);
     if (error) {
       return { ok: false, error: mapBackendError(error, "마일스톤 저장 준비 중 오류가 발생했습니다.") };
@@ -382,11 +520,13 @@ async function upsertCriteriaForMilestone(
   projectId: string,
   sowVersionId: string,
   milestoneId: string,
+  milestoneTitle: string,
   dods: string[],
-): Promise<BackendResult<null>> {
+  requestedDesigns: DodVerificationDesign[] = [],
+): Promise<BackendResult<Array<{ description: string; design: DodVerificationDesign }>>> {
   const { data: existingRows, error: existingError } = await supabase
     .from("completion_criteria")
-    .select("id, position")
+    .select("id, position, description, verification_method, test_spec")
     .eq("milestone_id", milestoneId)
     .eq("kind", "definition_of_done")
     .order("position", { ascending: true });
@@ -395,11 +535,11 @@ async function upsertCriteriaForMilestone(
     return { ok: false, error: mapBackendError(existingError, "기존 완료 조건을 확인하지 못했습니다.") };
   }
 
-  const tempBase = buildTempPositionBase();
+  const tempBase = buildTempPositionBase((existingRows ?? []).map((row) => row.position));
   for (let index = 0; index < (existingRows?.length ?? 0); index += 1) {
     const { error } = await supabase
       .from("completion_criteria")
-      .update({ position: tempBase - index })
+      .update({ position: tempBase + index })
       .eq("id", existingRows![index].id);
     if (error) {
       return { ok: false, error: mapBackendError(error, "완료 조건 저장 준비 중 오류가 발생했습니다.") };
@@ -408,24 +548,227 @@ async function upsertCriteriaForMilestone(
 
   const existingIdByOriginalOrder = new Map((existingRows ?? []).map((row, index) => [index + 1, row.id]));
 
-  const verifications: Array<{
+  type ResolvedVerification = {
     verificationMethod: VerificationMethod;
     testSpec: ManagedTestSpec | ManualGuidanceSpec | Record<string, never>;
-  }> = dods.map((dod) => createMvpVerificationDefinition(dod));
-  const unresolvedIndexes = verifications
-    .map((verification, index) => (verification.verificationMethod === "manual" ? index : -1))
-    .filter((index) => index !== -1);
+    design: DodVerificationDesign;
+    description: string;
+  };
 
-  if (unresolvedIndexes.length > 0) {
-    // 정규식 프리셋이 놓친 DoD는 고정된 atom 어휘의 조합으로 표현해 본다(설계 §21.2).
-    // LLM은 조합만 고르고, 채택 여부는 엄격 파서가 결정한다.
-    const composed = await composeVerificationAtoms(unresolvedIndexes.map((index) => dods[index]));
+  const verifications: Array<ResolvedVerification | undefined> = new Array(dods.length).fill(undefined);
+  // 질문 세트가 아직 없는 DoD. 최초 분석을 거치지 않았거나 사용자가 문장을 직접
+  // 고쳐 이전 설계가 무효가 된 항목이며, 여기서 한 번만 질문 세트를 만든다.
+  const needsQuestionSet: number[] = [];
+  const lockedRequirements = new Map<number, DodClarificationRequirement[]>();
+  const contracts = new Map<number, DodTestContract>();
+
+  dods.forEach((dod, dodIndex) => {
+    const requested = requestedDesigns[dodIndex];
+    const existing = existingRows?.[dodIndex];
+
+    // 이미 실행 가능한 스펙이 있고 문장이 그대로면 다시 판정하지 않는다.
+    // 다른 DoD에 답할 때마다 전체가 저장되므로, 매번 다시 판정하면 준비가 끝난
+    // 자동 테스트가 이유 없이 사라진다(완료 상태의 되돌아감).
+    const storedSpec = parseStoredExecutableSpec(existing?.test_spec);
+    if (
+      storedSpec &&
+      // 답변이 남아 있는 질문 세트가 함께 오면 아직 확정 전이므로 재사용하지 않는다.
+      unansweredRequirements(requested?.requirements).length === 0 &&
+      shouldReuseExistingSpec({
+        storedDescription: existing?.description,
+        storedMethod: existing?.verification_method,
+        hasStoredSpec: true,
+        currentDod: dod,
+      })
+    ) {
+      const requirements = requested?.requirements ?? [];
+      verifications[dodIndex] = {
+        verificationMethod: "automated_e2e",
+        testSpec: storedSpec,
+        design: resolveDesign({
+          requirements,
+          contract: requested?.testContract,
+          hasExecutableSpec: true,
+          startPath: requested?.testContract?.startPath ?? extractStartPath(dod) ?? undefined,
+        }).design,
+        description: dod,
+      };
+      return;
+    }
+
+    // 사람이 직접 확인하기로 이미 확정한 항목은 다시 자동화를 시도하지 않는다.
+    // 조합 단계는 앞서 실패했고, 재시도는 사용자가 내린 결정을 흔들 뿐이다.
+    const storedGuidance = parseManualGuidanceSpec(existing?.test_spec);
+    if (
+      requested?.status === "human_review_required" &&
+      requested.humanReviewAccepted === true &&
+      existing?.description?.trim() === dod.trim()
+    ) {
+      verifications[dodIndex] = {
+        verificationMethod: "manual",
+        testSpec: storedGuidance ?? {},
+        design: resolveDesign({
+          requirements: requested.requirements ?? [],
+          contract: requested.testContract,
+          hasExecutableSpec: false,
+          humanReviewAccepted: true,
+          startPath: requested.testContract?.startPath ?? extractStartPath(dod) ?? undefined,
+          ...(storedGuidance
+            ? {
+                manualGuidance: {
+                  location: storedGuidance.location,
+                  method: storedGuidance.method,
+                  expected: storedGuidance.expected,
+                },
+              }
+            : {}),
+        }).design,
+        description: dod,
+      };
+      return;
+    }
+
+    // 최초 분석이 확정한 질문 세트는 그대로 쓴다. 빈 배열도 "질문 없음"이라는
+    // 확정 결과이므로 여기서 질문을 새로 만들어 덧붙이지 않는다.
+    if (requested?.questionSetLocked && Array.isArray(requested.requirements)) {
+      lockedRequirements.set(dodIndex, requested.requirements.map((requirement) => ({ ...requirement })));
+      if (requested.testContract) contracts.set(dodIndex, requested.testContract);
+      return;
+    }
+    needsQuestionSet.push(dodIndex);
+  });
+
+  // 질문 세트가 없는 DoD는 정규식으로 질문을 지어내지 않고 최초 분석과 같은
+  // 경로로 한 번만 분석한다. 정규식 질문은 프로젝트와 무관한 예시(할 일 목록 등)를
+  // 사실처럼 되물어 사용자를 혼란스럽게 했다.
+  if (needsQuestionSet.length > 0) {
+    try {
+      const analyses = await analyzeDodContracts(
+        needsQuestionSet.map((dodIndex) => ({ milestoneTitle, dod: dods[dodIndex] })),
+      );
+      needsQuestionSet.forEach((dodIndex, analysisIndex) => {
+        const analysis = analyses[analysisIndex];
+        if (!analysis) return;
+        // 사용자가 방금 입력한 문장은 그대로 두고 계약과 질문만 받는다.
+        lockedRequirements.set(dodIndex, analysis.requirements);
+        contracts.set(dodIndex, analysis.testContract);
+      });
+    } catch (error) {
+      console.error("[sow] DoD 검수 계약 분석 실패", error);
+    }
+  }
+
+  // 확정된 답변을 계약에 결정적으로 반영한다. LLM을 다시 거치지 않으므로
+  // 사용자가 확정한 값이 조용히 바뀌거나 누락될 수 없다.
+  const readyForComposition: number[] = [];
+  dods.forEach((dod, dodIndex) => {
+    if (verifications[dodIndex]) return;
+    const requested = requestedDesigns[dodIndex];
+    const requirements = lockedRequirements.get(dodIndex);
+    if (!requirements) {
+      // 분석이 실패해 질문 세트를 만들지 못했다. 준비되지 않은 상태를 완료로
+      // 표시하지 않고, 사용자가 AI 분석을 다시 실행하도록 남긴다.
+      verifications[dodIndex] = {
+        verificationMethod: "manual",
+        testSpec: {},
+        design: {
+          status: "human_review_required",
+          requirements: [],
+          conversation: [],
+          questionSetLocked: false,
+          humanReviewAccepted: false,
+          message: "AI 분석을 완료하지 못해 자동 테스트 준비 상태를 확인할 수 없습니다. AI 분석을 다시 실행해 주세요.",
+          ...(extractStartPath(dod) ? { startPath: extractStartPath(dod)! } : {}),
+        },
+        description: dod,
+      };
+      return;
+    }
+
+    const baseContract = contracts.get(dodIndex)
+      ?? requested?.testContract
+      ?? { version: DOD_TEST_CONTRACT_VERSION, scenario: "generic_ui" as const };
+    const contract = applyAnswersToContract(baseContract, requirements);
+    contracts.set(dodIndex, contract);
+
+    if (unansweredRequirements(requirements).length > 0) {
+      verifications[dodIndex] = {
+        verificationMethod: "manual",
+        testSpec: {},
+        design: resolveDesign({
+          requirements,
+          contract,
+          hasExecutableSpec: false,
+          startPath: contract.startPath ?? extractStartPath(dod) ?? undefined,
+        }).design,
+        description: dod,
+      };
+      return;
+    }
+    readyForComposition.push(dodIndex);
+  });
+
+  // 답변이 모두 끝난 DoD만 실행 스펙 생성으로 넘어간다. 고정된 로그인 프리셋을
+  // 먼저 시도하고(§21.5 v1 폴백 유지), 매칭되지 않으면 확정된 계약을 그대로
+  // atom 조합 단계에 넘긴다.
+  const needsComposition: number[] = [];
+  for (const dodIndex of readyForComposition) {
+    const dod = dods[dodIndex];
+    const contract = contracts.get(dodIndex)!;
+    const startPath = contract.startPath ?? extractStartPath(dod) ?? undefined;
+    const description = extractStartPath(dod) || !startPath ? dod : `\`${startPath}\`에서 ${dod}`;
+    const preset = createMvpVerificationDefinition(description);
+    if (preset.verificationMethod === "automated_e2e") {
+      verifications[dodIndex] = {
+        verificationMethod: "automated_e2e",
+        testSpec: preset.testSpec,
+        design: resolveDesign({
+          requirements: lockedRequirements.get(dodIndex) ?? [],
+          contract,
+          hasExecutableSpec: true,
+          startPath,
+        }).design,
+        description,
+      };
+      continue;
+    }
+    verifications[dodIndex] = {
+      verificationMethod: "manual",
+      testSpec: {},
+      design: resolveDesign({
+        requirements: lockedRequirements.get(dodIndex) ?? [],
+        contract,
+        hasExecutableSpec: false,
+        startPath,
+      }).design,
+      description,
+    };
+    needsComposition.push(dodIndex);
+  }
+
+  if (needsComposition.length > 0) {
+    const composed = await composeVerificationAtoms(
+      needsComposition.map((dodIndex) => ({
+        description: verifications[dodIndex]!.description,
+        contract: contracts.get(dodIndex),
+      })),
+    );
     const stillManual: Array<{ dodIndex: number; reason: NonNullable<ComposeOutcome["reason"]> }> = [];
 
-    unresolvedIndexes.forEach((dodIndex, composeIndex) => {
+    needsComposition.forEach((dodIndex, composeIndex) => {
       const outcome = composed[composeIndex];
       if (outcome?.spec) {
-        verifications[dodIndex] = { verificationMethod: "automated_e2e", testSpec: outcome.spec };
+        verifications[dodIndex] = {
+          verificationMethod: "automated_e2e",
+          testSpec: outcome.spec,
+          design: resolveDesign({
+            requirements: lockedRequirements.get(dodIndex) ?? [],
+            contract: contracts.get(dodIndex),
+            hasExecutableSpec: true,
+            startPath: contracts.get(dodIndex)?.startPath,
+          }).design,
+          description: verifications[dodIndex]!.description,
+        };
         return;
       }
       stillManual.push({ dodIndex, reason: outcome?.reason ?? "llm_failed" });
@@ -435,33 +778,92 @@ async function upsertCriteriaForMilestone(
       await logVerificationAtomGaps(
         supabase,
         projectId,
-        stillManual.map((entry) => ({ dodText: dods[entry.dodIndex], reason: entry.reason })),
+        stillManual.map((entry) => ({
+          dodText: verifications[entry.dodIndex]!.description,
+          reason: entry.reason,
+        })),
       );
       const guidances = await generateManualCheckGuidance(
-        stillManual.map((entry) => dods[entry.dodIndex]),
+        stillManual.map((entry) => verifications[entry.dodIndex]!.description),
       );
       stillManual.forEach((entry, guidanceIndex) => {
         const guidance = guidances[guidanceIndex];
-        if (!guidance) return;
+        const requested = requestedDesigns[entry.dodIndex];
         verifications[entry.dodIndex] = {
-          ...verifications[entry.dodIndex],
-          testSpec: { version: MANUAL_GUIDANCE_SPEC_VERSION, kind: "manual_guidance", ...guidance },
+          verificationMethod: "manual",
+          testSpec: guidance
+            ? { version: MANUAL_GUIDANCE_SPEC_VERSION, kind: "manual_guidance", ...guidance }
+            : {},
+          design: resolveDesign({
+            requirements: lockedRequirements.get(entry.dodIndex) ?? [],
+            contract: contracts.get(entry.dodIndex),
+            hasExecutableSpec: false,
+            humanReviewAccepted: requested?.humanReviewAccepted === true,
+            startPath: contracts.get(entry.dodIndex)?.startPath,
+            ...(guidance ? { manualGuidance: guidance } : {}),
+          }).design,
+          description: verifications[entry.dodIndex]!.description,
         };
       });
     }
   }
 
+  // 상태와 검수 방식이 어긋나면 실행되지 않을 항목이 자동 검수 대상으로 저장되거나
+  // 그 반대가 된다. 저장 직전에 상태를 기준으로 한 번 더 맞춘다.
+  for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
+    const verification = verifications[dodIndex];
+    if (!verification) continue;
+    const shouldAutomate = verification.design.status === "automation_ready";
+    if (shouldAutomate === (verification.verificationMethod === "automated_e2e")) continue;
+    verifications[dodIndex] = shouldAutomate
+      ? { ...verification, verificationMethod: "automated_e2e" }
+      : { ...verification, verificationMethod: "manual", testSpec: {} };
+  }
+
   for (let dodIndex = 0; dodIndex < dods.length; dodIndex += 1) {
     const existingId = existingIdByOriginalOrder.get(dodIndex + 1);
     const verification = verifications[dodIndex];
+    // 모든 슬롯은 위 단계에서 채워진다. 비어 있다면 판정 흐름에 구멍이 생긴
+    // 것이므로, 준비되지 않은 항목을 완료로 저장하지 않도록 오류로 끝낸다.
+    if (!verification) {
+      return {
+        ok: false,
+        error: { code: "DATABASE_ERROR", message: "완료조건의 검수 설계를 확정하지 못했습니다." },
+      };
+    }
+    const persistedDesign: PersistedVerificationDesign = {
+      version: VERIFICATION_DESIGN_VERSION,
+      status: verification.design.status!,
+      ...(verification.design.startPath ? { startPath: verification.design.startPath } : {}),
+      ...(verification.design.testHint ? { testHint: verification.design.testHint } : {}),
+      ...(verification.design.question ? { question: verification.design.question } : {}),
+      ...(verification.design.suggestions ? { suggestions: verification.design.suggestions } : {}),
+      ...(verification.design.recommendedSuggestion
+        ? { recommendedSuggestion: verification.design.recommendedSuggestion }
+        : {}),
+      ...(verification.design.conversation ? { conversation: verification.design.conversation } : {}),
+      ...(verification.design.requirements ? { requirements: verification.design.requirements } : {}),
+      ...(verification.design.testContract ? { testContract: verification.design.testContract } : {}),
+      questionSetLocked: verification.design.questionSetLocked === true,
+      humanReviewAccepted: verification.design.humanReviewAccepted === true,
+      message: verification.design.message ?? "검수 설계 상태를 확인해 주세요.",
+    };
+    const persistedTestSpec = verification.design.status === "clarification_required"
+      ? {
+          version: VERIFICATION_DESIGN_VERSION,
+          kind: "verification_clarification",
+          question: verification.design.question ?? "이 완료조건은 어느 화면에서 확인할 수 있나요?",
+          verificationDesign: persistedDesign,
+        }
+      : { ...verification.testSpec, verificationDesign: persistedDesign };
     if (existingId) {
       const { error } = await supabase
         .from("completion_criteria")
         .update({
-          description: dods[dodIndex],
+          description: verification.description,
           verification_method: verification.verificationMethod,
           position: dodIndex + 1,
-          test_spec: verification.testSpec,
+          test_spec: persistedTestSpec,
         })
         .eq("id", existingId);
       if (error) {
@@ -473,11 +875,11 @@ async function upsertCriteriaForMilestone(
         sow_version_id: sowVersionId,
         milestone_id: milestoneId,
         kind: "definition_of_done",
-        description: dods[dodIndex],
+        description: verification.description,
         verification_method: verification.verificationMethod,
         is_required: true,
         position: dodIndex + 1,
-        test_spec: verification.testSpec,
+        test_spec: persistedTestSpec,
       });
       if (error) {
         return { ok: false, error: mapBackendError(error, "완료 조건을 저장하지 못했습니다.") };
@@ -485,7 +887,13 @@ async function upsertCriteriaForMilestone(
     }
   }
 
-  return { ok: true, data: null };
+  return { ok: true, data: verifications.map((verification, dodIndex) => ({
+    description: verification?.description ?? dods[dodIndex],
+    design: {
+      ...(verification?.design ?? {}),
+      ...(verification ? { verificationMethod: verification.verificationMethod } : {}),
+    },
+  })) };
 }
 
 async function insertSowVersion(
@@ -613,6 +1021,7 @@ async function insertSowVersion(
     return milestoneUpsert;
   }
 
+  const verificationDesigns: SaveSowVersionOutput["verificationDesigns"] = [];
   for (let index = 0; index < input.milestones.length; index += 1) {
     const milestone = input.milestones[index];
     const code = milestone.code || `M${index + 1}`;
@@ -625,14 +1034,42 @@ async function insertSowVersion(
       input.projectId,
       sowVersion.id,
       milestoneId,
+      milestone.title,
       dods,
+      milestone.verificationDesigns,
     );
     if (!criteriaResult.ok) {
       return criteriaResult;
     }
+    criteriaResult.data.forEach((result, dodIndex) => {
+      verificationDesigns.push({ milestoneCode: code, dodIndex, ...result });
+    });
   }
 
   if (status === "in_review") {
+    // 자동 테스트가 준비된 항목과, 사람이 직접 확인하기로 발주자가 확정한 항목만
+    // 확정된 상태다. 자동화 불가는 그 자체로 정상적인 결론이므로(설계 §21.4)
+    // 확인만 받으면 제출을 막지 않는다. 다만 확인 없이 통과시키지도 않는다.
+    const summary = summarizeDesigns(verificationDesigns.map((item) => item.design));
+    if (summary.clarificationRequired > 0 || summary.humanReviewUnaccepted > 0 || summary.transient > 0) {
+      const reasons = [
+        summary.clarificationRequired > 0
+          ? `AI 질문에 답변이 필요한 완료조건 ${summary.clarificationRequired}개`
+          : null,
+        summary.humanReviewUnaccepted > 0
+          ? `직접 확인 항목으로 확정해야 하는 완료조건 ${summary.humanReviewUnaccepted}개`
+          : null,
+        summary.transient > 0 ? `실행 스펙 생성이 끝나지 않은 완료조건 ${summary.transient}개` : null,
+      ].filter(Boolean).join(", ");
+      return {
+        ok: false,
+        error: {
+          code: "INVALID_INPUT",
+          message: `검수 설계를 먼저 완료해 주세요: ${reasons}`,
+        },
+      };
+    }
+
     const { data: submitted, error: submitError } = await supabase
       .from("sow_versions")
       .update({ status: "in_review", submitted_for_review_at: new Date().toISOString() })
@@ -656,6 +1093,7 @@ async function insertSowVersion(
         sowVersionId: submitted.id,
         versionNumber: submitted.version_number,
         status: submitted.status,
+        verificationDesigns,
       },
     };
   }
@@ -666,6 +1104,7 @@ async function insertSowVersion(
       sowVersionId: sowVersion.id,
       versionNumber: sowVersion.version_number,
       status: sowVersion.status,
+      verificationDesigns,
     },
   };
 }
@@ -756,7 +1195,7 @@ export async function getSowWorkspaceContext(
         .order("position", { ascending: true }),
       supabase
         .from("completion_criteria")
-        .select("id, milestone_id, kind, description, verification_method, position")
+        .select("id, milestone_id, kind, description, verification_method, position, test_spec")
         .eq("sow_version_id", latestSow.id)
         .order("position", { ascending: true }),
       supabase
@@ -788,6 +1227,12 @@ export async function getSowWorkspaceContext(
         const dods = milestoneCriteria
           .filter((criterion) => criterion.kind === "definition_of_done")
           .map((criterion) => criterion.description);
+        const verificationDesigns = milestoneCriteria
+          .filter((criterion) => criterion.kind === "definition_of_done")
+          .map((criterion) => ({
+            ...readPersistedVerificationDesign(criterion.test_spec),
+            verificationMethod: criterion.verification_method,
+          }));
 
         return {
           code: milestone.code,
@@ -795,6 +1240,7 @@ export async function getSowWorkspaceContext(
           period: formatPeriodForDraft(milestone.start_date, milestone.end_date),
           amount: formatAmountForDraft(milestone.amount),
           dods: dods.length ? dods : [""],
+          verificationDesigns,
         };
       }),
     };

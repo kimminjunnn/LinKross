@@ -3,6 +3,19 @@
 import OpenAI from "openai";
 
 import { assertActionRole } from "@/lib/auth/workspace-access";
+import type {
+  DodClarificationRequirement,
+  DodTestContract,
+  DodVerificationDesign,
+} from "@/lib/backend";
+import { analyzeDodContracts } from "@/lib/dod-contract-analyzer";
+import {
+  applyAnswersToContract,
+  contractToDodSentence,
+  isCompleteTestContract,
+  unansweredContractFieldLabels,
+} from "@/lib/dod-test-contract";
+import { conversationFromRequirements, unansweredRequirements } from "@/lib/dod-verification-state";
 import type { EnglishSOWResult, MilestoneInput } from "@/lib/rag-translator";
 import { retrieveGlossaryTerms } from "@/lib/rag-translator";
 
@@ -16,6 +29,169 @@ export type AIAnalysisResult = {
   extractedEndDate?: string | null;
   extractedBudget?: string | null;
 };
+
+export type DodVerificationAnalysisResult = {
+  milestoneCode: string;
+  dodIndex: number;
+  revisedDod: string;
+  design: DodVerificationDesign;
+};
+
+/**
+ * 각 DoD의 검수 계약과 질문 세트를 한 번에 확정한다.
+ *
+ * 질문은 이 호출에서만 만들어지고 그대로 잠긴다(`questionSetLocked`). 이후
+ * 저장·재저장에서 새 질문이 생기지 않으므로 사용자는 DoD마다 한 번의 질문·답변만
+ * 거친다.
+ */
+export async function analyzeDodsForVerificationWithLLM(
+  milestones: MilestoneInput[],
+): Promise<DodVerificationAnalysisResult[]> {
+  await assertActionRole("company");
+  const flattened = milestones.flatMap((milestone) =>
+    milestone.dods.map((dod, dodIndex) => ({
+      milestoneCode: milestone.code,
+      milestoneTitle: milestone.title,
+      dodIndex,
+      dod,
+    })),
+  );
+  if (flattened.length === 0) return [];
+
+  const analyses = await analyzeDodContracts(
+    flattened.map((item) => ({ milestoneTitle: item.milestoneTitle, dod: item.dod })),
+  );
+
+  return flattened.map((item, index) => {
+    const analysis = analyses[index];
+    if (!analysis) throw new Error("일부 완료조건의 분석 결과가 누락되었습니다.");
+    const { requirements, testContract } = analysis;
+    const pending = unansweredRequirements(requirements);
+    return {
+      milestoneCode: item.milestoneCode,
+      dodIndex: item.dodIndex,
+      revisedDod: analysis.revisedDod || item.dod,
+      design: {
+        // 질문이 남아 있으면 답변을 받고, 없으면 저장 단계가 실행 스펙을 만들 때까지
+        // 과도기 상태로 둔다. 실행 스펙이 없는 항목을 완료로 표시하지 않는다.
+        status: pending.length > 0 ? "clarification_required" : "contract_ready",
+        ...(testContract.startPath ? { startPath: testContract.startPath } : {}),
+        ...(pending.length > 0
+          ? {
+              question: pending[0].question,
+              ...(pending[0].suggestions ? { suggestions: pending[0].suggestions } : {}),
+              ...(pending[0].recommendedSuggestion
+                ? { recommendedSuggestion: pending[0].recommendedSuggestion }
+                : {}),
+            }
+          : {}),
+        conversation: conversationFromRequirements(requirements),
+        requirements,
+        testContract,
+        questionSetLocked: true,
+        humanReviewAccepted: false,
+        message: pending.length > 0
+          ? `자동 테스트를 만들기 위해 확인이 필요한 항목 ${pending.length}개를 한 번에 정리했습니다.`
+          : "원문만으로 검수 계약을 확정했습니다. 실행 가능한 자동 테스트를 만드는 중입니다.",
+      },
+    };
+  });
+}
+
+/**
+ * 확정된 질문의 답변을 계약에 반영하고 최종 DoD 문장을 만든다.
+ *
+ * 계약 병합은 LLM 없이 결정적으로 수행한다. 문장 다듬기만 LLM에 맡기고,
+ * 실패하면 계약에서 문장을 만들어 답변이 사라지지 않게 한다.
+ */
+export async function finalizeDodForVerificationWithLLM(input: {
+  milestoneTitle: string;
+  dod: string;
+  requirements: DodClarificationRequirement[];
+  testContract?: DodTestContract;
+}): Promise<{ revisedDod: string; testContract: DodTestContract; isComplete: boolean; missingFields: string[] }> {
+  await assertActionRole("company");
+  if (!input.dod.trim()) {
+    throw new Error("최종 DoD를 만들 원본 완료조건이 없습니다.");
+  }
+  if (unansweredRequirements(input.requirements).length > 0) {
+    throw new Error("최종 DoD 생성에 필요한 답변이 모두 준비되지 않았습니다.");
+  }
+
+  const baseContract: DodTestContract = input.testContract
+    ?? { version: 1, scenario: "generic_ui" };
+  const testContract = applyAnswersToContract(baseContract, input.requirements);
+  const fallbackSentence = contractToDodSentence(testContract, input.dod);
+
+  let revisedDod = fallbackSentence;
+  try {
+    revisedDod = (await polishDodSentence({
+      milestoneTitle: input.milestoneTitle,
+      originalDod: input.dod,
+      testContract,
+      requirements: input.requirements,
+    })) || fallbackSentence;
+  } catch (error) {
+    // 문장 다듬기는 보조 단계다. 실패해도 확정된 계약과 답변은 그대로 유지한다.
+    console.error("[analyze] 최종 DoD 문장 다듬기 실패", error);
+  }
+
+  return {
+    revisedDod,
+    testContract,
+    isComplete: isCompleteTestContract(testContract),
+    missingFields: unansweredContractFieldLabels(testContract),
+  };
+}
+
+async function polishDodSentence(input: {
+  milestoneTitle: string;
+  originalDod: string;
+  testContract: DodTestContract;
+  requirements: DodClarificationRequirement[];
+}): Promise<string | null> {
+  if (!process.env.OPENAI_API_KEY) return null;
+  const completion = await openai.chat.completions.parse({
+    model: process.env.OPENAI_MODEL ?? "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: [
+          "당신은 Playwright 자동 테스트용 Definition of Done 문장을 최종 확정하는 QA 설계자입니다.",
+          "확정된 검수 계약과 질의응답만 사용해 최종 DoD 한 문장을 작성하세요.",
+          "새 질문을 만들거나 원문에 없는 기능을 추가하지 마세요.",
+          "계약의 시작 URL, 한 가지 사용자 행동, 입력·사전 상태, 화면에서 관찰 가능한 결과를 문장에 담으세요.",
+          "여러 독립 조건을 합치지 말고 문장 끝은 확인·표시·이동·차단·완료 같은 명사형으로 끝내세요.",
+        ].join("\n"),
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          milestoneTitle: input.milestoneTitle,
+          originalDod: input.originalDod,
+          testContract: input.testContract,
+          answers: input.requirements.map(({ key, question, answer }) => ({ key, question, answer })),
+        }),
+      },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "finalized_dod",
+        strict: true,
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: { revisedDod: { type: "string" } },
+          required: ["revisedDod"],
+        },
+      },
+    },
+    temperature: 0.1,
+  });
+  const parsed = completion.choices[0].message.parsed as { revisedDod: string } | null;
+  return parsed?.revisedDod?.trim() || null;
+}
 
 export async function analyzeWorkDetailWithLLM(
   workDetail: string,
@@ -36,7 +212,7 @@ export async function analyzeWorkDetailWithLLM(
 1. 화면 단위 분할 (기술 용어 금지): 마일스톤을 "DB 설계", "API 개발" 등 개발 프로세스나 기술 레이어로 잡지 말고, 비개발 발주자가 브라우저에서 직접 확인할 수 있는 '사용자 화면 및 행동(Feature) 단위'로 나누세요.
 2. 마이크로 세분화: 기능을 뭉뚱그리지 말고 최소 5~10개의 마일스톤으로 세분화하세요. 핵심 흐름, 제한/마감 처리, 예외 상황을 각각 별도 마일스톤으로 분리하세요.
 3. 조건별 독립적 분리 (엣지 케이스 및 복수 상태 전이 분리): 여러 조건이나 다단계 상태 전이를 절대 한 문장에 묶지 마세요. 사소한 제약조건도 무조건 개별 DoD로 쪼개세요.
-4. 정확한 URL 라우팅 필수 명시: 모든 DoD 문장에는 사용자 행동 위치나 이동 목적지를 \`/login\`, \`/signup\`, \`/orders\`, \`/addresses\`, \`/admin\` 등 **구체적 URL(경로)**로 반드시 시작하거나 포함하세요.
+4. 정확한 URL 라우팅 확인: 원문에 URL 경로가 명시된 경우 모든 DoD에 \`/login\`, \`/orders\`처럼 정확히 포함하세요. 원문에 URL이 없다면 임의로 경로를 창작하지 말고 DoD 앞에 반드시 "[URL 확인 필요]"를 붙이세요. 다음 검수 설계 단계에서 사용자에게 질문할 수 있어야 합니다.
 5. 관찰 가능한 상태 변화 묘사 및 명사 단어형 종결 (체언 종결): 모든 문장의 끝은 반드시 '~한다', '~된다' 등의 서술형을 쓰지 말고, 순수 명사 단어('확인', '가능', '완료', '노출', '유지', '이동', '표시', '차단', '제한' 등)로 끝내세요. 또한 눈에 보이는 UI 컴포넌트의 상태 변화(버튼 텍스트 변화, 에러 문구 표시 등)를 명확히 서술하세요.
 6. 상태 파이프라인 부정 전이(Negative Path) 및 비인가 접근 차단 구체화: 상태 진행 순서가 있는 경우 "정해진 순서대로만 진행됨" 같은 추상적 서술을 절대 금지합니다. 반드시 "‘A’ 상태에서 허용되지 않은 ‘C’ 상태로 직접 변경 시도 시 변경이 거부되고 오류 메시지가 표시됨", "일반 고객 계정으로 \`/admin\` 직접 접근 시 접근 차단 및 권한 오류 안내 표시"와 같이 구체적 출발 상태, 비정상 목표 상태, 거부 및 오류 표시를 명시하세요.
 7. 원문 범위 엄격 준수 및 임의 기능(CRUD) 완전 차단 [절대 규칙]: 
