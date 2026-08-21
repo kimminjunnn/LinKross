@@ -12,7 +12,8 @@
     "test": "node --experimental-strip-types --import ./scripts/register-test-hooks.mjs --test src/lib/__tests__/*.test.ts",
     "eval:sow": "node --experimental-strip-types --import ./eval/load-env.mjs --import ./scripts/register-test-hooks.mjs eval/run-sow-eval.mjs",
     "eval:models": "node --experimental-strip-types --import ./eval/load-env.mjs --import ./scripts/register-test-hooks.mjs eval/compare-models.mjs",
-    "eval:composition": "node --experimental-strip-types --conditions=react-server --import ./eval/load-env.mjs --import ./scripts/register-test-hooks.mjs eval/run-composition-eval.mjs"
+    "eval:composition": "node --experimental-strip-types --conditions=react-server --import ./eval/load-env.mjs --import ./scripts/register-test-hooks.mjs eval/run-composition-eval.mjs",
+    "eval:judgment": "node --experimental-strip-types --conditions=react-server --import ./eval/load-env.mjs --import ./scripts/register-test-hooks.mjs eval/run-judgment-eval.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -35,6 +36,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

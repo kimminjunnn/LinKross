@@ -67,7 +67,61 @@ export async function composeVerificationAtoms(
 async function composeChunk(bounded: CompositionRequest[]): Promise<ComposeOutcome[]> {
   if (bounded.length === 0) return [];
 
-  let items: FlatItem[];
+  const items = await requestComposition(bounded);
+  if (items === null) return splitAndRetry(bounded);
+  if (items === "failed") return bounded.map(() => ({ spec: null, reason: "llm_failed" as const }));
+
+  const outcomes = items.map((item, index) => normalizeFor(bounded[index], item));
+
+  // 거부된 항목만 모아 무엇이 걸렸는지 알려주고 한 번만 다시 받는다.
+  //
+  // 실측에서 거부 사유는 어휘 부족이 아니라 형식 실수에 몰려 있었다. 대상 종류는
+  // 골라 놓고 값을 빈 문자열로 두거나, 제출 버튼에 fill 을 쓰는 식이다. 사람이라면
+  // 무엇이 잘못됐는지 한 줄만 들어도 고치는 종류이므로 그 한 줄을 돌려준다.
+  // 교정본도 엄격 파서와 근거 검사를 그대로 통과해야 채택되므로, 지어낸 교정은
+  // 여전히 버려진다. 무한히 되묻지 않도록 한 번으로 제한한다.
+  const repairIndexes = outcomes.flatMap((outcome, index) =>
+    outcome.spec === null && isRepairable(outcome.reason) ? [index] : [],
+  );
+  if (repairIndexes.length === 0) return outcomes;
+
+  const repairRequests = repairIndexes.map((index) => bounded[index]);
+  const notes = repairIndexes.map((index) => outcomes[index].detail ?? "형식이 실행 가능한 조합이 아닙니다.");
+  const repaired = await requestComposition(repairRequests, notes);
+  if (repaired === null || repaired === "failed") return outcomes;
+
+  repairIndexes.forEach((index, repairIndex) => {
+    const item = repaired[repairIndex];
+    if (!item) return;
+    const retry = normalizeFor(bounded[index], item);
+    // 교정본이 통과했을 때만 바꾼다. 실패했다면 첫 진단을 남겨 두는 편이
+    // 무엇을 고쳐야 하는지 알려 준다.
+    if (retry.spec) outcomes[index] = retry;
+  });
+  return outcomes;
+}
+
+function normalizeFor(request: CompositionRequest | undefined, item: FlatItem): ComposeOutcome {
+  return normalizeComposedItem(
+    item,
+    request?.contract?.startPath,
+    request ? contractToCompositionBrief(request.description, request.contract) : undefined,
+  );
+}
+
+/** 형식 실수만 다시 묻는다. 자동화 불가 판단(§21.4)은 정상 결론이므로 되묻지 않는다. */
+function isRepairable(reason: ComposeOutcome["reason"]): boolean {
+  return reason === "schema_rejected" || reason === "ungrounded_text";
+}
+
+/**
+ * 조합을 한 번 요청한다. `repairNotes`가 있으면 직전 시도가 거부된 이유를 함께 전달한다.
+ * 응답이 잘려 개수가 맞지 않으면 null, 호출 자체가 실패하면 "failed"를 돌려준다.
+ */
+async function requestComposition(
+  bounded: CompositionRequest[],
+  repairNotes?: string[],
+): Promise<FlatItem[] | null | "failed"> {
   try {
     const completion = await openai.chat.completions.parse({
       model: process.env.OPENAI_MODEL || "gpt-4o",
@@ -76,13 +130,17 @@ async function composeChunk(bounded: CompositionRequest[]): Promise<ComposeOutco
         {
           role: "user",
           content:
-            "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n" +
+            (repairNotes
+              ? "아래 조합은 직전 시도에서 실행 가능한 형태가 아니어서 거부되었습니다. 지적된 부분만 고쳐 다시 작성하세요.\n" +
+                "고칠 수 없다면 automatable=none 을 고르세요. 없는 화면 요소를 지어내서는 안 됩니다.\n\n"
+              : "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n") +
             "각 항목의 라벨(시작 URL, 사전 상태, 사용자 행동, 기대 결과 등)은 발주자가 질문에 답해 확정한 값입니다. 그 값을 그대로 사용하고 다시 추측하지 마세요.\n\n" +
             bounded
-              .map(
-                (request, index) =>
-                  `[${index + 1}]\n${contractToCompositionBrief(request.description, request.contract)}`,
-              )
+              .map((request, index) => {
+                const brief = contractToCompositionBrief(request.description, request.contract);
+                const note = repairNotes?.[index];
+                return note ? `[${index + 1}]\n${brief}\n거부된 이유: ${note}` : `[${index + 1}]\n${brief}`;
+              })
               .join("\n\n"),
         },
       ],
@@ -96,26 +154,15 @@ async function composeChunk(bounded: CompositionRequest[]): Promise<ComposeOutco
     const parsed = completion.choices[0].message.parsed as { items: FlatItem[] } | null;
     if (!parsed || !Array.isArray(parsed.items) || parsed.items.length !== bounded.length) {
       // 응답이 출력 한도에 걸려 잘린 경우다. 나눠 담으면 통과할 수 있다.
-      return splitAndRetry(bounded);
+      return null;
     }
-    items = parsed.items;
+    return parsed.items;
   } catch (error) {
     // 인증·과금·네트워크 실패는 나눠도 똑같이 실패한다. 재시도하면 실패한
     // 호출만 배로 늘어나므로 여기서 끝낸다.
     console.error("[verification-atom-composer] LLM composition failed", error);
-    return bounded.map(() => ({ spec: null, reason: "llm_failed" as const }));
+    return "failed";
   }
-
-  // 확정된 계약의 시작 URL이 LLM이 다시 고른 경로보다 우선한다. 화면 문구 단언은
-  // 완료조건과 확정된 계약에 실제로 등장하는 표현만 허용한다.
-  return items.map((item, index) => {
-    const request = bounded[index];
-    return normalizeComposedItem(
-      item,
-      request?.contract?.startPath,
-      request ? contractToCompositionBrief(request.description, request.contract) : undefined,
-    );
-  });
 }
 
 async function splitAndRetry(bounded: CompositionRequest[]): Promise<ComposeOutcome[]> {
@@ -153,6 +200,16 @@ function buildSystemPrompt(): string {
     "회사명·초대 이메일·파일 첨부처럼 그 밖의 입력란에는 field 를 쓸 수 없습니다. 화면에 보이는 라벨을 targetKind=label 과 targetText 로 지정하세요.",
     "textbox·button 같은 접근성 역할은 targetKind=role 과 targetRole 에 넣습니다. field 에 역할 이름을 넣으면 조합 전체가 버려집니다.",
     "라벨을 완료조건이나 계약에서 확인할 수 없다면 지어내지 말고 automatable=none 을 고르세요.",
+    "",
+    "[고른 대상 종류의 값을 반드시 채우세요]",
+    "targetKind 를 골랐으면 그에 대응하는 값을 빈 문자열로 두면 안 됩니다. 값이 비면 그 동작은 아무 요소도 가리키지 못해 조합 전체가 버려집니다.",
+    "  targetKind=field → targetField, targetKind=role → targetRole, targetKind=label|text|placeholder|testId → targetText",
+    "확인 동작(expect_error_feedback 을 제외한 expect_*)에는 대상이 반드시 필요합니다. targetKind=none 으로 두지 마세요.",
+    "가리킬 요소를 특정할 수 없다면 그때는 automatable=none 입니다.",
+    "",
+    "[fill 과 click 을 구분하세요]",
+    `fill 은 값을 넣는 동작입니다. valueKind=ref 는 ${UI_CREDENTIAL_REFS.join("|")} 세 가지에만 쓰고, 그 밖의 값은 valueKind=literal 과 비어 있지 않은 value 로 넣으세요.`,
+    "제출 버튼은 값을 넣는 대상이 아닙니다. fill 이 아니라 click 을 쓰세요. 제출 버튼에 fill 을 쓰면 조합 전체가 버려집니다.",
     "",
     "automatable=none 을 선택해야 하는 경우:",
     "- 주관적 판단(디자인이 깔끔하다, 색상이 브랜드와 어울린다)",
