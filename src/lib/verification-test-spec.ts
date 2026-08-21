@@ -168,43 +168,26 @@ export function createMvpVerificationDefinition(description: string): {
     };
   }
 
-  const apiCheckSteps = inferLoginLockoutSteps(description);
-  if (apiCheckSteps) {
-    return {
-      verificationMethod: "automated_e2e",
-      testSpec: { version: MANAGED_API_CHECK_SPEC_VERSION, kind: "api_check", steps: apiCheckSteps },
-    };
-  }
-
+  // 계정 잠금 조건은 프리셋으로 판정하지 않는다. 아래를 참고.
   return { verificationMethod: "manual", testSpec: {} };
 }
 
-const LOCKOUT_FAILED_ATTEMPTS = 5;
-
-function inferLoginLockoutSteps(description: string): ManagedApiCheckStep[] | null {
-  const normalized = description.toLowerCase().replace(/[`'"“”‘’]/g, "").replace(/\s+/g, " ").trim();
-  const mentionsLoginFailure = /(로그인|login).*(실패|fail)|(실패|fail).*(로그인|login)/.test(normalized);
-  const mentionsLockout = /잠금|잠기|잠긴|잠겨|잠겼|잠글|차단|lock|429/.test(normalized);
-  if (!mentionsLoginFailure || !mentionsLockout) return null;
-
-  const steps: ManagedApiCheckStep[] = [];
-  for (let attempt = 1; attempt <= LOCKOUT_FAILED_ATTEMPTS; attempt += 1) {
-    steps.push({
-      method: "POST",
-      path: "/api/login",
-      body: { email: DEFAULT_CREDENTIALS.email, password: `${DEFAULT_CREDENTIALS.invalidPassword}-${attempt}` },
-      expectStatus: 401,
-    });
-  }
-  steps.push({
-    method: "POST",
-    path: "/api/login",
-    body: { email: DEFAULT_CREDENTIALS.email, password: `${DEFAULT_CREDENTIALS.invalidPassword}-lockout-check` },
-    expectStatus: 429,
-  });
-  return steps;
-}
-
+/**
+ * 계정 잠금 조건("N회 연속 실패하면 잠긴다")은 프리셋으로 판정하지 않는다.
+ *
+ * 예전에는 5회 실패 뒤 6번째 요청이 429를 반환한다고 가정한 고정 시퀀스를
+ * 만들었다. 두 가지가 잘못됐다.
+ *
+ * 1. 임계값과 해석을 LinKross가 발명했다. "5회 연속 실패하면 잠긴다"는 5번째
+ *    응답 자체가 차단인지, 5번 실패 후 6번째부터 차단인지 정하지 않는다.
+ *    합의되지 않은 기준으로 프리랜서의 정상 구현을 실패로 판정했다.
+ * 2. 실패 횟수가 0에서 시작하지 않는다. 같은 실행에서 브라우저 검수가 먼저
+ *    돌며 틀린 비밀번호로 로그인을 시도하고, 그 서버를 그대로 이어 쓴다.
+ *    실제로 같은 저장소가 통과와 실패를 오갔다.
+ *
+ * 이제 이런 조건은 atom 조합 단계로 넘어가고, 표현할 수 없으면 사람 확인으로
+ * 남는다. 판정하지 못하는 것이 잘못 판정하는 것보다 낫다.
+ */
 export function resolveMvpVerificationDefinition(input: {
   description: string;
   verificationMethod: VerificationMethod;

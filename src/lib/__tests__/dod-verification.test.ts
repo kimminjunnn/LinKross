@@ -21,6 +21,7 @@ import { normalizeComposedItem, type FlatItem, type FlatStep } from "@/lib/dod-a
 import {
   MANAGED_BROWSER_SPEC_VERSION_V2,
   MANAGED_BROWSER_SPEC_VERSION_V3,
+  createMvpVerificationDefinition,
   parseManagedBrowserAtomTestSpec,
 } from "@/lib/verification-test-spec";
 
@@ -443,4 +444,40 @@ test("계약이 있으면 실행될 테스트 내용(testHint)이 설계에 담�
   assert.equal(design.status, "automation_ready");
   assert.ok(design.testHint?.includes("/login"));
   assert.ok(design.testHint?.includes("로그인 버튼"));
+});
+
+// ── 합의되지 않은 기준으로 판정하지 않는다 ───────────────────────────────────
+test("계정 잠금 조건은 프리셋으로 자동 판정하지 않는다", () => {
+  // 임계값과 "몇 번째 시도부터 차단인지"는 합의된 적이 없다. 고정 시퀀스로
+  // 판정하면 정상 구현을 실패로 찍는다. 사람 확인으로 남기는 것이 옳다.
+  for (const dod of [
+    "로그인에 5회 연속 실패하면 계정이 잠긴다.",
+    "/login에서 로그인 실패가 반복되면 계정이 잠겨 접속이 차단됨",
+  ]) {
+    const result = createMvpVerificationDefinition(dod);
+    assert.equal(result.verificationMethod, "manual", dod);
+    assert.deepEqual(result.testSpec, {});
+  }
+});
+
+test("로그인 프리셋 4종은 그대로 유지된다", () => {
+  const cases: Array<[string, string]> = [
+    ["로그인 화면에 이메일과 비밀번호 입력란이 표시된다.", "login_fields"],
+    ["이메일과 비밀번호로 정상 로그인하면 /dashboard로 이동한다.", "login_success"],
+    ["잘못된 비밀번호로 로그인하면 오류 메시지가 표시된다.", "login_invalid_password"],
+    ["이메일 미입력 시 로그인이 차단된다.", "login_email_required"],
+  ];
+  for (const [dod, preset] of cases) {
+    const result = createMvpVerificationDefinition(dod);
+    assert.equal(result.verificationMethod, "automated_e2e", dod);
+    assert.equal((result.testSpec as { preset?: string }).preset, preset, dod);
+  }
+});
+
+test("프리셋에 매칭되지 않는 표현은 조합 단계로 넘긴다", () => {
+  // "입력하지 않으면"은 login_email_required 정규식(미입력·비어·누락)에 걸리지
+  // 않는다. 정규식을 넓혀 억지로 프리셋에 태우지 않는다 — 그 프리셋의 판정은
+  // HTML5 checkValidity에 의존해 자체 검증을 쓰는 앱을 실패로 찍는다.
+  const result = createMvpVerificationDefinition("이메일을 입력하지 않으면 로그인이 되지 않는다.");
+  assert.equal(result.verificationMethod, "manual");
 });
