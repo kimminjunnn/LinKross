@@ -173,14 +173,6 @@ export async function runManagedBrowserCriteria(input: {
     env: { PLAYWRIGHT_BROWSERS_PATH },
     timeoutMs: 2 * 60 * 1_000,
   });
-
-  // 브라우저 시나리오가 끝나면 앱 서버를 내린다. 남겨두면 뒤이어 실행되는
-  // API 검증이 같은 서버를 이어받아, 앞 조건이 만든 상태(로그인 실패 횟수,
-  // 생성한 데이터) 위에서 판정하게 된다. 실제로 같은 저장소가 실행마다 통과와
-  // 실패를 오갔다. 증거 파일은 이미 디스크에 있으므로 여기서 내려도 안전하다.
-  await server.kill().catch(() => undefined);
-  await server.wait().catch(() => null);
-
   if (run.exitCode !== 0) {
     return [
       ...missingSpecs,
