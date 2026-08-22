@@ -5,9 +5,11 @@ import {
   applyAnswersToContract,
   contractToCompositionBrief,
   contractToDodSentence,
+  contractToGroundingText,
   isCompleteTestContract,
   missingContractFields,
   normalizeContractRequirements,
+  targetSuggestionsFrom,
 } from "@/lib/dod-test-contract";
 import {
   conversationFromRequirements,
@@ -17,7 +19,13 @@ import {
   summarizeDesigns,
   unansweredRequirements,
 } from "@/lib/dod-verification-state";
-import { normalizeComposedItem, type FlatItem, type FlatStep } from "@/lib/dod-atom-composition";
+import {
+  normalizeComposedItem,
+  requiresExistingData,
+  requiresLoginState,
+  type FlatItem,
+  type FlatStep,
+} from "@/lib/dod-atom-composition";
 import {
   MANAGED_BROWSER_SPEC_VERSION_V2,
   MANAGED_BROWSER_SPEC_VERSION_V3,
@@ -39,7 +47,7 @@ const req = (key: string, answer?: string) => ({
 });
 
 const step = (over: Partial<FlatStep>): FlatStep => ({
-  atom: "click", targetKind: "none", targetValue: "", targetName: "",
+  atom: "click", targetKind: "none", targetField: "", targetRole: "", targetName: "", targetText: "",
   valueKind: "none", value: "", path: "", contains: "", key: "", viewport: "", count: 0,
   ...over,
 });
@@ -50,7 +58,7 @@ const uiItem = (steps: FlatStep[], startPath = "/login"): FlatItem =>
 // ── 완료 상태를 오판하지 않는다 ──────────────────────────────────────────────
 test("실행 가능한 스펙이 없으면 계약이 완성돼도 준비 완료가 되지 않는다", () => {
   const full = contract({
-    startPath: "/login", action: "클릭", target: "로그인 버튼",
+    startPath: "/login", precondition: "로그아웃 상태에서 시작", action: "클릭", target: "로그인 버튼",
     input: "test@example.com", expected: "/dashboard로 이동",
   });
   assert.equal(isCompleteTestContract(full), true);
@@ -126,12 +134,14 @@ test("문장이 바뀌거나 스펙이 없으면 재사용하지 않는다", () 
 test("답변이 같은 이름의 계약 필드에 그대로 들어간다", () => {
   const merged = applyAnswersToContract(contract(), [
     req("startPath", "/orders 화면에서"),
+    req("precondition", "테스트 계정으로 로그인한 상태에서 시작"),
     req("action", "픽업 요청 버튼 클릭"),
     req("target", "픽업 요청"),
     req("expected", "목록에 1건 표시"),
     req("input", "회의 준비"),
   ]);
   assert.equal(merged.startPath, "/orders");           // 한국어 조사 제거
+  assert.equal(merged.precondition, "테스트 계정으로 로그인한 상태에서 시작");
   assert.equal(merged.action, "픽업 요청 버튼 클릭");
   assert.equal(merged.target, "픽업 요청");
   assert.equal(merged.expected, "목록에 1건 표시");
@@ -166,21 +176,21 @@ test("구조화된 브리프가 라벨을 유지한다", () => {
 
 // ── 실행 불가능한 조합을 채택하지 않는다 ────────────────────────────────────
 test("단언이 하나도 없는 조합은 거부한다", () => {
-  const outcome = normalizeComposedItem(uiItem([step({ atom: "click", targetKind: "field", targetValue: "submit" })]));
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "click", targetKind: "field", targetField: "submit" })]));
   assert.equal(outcome.spec, null);
   assert.equal(outcome.reason, "schema_rejected");
 });
 
 test("변환 실패한 step이 하나라도 있으면 조합 전체를 버린다", () => {
   const outcome = normalizeComposedItem(uiItem([
-    step({ atom: "expect_visible", targetKind: "field", targetValue: "email" }),
+    step({ atom: "expect_visible", targetKind: "field", targetField: "email" }),
     step({ atom: "click", targetKind: "none" }),   // 대상 없음 → 변환 실패
   ]));
   assert.equal(outcome.spec, null, "단언만 남기고 조용히 통과시키면 안 된다");
 });
 
 test("알 수 없는 atom은 거부한다", () => {
-  const outcome = normalizeComposedItem(uiItem([step({ atom: "run_shell", targetKind: "text", targetValue: "x" })]));
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "run_shell", targetKind: "text", targetText: "x" })]));
   assert.equal(outcome.spec, null);
 });
 
@@ -192,9 +202,9 @@ test("automatable=none은 자동화 포기로 기록된다", () => {
 
 test("유효한 UI 조합은 실행 가능한 스펙이 된다", () => {
   const outcome = normalizeComposedItem(uiItem([
-    step({ atom: "fill", targetKind: "field", targetValue: "email", valueKind: "ref", value: "email" }),
-    step({ atom: "fill", targetKind: "field", targetValue: "password", valueKind: "ref", value: "password" }),
-    step({ atom: "click", targetKind: "field", targetValue: "submit" }),
+    step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "email" }),
+    step({ atom: "fill", targetKind: "field", targetField: "password", valueKind: "ref", value: "password" }),
+    step({ atom: "click", targetKind: "field", targetField: "submit" }),
     step({ atom: "expect_path", path: "/dashboard" }),
   ]));
   assert.ok(outcome.spec, "유효한 조합은 채택되어야 한다");
@@ -204,7 +214,7 @@ test("유효한 UI 조합은 실행 가능한 스펙이 된다", () => {
 
 test("확정된 계약의 시작 URL이 LLM이 비워둔 경로를 대신한다", () => {
   const outcome = normalizeComposedItem(
-    uiItem([step({ atom: "expect_visible", targetKind: "field", targetValue: "email" })], ""),
+    uiItem([step({ atom: "expect_visible", targetKind: "field", targetField: "email" })], ""),
     "/signin",
   );
   assert.equal((outcome.spec as { startPath: string } | null)?.startPath, "/signin");
@@ -279,7 +289,7 @@ test("완료조건에 있는 문구는 띄어쓰기가 달라도 통과한다", 
 test("지어낸 버튼 이름도 거부한다", () => {
   const outcome = normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "지금 결제하기" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "지금 결제하기" }),
       step({ atom: "expect_path", path: "/done" }),
     ]),
     undefined,
@@ -293,7 +303,7 @@ test("expect_text의 요소 설명 대상은 떼어내고 화면 전체에서 �
   // `{text: "빈 상태 화면"}`을 그대로 두면 그 문구를 가진 요소를 먼저 찾다가
   // 항상 실패한다. contains 단언만 남겨야 한다.
   const outcome = normalizeComposedItem(
-    uiItem([step({ atom: "expect_text", contains: "마감", targetKind: "text", targetValue: "예약 버튼" })]),
+    uiItem([step({ atom: "expect_text", contains: "마감", targetKind: "text", targetText: "예약 버튼" })]),
     undefined,
     "완료조건: 마감된 수업의 예약 버튼이 마감으로 표시됨",
   );
@@ -316,9 +326,9 @@ test("로그인 준비 단계는 field 대상이라 근거 문구 검사에 걸�
   const outcome = normalizeComposedItem(
     uiItem([
       step({ atom: "goto", path: "/login" }),
-      step({ atom: "fill", targetKind: "field", targetValue: "email", valueKind: "ref", value: "email" }),
-      step({ atom: "fill", targetKind: "field", targetValue: "password", valueKind: "ref", value: "password" }),
-      step({ atom: "click", targetKind: "field", targetValue: "submit" }),
+      step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "email" }),
+      step({ atom: "fill", targetKind: "field", targetField: "password", valueKind: "ref", value: "password" }),
+      step({ atom: "click", targetKind: "field", targetField: "submit" }),
       step({ atom: "goto", path: "/todos" }),
       // 같은 경로로 다시 이동하는 것이 재접속이다. 별도 새로고침 atom은 없다.
       step({ atom: "goto", path: "/todos" }),
@@ -338,8 +348,8 @@ test("계약의 준비 답변에 적힌 이름은 준비 단계에서 쓸 수 �
   );
   const outcome = normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "할 일 추가" }),
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "진행중" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "진행중" }),
       step({ atom: "expect_text", contains: "진행중" }),
     ], "/todos"),
     "/todos",
@@ -355,7 +365,7 @@ test("준비 단계라도 계약에 없는 이름을 지어내면 거부한다",
   );
   const outcome = normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "button", targetName: "샘플 데이터 생성" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "샘플 데이터 생성" }),
       step({ atom: "expect_text", contains: "진행중" }),
     ], "/todos"),
     "/todos",
@@ -384,23 +394,27 @@ test("새 조합은 v3으로 기록하고 기존 v2 조합도 그대로 실행�
 });
 
 test("체크 상태 확인을 조합에 담을 수 있다", () => {
+  // 목록에는 체크박스가 여럿이므로 누를 대상은 이름으로 특정해야 한다.
+  // 이름 없이 누르면 첫 번째 항목을 누르게 되어 무엇을 확인했는지 정해지지 않는다.
   const spec = specOf(normalizeComposedItem(
     uiItem([
-      step({ atom: "click", targetKind: "role", targetValue: "checkbox" }),
-      step({ atom: "expect_checked", targetKind: "role", targetValue: "checkbox" }),
+      step({ atom: "click", targetKind: "role", targetRole: "checkbox", targetName: "우유 사기" }),
+      step({ atom: "expect_checked", targetKind: "role", targetRole: "checkbox", targetName: "우유 사기" }),
     ], "/todos"),
+    undefined,
+    "우유 사기",
   ));
-  assert.deepEqual(spec?.steps[1], { atom: "expect_checked", target: { role: "checkbox" } });
+  assert.deepEqual(spec?.steps[1], { atom: "expect_checked", target: { role: "checkbox", name: "우유 사기" } });
 });
 
 test("개수 확인은 정수만 받고 음수는 거부한다", () => {
   const ok = specOf(normalizeComposedItem(
-    uiItem([step({ atom: "expect_count", targetKind: "role", targetValue: "listitem", count: 1 })], "/todos"),
+    uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: 1 })], "/todos"),
   ));
   assert.deepEqual(ok?.steps[0], { atom: "expect_count", target: { role: "listitem" }, count: 1 });
 
   const bad = normalizeComposedItem(
-    uiItem([step({ atom: "expect_count", targetKind: "role", targetValue: "listitem", count: -1 })], "/todos"),
+    uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: -1 })], "/todos"),
   );
   assert.equal(bad.spec, null);
   assert.equal(bad.reason, "schema_rejected");
@@ -408,14 +422,14 @@ test("개수 확인은 정수만 받고 음수는 거부한다", () => {
 
 test("목록 내용 단언도 완료조건에 있는 문구만 허용한다", () => {
   const grounded = normalizeComposedItem(
-    uiItem([step({ atom: "expect_none_text", targetKind: "role", targetValue: "listitem", contains: "완료" })], "/todos"),
+    uiItem([step({ atom: "expect_none_text", targetKind: "role", targetRole: "listitem", contains: "완료" })], "/todos"),
     undefined,
     "완료조건: /todos에서 '진행중' 필터 선택 시 완료되지 않은 할 일만 표시 확인",
   );
   assert.ok(grounded.spec, `거부됨: ${grounded.reason}`);
 
   const invented = normalizeComposedItem(
-    uiItem([step({ atom: "expect_every_text", targetKind: "role", targetValue: "listitem", contains: "보관됨" })], "/todos"),
+    uiItem([step({ atom: "expect_every_text", targetKind: "role", targetRole: "listitem", contains: "보관됨" })], "/todos"),
     undefined,
     "완료조건: /todos에서 '진행중' 필터 선택 시 완료되지 않은 할 일만 표시 확인",
   );
@@ -480,4 +494,348 @@ test("프리셋에 매칭되지 않는 표현은 조합 단계로 넘긴다", ()
   // HTML5 checkValidity에 의존해 자체 검증을 쓰는 앱을 실패로 찍는다.
   const result = createMvpVerificationDefinition("이메일을 입력하지 않으면 로그인이 되지 않는다.");
   assert.equal(result.verificationMethod, "manual");
+});
+
+// ── 대상 어휘를 벗어난 조합은 바꿔치기하지 않고 거부한다 ──────────────────────
+// 실측에서 자동화 실패의 가장 큰 원인이었다. 모델이 targetKind=field 에 역할
+// 이름(textbox)이나 임의의 입력란 이름(companyName)을 넣으면 로그인 요소 세
+// 가지가 아니므로 실행할 수 없다. 비슷한 대상으로 고쳐 쓰면 한국어 라벨과
+// 맞지 않아 정상 앱을 실패로 판정하므로, 조합 전체를 버리고 사람 확인으로 넘긴다.
+
+test("field 자리에 역할 이름이 오면 조합을 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "textbox", valueKind: "literal", value: "x" })]),
+  );
+  assert.equal(outcome.spec, null);
+  assert.equal(outcome.reason, "schema_rejected");
+  assert.match(outcome.detail ?? "", /field=textbox/);
+});
+
+test("로그인 요소가 아닌 입력란 이름은 field로 받지 않는다", () => {
+  for (const name of ["companyName", "inviteEmail", "file"]) {
+    const outcome = normalizeComposedItem(
+      uiItem([step({ atom: "fill", targetKind: "field", targetField: name, valueKind: "literal", value: "x" })]),
+    );
+    assert.equal(outcome.spec, null, name);
+    assert.equal(outcome.reason, "schema_rejected", name);
+  }
+});
+
+test("허용된 역할과 라벨은 그대로 조합에 담긴다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([
+      step({ atom: "fill", targetKind: "label", targetText: "회사명", valueKind: "literal", value: "테스트회사" }),
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "저장" }),
+      step({ atom: "expect_visible", targetKind: "role", targetRole: "alert" }),
+    ]),
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("목록에 없는 역할은 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "click", targetKind: "role", targetRole: "menuitem", targetName: "저장" })]),
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /role=menuitem/);
+});
+
+test("fill의 입력값이 비었거나 허용되지 않은 참조면 거부한다", () => {
+  const emptyLiteral = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "literal", value: "" })]),
+  );
+  assert.equal(emptyLiteral.spec, null);
+
+  const badRef = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "username" })]),
+  );
+  assert.equal(badRef.spec, null);
+});
+
+test("시작 경로가 없으면 거부 사유에 그 사실이 남는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_visible", targetKind: "field", targetField: "email" })], ""),
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /시작 경로/);
+});
+
+// ── 계약이 요구한 전제를 만들지 않은 조합은 채택하지 않는다 ────────────────────
+// 실측에서 이 누락 하나가 두 가지 오판을 동시에 만들었다. 로그인이 필요한 화면에
+// 로그인 없이 접근하면 정상 앱은 로그인 화면으로 리다이렉트되어 실패하고(False FAIL),
+// 권한 검사가 빠진 고장 앱은 오히려 열려서 통과한다(False PASS).
+
+test("로그인 전제를 요구하는데 로그인 단계가 없으면 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_path", path: "/todos" })], "/todos"),
+    "/todos",
+    undefined,
+    "로그인한 상태",
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /전제 미이행/);
+});
+
+test("로그인 단계를 포함하면 같은 조합이 채택된다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem(
+      [
+        step({ atom: "goto", path: "/login" }),
+        step({ atom: "fill", targetKind: "field", targetField: "email", valueKind: "ref", value: "email" }),
+        step({ atom: "fill", targetKind: "field", targetField: "password", valueKind: "ref", value: "password" }),
+        step({ atom: "click", targetKind: "field", targetField: "submit" }),
+        step({ atom: "goto", path: "/todos" }),
+        step({ atom: "expect_path", path: "/todos" }),
+      ],
+      "/login",
+    ),
+    "/login",
+    undefined,
+    "로그인한 상태",
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("비로그인 전제에는 로그인 단계를 요구하지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_path", path: "/login" })], "/todos"),
+    "/todos",
+    undefined,
+    "로그인하지 않은 상태",
+  );
+  assert.notEqual(outcome.spec, null, "비로그인 조건은 로그인 없이 확인하는 것이 맞다");
+});
+
+test("전제가 없으면 로그인 여부를 따지지 않는다", () => {
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "expect_path", path: "/todos" })], "/todos"), "/todos");
+  assert.notEqual(outcome.spec, null);
+});
+
+test("전제 판정은 부정형 표현을 로그인 요구로 읽지 않는다", () => {
+  assert.equal(requiresLoginState("로그인한 상태에서 시작"), true);
+  assert.equal(requiresLoginState("테스트 계정으로 로그인한 상태"), true);
+  assert.equal(requiresLoginState("로그인하지 않은 상태에서 시작"), false);
+  assert.equal(requiresLoginState("비로그인 상태"), false);
+  assert.equal(requiresLoginState("로그아웃 상태에서 시작"), false);
+  assert.equal(requiresLoginState(""), false);
+  assert.equal(requiresLoginState(undefined), false);
+});
+
+test("문구 확인에서 빠진 필드를 대상이 아니라 문구로 짚는다", () => {
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "expect_text", contains: "" })]));
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /문구/);
+});
+
+// ── 사전 상태는 시나리오와 무관하게 항상 확인한다 ────────────────────────────
+// 로그인이 필요한 화면인지 아무도 확인하지 않으면, 조합이 로그인 없이 화면을 열어
+// 정상 앱이 로그인 화면으로 리다이렉트되며 실패로 판정된다(False FAIL).
+
+test("폼 제출 시나리오도 사전 상태를 필수로 묻는다", () => {
+  const incomplete = contract({
+    scenario: "form_submission",
+    startPath: "/todos", action: "추가 버튼 클릭", target: "할 일 추가",
+    input: "우유 사기", expected: "목록에 표시",
+  });
+  assert.deepEqual(missingContractFields(incomplete), ["precondition"]);
+  assert.equal(isCompleteTestContract(incomplete), false);
+});
+
+test("사전 상태 질문에는 로그인 여부를 고를 선택지가 붙는다", () => {
+  const requirements = normalizeContractRequirements(
+    contract({ scenario: "form_submission", startPath: "/todos", action: "클릭", target: "버튼", input: "값", expected: "표시" }),
+    [],
+  );
+  const precondition = requirements.find((requirement) => requirement.key === "precondition");
+  assert.notEqual(precondition, undefined);
+  const suggestions = precondition?.suggestions ?? [];
+  assert.equal(suggestions.length >= 2, true);
+  assert.equal(
+    suggestions.some((suggestion) => suggestion.includes("로그인")),
+    true,
+  );
+});
+
+test("제출 버튼에는 값을 넣지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "field", targetField: "submit", valueKind: "literal", value: "x" })]),
+  );
+  assert.equal(outcome.spec, null);
+});
+
+// ── 데이터 전제도 로그인 전제와 같은 원리로 확인한다 ──────────────────────────
+// 확인할 데이터가 없으면 정상 앱에서도 대상을 찾지 못해 실패한다.
+
+test("데이터 존재 전제인데 만드는 단계가 없으면 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_visible", targetKind: "role", targetRole: "listitem" })], "/todos"),
+    "/todos",
+    undefined,
+    "할 일 목록에 할 일 존재",
+  );
+  assert.equal(outcome.spec, null);
+  assert.match(outcome.detail ?? "", /데이터를 만드는 단계가 없음/);
+});
+
+test("화면에서 데이터를 만들면 같은 조합이 채택된다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem(
+      [
+        step({ atom: "fill", targetKind: "label", targetText: "할 일", valueKind: "literal", value: "우유 사기" }),
+        step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+        step({ atom: "expect_visible", targetKind: "role", targetRole: "listitem" }),
+      ],
+      "/todos",
+    ),
+    "/todos",
+    undefined,
+    "할 일 목록에 할 일 존재",
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("빈 상태 확인에는 데이터 생성을 요구하지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_text", contains: "등록된 할 일이 없습니다" })], "/todos"),
+    "/todos",
+    "등록된 할 일이 없습니다",
+    "할 일이 하나도 없는 상태",
+  );
+  assert.notEqual(outcome.spec, null, "빈 상태는 데이터를 만들면 안 된다");
+});
+
+test("데이터 전제 판정은 부정형을 요구로 읽지 않는다", () => {
+  assert.equal(requiresExistingData("할 일 목록에 할 일 존재"), true);
+  assert.equal(requiresExistingData("등록된 주문이 있는 상태"), true);
+  assert.equal(requiresExistingData("할 일이 하나도 없는 상태"), false);
+  assert.equal(requiresExistingData("목록이 비어 있는 상태"), false);
+  assert.equal(requiresExistingData("로그인한 상태"), false);
+  assert.equal(requiresExistingData(undefined), false);
+});
+
+// ── 근거는 사람이 승인한 것만 인정한다 ────────────────────────────────────────
+// 분석기가 스스로 채운 계약 필드는 질문이 만들어지지 않아 아무도 확인하지 않는다.
+// 그 값을 근거로 인정하면 상류의 창작이 하류에서 "근거 있음"으로 세탁된다.
+// 실측에서 분석기가 target에 "할 일 내용"을 채웠고(실제 라벨은 "할 일"), 그 이름으로
+// 요소를 찾으려던 조합이 정상 앱을 실패로 판정했다.
+
+test("근거 텍스트에는 답변한 계약 필드만 들어간다", () => {
+  const full = contract({ target: "할 일 내용", expected: "목록에 표시", precondition: "로그인한 상태" });
+  const dod = "/todos에서 할 일 입력 후 추가 시 목록에 표시 확인";
+
+  const narrow = contractToGroundingText(dod, full, ["precondition"]);
+  assert.equal(narrow.includes("로그인한 상태"), true);
+  assert.equal(narrow.includes("할 일 내용"), false, "답변하지 않은 필드는 근거가 아니다");
+
+  const wide = contractToGroundingText(dod, full, ["precondition", "target"]);
+  assert.equal(wide.includes("할 일 내용"), true, "답변한 필드는 근거로 인정한다");
+});
+
+test("답변한 필드가 없으면 완료조건 문장만 근거가 된다", () => {
+  const dod = "/todos에서 할 일 표시 확인";
+  assert.equal(contractToGroundingText(dod, contract({ target: "지어낸 이름" }), []), dod);
+  assert.equal(contractToGroundingText(dod, undefined, ["target"]), dod);
+});
+
+test("분석기가 채운 이름으로 요소를 찾는 조합은 거부한다", () => {
+  const dod = "/todos에서 할 일 입력 후 '할 일 추가' 버튼 클릭 시 목록에 표시 확인";
+  const outcome = normalizeComposedItem(
+    uiItem(
+      [
+        step({ atom: "fill", targetKind: "label", targetText: "할 일 내용", valueKind: "literal", value: "우유" }),
+        step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+        step({ atom: "expect_text", contains: "우유" }),
+      ],
+      "/todos",
+    ),
+    "/todos",
+    contractToGroundingText(dod, contract({ target: "할 일 내용" }), []),
+  );
+  assert.equal(outcome.spec, null, "완료조건에 없는 라벨이므로 거부해야 한다");
+  assert.equal(outcome.reason, "ungrounded_text");
+});
+
+// ── 이름 없는 역할을 조작 대상으로 삼지 않는다 ────────────────────────────────
+// "화면의 첫 번째 버튼을 누른다"는 무엇을 눌렀는지 정해지지 않아 검증으로 성립하지
+// 않는다. 실측에서 로그아웃 버튼이 먼저 있는 화면에 대해 조합이 이름 없는
+// click(role=button)을 골랐고, 세션이 끊긴 채 확인이 진행돼 정상 앱이 실패로 찍혔다.
+
+test("이름 없는 역할을 누르는 조합은 거부한다", () => {
+  const outcome = normalizeComposedItem(uiItem([step({ atom: "click", targetKind: "role", targetRole: "button" })]));
+  assert.equal(outcome.spec, null);
+});
+
+test("이름 없는 역할에 값을 넣는 조합도 거부한다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "fill", targetKind: "role", targetRole: "textbox", valueKind: "literal", value: "x" })]),
+  );
+  assert.equal(outcome.spec, null);
+});
+
+test("이름이 있으면 역할 대상을 그대로 쓴다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([
+      step({ atom: "click", targetKind: "role", targetRole: "button", targetName: "할 일 추가" }),
+      step({ atom: "expect_visible", targetKind: "role", targetRole: "listitem" }),
+    ]),
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+test("확인 동작은 이름 없는 역할을 그대로 허용한다", () => {
+  // expect_count(role=listitem) 처럼 같은 역할을 한꺼번에 세는 것이 목적일 수 있다.
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_count", targetKind: "role", targetRole: "listitem", count: 1 })], "/todos"),
+  );
+  assert.notEqual(outcome.spec, null);
+});
+
+// ── 선택지는 지시문이 아니라 실제 값이어야 한다 ──────────────────────────────
+// 선택지는 그대로 계약 필드 값이 되고, 조합 단계에서 화면 요소 이름으로 쓰인다.
+// 예전 target 기본값("화면에 표시된 버튼 이름 사용")이 그대로 이름이 되어
+// 정상 앱에서 요소를 찾지 못하고 실패로 판정됐다.
+
+test("완료조건의 따옴표 안 이름을 대상 선택지로 뽑는다", () => {
+  assert.deepEqual(
+    targetSuggestionsFrom("/todos에서 할 일 입력 후 '할 일 추가' 버튼 클릭 시 목록에 표시 확인"),
+    ["할 일 추가"],
+  );
+  assert.deepEqual(
+    targetSuggestionsFrom("“픽업 대기” 상태에서 \"배송 완료\"로 직접 변경 시도 시 변경 거부 확인"),
+    ["픽업 대기", "배송 완료"],
+  );
+  assert.deepEqual(targetSuggestionsFrom("/todos에서 목록 표시 확인"), []);
+});
+
+test("대상 질문의 선택지가 완료조건에서 온다", () => {
+  const requirements = normalizeContractRequirements(
+    contract({ scenario: "state_change", startPath: "/todos", precondition: "로그인한 상태", expected: "표시" }),
+    [],
+    "/todos에서 '할 일 추가' 버튼 클릭 시 목록에 표시 확인",
+  );
+  const target = requirements.find((requirement) => requirement.key === "target");
+  assert.deepEqual(target?.suggestions, ["할 일 추가"]);
+  assert.equal(target?.recommendedSuggestion, "할 일 추가");
+});
+
+test("뽑을 이름이 없으면 지시문을 선택지로 주지 않는다", () => {
+  const requirements = normalizeContractRequirements(
+    contract({ scenario: "state_change", startPath: "/todos", precondition: "로그인한 상태", expected: "표시" }),
+    [],
+    "/todos에서 목록 표시 확인",
+  );
+  const target = requirements.find((requirement) => requirement.key === "target");
+  assert.deepEqual(target?.suggestions, [], "그럴듯한 지시문이 이름으로 쓰이면 안 된다");
+});
+
+test("제출 버튼에는 입력 검증 차단을 확인하지 않는다", () => {
+  const outcome = normalizeComposedItem(
+    uiItem([step({ atom: "expect_form_blocked", targetKind: "field", targetField: "submit" })], "/login"),
+  );
+  assert.equal(outcome.spec, null);
+
+  const onInput = normalizeComposedItem(
+    uiItem([step({ atom: "expect_form_blocked", targetKind: "field", targetField: "email" })], "/login"),
+  );
+  assert.notEqual(onInput.spec, null);
 });

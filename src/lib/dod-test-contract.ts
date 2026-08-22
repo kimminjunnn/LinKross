@@ -46,7 +46,7 @@ const INPUT_SCENARIOS = new Set<DodTestScenario>([
 
 const FIELD_QUESTIONS: Record<DodTestContractField, string> = {
   startPath: "이 완료조건을 시작할 정확한 URL은 무엇인가요?",
-  precondition: "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+  precondition: "이 완료조건을 확인하려면 시작할 때 어떤 로그인 상태여야 하나요?",
   fixture: "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
   action: "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
   target: "사용자가 누르거나 입력할 화면 요소의 이름은 무엇인가요?",
@@ -55,20 +55,61 @@ const FIELD_QUESTIONS: Record<DodTestContractField, string> = {
   cleanup: "다음 테스트에 영향을 주지 않도록 데이터를 어떻게 정리하나요?",
 };
 
+/**
+ * 답변이 없을 때 쓰는 기본 선택지.
+ *
+ * 선택지는 그대로 계약 필드 값이 되므로 "무엇을 하라"는 지시문이 아니라 실제
+ * 값이어야 한다. 예전 `target` 기본값은 "화면에 표시된 버튼 이름 사용"이었는데,
+ * 이것이 그대로 계약의 `target`이 되고 조합 단계에서 요소 이름으로 쓰였다.
+ * 실측에서 모델이 `대상 버튼`, `로그아웃 버튼`, `할 일 체크박스` 같은 이름으로
+ * 요소를 찾으려 했고(실제 화면 문구는 각각 없음/`로그아웃`/할 일 제목),
+ * 정상 앱이 실패로 판정됐다.
+ *
+ * `target`은 화면마다 달라 일반적인 기본값이 존재하지 않는다. 완료조건에 적힌
+ * 이름을 뽑아 쓰고(`targetSuggestionsFrom`), 뽑을 수 없으면 사용자가 직접
+ * 적도록 안내 문구만 남긴다.
+ */
 const FIELD_SUGGESTIONS: Record<DodTestContractField, string[]> = {
   startPath: ["/login", "/todos"],
   precondition: ["로그아웃 상태에서 시작", "테스트 계정으로 로그인한 상태에서 시작"],
   fixture: ["테스트 계정에 필요한 데이터를 화면에서 미리 생성", "새 테스트 계정의 초기 상태 사용"],
-  action: ["대상 버튼을 한 번 클릭", "값을 입력한 뒤 제출 버튼 클릭"],
-  target: ["화면에 표시된 버튼 이름 사용", "입력란의 라벨 이름 사용"],
+  action: ["클릭", "값 입력 후 제출"],
+  target: [],
   input: ["고정된 합성 테스트 값 사용", "AI 추천 테스트 값 사용"],
   expected: ["이동한 URL로 확인", "화면에 표시되는 문구와 상태로 확인"],
   cleanup: ["테스트에서 만든 데이터를 화면에서 삭제", "격리된 테스트 계정을 매 실행마다 초기화"],
 };
 
+/**
+ * 완료조건 문장에서 화면 요소 이름 후보를 뽑는다.
+ *
+ * CLAUDE.md의 작성 규칙상 버튼·문구 이름은 따옴표로 감싸 적는다
+ * (예: `'할 일 추가' 버튼 클릭`). 그 따옴표 안이 실제 화면에 보이는 이름이므로
+ * 지어낸 이름 대신 이것을 선택지로 준다.
+ */
+export function targetSuggestionsFrom(dod: string): string[] {
+  const found = [...dod.matchAll(/['"“”‘’「」『』]([^'"“”‘’「」『』]{1,40})['"“”‘’「」『』]/g)]
+    .map((match) => match[1].trim())
+    .filter((name) => name.length > 0);
+  return [...new Set(found)].slice(0, 3);
+}
+
+/**
+ * `precondition`은 시나리오와 무관하게 항상 필요하다.
+ *
+ * 예전에는 상태형 시나리오에만 물었다. 그래서 `form_submission`으로 분류된
+ * "/todos에서 할 일 추가" 같은 완료조건은 사전 상태를 아무도 확인하지 않았고,
+ * 분석기가 채운 값("할 일 입력란에 텍스트 입력" — 사전 상태가 아니라 행동)이
+ * 검증 없이 그대로 쓰였다. 그 결과 로그인이 필요한 화면인 줄 모른 채 조합이
+ * 만들어져, 정상 앱이 로그인 화면으로 리다이렉트되며 실패로 판정됐다.
+ *
+ * 화면을 열 때 어떤 로그인 상태여야 하는지는 완료조건 문장만으로 알 수 없는
+ * 경우가 많고, 발주자는 화면을 보고 바로 답할 수 있다. 질문 하나를 더 하는
+ * 비용보다 잘못된 판정의 비용이 크다(CLAUDE.md §11).
+ */
 export function requiredContractFields(contract: DodTestContract): DodTestContractField[] {
-  const fields: DodTestContractField[] = ["startPath", "action", "target", "expected"];
-  if (STATEFUL_SCENARIOS.has(contract.scenario)) fields.splice(1, 0, "precondition", "fixture");
+  const fields: DodTestContractField[] = ["startPath", "precondition", "action", "target", "expected"];
+  if (STATEFUL_SCENARIOS.has(contract.scenario)) fields.splice(2, 0, "fixture");
   if (INPUT_SCENARIOS.has(contract.scenario)) fields.splice(fields.length - 1, 0, "input");
   return fields;
 }
@@ -80,22 +121,27 @@ export function missingContractFields(contract: DodTestContract): DodTestContrac
 export function normalizeContractRequirements(
   contract: DodTestContract,
   proposed: DodClarificationRequirement[],
+  dod?: string,
 ): DodClarificationRequirement[] {
   const proposedByKey = new Map(proposed.map((item) => [item.key, item]));
   return missingContractFields(contract).map((field) => {
     const candidate = proposedByKey.get(field);
-    const suggestions = (candidate?.suggestions ?? FIELD_SUGGESTIONS[field])
+    const fallback =
+      field === "target" && dod ? targetSuggestionsFrom(dod) : FIELD_SUGGESTIONS[field];
+    const suggestions = (candidate?.suggestions ?? fallback)
       .map((value) => value.trim().slice(0, 120))
       .filter((value, index, all) => Boolean(value) && all.indexOf(value) === index)
       .slice(0, 3);
     return {
       key: field,
       question: candidate?.question?.trim().slice(0, 500) || FIELD_QUESTIONS[field],
-      suggestions: suggestions.length >= 2 ? suggestions : FIELD_SUGGESTIONS[field],
+      // 후보가 없으면 빈 목록을 남긴다. 그럴듯한 지시문을 선택지로 주면 그것이
+      // 그대로 계약 값이 되고 요소 이름으로 쓰여 정상 앱을 실패로 만든다.
+      suggestions: suggestions.length >= 2 ? suggestions : (suggestions.length > 0 ? suggestions : fallback),
       recommendedSuggestion:
         candidate?.recommendedSuggestion && suggestions.includes(candidate.recommendedSuggestion)
           ? candidate.recommendedSuggestion
-          : suggestions[0] ?? FIELD_SUGGESTIONS[field][0],
+          : suggestions[0] ?? fallback[0] ?? "",
       ...(candidate?.answer?.trim() ? { answer: candidate.answer.trim().slice(0, 1000) } : {}),
     };
   });
@@ -240,6 +286,39 @@ export function contractToCompositionBrief(dod: string, contract?: DodTestContra
       return value ? [`${FIELD_LABELS[field]}: ${value}`] : [];
     }),
   ];
+  return lines.join("\n").slice(0, 2000);
+}
+
+/**
+ * 화면 문구 단언의 근거로 쓸 텍스트를 만든다.
+ *
+ * 조합 단계에 넘기는 브리프(`contractToCompositionBrief`)와 목적이 다르다.
+ * 브리프는 모델이 조합을 만들 때 참고할 맥락이므로 계약 전체를 담지만, 근거는
+ * "이 문구가 화면에 있다고 주장해도 되는가"의 기준이므로 **사람이 승인한 것만**
+ * 담아야 한다.
+ *
+ * 두 가지를 한 텍스트로 묶었더니 상류의 창작이 하류에서 근거로 세탁됐다. 실측에서
+ * 분석기가 계약의 `target`에 "할 일 내용"을 채웠고(실제 화면 라벨은 "할 일"),
+ * 아무도 그 값을 확인하지 않았는데도 조합이 그 이름으로 요소를 찾으려 해서 정상
+ * 앱이 실패로 판정됐다. 분석기가 스스로 채운 필드는 질문이 만들어지지 않으므로
+ * 사람의 검토를 거치지 않는다.
+ *
+ * 근거로 인정하는 것은 두 가지뿐이다.
+ *   - 발주자가 승인한 완료조건 문장
+ *   - 발주자가 질문에 실제로 답해 확정한 계약 필드
+ */
+export function contractToGroundingText(
+  dod: string,
+  contract?: DodTestContract,
+  answeredFields?: readonly DodTestContractField[],
+): string {
+  if (!contract || !answeredFields || answeredFields.length === 0) return dod;
+  const lines = [dod];
+  for (const field of CONTRACT_FIELDS) {
+    if (!answeredFields.includes(field)) continue;
+    const value = contract[field]?.trim();
+    if (value) lines.push(value);
+  }
   return lines.join("\n").slice(0, 2000);
 }
 

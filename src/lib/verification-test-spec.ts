@@ -329,7 +329,14 @@ export function parseManagedBrowserAtomTestSpec(value: unknown): ManagedBrowserA
   };
 }
 
-function parseUiAtom(value: unknown): UiAtom | null {
+/**
+ * 단일 atom을 엄격 규칙으로 검사한다.
+ *
+ * 조합 단계가 어느 step 때문에 스펙 전체를 버렸는지 짚으려면 같은 규칙을
+ * step 하나에도 적용할 수 있어야 한다. 판정 규칙은 여기 하나뿐이며 진단이
+ * 별도 사본을 갖지 않게 하려고 공개한다.
+ */
+export function parseUiAtom(value: unknown): UiAtom | null {
   if (!isRecord(value)) return null;
 
   switch (value.atom) {
@@ -527,7 +534,7 @@ function inferLoginPreset(description: string): ManagedBrowserPreset | null {
   return null;
 }
 
-function isSafePath(value: unknown): value is string {
+export function isSafePath(value: unknown): value is string {
   return typeof value === "string" && /^\/(?!\/)[^\s?#]{0,500}$/.test(value);
 }
 

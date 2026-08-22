@@ -1,0 +1,3368 @@
+{
+  "report": {
+    "label": "afterfix",
+    "total": 74,
+    "automationReady": 39,
+    "automationReadyRate": 52.7,
+    "byOutcome": {
+      "composed": 36,
+      "preset": 3,
+      "rejected": 35
+    },
+    "byRejectionReason": {
+      "schema_rejected": 34,
+      "llm_declined": 1
+    },
+    "byRejectionDetail": {
+      "atom 변환 실패: atom=fill field=password": 1,
+      "atom 변환 실패: atom=fill field=email": 7,
+      "atom 변환 실패: atom=expect_visible 대상 없음": 4,
+      "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)": 12,
+      "atom 변환 실패: atom=fill field=submit": 8,
+      "(미기록)": 1,
+      "atom 변환 실패: atom=fill field=(빈 값)": 2
+    },
+    "avgQuestionsPerDod": 0.8
+  },
+  "records": [
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/signup에서 이메일과 비밀번호 입력 후 회원가입 시 성공 메시지 표시 확인",
+      "revisedDod": "/signup에서 이메일과 비밀번호 입력 후 회원가입 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/signup",
+        "action": "회원가입",
+        "target": "성공 메시지",
+        "input": "이메일과 비밀번호",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/signup에서 이메일과 비밀번호 입력 후 회원가입 시 성공 메시지 표시 확인",
+      "startPath": "/signup",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/signup",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/signup"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "성공 메시지"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /dashboard로 이동 확인",
+      "revisedDod": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /dashboard로 이동 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/login",
+        "action": "로그인",
+        "target": "대시보드",
+        "input": "이메일과 비밀번호",
+        "expected": "/dashboard로 이동"
+      },
+      "description": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /dashboard로 이동 확인",
+      "startPath": "/login",
+      "outcome": "preset",
+      "spec": {
+        "version": 1,
+        "kind": "managed_browser",
+        "preset": "login_success",
+        "startPath": "/login",
+        "expectedPath": "/dashboard",
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "revisedDod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/login",
+        "action": "로그인 시도",
+        "target": "오류 메시지",
+        "input": "잘못된 비밀번호",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "startPath": "/login",
+      "outcome": "preset",
+      "spec": {
+        "version": 1,
+        "kind": "managed_browser",
+        "preset": "login_invalid_password",
+        "startPath": "/login",
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login에서 존재하지 않는 이메일 입력 시 오류 메시지 표시 확인",
+      "revisedDod": "/login에서 존재하지 않는 이메일 입력 시 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/login",
+        "action": "로그인 시도",
+        "target": "오류 메시지",
+        "input": "존재하지 않는 이메일",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/login에서 존재하지 않는 이메일 입력 시 오류 메시지 표시 확인",
+      "startPath": "/login",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=password",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/login 상태에서 새로고침 시 세션 유지 확인",
+      "revisedDod": "/login 상태에서 새로고침 시 세션 유지 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "로그인 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "사용자 로그인 상태",
+          "answer": "사용자 로그인 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "로그인에 사용할 테스트 데이터는 무엇인가요?",
+          "suggestions": [
+            "이메일과 비밀번호",
+            "이메일만",
+            "비밀번호만"
+          ],
+          "recommendedSuggestion": "이메일과 비밀번호",
+          "answer": "이메일과 비밀번호"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "state_persistence",
+        "startPath": "/login",
+        "action": "페이지 새로고침",
+        "target": "로그인 상태",
+        "expected": "세션 유지",
+        "precondition": "사용자 로그인 상태",
+        "fixture": "이메일과 비밀번호"
+      },
+      "description": "/login 상태에서 새로고침 시 세션 유지 확인",
+      "startPath": "/login",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/login",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/login"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "goto",
+            "path": "/login"
+          },
+          {
+            "atom": "expect_text",
+            "contains": "로그인 상태"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "회원가입 및 로그인 기능 구현",
+      "dod": "/logout 시 세션 종료 및 /login으로 이동 확인",
+      "revisedDod": "/logout 시 세션 종료 및 /login으로 이동 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/logout",
+        "action": "로그아웃",
+        "target": "로그인 페이지",
+        "expected": "/login으로 이동"
+      },
+      "description": "/logout 시 세션 종료 및 /login으로 이동 확인",
+      "startPath": "/logout",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/logout",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/logout"
+          },
+          {
+            "atom": "expect_path",
+            "path": "/login"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace/create에서 회사명과 워크스페이스 이름 입력 후 생성 시 성공 메시지 표시 확인",
+      "revisedDod": "/workspace/create에서 회사명과 워크스페이스 이름 입력 후 생성 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/workspace/create",
+        "action": "워크스페이스 생성",
+        "target": "성공 메시지",
+        "input": "회사명과 워크스페이스 이름",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/workspace/create에서 회사명과 워크스페이스 이름 입력 후 생성 시 성공 메시지 표시 확인",
+      "startPath": "/workspace/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace/invite에서 팀원 초대 시 초대 이메일 발송 확인",
+      "revisedDod": "/workspace/invite에서 팀원 초대 시 초대 이메일 발송 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/workspace/invite",
+        "action": "팀원 초대",
+        "target": "초대 이메일",
+        "input": "팀원 이메일",
+        "expected": "초대 이메일 발송"
+      },
+      "description": "/workspace/invite에서 팀원 초대 시 초대 이메일 발송 확인",
+      "startPath": "/workspace/invite",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace에서 초대 링크 클릭 시 워크스페이스 참여 가능 확인",
+      "revisedDod": "/workspace에서 초대 링크 클릭 시 워크스페이스 참여 가능 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "워크스페이스 참여 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "초대 링크 수신",
+          "answer": "초대 링크 수신"
+        },
+        {
+          "key": "fixture",
+          "question": "워크스페이스 참여에 사용할 테스트 데이터는 무엇인가요?",
+          "suggestions": [
+            "초대 링크",
+            "워크스페이스 이름",
+            "팀원 이메일"
+          ],
+          "recommendedSuggestion": "초대 링크",
+          "answer": "초대 링크"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "access_control",
+        "startPath": "/workspace",
+        "action": "초대 링크 클릭",
+        "target": "워크스페이스 참여",
+        "input": "초대 링크",
+        "expected": "워크스페이스 참여 가능",
+        "precondition": "초대 링크 수신",
+        "fixture": "초대 링크"
+      },
+      "description": "/workspace에서 초대 링크 클릭 시 워크스페이스 참여 가능 확인",
+      "startPath": "/workspace",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/workspace",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/workspace"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "link"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "워크스페이스 참여"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "워크스페이스 및 팀원 관리 기능 구현",
+      "dod": "/workspace에서 관리자만 팀원 비활성화 시도 시 변경 거부 및 오류 메시지 표시 확인",
+      "revisedDod": "/workspace에서 관리자만 팀원 비활성화 시도 시 변경 거부 및 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/workspace",
+        "action": "팀원 비활성화 시도",
+        "target": "오류 메시지",
+        "input": "팀원 이메일",
+        "expected": "변경 거부 및 오류 메시지 표시"
+      },
+      "description": "/workspace에서 관리자만 팀원 비활성화 시도 시 변경 거부 및 오류 메시지 표시 확인",
+      "startPath": "/workspace",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/create에서 고객 정보 입력 후 등록 시 성공 메시지 표시 확인",
+      "revisedDod": "/customers/create에서 고객 정보 입력 후 등록 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/customers/create",
+        "action": "고객 등록",
+        "target": "성공 메시지",
+        "input": "고객 정보",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/customers/create에서 고객 정보 입력 후 등록 시 성공 메시지 표시 확인",
+      "startPath": "/customers/create",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/customers/create",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/customers/create"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "성공 메시지"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/list에서 고객 목록 검색 시 검색 결과 확인",
+      "revisedDod": "/customers/list에서 고객 목록 검색 시 검색 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "고객 목록 검색 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "고객 데이터 존재",
+          "answer": "고객 데이터 존재"
+        },
+        {
+          "key": "fixture",
+          "question": "고객 목록 검색에 사용할 테스트 데이터는 무엇인가요?",
+          "suggestions": [
+            "검색어",
+            "고객 이름",
+            "고객 ID"
+          ],
+          "recommendedSuggestion": "검색어",
+          "answer": "검색어"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/customers/list",
+        "action": "고객 목록 검색",
+        "target": "검색 결과",
+        "input": "검색어",
+        "expected": "검색 결과 확인",
+        "precondition": "고객 데이터 존재",
+        "fixture": "검색어"
+      },
+      "description": "/customers/list에서 고객 목록 검색 시 검색 결과 확인",
+      "startPath": "/customers/list",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/detail에서 고객의 문의 목록과 처리 이력 확인 가능 확인",
+      "revisedDod": "/customers/detail에서 고객의 문의 목록과 처리 이력 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/customers/detail",
+        "action": "문의 목록 확인",
+        "target": "문의 목록과 처리 이력",
+        "expected": "문의 목록과 처리 이력 확인 가능"
+      },
+      "description": "/customers/detail에서 고객의 문의 목록과 처리 이력 확인 가능 확인",
+      "startPath": "/customers/detail",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible 대상 없음",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "고객 관리 기능 구현",
+      "dod": "/customers/create에서 동일한 이메일로 고객 등록 시 오류 메시지 표시 확인",
+      "revisedDod": "/customers/create에서 동일한 이메일로 고객 등록 시 오류 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/customers/create",
+        "action": "고객 등록 시도",
+        "target": "오류 메시지",
+        "input": "동일한 이메일",
+        "expected": "오류 메시지 표시"
+      },
+      "description": "/customers/create에서 동일한 이메일로 고객 등록 시 오류 메시지 표시 확인",
+      "startPath": "/customers/create",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/customers/create",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/customers/create"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_error_feedback"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/create에서 티켓 제목과 내용을 입력 후 등록 시 성공 메시지 표시 확인",
+      "revisedDod": "/tickets/create에서 티켓 제목과 내용을 입력 후 등록 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/tickets/create",
+        "action": "티켓 등록",
+        "target": "성공 메시지",
+        "input": "티켓 제목과 내용",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/tickets/create에서 티켓 제목과 내용을 입력 후 등록 시 성공 메시지 표시 확인",
+      "startPath": "/tickets/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/detail에서 티켓 상태 변경 시 변경 사항 반영 확인",
+      "revisedDod": "/tickets/detail에서 티켓 상태 변경 시 변경 사항 반영 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/tickets/detail",
+        "action": "티켓 상태 변경",
+        "target": "변경 사항",
+        "input": "새로운 상태",
+        "expected": "변경 사항 반영"
+      },
+      "description": "/tickets/detail에서 티켓 상태 변경 시 변경 사항 반영 확인",
+      "startPath": "/tickets/detail",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/detail에서 고객 답변과 내부 메모 구분 확인",
+      "revisedDod": "/tickets/detail에서 고객 답변과 내부 메모 구분 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/tickets/detail",
+        "action": "답변 및 메모 확인",
+        "target": "고객 답변과 내부 메모",
+        "expected": "구분 확인"
+      },
+      "description": "/tickets/detail에서 고객 답변과 내부 메모 구분 확인",
+      "startPath": "/tickets/detail",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible 대상 없음",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/create에서 첨부파일 업로드 시 성공 메시지 표시 확인",
+      "revisedDod": "/tickets/create에서 첨부파일 업로드 시 성공 메시지 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/tickets/create",
+        "action": "첨부파일 업로드",
+        "target": "성공 메시지",
+        "input": "첨부파일",
+        "expected": "성공 메시지 표시"
+      },
+      "description": "/tickets/create에서 첨부파일 업로드 시 성공 메시지 표시 확인",
+      "startPath": "/tickets/create",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=email",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "문의 티켓 관리 기능 구현",
+      "dod": "/tickets/detail에서 티켓 생성 이력 확인 가능 확인",
+      "revisedDod": "/tickets/detail에서 티켓 생성 이력 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/tickets/detail",
+        "action": "티켓 생성 이력 확인",
+        "target": "티켓 생성 이력",
+        "expected": "확인 가능"
+      },
+      "description": "/tickets/detail에서 티켓 생성 이력 확인 가능 확인",
+      "startPath": "/tickets/detail",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "티켓 목록 및 검색 기능 구현",
+      "dod": "/tickets/list에서 전체 티켓과 나에게 배정된 티켓 구분 확인",
+      "revisedDod": "/tickets/list에서 전체 티켓과 나에게 배정된 티켓 구분 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "티켓 구분 확인 전에 필요한 상태는 무엇인가요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "티켓 존재",
+          "answer": "티켓 존재"
+        },
+        {
+          "key": "fixture",
+          "question": "티켓 구분 확인에 사용할 테스트 데이터는 무엇인가요?",
+          "suggestions": [
+            "티켓 ID",
+            "사용자 ID",
+            "티켓 제목"
+          ],
+          "recommendedSuggestion": "티켓 ID",
+          "answer": "티켓 ID"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/tickets/list",
+        "action": "티켓 구분 확인",
+        "target": "전체 티켓과 나에게 배정된 티켓",
+        "expected": "구분 확인",
+        "precondition": "티켓 존재",
+        "fixture": "티켓 ID"
+      },
+      "description": "/tickets/list에서 전체 티켓과 나에게 배정된 티켓 구분 확인",
+      "startPath": "/tickets/list",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "티켓 목록 및 검색 기능 구현",
+      "dod": "/tickets/list에서 상태 및 우선순위 필터링 시 필터링 결과 확인",
+      "revisedDod": "/tickets/list에서 상태 및 우선순위 필터링 시 필터링 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 로그인이나 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "로그인 상태",
+            "로그아웃 상태",
+            "특정 필터 설정"
+          ],
+          "recommendedSuggestion": "로그인 상태",
+          "answer": "로그인 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "상태 및 우선순위가 설정된 티켓 데이터",
+            "기본 티켓 데이터",
+            "필터링 조건이 없는 데이터"
+          ],
+          "recommendedSuggestion": "상태 및 우선순위가 설정된 티켓 데이터",
+          "answer": "상태 및 우선순위가 설정된 티켓 데이터"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/tickets/list",
+        "action": "상태 및 우선순위 필터링",
+        "target": "필터링 결과",
+        "expected": "필터링된 티켓 목록 확인",
+        "precondition": "로그인 상태",
+        "fixture": "상태 및 우선순위가 설정된 티켓 데이터"
+      },
+      "description": "/tickets/list에서 상태 및 우선순위 필터링 시 필터링 결과 확인",
+      "startPath": "/tickets/list",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "티켓 목록 및 검색 기능 구현",
+      "dod": "/tickets/list에서 제목으로 검색 시 검색 결과 확인",
+      "revisedDod": "/tickets/list에서 제목으로 검색 시 검색 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 로그인이나 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "로그인 상태",
+            "로그아웃 상태",
+            "특정 검색어 입력"
+          ],
+          "recommendedSuggestion": "로그인 상태",
+          "answer": "로그인 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "제목이 포함된 티켓 데이터",
+            "기본 티켓 데이터",
+            "검색어가 없는 데이터"
+          ],
+          "recommendedSuggestion": "제목이 포함된 티켓 데이터",
+          "answer": "제목이 포함된 티켓 데이터"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/tickets/list",
+        "action": "제목으로 검색",
+        "target": "검색 결과",
+        "expected": "검색된 티켓 목록 확인",
+        "precondition": "로그인 상태",
+        "fixture": "제목이 포함된 티켓 데이터"
+      },
+      "description": "/tickets/list에서 제목으로 검색 시 검색 결과 확인",
+      "startPath": "/tickets/list",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "티켓 목록 및 검색 기능 구현",
+      "dod": "/tickets/list에서 필터와 검색 조건 동시 적용 시 결과 확인",
+      "revisedDod": "/tickets/list에서 필터와 검색 조건 동시 적용 시 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 로그인이나 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "로그인 상태",
+            "로그아웃 상태",
+            "특정 필터 및 검색어 설정"
+          ],
+          "recommendedSuggestion": "로그인 상태",
+          "answer": "로그인 상태"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "필터와 검색어가 설정된 티켓 데이터",
+            "기본 티켓 데이터",
+            "필터링 조건이 없는 데이터"
+          ],
+          "recommendedSuggestion": "필터와 검색어가 설정된 티켓 데이터",
+          "answer": "필터와 검색어가 설정된 티켓 데이터"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/tickets/list",
+        "action": "필터와 검색 조건 동시 적용",
+        "target": "결과 확인",
+        "expected": "필터링 및 검색된 티켓 목록 확인",
+        "precondition": "로그인 상태",
+        "fixture": "필터와 검색어가 설정된 티켓 데이터"
+      },
+      "description": "/tickets/list에서 필터와 검색 조건 동시 적용 시 결과 확인",
+      "startPath": "/tickets/list",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "대시보드 기능 구현",
+      "dod": "/dashboard에서 전체 티켓 수 및 처리 현황 확인 가능 확인",
+      "revisedDod": "/dashboard에서 전체 티켓 수 및 처리 현황 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/dashboard",
+        "action": "전체 티켓 수 및 처리 현황 확인",
+        "target": "대시보드",
+        "expected": "전체 티켓 수 및 처리 현황 표시"
+      },
+      "description": "/dashboard에서 전체 티켓 수 및 처리 현황 확인 가능 확인",
+      "startPath": "/dashboard",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/dashboard",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/dashboard"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "대시보드"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "대시보드 기능 구현",
+      "dod": "/dashboard에서 최근 생성된 티켓 목록 확인 가능 확인",
+      "revisedDod": "/dashboard에서 최근 생성된 티켓 목록 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/dashboard",
+        "action": "최근 생성된 티켓 목록 확인",
+        "target": "대시보드",
+        "expected": "최근 생성된 티켓 목록 표시"
+      },
+      "description": "/dashboard에서 최근 생성된 티켓 목록 확인 가능 확인",
+      "startPath": "/dashboard",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/dashboard",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/dashboard"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "대시보드"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "대시보드 기능 구현",
+      "dod": "/dashboard에서 긴급 티켓 목록 확인 가능 확인",
+      "revisedDod": "/dashboard에서 긴급 티켓 목록 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/dashboard",
+        "action": "긴급 티켓 목록 확인",
+        "target": "대시보드",
+        "expected": "긴급 티켓 목록 표시"
+      },
+      "description": "/dashboard에서 긴급 티켓 목록 확인 가능 확인",
+      "startPath": "/dashboard",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/dashboard",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/dashboard"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "대시보드"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "알림 기능 구현",
+      "dod": "/notifications에서 새로 배정된 티켓 알림 확인 가능 확인",
+      "revisedDod": "/notifications에서 새로 배정된 티켓 알림 확인 가능 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/notifications",
+        "action": "새로 배정된 티켓 알림 확인",
+        "target": "알림 목록",
+        "expected": "새로 배정된 티켓 알림 표시"
+      },
+      "description": "/notifications에서 새로 배정된 티켓 알림 확인 가능 확인",
+      "startPath": "/notifications",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/notifications",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/notifications"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "새로 배정된 티켓 알림"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "알림 기능 구현",
+      "dod": "/notifications에서 읽지 않은 알림 개수 표시 확인",
+      "revisedDod": "/notifications에서 읽지 않은 알림 개수 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/notifications",
+        "action": "읽지 않은 알림 개수 확인",
+        "target": "알림 개수 표시",
+        "expected": "읽지 않은 알림 개수 표시"
+      },
+      "description": "/notifications에서 읽지 않은 알림 개수 표시 확인",
+      "startPath": "/notifications",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/notifications",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/notifications"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "읽지 않은 알림 개수"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 1,
+      "milestoneTitle": "알림 기능 구현",
+      "dod": "/notifications에서 알림 읽음 처리 시 상태 변경 확인",
+      "revisedDod": "/notifications에서 알림 읽음 처리 시 상태 변경 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/notifications",
+        "action": "알림 읽음 처리",
+        "target": "알림 상태",
+        "expected": "알림 상태 변경 확인"
+      },
+      "description": "/notifications에서 알림 읽음 처리 시 상태 변경 확인",
+      "startPath": "/notifications",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/notifications",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/notifications"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "알림 읽음 처리"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "회원가입 및 로그인 기능",
+      "dod": "/signup에서 이메일과 비밀번호로 회원가입 시 성공 메시지 확인",
+      "revisedDod": "/signup에서 이메일과 비밀번호로 회원가입 시 성공 메시지 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "이메일 주소",
+            "비밀번호",
+            "이메일과 비밀번호"
+          ],
+          "recommendedSuggestion": "이메일 주소",
+          "answer": "이메일 주소"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/signup",
+        "action": "이메일과 비밀번호로 회원가입",
+        "target": "성공 메시지",
+        "expected": "회원가입 성공 메시지 표시",
+        "input": "이메일 주소"
+      },
+      "description": "/signup에서 이메일과 비밀번호로 회원가입 시 성공 메시지 확인",
+      "startPath": "/signup",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/signup",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/signup"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "회원가입 성공 메시지"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "회원가입 및 로그인 기능",
+      "dod": "/login에서 비밀번호 입력 시 마스킹 표시 확인",
+      "revisedDod": "/login에서 비밀번호 입력 시 마스킹 표시 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "비밀번호",
+            "특별한 입력 없음",
+            "이메일"
+          ],
+          "recommendedSuggestion": "비밀번호",
+          "answer": "비밀번호"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/login",
+        "action": "비밀번호 입력",
+        "target": "비밀번호 입력 필드",
+        "expected": "비밀번호 마스킹 표시 확인",
+        "input": "비밀번호"
+      },
+      "description": "/login에서 비밀번호 입력 시 마스킹 표시 확인",
+      "startPath": "/login",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/login",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/login"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "field": "password"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "회원가입 및 로그인 기능",
+      "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "revisedDod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "잘못된 비밀번호",
+            "특별한 입력 없음",
+            "이메일"
+          ],
+          "recommendedSuggestion": "잘못된 비밀번호",
+          "answer": "잘못된 비밀번호"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/login",
+        "action": "잘못된 비밀번호 입력",
+        "target": "오류 메시지",
+        "expected": "오류 메시지 표시",
+        "input": "잘못된 비밀번호"
+      },
+      "description": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+      "startPath": "/login",
+      "outcome": "preset",
+      "spec": {
+        "version": 1,
+        "kind": "managed_browser",
+        "preset": "login_invalid_password",
+        "startPath": "/login",
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "창고 및 팀원 관리 기능",
+      "dod": "/admin에서 워크스페이스 생성 시 성공 메시지 확인",
+      "revisedDod": "/admin에서 워크스페이스 생성 시 성공 메시지 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "워크스페이스 이름",
+            "특별한 입력 없음",
+            "기본 이름"
+          ],
+          "recommendedSuggestion": "워크스페이스 이름",
+          "answer": "워크스페이스 이름"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/admin",
+        "action": "워크스페이스 생성",
+        "target": "성공 메시지",
+        "expected": "워크스페이스 생성 성공 메시지 표시",
+        "input": "워크스페이스 이름"
+      },
+      "description": "/admin에서 워크스페이스 생성 시 성공 메시지 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "워크스페이스 생성 성공 메시지"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "창고 및 팀원 관리 기능",
+      "dod": "/admin에서 하위 물리적 창고 등록 시 등록 완료 확인",
+      "revisedDod": "/admin에서 하위 물리적 창고 등록 시 등록 완료 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "하위 창고 이름",
+            "특별한 입력 없음",
+            "기본 이름"
+          ],
+          "recommendedSuggestion": "하위 창고 이름",
+          "answer": "하위 창고 이름"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/admin",
+        "action": "하위 물리적 창고 등록",
+        "target": "등록 완료 확인",
+        "expected": "하위 물리적 창고 등록 완료 메시지 표시",
+        "input": "하위 창고 이름"
+      },
+      "description": "/admin에서 하위 물리적 창고 등록 시 등록 완료 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "하위 물리적 창고 등록 완료 메시지"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "창고 및 팀원 관리 기능",
+      "dod": "/admin에서 팀원 초대 시 초대 이메일 발송 확인",
+      "revisedDod": "/admin에서 팀원 초대 시 초대 이메일 발송 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "팀원 이메일",
+            "특별한 입력 없음",
+            "기본 이메일"
+          ],
+          "recommendedSuggestion": "팀원 이메일",
+          "answer": "팀원 이메일"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/admin",
+        "action": "팀원 초대",
+        "target": "초대 이메일",
+        "expected": "초대 이메일 발송 확인",
+        "input": "팀원 이메일"
+      },
+      "description": "/admin에서 팀원 초대 시 초대 이메일 발송 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "초대 이메일 발송 확인"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "상품 관리 기능",
+      "dod": "/products에서 상품 등록 시 동일 바코드 중복 등록 차단 확인",
+      "revisedDod": "/products에서 상품 등록 시 동일 바코드 중복 등록 차단 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "바코드",
+            "특별한 입력 없음",
+            "상품 이름"
+          ],
+          "recommendedSuggestion": "바코드",
+          "answer": "바코드"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/products",
+        "action": "상품 등록",
+        "target": "중복 등록 차단",
+        "expected": "동일 바코드 중복 등록 차단 확인",
+        "input": "바코드"
+      },
+      "description": "/products에서 상품 등록 시 동일 바코드 중복 등록 차단 확인",
+      "startPath": "/products",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "상품 관리 기능",
+      "dod": "/products에서 상품 수정 시 수정 내용 반영 확인",
+      "revisedDod": "/products에서 상품 수정 시 수정 내용 반영 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "수정된 상품 정보",
+            "특별한 입력 없음",
+            "상품 이름"
+          ],
+          "recommendedSuggestion": "수정된 상품 정보",
+          "answer": "수정된 상품 정보"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/products",
+        "action": "상품 수정",
+        "target": "수정 내용",
+        "expected": "수정된 상품 정보 확인",
+        "input": "수정된 상품 정보"
+      },
+      "description": "/products에서 상품 수정 시 수정 내용 반영 확인",
+      "startPath": "/products",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "상품 관리 기능",
+      "dod": "/products에서 안전 재고량 입력 시 유효성 검사 통과 확인",
+      "revisedDod": "/products에서 안전 재고량 입력 시 유효성 검사 통과 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "안전 재고량",
+            "특별한 입력 없음",
+            "상품 이름"
+          ],
+          "recommendedSuggestion": "안전 재고량",
+          "answer": "안전 재고량"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/products",
+        "action": "안전 재고량 입력",
+        "target": "유효성 검사",
+        "expected": "유효성 검사 통과 확인",
+        "input": "안전 재고량"
+      },
+      "description": "/products에서 안전 재고량 입력 시 유효성 검사 통과 확인",
+      "startPath": "/products",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "재고 및 발주 관리 기능",
+      "dod": "/inventory에서 안전 재고량 이하로 떨어진 상품 표시 확인",
+      "revisedDod": "/inventory에서 안전 재고량 이하로 떨어진 상품 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/inventory",
+        "action": "안전 재고량 이하로 떨어진 상품 확인",
+        "target": "상품 목록",
+        "expected": "안전 재고량 이하 상품 표시"
+      },
+      "description": "/inventory에서 안전 재고량 이하로 떨어진 상품 표시 확인",
+      "startPath": "/inventory",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/inventory",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/inventory"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "listitem"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "재고 및 발주 관리 기능",
+      "dod": "/orders에서 발주서 생성 시 관리자 승인 대기 상태로 전환 확인",
+      "revisedDod": "/orders에서 발주서 생성 시 관리자 승인 대기 상태로 전환 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "발주서 정보",
+            "특별한 입력 없음",
+            "상품 정보"
+          ],
+          "recommendedSuggestion": "발주서 정보",
+          "answer": "발주서 정보"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/orders",
+        "action": "발주서 생성",
+        "target": "상태 전환",
+        "expected": "관리자 승인 대기 상태로 전환 확인",
+        "input": "발주서 정보"
+      },
+      "description": "/orders에서 발주서 생성 시 관리자 승인 대기 상태로 전환 확인",
+      "startPath": "/orders",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "재고 및 발주 관리 기능",
+      "dod": "/inventory에서 입고 완료 처리 시 재고 수량 증가 확인",
+      "revisedDod": "/inventory에서 입고 완료 처리 시 재고 수량 증가 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/inventory",
+        "action": "입고 완료 처리",
+        "target": "재고 수량",
+        "expected": "재고 수량 증가"
+      },
+      "description": "/inventory에서 입고 완료 처리 시 재고 수량 증가 확인",
+      "startPath": "/inventory",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "검색 및 필터링 기능",
+      "dod": "/products에서 상품명으로 검색 시 해당 상품 표시 확인",
+      "revisedDod": "/products에서 상품명으로 검색 시 해당 상품 표시 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "상품 목록이 표시됨",
+            "검색창이 활성화됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "상품 목록이 표시됨",
+          "answer": "상품 목록이 표시됨"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "상품 데이터가 준비됨",
+            "검색 데이터가 준비됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "상품 데이터가 준비됨",
+          "answer": "상품 데이터가 준비됨"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/products",
+        "action": "상품명으로 검색",
+        "target": "해당 상품",
+        "expected": "상품 표시",
+        "precondition": "상품 목록이 표시됨",
+        "fixture": "상품 데이터가 준비됨"
+      },
+      "description": "/products에서 상품명으로 검색 시 해당 상품 표시 확인",
+      "startPath": "/products",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "검색 및 필터링 기능",
+      "dod": "/products에서 카테고리별 필터 적용 시 필터링 결과 확인",
+      "revisedDod": "/products에서 카테고리별 필터 적용 시 필터링 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "상품 목록이 표시됨",
+            "필터 옵션이 활성화됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "상품 목록이 표시됨",
+          "answer": "상품 목록이 표시됨"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "카테고리 데이터가 준비됨",
+            "상품 데이터가 준비됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "카테고리 데이터가 준비됨",
+          "answer": "카테고리 데이터가 준비됨"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/products",
+        "action": "카테고리별 필터 적용",
+        "target": "필터링 결과",
+        "expected": "필터링된 상품 표시",
+        "precondition": "상품 목록이 표시됨",
+        "fixture": "카테고리 데이터가 준비됨"
+      },
+      "description": "/products에서 카테고리별 필터 적용 시 필터링 결과 확인",
+      "startPath": "/products",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "검색 및 필터링 기능",
+      "dod": "/products에서 '재고 부족' 상태 필터 적용 시 위험 재고 표시 확인",
+      "revisedDod": "/products에서 '재고 부족' 상태 필터 적용 시 위험 재고 표시 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "상품 목록이 표시됨",
+            "필터 옵션이 활성화됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "상품 목록이 표시됨",
+          "answer": "상품 목록이 표시됨"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "재고 데이터가 준비됨",
+            "위험 재고 데이터가 준비됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "위험 재고 데이터가 준비됨",
+          "answer": "위험 재고 데이터가 준비됨"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/products",
+        "action": "'재고 부족' 상태 필터 적용",
+        "target": "위험 재고",
+        "expected": "위험 재고 표시",
+        "precondition": "상품 목록이 표시됨",
+        "fixture": "위험 재고 데이터가 준비됨"
+      },
+      "description": "/products에서 '재고 부족' 상태 필터 적용 시 위험 재고 표시 확인",
+      "startPath": "/products",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/products",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/products"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "listitem"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "label": "재고 부족"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "listitem"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "대시보드 기능",
+      "dod": "/dashboard에서 총 재고 자산 규모 표시 확인",
+      "revisedDod": "/dashboard에서 총 재고 자산 규모 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/dashboard",
+        "action": "총 재고 자산 규모 확인",
+        "target": "총 재고 자산 규모",
+        "expected": "총 재고 자산 규모 표시"
+      },
+      "description": "/dashboard에서 총 재고 자산 규모 표시 확인",
+      "startPath": "/dashboard",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "대시보드 기능",
+      "dod": "/dashboard에서 안전 재고 미달 상품 수 표시 확인",
+      "revisedDod": "/dashboard에서 안전 재고 미달 상품 수 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/dashboard",
+        "action": "안전 재고 미달 상품 수 확인",
+        "target": "안전 재고 미달 상품 수",
+        "expected": "안전 재고 미달 상품 수 표시"
+      },
+      "description": "/dashboard에서 안전 재고 미달 상품 수 표시 확인",
+      "startPath": "/dashboard",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "대시보드 기능",
+      "dod": "/dashboard에서 금주 입고 예정 발주 건수 표시 확인",
+      "revisedDod": "/dashboard에서 금주 입고 예정 발주 건수 표시 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/dashboard",
+        "action": "금주 입고 예정 발주 건수 확인",
+        "target": "금주 입고 예정 발주 건수",
+        "expected": "금주 입고 예정 발주 건수 표시"
+      },
+      "description": "/dashboard에서 금주 입고 예정 발주 건수 표시 확인",
+      "startPath": "/dashboard",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "알림 및 파일 첨부 기능",
+      "dod": "/notifications에서 새로운 발주서 상신 알림 확인",
+      "revisedDod": "/notifications에서 새로운 발주서 상신 알림 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/notifications",
+        "action": "새로운 발주서 상신 확인",
+        "target": "알림",
+        "expected": "새로운 발주서 알림 표시"
+      },
+      "description": "/notifications에서 새로운 발주서 상신 알림 확인",
+      "startPath": "/notifications",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "알림 및 파일 첨부 기능",
+      "dod": "/orders에서 발주서 승인 시 알림 발송 확인",
+      "revisedDod": "/orders에서 발주서 승인 시 알림 발송 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "generic_ui",
+        "startPath": "/orders",
+        "action": "발주서 승인",
+        "target": "알림",
+        "expected": "알림 발송"
+      },
+      "description": "/orders에서 발주서 승인 시 알림 발송 확인",
+      "startPath": "/orders",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "알림 및 파일 첨부 기능",
+      "dod": "/orders에서 발주서 생성 시 파일 첨부 가능 확인",
+      "revisedDod": "/orders에서 발주서 생성 시 파일 첨부 가능 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "파일 경로",
+            "기타"
+          ],
+          "recommendedSuggestion": "파일 경로",
+          "answer": "파일 경로"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/orders",
+        "action": "발주서 생성",
+        "target": "파일 첨부",
+        "expected": "파일 첨부 가능",
+        "input": "파일 경로"
+      },
+      "description": "/orders에서 발주서 생성 시 파일 첨부 가능 확인",
+      "startPath": "/orders",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "권한과 보안 및 예외 처리 기능",
+      "dod": "/admin에서 비인가 접근 시 접근 차단 및 오류 메시지 표시 확인",
+      "revisedDod": "/admin에서 비인가 접근 시 접근 차단 및 오류 메시지 표시 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "비인가 접근 시도",
+            "로그인 화면이 표시됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "로그인 화면이 표시됨",
+          "answer": "로그인 화면이 표시됨"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "비인가 사용자 데이터가 준비됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "비인가 사용자 데이터가 준비됨",
+          "answer": "비인가 사용자 데이터가 준비됨"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "access_control",
+        "startPath": "/admin",
+        "action": "비인가 접근 시도",
+        "target": "접근 차단",
+        "expected": "오류 메시지 표시",
+        "precondition": "로그인 화면이 표시됨",
+        "fixture": "비인가 사용자 데이터가 준비됨"
+      },
+      "description": "/admin에서 비인가 접근 시 접근 차단 및 오류 메시지 표시 확인",
+      "startPath": "/admin",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible role=(빈 값) name=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "권한과 보안 및 예외 처리 기능",
+      "dod": "/inventory에서 다른 워크스페이스 데이터 접근 시 차단 확인",
+      "revisedDod": "/inventory에서 다른 워크스페이스 데이터 접근 시 차단 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트 시작 전 필요한 화면 상태는 무엇인가요?",
+          "suggestions": [
+            "다른 워크스페이스 데이터 접근 시도",
+            "재고 목록이 표시됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "재고 목록이 표시됨",
+          "answer": "재고 목록이 표시됨"
+        },
+        {
+          "key": "fixture",
+          "question": "테스트를 위한 데이터 준비 방법은 무엇인가요?",
+          "suggestions": [
+            "다른 워크스페이스 데이터가 준비됨",
+            "기타"
+          ],
+          "recommendedSuggestion": "다른 워크스페이스 데이터가 준비됨",
+          "answer": "다른 워크스페이스 데이터가 준비됨"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "access_control",
+        "startPath": "/inventory",
+        "action": "다른 워크스페이스 데이터 접근 시도",
+        "target": "접근 차단",
+        "expected": "차단 확인",
+        "precondition": "재고 목록이 표시됨",
+        "fixture": "다른 워크스페이스 데이터가 준비됨"
+      },
+      "description": "/inventory에서 다른 워크스페이스 데이터 접근 시 차단 확인",
+      "startPath": "/inventory",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/inventory",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/inventory"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "label": "접근 차단"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_error_feedback"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 2,
+      "milestoneTitle": "권한과 보안 및 예외 처리 기능",
+      "dod": "동시 입출고 처리 시 재고 수량 충돌 방지 확인",
+      "revisedDod": "동시 입출고 처리 시 재고 수량 충돌 방지 확인",
+      "requirements": [
+        {
+          "key": "startPath",
+          "question": "테스트를 시작할 URL 경로는 무엇인가요?",
+          "suggestions": [
+            "/inventory",
+            "/orders",
+            "/dashboard"
+          ],
+          "recommendedSuggestion": "/inventory",
+          "answer": "/inventory"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "action": "동시 입출고 처리",
+        "target": "재고 수량",
+        "expected": "재고 수량 충돌 방지",
+        "startPath": "/inventory"
+      },
+      "description": "`/inventory`에서 동시 입출고 처리 시 재고 수량 충돌 방지 확인",
+      "startPath": "/inventory",
+      "outcome": "rejected",
+      "reason": "llm_declined",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "회원가입 및 조직 관리",
+      "dod": "/signup에서 이메일 입력 후 초대 링크 수신 확인",
+      "revisedDod": "/signup에서 이메일 입력 후 초대 링크 수신 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "이메일 주소",
+            "기타"
+          ],
+          "recommendedSuggestion": "이메일 주소",
+          "answer": "이메일 주소"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/signup",
+        "action": "이메일 입력 후 초대 링크 수신",
+        "target": "초대 링크",
+        "expected": "초대 링크 수신 확인",
+        "input": "이메일 주소"
+      },
+      "description": "/signup에서 이메일 입력 후 초대 링크 수신 확인",
+      "startPath": "/signup",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/signup",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/signup"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_error_feedback"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "회원가입 및 조직 관리",
+      "dod": "/signup에서 비밀번호 설정 후 가입 완료 확인",
+      "revisedDod": "/signup에서 비밀번호 설정 후 가입 완료 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "비밀번호",
+            "기타"
+          ],
+          "recommendedSuggestion": "비밀번호",
+          "answer": "비밀번호"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/signup",
+        "action": "비밀번호 설정 후 가입 완료",
+        "target": "가입 완료",
+        "expected": "가입 완료 확인",
+        "input": "비밀번호"
+      },
+      "description": "/signup에서 비밀번호 설정 후 가입 완료 확인",
+      "startPath": "/signup",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/signup",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/signup"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_error_feedback"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "회원가입 및 조직 관리",
+      "dod": "/admin에서 회사 워크스페이스 생성 후 부서 트리 구성 확인",
+      "revisedDod": "/admin에서 회사 워크스페이스 생성 후 부서 트리 구성 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/admin",
+        "action": "회사 워크스페이스 생성 후 부서 트리 구성",
+        "target": "부서 트리",
+        "expected": "부서 트리 구성 확인"
+      },
+      "description": "/admin에서 회사 워크스페이스 생성 후 부서 트리 구성 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button",
+              "name": "부서 트리 구성"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "임직원 프로필 및 연차 관리",
+      "dod": "/admin에서 사원 기본 정보 입력 후 저장 확인",
+      "revisedDod": "/admin에서 사원 기본 정보 입력 후 저장 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "사원 정보",
+            "기타"
+          ],
+          "recommendedSuggestion": "사원 정보",
+          "answer": "사원 정보"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/admin",
+        "action": "사원 기본 정보 입력 후 저장",
+        "target": "사원 기본 정보",
+        "expected": "저장 확인",
+        "input": "사원 정보"
+      },
+      "description": "/admin에서 사원 기본 정보 입력 후 저장 확인",
+      "startPath": "/admin",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "임직원 프로필 및 연차 관리",
+      "dod": "/admin에서 입사일 기준 연차 일수 등록 후 확인",
+      "revisedDod": "/admin에서 입사일 기준 연차 일수 등록 후 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "연차 일수",
+            "기타"
+          ],
+          "recommendedSuggestion": "연차 일수",
+          "answer": "연차 일수"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/admin",
+        "action": "입사일 기준 연차 일수 등록",
+        "target": "연차 일수",
+        "expected": "연차 일수 등록 확인",
+        "input": "연차 일수"
+      },
+      "description": "/admin에서 입사일 기준 연차 일수 등록 후 확인",
+      "startPath": "/admin",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=(빈 값)",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "임직원 프로필 및 연차 관리",
+      "dod": "/employee에서 사용된 휴가 차감 후 잔여 연차 자동 계산 확인",
+      "revisedDod": "/employee에서 사용된 휴가 차감 후 잔여 연차 자동 계산 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/employee",
+        "action": "사용된 휴가 차감 후 잔여 연차 자동 계산",
+        "target": "잔여 연차",
+        "expected": "잔여 연차 자동 계산 확인"
+      },
+      "description": "/employee에서 사용된 휴가 차감 후 잔여 연차 자동 계산 확인",
+      "startPath": "/employee",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/employee",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/employee"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_error_feedback"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "근태 기록 (출퇴근 체크)",
+      "dod": "/main에서 '출근' 버튼 클릭 시 서버에 현재 시간 기록 확인",
+      "revisedDod": "/main에서 '출근' 버튼 클릭 시 서버에 현재 시간 기록 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "입력할 값은 무엇인가요?",
+          "suggestions": [
+            "고정된 합성 테스트 값 사용",
+            "AI 추천 테스트 값 사용"
+          ],
+          "recommendedSuggestion": "기타",
+          "answer": "기타"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/main",
+        "action": "'출근' 버튼 클릭",
+        "target": "서버에 현재 시간",
+        "expected": "현재 시간 기록 확인",
+        "input": "기타"
+      },
+      "description": "/main에서 '출근' 버튼 클릭 시 서버에 현재 시간 기록 확인",
+      "startPath": "/main",
+      "outcome": "composed",
+      "spec": {
+        "version": 1,
+        "kind": "api_check",
+        "steps": [
+          {
+            "method": "POST",
+            "path": "/api/attendance/check-in",
+            "expectStatus": 200
+          }
+        ]
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "근태 기록 (출퇴근 체크)",
+      "dod": "/main에서 '퇴근' 버튼 클릭 시 서버에 현재 시간 기록 확인",
+      "revisedDod": "/main에서 '퇴근' 버튼 클릭 시 서버에 현재 시간 기록 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+          "suggestions": [
+            "고정된 합성 테스트 값 사용",
+            "AI 추천 테스트 값 사용"
+          ],
+          "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+          "answer": "고정된 합성 테스트 값 사용"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/main",
+        "action": "퇴근 버튼 클릭",
+        "target": "퇴근 버튼",
+        "expected": "서버에 현재 시간 기록 확인",
+        "input": "고정된 합성 테스트 값 사용"
+      },
+      "description": "/main에서 '퇴근' 버튼 클릭 시 서버에 현재 시간 기록 확인",
+      "startPath": "/main",
+      "outcome": "composed",
+      "spec": {
+        "version": 1,
+        "kind": "api_check",
+        "steps": [
+          {
+            "method": "POST",
+            "path": "/api/attendance/check-out",
+            "expectStatus": 200
+          }
+        ]
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "근태 기록 (출퇴근 체크)",
+      "dod": "/admin에서 전체 직원 출퇴근 기록 열람 시 지각/조기퇴근 여부 확인",
+      "revisedDod": "/admin에서 전체 직원 출퇴근 기록 열람 시 지각/조기퇴근 여부 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "navigation",
+        "startPath": "/admin",
+        "action": "전체 직원 출퇴근 기록 열람",
+        "target": "출퇴근 기록 화면",
+        "expected": "지각/조기퇴근 여부 확인"
+      },
+      "description": "/admin에서 전체 직원 출퇴근 기록 열람 시 지각/조기퇴근 여부 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "지각/조기퇴근 여부 확인"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "휴가 신청 및 전자결재 워크플로우",
+      "dod": "/leave-application에서 휴가 종류 및 사유 입력 후 상신 확인",
+      "revisedDod": "/leave-application에서 휴가 종류 및 사유 입력 후 상신 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+          "suggestions": [
+            "고정된 합성 테스트 값 사용",
+            "AI 추천 테스트 값 사용"
+          ],
+          "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+          "answer": "고정된 합성 테스트 값 사용"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/leave-application",
+        "action": "휴가 종류 및 사유 입력 후 상신",
+        "target": "상신 버튼",
+        "expected": "상신 확인",
+        "input": "고정된 합성 테스트 값 사용"
+      },
+      "description": "/leave-application에서 휴가 종류 및 사유 입력 후 상신 확인",
+      "startPath": "/leave-application",
+      "outcome": "composed",
+      "spec": {
+        "version": 1,
+        "kind": "api_check",
+        "steps": [
+          {
+            "method": "POST",
+            "path": "/api/leave-application/submit",
+            "expectStatus": 200
+          }
+        ]
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "휴가 신청 및 전자결재 워크플로우",
+      "dod": "/admin에서 상신된 휴가 승인 시 잔여 연차 즉시 차감 확인",
+      "revisedDod": "/admin에서 상신된 휴가 승인 시 잔여 연차 즉시 차감 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "state_change",
+        "startPath": "/admin",
+        "action": "상신된 휴가 승인",
+        "target": "승인 버튼",
+        "expected": "잔여 연차 즉시 차감 확인"
+      },
+      "description": "/admin에서 상신된 휴가 승인 시 잔여 연차 즉시 차감 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 1,
+        "kind": "api_check",
+        "steps": [
+          {
+            "method": "POST",
+            "path": "/api/leave-application/approve",
+            "expectStatus": 200
+          }
+        ]
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "휴가 신청 및 전자결재 워크플로우",
+      "dod": "/admin에서 반려 시 반려 사유 안내 메시지 표시 확인",
+      "revisedDod": "/admin에서 반려 시 반려 사유 안내 메시지 표시 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+          "suggestions": [
+            "고정된 합성 테스트 값 사용",
+            "AI 추천 테스트 값 사용"
+          ],
+          "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+          "answer": "고정된 합성 테스트 값 사용"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/admin",
+        "action": "반려",
+        "target": "반려 버튼",
+        "expected": "반려 사유 안내 메시지 표시 확인",
+        "input": "고정된 합성 테스트 값 사용"
+      },
+      "description": "/admin에서 반려 시 반려 사유 안내 메시지 표시 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "반려 사유 안내 메시지 표시 확인"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "조회 및 검색 필터",
+      "dod": "/employee에서 본인 과거 휴가 신청 내역 조회 확인",
+      "revisedDod": "/employee에서 본인 과거 휴가 신청 내역 조회 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "로그아웃 상태에서 시작",
+          "answer": "로그아웃 상태에서 시작"
+        },
+        {
+          "key": "fixture",
+          "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+          "suggestions": [
+            "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "새 테스트 계정의 초기 상태 사용"
+          ],
+          "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+          "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/employee",
+        "action": "본인 과거 휴가 신청 내역 조회",
+        "target": "조회 버튼",
+        "expected": "과거 휴가 신청 내역 확인",
+        "precondition": "로그아웃 상태에서 시작",
+        "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+      },
+      "description": "/employee에서 본인 과거 휴가 신청 내역 조회 확인",
+      "startPath": "/employee",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/employee",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/employee"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "과거 휴가 신청 내역 확인"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "조회 및 검색 필터",
+      "dod": "/admin에서 전체 직원 기록 부서별 필터링 후 검색 결과 확인",
+      "revisedDod": "/admin에서 전체 직원 기록 부서별 필터링 후 검색 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "로그아웃 상태에서 시작",
+          "answer": "로그아웃 상태에서 시작"
+        },
+        {
+          "key": "fixture",
+          "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+          "suggestions": [
+            "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "새 테스트 계정의 초기 상태 사용"
+          ],
+          "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+          "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/admin",
+        "action": "부서별 필터링 후 검색",
+        "target": "검색 버튼",
+        "expected": "검색 결과 확인",
+        "precondition": "로그아웃 상태에서 시작",
+        "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+      },
+      "description": "/admin에서 전체 직원 기록 부서별 필터링 후 검색 결과 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "click",
+            "target": {
+              "role": "button"
+            }
+          },
+          {
+            "atom": "expect_text",
+            "contains": "검색 결과 확인"
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "조회 및 검색 필터",
+      "dod": "/admin에서 날짜별 필터링 후 검색 결과 확인",
+      "revisedDod": "/admin에서 날짜별 필터링 후 검색 결과 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "로그아웃 상태에서 시작",
+          "answer": "로그아웃 상태에서 시작"
+        },
+        {
+          "key": "fixture",
+          "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+          "suggestions": [
+            "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "새 테스트 계정의 초기 상태 사용"
+          ],
+          "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+          "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "list_filter",
+        "startPath": "/admin",
+        "action": "날짜별 필터링 후 검색",
+        "target": "검색 버튼",
+        "expected": "검색 결과 확인",
+        "precondition": "로그아웃 상태에서 시작",
+        "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+      },
+      "description": "/admin에서 날짜별 필터링 후 검색 결과 확인",
+      "startPath": "/admin",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=fill field=submit",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "대시보드 및 알림",
+      "dod": "/admin/dashboard에서 오늘 휴가자 목록 확인",
+      "revisedDod": "/admin/dashboard에서 오늘 휴가자 목록 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "navigation",
+        "startPath": "/admin/dashboard",
+        "action": "오늘 휴가자 목록 확인",
+        "target": "휴가자 목록",
+        "expected": "오늘 휴가자 목록 확인"
+      },
+      "description": "/admin/dashboard에서 오늘 휴가자 목록 확인",
+      "startPath": "/admin/dashboard",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin/dashboard",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin/dashboard"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "대시보드 및 알림",
+      "dod": "/admin/dashboard에서 결근/지각자 현황 확인",
+      "revisedDod": "/admin/dashboard에서 결근/지각자 현황 확인",
+      "requirements": [],
+      "questionCount": 0,
+      "contract": {
+        "version": 1,
+        "scenario": "navigation",
+        "startPath": "/admin/dashboard",
+        "action": "결근/지각자 현황 확인",
+        "target": "결근/지각자 현황",
+        "expected": "결근/지각자 현황 확인"
+      },
+      "description": "/admin/dashboard에서 결근/지각자 현황 확인",
+      "startPath": "/admin/dashboard",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin/dashboard",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin/dashboard"
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "list"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "대시보드 및 알림",
+      "dod": "/notification에서 휴가 승인 시 기안자에게 알림 표시 확인",
+      "revisedDod": "/notification에서 휴가 승인 시 기안자에게 알림 표시 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "로그아웃 상태에서 시작",
+          "answer": "로그아웃 상태에서 시작"
+        },
+        {
+          "key": "fixture",
+          "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+          "suggestions": [
+            "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "새 테스트 계정의 초기 상태 사용"
+          ],
+          "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+          "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "error_recovery",
+        "startPath": "/notification",
+        "action": "휴가 승인 시 알림 표시 확인",
+        "target": "알림",
+        "expected": "기안자에게 알림 표시 확인",
+        "precondition": "로그아웃 상태에서 시작",
+        "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+      },
+      "description": "/notification에서 휴가 승인 시 기안자에게 알림 표시 확인",
+      "startPath": "/notification",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/notification",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/notification"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "alert"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "파일 첨부 및 보안",
+      "dod": "/leave-application에서 파일 첨부 후 제출 확인",
+      "revisedDod": "/leave-application에서 파일 첨부 후 제출 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+          "suggestions": [
+            "고정된 합성 테스트 값 사용",
+            "AI 추천 테스트 값 사용"
+          ],
+          "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+          "answer": "고정된 합성 테스트 값 사용"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "form_submission",
+        "startPath": "/leave-application",
+        "action": "파일 첨부 후 제출",
+        "target": "제출 버튼",
+        "expected": "제출 확인",
+        "input": "고정된 합성 테스트 값 사용"
+      },
+      "description": "/leave-application에서 파일 첨부 후 제출 확인",
+      "startPath": "/leave-application",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible 대상 없음",
+      "status": "human_review_required"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "파일 첨부 및 보안",
+      "dod": "/admin에서 첨부파일 열람 시 본인과 관리자만 접근 가능 확인",
+      "revisedDod": "/admin에서 첨부파일 열람 시 본인과 관리자만 접근 가능 확인",
+      "requirements": [
+        {
+          "key": "precondition",
+          "question": "테스트를 시작하기 전에 어떤 로그인 상태나 화면 상태가 필요하나요?",
+          "suggestions": [
+            "로그아웃 상태에서 시작",
+            "테스트 계정으로 로그인한 상태에서 시작"
+          ],
+          "recommendedSuggestion": "로그아웃 상태에서 시작",
+          "answer": "로그아웃 상태에서 시작"
+        },
+        {
+          "key": "fixture",
+          "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+          "suggestions": [
+            "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "새 테스트 계정의 초기 상태 사용"
+          ],
+          "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+          "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+        }
+      ],
+      "questionCount": 2,
+      "contract": {
+        "version": 1,
+        "scenario": "access_control",
+        "startPath": "/admin",
+        "action": "첨부파일 열람",
+        "target": "첨부파일",
+        "expected": "본인과 관리자만 접근 가능 확인",
+        "precondition": "로그아웃 상태에서 시작",
+        "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+      },
+      "description": "/admin에서 첨부파일 열람 시 본인과 관리자만 접근 가능 확인",
+      "startPath": "/admin",
+      "outcome": "composed",
+      "spec": {
+        "version": 3,
+        "kind": "managed_browser",
+        "startPath": "/admin",
+        "steps": [
+          {
+            "atom": "goto",
+            "path": "/admin"
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "email"
+            },
+            "value": {
+              "ref": "email"
+            }
+          },
+          {
+            "atom": "fill",
+            "target": {
+              "field": "password"
+            },
+            "value": {
+              "ref": "password"
+            }
+          },
+          {
+            "atom": "click",
+            "target": {
+              "field": "submit"
+            }
+          },
+          {
+            "atom": "expect_visible",
+            "target": {
+              "role": "button"
+            }
+          }
+        ],
+        "syntheticCredentials": {
+          "email": "test@example.com",
+          "password": "Test1234!",
+          "invalidPassword": "wrong-password"
+        }
+      },
+      "status": "automation_ready"
+    },
+    {
+      "scenarioId": 3,
+      "milestoneTitle": "파일 첨부 및 보안",
+      "dod": "/leave-application에서 증빙 파일 첨부 시 보안 처리 확인",
+      "revisedDod": "/leave-application에서 증빙 파일 첨부 시 보안 처리 확인",
+      "requirements": [
+        {
+          "key": "input",
+          "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+          "suggestions": [
+            "고정된 합성 테스트 값 사용",
+            "AI 추천 테스트 값 사용"
+          ],
+          "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+          "answer": "고정된 합성 테스트 값 사용"
+        }
+      ],
+      "questionCount": 1,
+      "contract": {
+        "version": 1,
+        "scenario": "validation_error",
+        "startPath": "/leave-application",
+        "action": "증빙 파일 첨부",
+        "target": "첨부 버튼",
+        "expected": "보안 처리 확인",
+        "input": "고정된 합성 테스트 값 사용"
+      },
+      "description": "/leave-application에서 증빙 파일 첨부 시 보안 처리 확인",
+      "startPath": "/leave-application",
+      "outcome": "rejected",
+      "reason": "schema_rejected",
+      "detail": "atom 변환 실패: atom=expect_visible 대상 없음",
+      "status": "human_review_required"
+    }
+  ]
+}

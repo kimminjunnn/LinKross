@@ -1,0 +1,91 @@
+{
+  "promptVersion": "2026-08-22.baseline",
+  "input": "eval/fixtures-laundry-input.txt",
+  "rows": [
+    {
+      "model": "gpt-4o",
+      "run": 1,
+      "ms": 12594,
+      "milestones": 8,
+      "total": 38,
+      "withUrlPath": 38,
+      "withUrlPathLegacy": 38,
+      "capabilityStatements": 0,
+      "nounTerminated": 38,
+      "atomic": 38,
+      "urlPathRate": 100,
+      "urlPathRateLegacy": 100,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 100
+    },
+    {
+      "model": "gpt-4o",
+      "run": 2,
+      "ms": 9909,
+      "milestones": 7,
+      "total": 29,
+      "withUrlPath": 27,
+      "withUrlPathLegacy": 27,
+      "capabilityStatements": 0,
+      "nounTerminated": 29,
+      "atomic": 28,
+      "urlPathRate": 93.1,
+      "urlPathRateLegacy": 93.1,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 96.6
+    },
+    {
+      "model": "gpt-4o-mini",
+      "run": 1,
+      "ms": 14061,
+      "milestones": 8,
+      "total": 23,
+      "withUrlPath": 22,
+      "withUrlPathLegacy": 22,
+      "capabilityStatements": 0,
+      "nounTerminated": 23,
+      "atomic": 23,
+      "urlPathRate": 95.7,
+      "urlPathRateLegacy": 95.7,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 100
+    },
+    {
+      "model": "gpt-4o-mini",
+      "run": 2,
+      "ms": 9625,
+      "milestones": 7,
+      "total": 24,
+      "withUrlPath": 19,
+      "withUrlPathLegacy": 19,
+      "capabilityStatements": 0,
+      "nounTerminated": 24,
+      "atomic": 24,
+      "urlPathRate": 79.2,
+      "urlPathRateLegacy": 79.2,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 100
+    }
+  ],
+  "samples": {
+    "gpt-4o#1": [],
+    "gpt-4o#2": [
+      "픽업 요청 버튼을 빠르게 여러 번 클릭 시 중복 생성 차단 확인",
+      "픽업 대기 상태에서 배송 완료로 직접 변경 시도 시 변경 거부 및 오류 메시지 표시 확인"
+    ],
+    "gpt-4o-mini#1": [
+      "'픽업 대기' 상태에서 '배송 완료'로 직접 변경 시 변경 거부 및 오류 메시지 표시 확인"
+    ],
+    "gpt-4o-mini#2": [
+      "주문 상태가 '픽업 대기'에서 '픽업 완료'로 변경 시 고객 화면에 즉시 반영 확인",
+      "주문 상태가 '픽업 완료'에서 '세탁 중'으로 변경 시 고객 화면에 즉시 반영 확인",
+      "주문 상태가 '세탁 중'에서 '세탁 완료'로 변경 시 고객 화면에 즉시 반영 확인",
+      "주문 상태가 '세탁 완료'에서 '배송 중'으로 변경 시 고객 화면에 즉시 반영 확인",
+      "주문 상태가 '배송 중'에서 '배송 완료'로 변경 시 고객 화면에 즉시 반영 확인"
+    ]
+  }
+}

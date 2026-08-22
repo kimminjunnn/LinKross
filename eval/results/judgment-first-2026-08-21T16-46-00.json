@@ -1,0 +1,607 @@
+{
+  "label": "first",
+  "summary": {
+    "totalRows": 8,
+    "automatedRows": 8,
+    "automationRate": 100,
+    "falseFail": 5,
+    "falseFailRate": 62.5,
+    "falsePass": 0,
+    "falsePassRate": 0,
+    "controlBroke": 1,
+    "rows": [
+      {
+        "id": "login-fields",
+        "automated": true,
+        "source": "preset",
+        "brokenBy": null,
+        "okStatus": "failed",
+        "brokenStatus": "failed",
+        "okObserved": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+        "brokenObserved": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+        "falseFail": true,
+        "falsePass": false,
+        "controlBroke": true
+      },
+      {
+        "id": "login-success-redirect",
+        "automated": true,
+        "source": "composed",
+        "brokenBy": "wrong_redirect",
+        "okStatus": "passed",
+        "brokenStatus": "failed",
+        "okObserved": "실제 브라우저에서 확인했습니다: /login 경로 열기 → 이메일 입력란에 값 입력 → 비밀번호 입력란에 값 입력 → 제출 버튼 클릭 → /todos 경로에 머무름 또는 이동.",
+        "brokenObserved": "확인한 동작: /login 경로 열기 → 이메일 입력란에 값 입력 → 비밀번호 입력란에 값 입력 → 제출 버튼 클릭. 다음 단계에서 기대한 결과를 확인하지 못했습니다: /todos 경로에 머무름 또는 이동.",
+        "falseFail": false,
+        "falsePass": false,
+        "controlBroke": false
+      },
+      {
+        "id": "login-bad-password-error",
+        "automated": true,
+        "source": "preset",
+        "brokenBy": "no_error_on_bad_password",
+        "okStatus": "failed",
+        "brokenStatus": "failed",
+        "okObserved": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+        "brokenObserved": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+        "falseFail": true,
+        "falsePass": false,
+        "controlBroke": false
+      },
+      {
+        "id": "login-email-required",
+        "automated": true,
+        "source": "composed",
+        "brokenBy": "allow_empty_email",
+        "okStatus": "passed",
+        "brokenStatus": "failed",
+        "okObserved": "실제 브라우저에서 확인했습니다: /login 경로 열기 → 이메일 입력란 검증으로 제출이 차단됨 → 제출 버튼 클릭.",
+        "brokenObserved": "확인한 동작: /login 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: 이메일 입력란 검증으로 제출이 차단됨.",
+        "falseFail": false,
+        "falsePass": false,
+        "controlBroke": false
+      },
+      {
+        "id": "todo-add",
+        "automated": true,
+        "source": "composed",
+        "brokenBy": "todo_not_added",
+        "okStatus": "failed",
+        "brokenStatus": "failed",
+        "okObserved": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+        "brokenObserved": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+        "falseFail": true,
+        "falsePass": false,
+        "controlBroke": false
+      },
+      {
+        "id": "todo-check",
+        "automated": true,
+        "source": "composed",
+        "brokenBy": "checkbox_not_checked",
+        "okStatus": "failed",
+        "brokenStatus": "failed",
+        "okObserved": "확인한 동작: /todos 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: checkbox 요소이 화면에 표시됨.",
+        "brokenObserved": "확인한 동작: /todos 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: checkbox 요소이 화면에 표시됨.",
+        "falseFail": true,
+        "falsePass": false,
+        "controlBroke": false
+      },
+      {
+        "id": "todos-auth-guard",
+        "automated": true,
+        "source": "composed",
+        "brokenBy": "no_auth_guard",
+        "okStatus": "passed",
+        "brokenStatus": "failed",
+        "okObserved": "실제 브라우저에서 확인했습니다: /todos 경로 열기 → /login 경로에 머무름 또는 이동.",
+        "brokenObserved": "확인한 동작: /todos 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: /login 경로에 머무름 또는 이동.",
+        "falseFail": false,
+        "falsePass": false,
+        "controlBroke": false
+      },
+      {
+        "id": "session-persist",
+        "automated": true,
+        "source": "composed",
+        "brokenBy": "session_lost",
+        "okStatus": "failed",
+        "brokenStatus": "failed",
+        "okObserved": "확인한 동작: /todos 경로 열기 → button 요소이 화면에 표시됨. 다음 단계에서 기대한 결과를 확인하지 못했습니다: button 요소에 키보드 포커스가 있음.",
+        "brokenObserved": "확인한 동작: /todos 경로 열기 → button 요소이 화면에 표시됨. 다음 단계에서 기대한 결과를 확인하지 못했습니다: button 요소에 키보드 포커스가 있음.",
+        "falseFail": true,
+        "falsePass": false,
+        "controlBroke": false
+      }
+    ]
+  },
+  "detail": [
+    {
+      "specs": [
+        {
+          "id": "login-fields",
+          "milestoneTitle": "로그인 화면",
+          "dod": "/login에서 이메일 입력란과 비밀번호 입력란 표시 확인",
+          "brokenBy": null,
+          "note": "어떤 결함으로도 깨지지 않는 대조군. 두 판 모두 통과해야 하며, 고장판에서 실패하면 검수가 무관한 이유로 실패를 옮기고 있다는 뜻이다.",
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/login",
+            "target": "이메일 입력란과 비밀번호 입력란",
+            "expected": "표시",
+            "action": "대상 버튼을 한 번 클릭"
+          },
+          "description": "/login에서 이메일 입력란과 비밀번호 입력란 표시 확인",
+          "spec": {
+            "version": 1,
+            "kind": "managed_browser",
+            "preset": "login_fields",
+            "startPath": "/login",
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "preset"
+        },
+        {
+          "id": "login-success-redirect",
+          "milestoneTitle": "로그인 화면",
+          "dod": "/login에서 올바른 이메일과 비밀번호 입력 후 로그인 시 /todos로 이동 확인",
+          "brokenBy": "wrong_redirect",
+          "contract": {
+            "version": 1,
+            "scenario": "navigation",
+            "startPath": "/login",
+            "precondition": "올바른 이메일과 비밀번호 입력",
+            "action": "로그인",
+            "expected": "/todos로 이동",
+            "target": "화면에 표시된 버튼 이름 사용"
+          },
+          "description": "/login에서 올바른 이메일과 비밀번호 입력 후 로그인 시 /todos로 이동 확인",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "expect_path",
+                "path": "/todos"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "composed"
+        },
+        {
+          "id": "login-bad-password-error",
+          "milestoneTitle": "로그인 화면",
+          "dod": "/login에서 비밀번호를 틀리게 입력 후 로그인 시도 시 오류 메시지 표시 확인",
+          "brokenBy": "no_error_on_bad_password",
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/login",
+            "precondition": "올바른 이메일과 틀린 비밀번호 입력",
+            "action": "로그인 시도",
+            "target": "오류 메시지",
+            "expected": "표시",
+            "input": "wrongpassword1"
+          },
+          "description": "/login에서 비밀번호를 틀리게 입력 후 로그인 시도 시 오류 메시지 표시 확인",
+          "spec": {
+            "version": 1,
+            "kind": "managed_browser",
+            "preset": "login_invalid_password",
+            "startPath": "/login",
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "preset"
+        },
+        {
+          "id": "login-email-required",
+          "milestoneTitle": "로그인 화면",
+          "dod": "/login에서 이메일을 입력하지 않고 로그인 시도 시 제출 차단 확인",
+          "brokenBy": "allow_empty_email",
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/login",
+            "precondition": "이메일 입력란 비어 있음",
+            "action": "로그인 시도",
+            "target": "제출 버튼",
+            "expected": "차단",
+            "input": "고정된 합성 테스트 값 사용"
+          },
+          "description": "/login에서 이메일을 입력하지 않고 로그인 시도 시 제출 차단 확인",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "field": "email"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "composed"
+        },
+        {
+          "id": "todo-add",
+          "milestoneTitle": "할 일 목록 화면",
+          "dod": "/todos에서 할 일 입력 후 '할 일 추가' 버튼 클릭 시 목록에 입력한 할 일 표시 확인",
+          "brokenBy": "todo_not_added",
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/todos",
+            "precondition": "할 일 입력란에 입력된 내용",
+            "action": "할 일 추가 버튼 클릭",
+            "target": "할 일 목록",
+            "expected": "입력한 할 일 표시"
+          },
+          "description": "/todos에서 할 일 입력 후 '할 일 추가' 버튼 클릭 시 목록에 입력한 할 일 표시 확인",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/todos",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/todos"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "submit"
+                },
+                "value": {
+                  "literal": "할 일 내용"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "role": "button"
+                }
+              },
+              {
+                "atom": "expect_visible",
+                "target": {
+                  "role": "listitem"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "composed"
+        },
+        {
+          "id": "todo-check",
+          "milestoneTitle": "할 일 목록 화면",
+          "dod": "/todos에서 할 일 체크박스 클릭 시 선택된 상태 확인",
+          "brokenBy": "checkbox_not_checked",
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/todos",
+            "precondition": "할 일 목록에 할 일이 존재",
+            "action": "체크박스 클릭",
+            "target": "선택된 체크박스",
+            "expected": "선택된 상태"
+          },
+          "description": "/todos에서 할 일 체크박스 클릭 시 선택된 상태 확인",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/todos",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/todos"
+              },
+              {
+                "atom": "expect_visible",
+                "target": {
+                  "role": "checkbox"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "role": "checkbox"
+                }
+              },
+              {
+                "atom": "expect_checked",
+                "target": {
+                  "role": "checkbox"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "composed"
+        },
+        {
+          "id": "todos-auth-guard",
+          "milestoneTitle": "접근 권한",
+          "dod": "로그인하지 않은 상태에서 /todos 직접 접근 시 /login으로 이동 확인",
+          "brokenBy": "no_auth_guard",
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/todos",
+            "precondition": "로그인하지 않은 상태",
+            "action": "/todos 접근",
+            "expected": "/login으로 이동",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "target": "화면에 표시된 버튼 이름 사용"
+          },
+          "description": "로그인하지 않은 상태에서 /todos 직접 접근 시 /login으로 이동 확인",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/todos",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/todos"
+              },
+              {
+                "atom": "expect_path",
+                "path": "/login"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "composed"
+        },
+        {
+          "id": "session-persist",
+          "milestoneTitle": "할 일 목록 화면",
+          "dod": "/todos에서 재접속 시 로그인 세션 유지 확인",
+          "brokenBy": "session_lost",
+          "contract": {
+            "version": 1,
+            "scenario": "state_persistence",
+            "startPath": "/todos",
+            "precondition": "로그인 상태",
+            "action": "재접속",
+            "expected": "로그인 세션 유지",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "target": "화면에 표시된 버튼 이름 사용"
+          },
+          "description": "/todos에서 재접속 시 로그인 세션 유지 확인",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/todos",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/todos"
+              },
+              {
+                "atom": "expect_visible",
+                "target": {
+                  "role": "button"
+                }
+              },
+              {
+                "atom": "expect_focused",
+                "target": {
+                  "role": "button"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "source": "composed"
+        }
+      ],
+      "ok": [
+        {
+          "criterionId": "login-fields",
+          "status": "failed",
+          "observedResult": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+          "errorMessage": "spec.steps is not iterable",
+          "durationMs": 1239,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/login-fields.png"
+        },
+        {
+          "criterionId": "login-success-redirect",
+          "status": "passed",
+          "observedResult": "실제 브라우저에서 확인했습니다: /login 경로 열기 → 이메일 입력란에 값 입력 → 비밀번호 입력란에 값 입력 → 제출 버튼 클릭 → /todos 경로에 머무름 또는 이동.",
+          "durationMs": 1320,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/login-success-redirect.png"
+        },
+        {
+          "criterionId": "login-bad-password-error",
+          "status": "failed",
+          "observedResult": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+          "errorMessage": "spec.steps is not iterable",
+          "durationMs": 323,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/login-bad-password-error.png"
+        },
+        {
+          "criterionId": "login-email-required",
+          "status": "passed",
+          "observedResult": "실제 브라우저에서 확인했습니다: /login 경로 열기 → 이메일 입력란 검증으로 제출이 차단됨 → 제출 버튼 클릭.",
+          "durationMs": 956,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/login-email-required.png"
+        },
+        {
+          "criterionId": "todo-add",
+          "status": "failed",
+          "observedResult": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+          "errorMessage": "locator.fill: Error: Element is not an <input>, <textarea>, <select> or [contenteditable] and does not have a role allowing [aria-readonly]\nCall log:\n  - waiting for locator('button[type=\"submit\"],input[type=\"submit\"],form button').first()\n    - locator resolved to <button type=\"submit\">로그인</button>\n    - fill(\"할 일 내용\")\n  - attempting fill action\n    - waiting for element to be visible, enabled and editable\n",
+          "durationMs": 483,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/todo-add.png"
+        },
+        {
+          "criterionId": "todo-check",
+          "status": "failed",
+          "observedResult": "확인한 동작: /todos 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: checkbox 요소이 화면에 표시됨.",
+          "errorMessage": "checkbox 요소을 화면에서 찾지 못했습니다.",
+          "durationMs": 328,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/todo-check.png"
+        },
+        {
+          "criterionId": "todos-auth-guard",
+          "status": "passed",
+          "observedResult": "실제 브라우저에서 확인했습니다: /todos 경로 열기 → /login 경로에 머무름 또는 이동.",
+          "durationMs": 300,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/todos-auth-guard.png"
+        },
+        {
+          "criterionId": "session-persist",
+          "status": "failed",
+          "observedResult": "확인한 동작: /todos 경로 열기 → button 요소이 화면에 표시됨. 다음 단계에서 기대한 결과를 확인하지 못했습니다: button 요소에 키보드 포커스가 있음.",
+          "errorMessage": "button 요소이 키보드 포커스를 받지 못했습니다.",
+          "durationMs": 373,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3100/session-persist.png"
+        }
+      ],
+      "broken": [
+        {
+          "criterionId": "login-fields",
+          "status": "failed",
+          "observedResult": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+          "errorMessage": "spec.steps is not iterable",
+          "durationMs": 488,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/login-fields.png"
+        },
+        {
+          "criterionId": "login-success-redirect",
+          "status": "failed",
+          "observedResult": "확인한 동작: /login 경로 열기 → 이메일 입력란에 값 입력 → 비밀번호 입력란에 값 입력 → 제출 버튼 클릭. 다음 단계에서 기대한 결과를 확인하지 못했습니다: /todos 경로에 머무름 또는 이동.",
+          "errorMessage": "기대한 경로는 /todos이지만 실제 경로는 /입니다.",
+          "durationMs": 11058,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/login-success-redirect.png"
+        },
+        {
+          "criterionId": "login-bad-password-error",
+          "status": "failed",
+          "observedResult": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+          "errorMessage": "spec.steps is not iterable",
+          "durationMs": 259,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/login-bad-password-error.png"
+        },
+        {
+          "criterionId": "login-email-required",
+          "status": "failed",
+          "observedResult": "확인한 동작: /login 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: 이메일 입력란 검증으로 제출이 차단됨.",
+          "errorMessage": "입력값 검증으로 제출이 차단되는 것을 확인하지 못했습니다.",
+          "durationMs": 347,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/login-email-required.png"
+        },
+        {
+          "criterionId": "todo-add",
+          "status": "failed",
+          "observedResult": "브라우저 시나리오 실행 중 오류가 발생했습니다.",
+          "errorMessage": "locator.fill: Error: Element is not an <input>, <textarea>, <select> or [contenteditable] and does not have a role allowing [aria-readonly]\nCall log:\n  - waiting for locator('button[type=\"submit\"],input[type=\"submit\"],form button').first()\n    - locator resolved to <button type=\"submit\">할 일 추가</button>\n    - fill(\"할 일 내용\")\n  - attempting fill action\n    - waiting for element to be visible, enabled and editable\n",
+          "durationMs": 302,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/todo-add.png"
+        },
+        {
+          "criterionId": "todo-check",
+          "status": "failed",
+          "observedResult": "확인한 동작: /todos 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: checkbox 요소이 화면에 표시됨.",
+          "errorMessage": "checkbox 요소을 화면에서 찾지 못했습니다.",
+          "durationMs": 323,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/todo-check.png"
+        },
+        {
+          "criterionId": "todos-auth-guard",
+          "status": "failed",
+          "observedResult": "확인한 동작: /todos 경로 열기. 다음 단계에서 기대한 결과를 확인하지 못했습니다: /login 경로에 머무름 또는 이동.",
+          "errorMessage": "기대한 경로는 /login이지만 실제 경로는 /todos입니다.",
+          "durationMs": 10314,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/todos-auth-guard.png"
+        },
+        {
+          "criterionId": "session-persist",
+          "status": "failed",
+          "observedResult": "확인한 동작: /todos 경로 열기 → button 요소이 화면에 표시됨. 다음 단계에서 기대한 결과를 확인하지 못했습니다: button 요소에 키보드 포커스가 있음.",
+          "errorMessage": "button 요소이 키보드 포커스를 받지 못했습니다.",
+          "durationMs": 364,
+          "screenshotPath": "/Users/mj/Dev/LinKross/eval/.work/evidence-3101/session-persist.png"
+        }
+      ]
+    }
+  ]
+}

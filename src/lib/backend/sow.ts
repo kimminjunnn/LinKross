@@ -46,6 +46,7 @@ import {
   DOD_TEST_CONTRACT_VERSION,
   applyAnswersToContract,
   parseDodTestContract,
+  type DodTestContractField,
 } from "@/lib/dod-test-contract";
 import {
   resolveDesign,
@@ -749,6 +750,10 @@ async function upsertCriteriaForMilestone(
       needsComposition.map((dodIndex) => ({
         description: verifications[dodIndex]!.description,
         contract: contracts.get(dodIndex),
+        // 발주자가 실제로 답한 필드만 화면 문구의 근거로 인정한다.
+        answeredFields: (lockedRequirements.get(dodIndex) ?? [])
+          .filter((requirement) => requirement.answer?.trim())
+          .map((requirement) => requirement.key as DodTestContractField),
       })),
     );
     const stillManual: Array<{ dodIndex: number; reason: NonNullable<ComposeOutcome["reason"]> }> = [];
