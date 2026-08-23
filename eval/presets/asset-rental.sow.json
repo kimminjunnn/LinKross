@@ -1,0 +1,132 @@
+{
+  "preset": "asset-rental",
+  "promptVersion": "2026-08-23.atomize-preset",
+  "source": "실제 검수 실행으로 확정 (M1 passed · M2/M3 needs_review · 실패 0). DB 프로젝트 057f6e3a와 일치.",
+  "results": [
+    {
+      "id": "asset-rental-final",
+      "milestones": [
+        {
+          "id": "m-1",
+          "code": "M1",
+          "title": "로그인과 비품 목록 화면",
+          "period": "26.08.22 - 26.08.28",
+          "amount": "3000",
+          "pr": 5,
+          "branch": "feat/m1-auth",
+          "commit": "a5466b9a3fe271f01cb2a94611b20b85bdc615c8",
+          "dods": [
+            "/login에서 이메일과 비밀번호 입력 후 로그인 시 /items로 이동 확인",
+            "/login에서 비밀번호를 잘못 입력 후 로그인 시도 시 오류 메시지 표시 확인",
+            "/login에서 이메일 미입력 상태로 로그인 시도 시 오류 메시지 표시 확인",
+            "/items에 로그인하지 않은 상태로 접근 시 /login으로 리다이렉트 확인",
+            "/items에서 '비품명' 문구 표시 확인",
+            "/items에서 '분류' 문구 표시 확인",
+            "/items에서 '상태' 문구 표시 확인",
+            "/items에서 '전체' 버튼 클릭 시 '대여 가능' 문구 표시 확인",
+            "/items에서 '전체' 버튼 클릭 시 '대여중' 문구 표시 확인",
+            "/items에서 '대여 가능' 버튼 클릭 시 비품 표에 '대여중' 문구 미표시 확인",
+            "/items에서 '대여중' 버튼 클릭 시 비품 표에 '대여 가능' 문구 미표시 확인"
+          ],
+          "verification": [
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto",
+            "auto"
+          ]
+        },
+        {
+          "id": "m-2",
+          "code": "M2",
+          "title": "비품 신청과 내 신청 내역 화면",
+          "period": "26.08.29 - 26.09.04",
+          "amount": "2500",
+          "pr": 6,
+          "branch": "feat/m2-rental",
+          "commit": "7f10d0ff3b1e958268bb7a92178031897aae24b0",
+          "dods": [
+            "/items에서 '비품 신청' 클릭 시 '신청하기' 문구 표시 확인",
+            "/items에서 신청 창의 비품 선택 목록에 '대여 가능' 비품만 표시 확인",
+            "/items에서 '비품 신청' 클릭 후 비품 선택 목록에 '대여중' 비품 미표시 확인",
+            "/items에서 '비품 신청' 클릭 후 비품 미선택 상태에서 '신청하기' 버튼이 비활성화됨 확인",
+            "/items에서 '비품 신청' 클릭 후 '신청 사유' 빈 상태에서 '신청하기' 버튼이 비활성화됨 확인",
+            "/items에서 '신청 사유' 100자 초과 시 오류 문구 표시 확인",
+            "/items에서 신청 후 '신청이 접수되었습니다' 문구 표시 확인",
+            "/items에서 신청 후 해당 비품 상태 '대여중'으로 변경 확인",
+            "/requests에서 본인 신청만 표시 확인",
+            "/requests에서 '비품명' 문구 표시 확인",
+            "/requests에서 '승인 대기' 상태 신청에 '취소' 버튼 표시 확인",
+            "/requests에서 '취소' 버튼 클릭 후 /items에서 해당 비품 상태 '대여 가능'으로 변경 확인",
+            "/requests에 신청 내역이 없을 때 '아직 신청한 비품이 없습니다' 안내 문구 표시 확인",
+            "/requests에 로그인하지 않은 상태로 접근 시 /login으로 리다이렉트 확인",
+            "/requests에서 '신청 사유' 문구 표시 확인",
+            "/requests에서 '상태' 문구 표시 확인"
+          ],
+          "verification": [
+            "auto",
+            "manual",
+            "auto",
+            "auto",
+            "auto",
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "auto",
+            "manual",
+            "manual",
+            "manual",
+            "auto",
+            "auto",
+            "auto"
+          ]
+        },
+        {
+          "id": "m-3",
+          "code": "M3",
+          "title": "총무팀 승인 화면",
+          "period": "26.09.05 - 26.09.12",
+          "amount": "3500",
+          "pr": 7,
+          "branch": "feat/m3-admin",
+          "commit": "8a5f838d7945ac3c19c2757923799ac23aea256a",
+          "dods": [
+            "/admin에서 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+            "/admin에서 신청 내역이 없을 때 '아직 들어온 신청이 없습니다' 안내 문구 표시 확인",
+            "/admin에서 '승인 대기' 상태 신청에 '승인' 및 '반려' 버튼 표시 확인",
+            "/admin에서 '승인 완료' 및 '반려됨' 상태 신청에 '승인' 및 '반려' 버튼 미표시 확인",
+            "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+            "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+            "/items에서 반려된 비품 상태 '대여 가능'으로 변경 확인",
+            "/items에서 승인된 비품 상태 '대여중'으로 유지 확인",
+            "/requests에서 '승인 완료' 및 '반려됨' 상태 신청에 '취소' 버튼 미표시 확인",
+            "/items에 일반 직원 계정으로 로그인 시 '승인 관리' 링크 미노출 확인",
+            "/admin에 일반 직원 계정으로 접근 시 /items로 이동 확인",
+            "/admin에 일반 직원 계정으로 접근 시 차단 안내 문구 표시 확인"
+          ],
+          "verification": [
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "manual",
+            "auto",
+            "auto",
+            "manual"
+          ]
+        }
+      ]
+    }
+  ]
+}

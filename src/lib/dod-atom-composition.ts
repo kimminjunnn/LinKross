@@ -21,6 +21,9 @@ import {
  * 네트워크·환경 의존이 없어 단독으로 검증할 수 있다.
  */
 
+/** expect_form_blocked 의 checkValidity() 검사가 성립하는 대상 역할. */
+const FORM_CONTROL_ROLES = ["textbox", "combobox", "checkbox", "radio"];
+
 export const ATOM_NAMES = [
   "goto",
   "fill",
@@ -183,6 +186,27 @@ export function normalizeComposedItem(
   // 동작만 있고 확인이 없는 조합은 무엇도 검증하지 못하므로 채택하지 않는다.
   if (!steps.some((atom) => String((atom as { atom: string }).atom).startsWith("expect_"))) {
     return { spec: null, reason: "schema_rejected", detail: "확인 단계(expect_*)가 하나도 없음" };
+  }
+
+  // expect_form_blocked 는 대상 요소의 checkValidity()/aria-invalid 를 본다
+  // (`verification-runner/playwright-harness.ts`). 폼 컨트롤이 아닌 대상에는
+  // 그 검사가 성립하지 않아 정상 결과물도 반드시 실패한다. 모델이 '비활성',
+  // '미노출' 같은 조건에 이 동작을 골라 오는 일이 반복돼, 프롬프트 안내 대신
+  // 여기서 결정적으로 막고 교정 요청에 이유를 남긴다.
+  const badFormBlocked = steps.find((atom) => {
+    const step = atom as { atom: string; target?: Record<string, unknown> };
+    if (step.atom !== "expect_form_blocked") return false;
+    const target = step.target ?? {};
+    if (typeof target.text === "string") return true;
+    return typeof target.role === "string" && !FORM_CONTROL_ROLES.includes(target.role);
+  });
+  if (badFormBlocked) {
+    const target = (badFormBlocked as { target?: Record<string, unknown> }).target ?? {};
+    return {
+      spec: null,
+      reason: "schema_rejected",
+      detail: `expect_form_blocked 대상이 입력란이 아님(${String(target.role ?? "text")}). 비활성 확인은 expect_disabled, 미노출 확인은 expect_hidden 을 쓸 것`,
+    };
   }
 
   // 계약이 로그인한 상태를 요구하는데 조합이 로그인을 하지 않으면, 그 조합은
@@ -400,10 +424,15 @@ export function toAtom(step: FlatStep): object | null {
     case "expect_focused":
     case "expect_within_viewport":
     case "expect_form_blocked": {
+      if (!target) return null;
       // 제출이 막히는 것은 입력값 검증의 결과이므로 그 입력란에서 확인해야 한다.
       // 제출 버튼 자체는 언제나 유효하므로 이 확인이 항상 실패한다.
-      if (target && (target as { field?: string }).field === "submit") return null;
-      return target ? { atom: "expect_form_blocked", target } : null;
+      if (step.atom === "expect_form_blocked" && (target as { field?: string }).field === "submit") return null;
+      // 일곱 개 단언을 한 블록에서 처리하면서 돌려주는 atom 이름을
+      // "expect_form_blocked"로 고정해 두었다. 그래서 expect_visible·expect_hidden·
+      // expect_disabled 등이 전부 제출 차단 검사로 바뀌어 저장됐고, 정상 결과물이
+      // 실패로 판정됐다. 고른 동작을 그대로 돌려준다.
+      return { atom: step.atom, target };
     }
     case "expect_checked":
     case "expect_unchecked":
