@@ -13,6 +13,18 @@ import type { DodVerificationDesign } from "@/lib/backend";
  * 질문씩 주고받으면 사용자는 같은 DoD로 반복해서 돌아오게 된다.
  */
 
+/**
+ * 완료조건별 질의응답 화면을 켤지 여부.
+ *
+ * 지금은 끈다. 시연에서 쓰는 SOW는 프리셋으로 들어오고, 프리셋은 질문 없이
+ * 검수 계약까지 확정된 상태로 오기 때문에 물어볼 것이 없다. 완료조건 수만큼
+ * 답을 받고 그때마다 LLM을 다시 부르는 흐름은 대기 시간과 토큰만 쓴다.
+ *
+ * 화면만 감추고 상태·저장·답변 반영 경로는 그대로 둔다. 프리셋이 없는 원문에서
+ * 질문이 다시 필요해지면 이 값만 true로 바꾸면 된다.
+ */
+const SHOW_CLARIFICATION_QUESTIONS: boolean = false;
+
 type StatusTone = "ready" | "pending" | "review" | "working" | "idle";
 
 const STATUS_TONES: Record<StatusTone, string> = {
@@ -98,7 +110,7 @@ export function DodDesignPanel({
         <p className="mt-1.5 whitespace-pre-line text-[0.7rem] leading-5 text-app-muted">{design.message}</p>
       ) : null}
 
-      {design?.status === "clarification_required" && requirements.length > 0 ? (
+      {SHOW_CLARIFICATION_QUESTIONS && design?.status === "clarification_required" && requirements.length > 0 ? (
         <div className="mt-2 space-y-3 rounded-control border border-brand-200 bg-brand-50/60 p-2.5">
           <p className="text-[0.7rem] font-semibold text-brand-800">
             자동 테스트를 만들기 위한 확인 {requirements.length}개 · 한 번에 답하면 끝납니다

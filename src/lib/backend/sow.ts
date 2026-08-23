@@ -42,6 +42,7 @@ import {
 import { generateManualCheckGuidance } from "@/lib/verification-guidance";
 import { composeVerificationAtoms, type ComposeOutcome } from "@/lib/verification-atom-composer";
 import { analyzeDodContracts } from "@/lib/dod-contract-analyzer";
+import { findPresetDod } from "@/lib/sow-presets";
 import {
   DOD_TEST_CONTRACT_VERSION,
   applyAnswersToContract,
@@ -564,6 +565,20 @@ async function upsertCriteriaForMilestone(
   dods.forEach((dod, dodIndex) => {
     const requested = requestedDesigns[dodIndex];
     const existing = existingRows?.[dodIndex];
+
+    // 시연용 프리셋의 완료조건은 문장과 실행 스펙이 짝으로 확정돼 있다. 질문도
+    // 조합도 다시 하지 않고 그대로 쓴다. 문장을 한 글자라도 고치면 더 이상
+    // 프리셋이 보증한 조건이 아니므로 아래의 평소 경로로 내려간다.
+    const preset = findPresetDod(dod);
+    if (preset) {
+      verifications[dodIndex] = {
+        verificationMethod: preset.verificationMethod,
+        testSpec: preset.testSpec as ManagedTestSpec | ManualGuidanceSpec | Record<string, never>,
+        design: preset.design,
+        description: dod,
+      };
+      return;
+    }
 
     // 이미 실행 가능한 스펙이 있고 문장이 그대로면 다시 판정하지 않는다.
     // 다른 DoD에 답할 때마다 전체가 저장되므로, 매번 다시 판정하면 준비가 끝난

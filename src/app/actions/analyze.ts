@@ -17,6 +17,7 @@ import {
 } from "@/lib/dod-test-contract";
 import { conversationFromRequirements, unansweredRequirements } from "@/lib/dod-verification-state";
 import { SOW_RESPONSE_SCHEMA, SOW_SYSTEM_MESSAGE, buildSowPrompt } from "@/lib/sow-prompt";
+import { matchSowPreset, toPresetMilestoneInputs } from "@/lib/sow-presets";
 import type { EnglishSOWResult, MilestoneInput } from "@/lib/rag-translator";
 import { retrieveGlossaryTerms } from "@/lib/rag-translator";
 
@@ -29,6 +30,9 @@ export type AIAnalysisResult = {
   extractedStartDate?: string | null;
   extractedEndDate?: string | null;
   extractedBudget?: string | null;
+  /** 프리셋으로 응답했을 때만 채워진다. 화면은 이 값을 보고 추가 분석을 건너뛴다. */
+  presetId?: string;
+  presetLabel?: string;
 };
 
 export type DodVerificationAnalysisResult = {
@@ -200,6 +204,22 @@ export async function analyzeWorkDetailWithLLM(
   currentEndDate: string
 ): Promise<AIAnalysisResult> {
   await assertActionRole("company");
+
+  // 시연용 프리셋이 있으면 LLM을 부르지 않는다. 같은 원문에서 매번 다른 문장과
+  // 다른 검수 계약이 나오면 시연이 재현되지 않고, 완료조건마다 붙는 질문·조합
+  // 호출이 그대로 대기 시간이 된다. 프리셋은 실행 스펙까지 확정된 상태로 온다.
+  const preset = matchSowPreset(workDetail);
+  if (preset) {
+    return {
+      presetId: preset.preset.id,
+      presetLabel: preset.preset.label,
+      milestones: toPresetMilestoneInputs(preset.preset, {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+        budget: workDetail.match(/^\s*예산\s*[:：]\s*([\d,]+)/m)?.[1],
+      }),
+    };
+  }
 
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY가 설정되지 않았습니다. .env.local 파일에 키를 추가해주세요.");

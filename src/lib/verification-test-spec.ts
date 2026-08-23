@@ -97,6 +97,8 @@ export type UiValue =
 export type UiAtom =
   | { atom: "goto"; path: string }
   | { atom: "fill"; target: UiTarget; value: UiValue }
+  /** 드롭다운(`<select>`)에서 항목을 고른다. 값은 옵션의 표시 문구를 먼저, 없으면 value를 찾는다. */
+  | { atom: "select_option"; target: UiTarget; value: UiValue }
   | { atom: "click"; target: UiTarget }
   | { atom: "press"; key: (typeof UI_PRESS_KEYS)[number] }
   | { atom: "set_viewport"; preset: (typeof UI_VIEWPORT_PRESETS)[number] }
@@ -345,10 +347,11 @@ export function parseUiAtom(value: unknown): UiAtom | null {
       if (!isSafePath(value.path)) return null;
       return { atom: value.atom, path: value.path };
     }
-    case "fill": {
+    case "fill":
+    case "select_option": {
       const target = parseUiTarget(value.target);
       const fillValue = parseUiValue(value.value);
-      return target && fillValue ? { atom: "fill", target, value: fillValue } : null;
+      return target && fillValue ? { atom: value.atom, target, value: fillValue } : null;
     }
     case "press": {
       return UI_PRESS_KEYS.includes(value.key as never)

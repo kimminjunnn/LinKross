@@ -291,6 +291,7 @@ function buildSystemPrompt(): string {
     "상태·개수·목록 내용에는 전용 동작이 있습니다. expect_visible 로 대신하지 말고 아래를 쓰세요:",
     "- 체크박스·라디오가 선택된 상태인지: expect_checked / expect_unchecked",
     "- 항목이 정확히 몇 개 보이는지: expect_count 와 count 값 (예: '할 일이 1건만 생성' → expect_count(role=listitem, count=1))",
+    "- 드롭다운(select)에서 항목을 고를 때: select_option 과 고를 항목의 표시 문구 (fill 은 드롭다운에 쓸 수 없습니다)",
     "- 목록에 특정 종류만 보이는지: expect_every_text / expect_none_text (예: '완료된 것만 표시' → 모든 항목에 '완료' 문구, '완료되지 않은 것만 표시' → 어떤 항목에도 '완료' 문구 없음)",
     "expect_count 는 정확히 일치해야 통과합니다. 기대 개수를 확신할 수 없으면 쓰지 마세요.",
     "expect_every_text·expect_none_text 의 contains 에도 완료조건에 적힌 표현만 쓰세요. 지어내면 조합 전체가 버려집니다.",

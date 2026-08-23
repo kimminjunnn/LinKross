@@ -192,21 +192,34 @@ function SowDraftWorkspace({
     milestonesRef.current = milestones;
   }, [milestones]);
 
-  const runVerificationDesignAnalysis = async (initialMilestones: MilestoneInput[]) => {
+  const runVerificationDesignAnalysis = async (
+    initialMilestones: MilestoneInput[],
+    // 프리셋으로 받은 완료조건은 검수 계약과 실행 스펙이 이미 확정돼 있다.
+    // 다시 분석하면 확정된 스펙을 LLM 응답으로 덮어쓸 뿐이고, 완료조건 수만큼
+    // 호출이 늘어 화면이 몇 분을 기다린다.
+    presetLabel?: string,
+  ) => {
     const initialSignature = milestoneContentSignature(initialMilestones);
     const totalDodCount = initialMilestones.reduce((count, milestone) => count + milestone.dods.length, 0);
     setIsDesigningVerification(true);
-    setStatusMessage(`🔎 DoD 자동화 가능성을 분석하고 있습니다 · 0/${totalDodCount}`);
+    setStatusMessage(
+      presetLabel
+        ? `📋 '${presetLabel}' 프리셋의 완료조건 ${totalDodCount}개를 불러왔습니다 · 검수 계약을 저장하는 중...`
+        : `🔎 DoD 자동화 가능성을 분석하고 있습니다 · 0/${totalDodCount}`,
+    );
 
     try {
-      const dodAnalysis = await analyzeDodsForVerificationWithLLM(initialMilestones);
-      if (milestoneContentSignature(milestonesRef.current) !== initialSignature) {
-        setStatusMessage("DoD가 수정되어 자동화 분석 결과를 적용하지 않았습니다. AI 분석을 다시 실행해 주세요.");
-        return;
-      }
+      let analyzedMilestones = initialMilestones;
+      if (!presetLabel) {
+        const dodAnalysis = await analyzeDodsForVerificationWithLLM(initialMilestones);
+        if (milestoneContentSignature(milestonesRef.current) !== initialSignature) {
+          setStatusMessage("DoD가 수정되어 자동화 분석 결과를 적용하지 않았습니다. AI 분석을 다시 실행해 주세요.");
+          return;
+        }
 
-      const analyzedMilestones = mergeDodAnalysisResults(initialMilestones, dodAnalysis);
-      setStatusMessage(`🧪 DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`);
+        analyzedMilestones = mergeDodAnalysisResults(initialMilestones, dodAnalysis);
+        setStatusMessage(`🧪 DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`);
+      }
 
       // 이 단계에서는 고정된 Playwright atom 스펙까지 검증한다. 사용자가 분석 중
       // DoD를 편집했다면 이전 입력을 저장하지 않고 중단한다.
@@ -237,7 +250,9 @@ function SowDraftWorkspace({
       setMilestones(verifiedMilestones);
       const summary = summarizeDesigns(specValidation.data.verificationDesigns.map((item) => item.design));
       setStatusMessage(
-        summary.clarificationRequired > 0
+        summary.humanReviewRequired > 0 && summary.humanReviewUnaccepted === 0 && summary.clarificationRequired === 0
+          ? `✅ 자동 테스트 ${summary.automationReady}개 준비 완료 · Preview에서 직접 확인할 항목 ${summary.humanReviewRequired}개`
+          : summary.clarificationRequired > 0
           ? `AI 검수 설계 완료: 답변이 필요한 DoD ${summary.clarificationRequired}개 · 자동 테스트 ${summary.automationReady}개 준비 완료`
           : summary.humanReviewUnaccepted > 0
             ? `AI 검수 설계 완료: 자동 테스트 ${summary.automationReady}개 · 직접 확인이 필요한 DoD ${summary.humanReviewUnaccepted}개`
@@ -288,7 +303,10 @@ function SowDraftWorkspace({
       setMilestones(cleanedMilestones);
       // 첫 AI 응답만 기다린 뒤 바로 편집 화면을 연다. 이후 자동화 설계는 화면을
       // 막지 않고 진행하며, DoD를 수정하면 오래된 분석 결과를 적용하지 않는다.
-      void runVerificationDesignAnalysis(cleanedMilestones);
+      void runVerificationDesignAnalysis(
+        cleanedMilestones,
+        analysis.presetId ? (analysis.presetLabel ?? analysis.presetId) : undefined,
+      );
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : "알 수 없는 오류";

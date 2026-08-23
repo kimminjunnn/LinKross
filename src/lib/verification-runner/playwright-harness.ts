@@ -54,6 +54,7 @@ function describeAtom(step) {
   switch (step.atom) {
     case "goto": return step.path + " 경로 열기";
     case "fill": return describeTarget(step.target) + "에 값 입력";
+    case "select_option": return describeTarget(step.target) + '에서 "' + (step.value.literal ?? "값") + '" 선택';
     case "click": return describeTarget(step.target) + " 클릭";
     case "press": return step.key + " 키 입력";
     case "set_viewport": return step.preset + " 화면 크기로 전환";
@@ -90,6 +91,19 @@ async function runAtom(page, step, credentials) {
     case "fill": {
       const value = step.value.ref ? credentials[step.value.ref] : step.value.literal;
       await resolveTarget(page, step.target).fill(value, { timeout: 10000 });
+      return;
+    }
+    case "select_option": {
+      const value = step.value.ref ? credentials[step.value.ref] : step.value.literal;
+      const locator = resolveTarget(page, step.target);
+      // 완료조건은 화면에 보이는 문구로 쓰이므로 표시 문구를 먼저 찾는다.
+      // 옵션 라벨과 value 가 다른 화면(예: 이름은 보이고 값은 id)을 위해 value 로도 한 번 더 시도한다.
+      try {
+        await locator.selectOption({ label: value }, { timeout: 10000 });
+      } catch {
+        await locator.selectOption(value, { timeout: 10000 });
+      }
+      await page.waitForTimeout(200);
       return;
     }
     case "click":

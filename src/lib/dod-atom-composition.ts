@@ -27,6 +27,7 @@ const FORM_CONTROL_ROLES = ["textbox", "combobox", "checkbox", "radio"];
 export const ATOM_NAMES = [
   "goto",
   "fill",
+  "select_option",
   "click",
   "press",
   "set_viewport",
@@ -390,14 +391,15 @@ export function toAtom(step: FlatStep): object | null {
         ? { atom: "expect_text", contains: step.contains, target: scoped }
         : { atom: "expect_text", contains: step.contains };
     }
-    case "fill": {
+    case "fill":
+    case "select_option": {
       if (!target) return null;
       if (isUnnamedRole(target)) return null;
       // 제출 버튼은 값을 넣는 대상이 아니다. 실제로 모델이 여기에 fill 을 골라
       // 하네스가 버튼에 입력을 시도하다 실패했고, 정상 앱이 오류로 판정됐다.
       if ((target as { field?: string }).field === "submit") return null;
       const value = toValue(step);
-      return value ? { atom: "fill", target, value } : null;
+      return value ? { atom: step.atom, target, value } : null;
     }
     case "expect_count": {
       if (!target || !Number.isInteger(step.count) || step.count < 0) return null;
