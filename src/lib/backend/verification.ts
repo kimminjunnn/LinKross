@@ -497,7 +497,7 @@ export async function submitMilestonePullRequest(
   }
 
   if (existing) {
-    return queueSubmissionVerification(access.data, input, existing);
+    return { ok: true, data: toSubmissionReceipt(existing) };
   }
 
   const { data: previous } = await access.data.supabase
@@ -536,7 +536,7 @@ export async function submitMilestonePullRequest(
         .eq("head_commit_sha", github.head.sha)
         .maybeSingle();
       if (concurrentSubmission) {
-        return queueSubmissionVerification(access.data, input, concurrentSubmission);
+        return { ok: true, data: toSubmissionReceipt(concurrentSubmission) };
       }
     }
     return { ok: false, error: mapBackendError(submissionError, "PR 제출 기록을 저장하지 못했습니다.") };
@@ -550,7 +550,7 @@ export async function submitMilestonePullRequest(
   );
   if (!claims.ok) return claims;
 
-  return queueSubmissionVerification(access.data, input, submission);
+  return { ok: true, data: toSubmissionReceipt(submission) };
 }
 
 export async function requestVerificationRun(
@@ -697,28 +697,17 @@ async function saveSubmissionCriteria(
   return { ok: true, data: { saved: true } };
 }
 
-async function queueSubmissionVerification(
-  access: AccessContext,
-  input: Pick<SubmitMilestonePullRequestInput, "projectId" | "milestoneId">,
+/**
+ * PR 제출은 Commit SHA만 고정하고 검수 실행은 만들지 않는다.
+ *
+ * 검수 시작은 발주자의 결정이다. 프리랜서 제출만으로 격리 환경 실행이
+ * 걸리면 발주자가 원하지 않는 시점에 실행 비용과 결과가 쌓인다.
+ * 실행은 발주자가 검수 화면에서 요청할 때 requestVerificationRun이 만든다.
+ */
+function toSubmissionReceipt(
   submission: { id: string; head_commit_sha: string },
-): Promise<BackendResult<MilestoneSubmissionReceipt>> {
-  const verification = await requestVerificationRunForAccess(access, {
-    projectId: input.projectId,
-    milestoneId: input.milestoneId,
-    submissionId: submission.id,
-    scope: "milestone",
-  });
-  if (!verification.ok) return verification;
-
-  return {
-    ok: true,
-    data: {
-      submissionId: submission.id,
-      headCommitSha: submission.head_commit_sha,
-      verificationRunId: verification.data.runId,
-      verificationStatus: verification.data.status,
-    },
-  };
+): MilestoneSubmissionReceipt {
+  return { submissionId: submission.id, headCommitSha: submission.head_commit_sha };
 }
 
 /**

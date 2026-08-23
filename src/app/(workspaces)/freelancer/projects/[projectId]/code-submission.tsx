@@ -4,12 +4,14 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
+  CheckSquare,
   Clock3,
   ExternalLink,
   GitPullRequest,
   Loader2,
   RotateCcw,
   ShieldCheck,
+  Square,
   XCircle,
 } from "lucide-react";
 
@@ -58,7 +60,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
         <div>
           <h2 className="text-lg font-semibold text-app-foreground">Code submission and verification</h2>
           <p className="mt-1 text-sm leading-6 text-app-muted">
-            Submit an open PR from the official project repository. LinKross locks the immutable head Commit SHA and queues milestone verification.
+            Submit an open PR from the official project repository. LinKross locks the immutable head Commit SHA. The client starts milestone verification from their review screen.
           </p>
         </div>
       </div>
@@ -103,7 +105,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
                 setMessage(formatSubmissionError(result.error));
                 return;
               }
-              setMessage(`Submission saved at Commit ${result.data.headCommitSha}. Verification ran in the isolated environment — see the result below.`);
+              setMessage(`Submission saved at Commit ${result.data.headCommitSha}. Verification starts when the client requests it.`);
               router.refresh();
             })}
           />
@@ -131,6 +133,19 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
     milestone.decision?.submissionId === latestSubmission?.id ? milestone.decision : null;
   const status = resolveMilestoneStatus(milestone, latestSubmission, currentDecision);
   const submissionClosed = status.key === "approved" || status.key === "cancelled";
+  const [selectedCriterionIds, setSelectedCriterionIds] = useState<string[]>([]);
+  const allCriteriaSelected =
+    milestone.checklist.length > 0 && selectedCriterionIds.length === milestone.checklist.length;
+
+  function toggleCriterion(criterionId: string, checked: boolean) {
+    setSelectedCriterionIds((previous) =>
+      checked ? [...previous, criterionId] : previous.filter((id) => id !== criterionId),
+    );
+  }
+
+  function toggleAllCriteria() {
+    setSelectedCriterionIds(allCriteriaSelected ? [] : milestone.checklist.map((criterion) => criterion.id));
+  }
 
   function submitForm(formData: FormData) {
     submit({
@@ -192,10 +207,34 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
             <input id={prInputId} name="pullRequestUrl" type="url" required disabled={pending} placeholder="https://github.com/owner/repository/pull/123" className="mt-2 min-h-11 w-full rounded-control border border-app-border-strong px-3 text-sm disabled:opacity-50" />
           </div>
           <fieldset disabled={pending} className="space-y-2">
-            <legend className="text-xs text-app-foreground">Criteria completed in this PR</legend>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <legend className="text-xs text-app-foreground">Criteria completed in this PR</legend>
+              {milestone.checklist.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={toggleAllCriteria}
+                  aria-pressed={allCriteriaSelected}
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-app-border-strong px-2.5 text-xs font-semibold text-app-foreground disabled:opacity-50"
+                >
+                  {allCriteriaSelected ? (
+                    <Square aria-hidden="true" className="size-3.5" />
+                  ) : (
+                    <CheckSquare aria-hidden="true" className="size-3.5" />
+                  )}
+                  {allCriteriaSelected ? "Clear all" : "Select all"}
+                </button>
+              ) : null}
+            </div>
             {milestone.checklist.map((criterion) => (
               <label key={criterion.id} className="flex items-start gap-2 rounded-control bg-app-surface-subtle p-3 text-sm text-app-muted">
-                <input type="checkbox" name="criterionId" value={criterion.id} className="mt-1" />
+                <input
+                  type="checkbox"
+                  name="criterionId"
+                  value={criterion.id}
+                  checked={selectedCriterionIds.includes(criterion.id)}
+                  onChange={(event) => toggleCriterion(criterion.id, event.target.checked)}
+                  className="mt-1"
+                />
                 <span>{criterion.description}</span>
               </label>
             ))}
@@ -208,7 +247,7 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
             {pending ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <GitPullRequest aria-hidden="true" className="size-4" />}Submit PR
           </button>
           <p className="text-xs leading-5 text-app-muted">
-            A new Commit SHA creates the next submission attempt. The same SHA will not duplicate an active verification request.
+            A new Commit SHA creates the next submission attempt. Verification does not start on submission — the client runs it against this Commit SHA.
           </p>
         </form>
       )}
@@ -253,7 +292,7 @@ function VerificationSummary({ milestone, submission }: {
           <p className="text-xs text-app-muted">Latest submitted Commit</p>
           <p className="mt-1 break-all font-mono text-xs text-app-foreground">{submission.headCommitSha}</p>
         </div>
-        {latestRun ? <RunStatusPill run={latestRun} /> : <StatusPill label="Verification pending" tone="neutral" />}
+        {latestRun ? <RunStatusPill run={latestRun} /> : <StatusPill label="Waiting for the client to verify" tone="neutral" />}
       </div>
 
       {latestRun?.errorSummary ? (
@@ -327,7 +366,7 @@ function resolveMilestoneStatus(
     return { key: latestRun.status, ...runStatus };
   }
   if (latestSubmission) {
-    return { key: "verification_ready", label: "Ready for verification", tone: "brand" as const };
+    return { key: "verification_ready", label: "Waiting for the client to verify", tone: "brand" as const };
   }
   return { key: "submission_required", label: "PR required", tone: "warning" as const };
 }

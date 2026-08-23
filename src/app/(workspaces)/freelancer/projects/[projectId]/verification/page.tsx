@@ -4,10 +4,6 @@ import { getVerificationWorkspace } from "@/lib/backend";
 
 import { FreelancerCodeSubmission } from "../code-submission";
 
-// 이 페이지의 PR 제출 Server Action이 격리 Sandbox 실행을 즉시 트리거한다.
-// docs/VERIFICATION_RUNNER_CONTROL_PLANE.md의 Vercel Hobby 함수 실행 한도(300초)와 맞춘다.
-export const maxDuration = 300;
-
 export default async function FreelancerProjectVerificationPage({
   params,
 }: {

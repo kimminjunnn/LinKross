@@ -658,7 +658,7 @@ function VerificationSummary({ milestone }: { milestone: VerificationMilestoneRe
       <p className="mt-4 text-xs leading-5 text-brand-700">
         {latestSubmission
           ? `PR #${latestSubmission.pullRequestNumber}의 Commit SHA를 기준으로 결과를 확인합니다.`
-          : "PR이 제출되면 최신 전체 Commit SHA를 고정하고 검수 실행을 바로 시작합니다."}
+          : "PR이 제출되면 최신 전체 Commit SHA가 고정됩니다. 검수는 발주자가 시작합니다."}
       </p>
     </article>
   );
@@ -912,7 +912,7 @@ function MilestoneDetail({
             {latestSubmission
               ? `Commit ${shortSha(latestSubmission.headCommitSha)} 기준으로 마일스톤 전체를 검수합니다.`
               : repositoryConnected
-                ? "프리랜서가 PR을 제출하면 마일스톤 전체 검수가 격리 환경에서 자동으로 시작됩니다."
+                ? "프리랜서가 PR을 제출하면 검수 버튼으로 마일스톤 전체 검수를 시작할 수 있습니다."
                 : "저장소가 아직 연결되지 않아 PR과 Commit SHA를 제출할 수 없습니다."}
           </div>
           <button
@@ -927,7 +927,7 @@ function MilestoneDetail({
               ? "검수 진행 중"
               : latestRun
                 ? "마일스톤 재검수"
-                : "검수 요청 복구"}
+                : "마일스톤 검수 시작"}
           </button>
         </div>
 

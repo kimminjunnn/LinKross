@@ -62,13 +62,10 @@ export async function connectProjectRepositoryAction(
 export async function submitMilestonePullRequestAction(
   input: SubmitMilestonePullRequestInput,
 ): Promise<BackendResult<MilestoneSubmissionReceipt>> {
+  // 제출은 Commit SHA만 고정한다. 검수 실행은 발주자가
+  // requestVerificationRunAction으로 직접 시작한다.
   const result = await submitMilestonePullRequest(input);
-  if (result.ok) {
-    if (result.data.verificationStatus === "queued") {
-      await triggerImmediateVerification(result.data.verificationRunId);
-    }
-    revalidateVerification(input.projectId);
-  }
+  if (result.ok) revalidateVerification(input.projectId);
   return result;
 }
 

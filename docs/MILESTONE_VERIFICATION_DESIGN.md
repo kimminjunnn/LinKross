@@ -625,7 +625,7 @@ SowVersion
 - `finished_at`
 - `error_summary`
 
-PR 제출 시 서버는 GitHub에서 열린 PR 여부, 공식 저장소 대상 여부와 전체 head Commit SHA를 확인한다. 제출 기록과 완료 주장 조건을 저장한 뒤 마일스톤 전체 범위의 `queued` 실행을 생성한다. 동일 Commit SHA의 재요청은 기존 제출과 진행 중 실행을 재사용한다.
+PR 제출 시 서버는 GitHub에서 열린 PR 여부, 공식 저장소 대상 여부와 전체 head Commit SHA를 확인하고 제출 기록과 완료 주장 조건을 저장한다. 제출만으로 검수 실행을 만들지는 않는다. 마일스톤 전체 범위의 `queued` 실행은 발주자가 검수 화면에서 요청할 때 생성한다. 동일 Commit SHA의 재요청은 기존 제출과 진행 중 실행을 재사용한다.
 
 Runner 조정기는 `FOR UPDATE SKIP LOCKED` 기반으로 대기 실행을 하나씩 선점한다. 작업별 lease는 비공개 테이블에 해시로 저장하고 heartbeat가 끊긴 만료 작업만 재선점한다. 조정기에는 저장소 좌표·PR·고정 Commit SHA·완료조건을 전달하지만 GitHub token과 Supabase key는 검수 Sandbox에 전달하지 않는다. 조건별 결과, 증거 메타데이터와 최종 실행 상태는 하나의 DB 트랜잭션으로 고정한다.
 

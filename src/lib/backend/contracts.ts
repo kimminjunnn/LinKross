@@ -580,8 +580,6 @@ export interface SubmitMilestonePullRequestInput {
 export interface MilestoneSubmissionReceipt {
   submissionId: string;
   headCommitSha: string;
-  verificationRunId: string;
-  verificationStatus: VerificationRunStatus;
 }
 
 export interface RequestVerificationInput {
