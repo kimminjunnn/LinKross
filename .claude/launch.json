@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "asset-rental-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/mj/Dev/linkross-github-app-test", "run", "dev", "--", "--port", "3210"],
+      "port": 3210
     }
   ]
 }
