@@ -1,0 +1,2824 @@
+{
+  "label": "seq-v3",
+  "runs": 3,
+  "summary": {
+    "runs": 3,
+    "total": 21,
+    "rates": [
+      28.6,
+      42.9,
+      33.3
+    ],
+    "meanRate": 34.9,
+    "minRate": 28.6,
+    "maxRate": 42.9,
+    "spread": 14.3,
+    "byRejectionDetail": {
+      "(미기록)": 29,
+      "근거 없는 문구": 5,
+      "전제 미이행: 계약이 \"로그인 상태\"를 요구하는데 로그인 단계가 없음": 1,
+      "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 4,
+      "전제 미이행: 계약이 \"'승인 완료' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 1,
+      "전제 미이행: 계약이 \"'반려됨' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 1
+    },
+    "byRejectionReason": {
+      "llm_declined": 17,
+      "llm_failed": 12,
+      "ungrounded_text": 5,
+      "schema_rejected": 7
+    },
+    "byOutcome": {
+      "composed": 19,
+      "preset": 3,
+      "rejected": 41
+    }
+  },
+  "detail": [
+    {
+      "total": 21,
+      "automationReady": 6,
+      "rate": 28.6,
+      "byOutcome": {
+        "composed": 5,
+        "preset": 1,
+        "rejected": 15
+      },
+      "byRejectionReason": {
+        "llm_declined": 5,
+        "llm_failed": 8,
+        "ungrounded_text": 2
+      },
+      "byRejectionDetail": {
+        "(미기록)": 13,
+        "근거 없는 문구": 2
+      },
+      "records": [
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "revisedDod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "navigation",
+            "startPath": "/login",
+            "precondition": "로그아웃 상태",
+            "fixture": "올바른 사내 계정",
+            "action": "로그인",
+            "target": "로그인 버튼",
+            "input": "올바른 사내 계정 정보",
+            "expected": "/items로 이동"
+          },
+          "description": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "startPath": "/login",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "expect_path",
+                "path": "/items"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "revisedDod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/login",
+            "precondition": "로그아웃 상태",
+            "fixture": "잘못된 비밀번호",
+            "action": "로그인",
+            "target": "로그인 버튼",
+            "input": "잘못된 비밀번호 입력",
+            "expected": "오류 메시지 표시"
+          },
+          "description": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "startPath": "/login",
+          "outcome": "preset",
+          "spec": {
+            "version": 1,
+            "kind": "managed_browser",
+            "preset": "login_invalid_password",
+            "startPath": "/login",
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "revisedDod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/items",
+            "precondition": "로그아웃 상태",
+            "action": "접근",
+            "target": "/items",
+            "expected": "/login으로 리다이렉트",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "startPath": "/items",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/items",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_path",
+                "path": "/login"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "revisedDod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 목록 데이터",
+            "action": "페이지 로드",
+            "target": "비품 목록",
+            "expected": "'비품명', '분류', '상태' 컬럼 표시"
+          },
+          "description": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "startPath": "/items",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/items",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "비품명"
+                }
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "분류"
+                }
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "상태"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "revisedDod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "list_filter",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 목록 데이터",
+            "action": "필터 버튼 클릭",
+            "target": "상태 필터 버튼",
+            "input": "대여 가능",
+            "expected": "대여 가능 상태의 비품만 표시"
+          },
+          "description": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "revisedDod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "navigation",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "대여 가능 비품 목록",
+            "action": "비품 신청 버튼 클릭",
+            "target": "비품 신청 버튼",
+            "expected": "대여 가능 비품 목록 표시"
+          },
+          "description": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "revisedDod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 신청 양식",
+            "action": "신청하기 클릭",
+            "target": "신청하기 버튼",
+            "input": "사유 100자 초과 입력",
+            "expected": "오류 메시지 표시"
+          },
+          "description": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "revisedDod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 신청 양식",
+            "action": "신청하기 클릭",
+            "target": "신청하기 버튼",
+            "input": "유효한 신청 정보 입력",
+            "expected": "'신청이 접수되었습니다' 문구 표시"
+          },
+          "description": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "revisedDod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "본인의 신청 내역",
+            "action": "페이지 로드",
+            "target": "신청 내역 목록",
+            "expected": "본인의 신청 내역만 표시"
+          },
+          "description": "/requests에서 본인의 신청 내역만 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "revisedDod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "승인 대기 상태의 신청",
+            "action": "페이지 로드",
+            "target": "신청 내역 목록",
+            "expected": "'취소' 버튼 표시"
+          },
+          "description": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "revisedDod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "승인 완료 또는 반려됨 상태의 신청",
+            "action": "페이지 로드",
+            "target": "신청 내역 목록",
+            "expected": "'취소' 버튼 미표시"
+          },
+          "description": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "revisedDod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "취소 가능한 신청",
+            "action": "신청 취소",
+            "target": "취소 버튼",
+            "expected": "/items에서 해당 비품 '대여 가능' 상태로 표시"
+          },
+          "description": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "revisedDod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            },
+            {
+              "key": "target",
+              "question": "사용자가 누르거나 입력할 화면 요소의 이름은 무엇인가요?",
+              "suggestions": [
+                "아직 신청한 비품이 없습니다"
+              ],
+              "recommendedSuggestion": "아직 신청한 비품이 없습니다",
+              "answer": "아직 신청한 비품이 없습니다"
+            }
+          ],
+          "questionCount": 3,
+          "contract": {
+            "version": 1,
+            "scenario": "empty_state",
+            "startPath": "/requests",
+            "precondition": "신청 내역이 없는 상태",
+            "expected": "'아직 신청한 비품이 없습니다' 문구 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "action": "클릭",
+            "target": "아직 신청한 비품이 없습니다"
+          },
+          "description": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "revisedDod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "requirements": [
+            {
+              "key": "precondition",
+              "question": "/admin 페이지에 접근하기 위한 사전 조건은 무엇입니까?",
+              "suggestions": [
+                "관리자 계정으로 로그인한 상태",
+                "특별한 사전 조건 없음"
+              ],
+              "recommendedSuggestion": "관리자 계정으로 로그인한 상태",
+              "answer": "관리자 계정으로 로그인한 상태"
+            },
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/admin",
+            "target": "신청 내역 테이블",
+            "expected": "'신청자', '비품명', '신청 사유', '상태' 컬럼 표시",
+            "precondition": "관리자 계정으로 로그인한 상태",
+            "action": "클릭"
+          },
+          "description": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "revisedDod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "requirements": [
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "'승인' 및 '반려' 버튼 표시",
+            "action": "클릭"
+          },
+          "description": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "revisedDod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'승인' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "신청 상태 '승인 완료'로 변경"
+          },
+          "description": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "revisedDod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'반려' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "신청 상태 '반려됨'으로 변경"
+          },
+          "description": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "revisedDod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "state_persistence",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'승인' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "/items에서 해당 비품 '대여중' 상태 유지",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "ungrounded_text",
+          "detail": "근거 없는 문구: 승인 대기",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "revisedDod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'반려' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "/items에서 해당 비품 '대여 가능' 상태로 변경"
+          },
+          "description": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "ungrounded_text",
+          "detail": "근거 없는 문구: 승인 대기",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "revisedDod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/admin",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "action": "직접 접근",
+            "target": "/admin",
+            "expected": "/items로 리다이렉트 및 권한 오류 안내 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "startPath": "/admin",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/admin",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/admin"
+              },
+              {
+                "atom": "expect_path",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_text",
+                "contains": "권한 오류"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "revisedDod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인.",
+          "requirements": [
+            {
+              "key": "startPath",
+              "question": "테스트 시작 시 어떤 경로로 이동해야 하나요?",
+              "suggestions": [
+                "/home",
+                "/dashboard",
+                "/main"
+              ],
+              "recommendedSuggestion": "/home",
+              "answer": "/home"
+            },
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "action": "상단 메뉴 확인",
+            "target": "승인 관리 항목",
+            "expected": "미표시 확인",
+            "startPath": "/home",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "`/home`에서 일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "startPath": "/home",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/home",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/home"
+              },
+              {
+                "atom": "expect_none_text",
+                "contains": "승인 관리",
+                "target": {
+                  "role": "link",
+                  "name": "승인 관리"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        }
+      ]
+    },
+    {
+      "total": 21,
+      "automationReady": 9,
+      "rate": 42.9,
+      "byOutcome": {
+        "composed": 8,
+        "preset": 1,
+        "rejected": 12
+      },
+      "byRejectionReason": {
+        "llm_declined": 4,
+        "ungrounded_text": 2,
+        "schema_rejected": 6
+      },
+      "byRejectionDetail": {
+        "(미기록)": 4,
+        "근거 없는 문구": 2,
+        "전제 미이행: 계약이 \"로그인 상태\"를 요구하는데 로그인 단계가 없음": 1,
+        "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 3,
+        "전제 미이행: 계약이 \"'승인 완료' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 1,
+        "전제 미이행: 계약이 \"'반려됨' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 1
+      },
+      "records": [
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "revisedDod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "navigation",
+            "startPath": "/login",
+            "precondition": "로그아웃 상태",
+            "fixture": "올바른 사내 계정",
+            "action": "로그인",
+            "target": "로그인 버튼",
+            "input": "올바른 사내 계정 정보",
+            "expected": "/items로 이동"
+          },
+          "description": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "startPath": "/login",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "expect_path",
+                "path": "/items"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "revisedDod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/login",
+            "precondition": "로그아웃 상태",
+            "fixture": "잘못된 비밀번호",
+            "action": "로그인",
+            "target": "로그인 버튼",
+            "input": "잘못된 비밀번호 입력",
+            "expected": "오류 메시지 표시"
+          },
+          "description": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "startPath": "/login",
+          "outcome": "preset",
+          "spec": {
+            "version": 1,
+            "kind": "managed_browser",
+            "preset": "login_invalid_password",
+            "startPath": "/login",
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "revisedDod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/items",
+            "precondition": "로그아웃 상태",
+            "action": "접근",
+            "target": "/items",
+            "expected": "/login으로 리다이렉트",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "startPath": "/items",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/items",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_path",
+                "path": "/login"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "revisedDod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 목록 데이터",
+            "action": "페이지 로드",
+            "target": "비품 목록",
+            "expected": "'비품명', '분류', '상태' 컬럼 표시"
+          },
+          "description": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "startPath": "/items",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/items",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "비품명"
+                }
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "분류"
+                }
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "상태"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "revisedDod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "list_filter",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 목록 데이터",
+            "action": "필터 버튼 클릭",
+            "target": "상태 필터 버튼",
+            "input": "'대여 가능' 또는 '대여중' 선택",
+            "expected": "해당 상태의 비품만 목록에 표시"
+          },
+          "description": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "revisedDod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "대여 가능 비품 목록 데이터",
+            "action": "비품 신청 버튼 클릭",
+            "target": "비품 신청 버튼",
+            "expected": "대여 가능 비품 목록 표시"
+          },
+          "description": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "revisedDod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 신청 양식",
+            "action": "신청하기 클릭",
+            "target": "신청하기 버튼",
+            "input": "사유 100자 초과 입력",
+            "expected": "오류 메시지 표시"
+          },
+          "description": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "revisedDod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "fixture": "비품 신청 양식",
+            "action": "신청 완료",
+            "target": "신청하기 버튼",
+            "input": "유효한 신청 정보 입력",
+            "expected": "'신청이 접수되었습니다' 문구 표시"
+          },
+          "description": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "ungrounded_text",
+          "detail": "근거 없는 문구: 신청하기",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "revisedDod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "본인의 신청 내역 데이터",
+            "action": "페이지 로드",
+            "target": "신청 내역 목록",
+            "expected": "본인의 신청 내역만 표시"
+          },
+          "description": "/requests에서 본인의 신청 내역만 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "revisedDod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "승인 대기 상태의 신청 데이터",
+            "action": "페이지 로드",
+            "target": "신청 내역 목록",
+            "expected": "'취소' 버튼 표시"
+          },
+          "description": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "startPath": "/requests",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/requests"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "취소"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "revisedDod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "승인 완료 또는 반려됨 상태의 신청 데이터",
+            "action": "페이지 로드",
+            "target": "신청 내역 목록",
+            "expected": "'취소' 버튼 미표시"
+          },
+          "description": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"로그인 상태\"를 요구하는데 로그인 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "revisedDod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "fixture": "취소 가능한 신청 데이터",
+            "action": "신청 취소",
+            "target": "취소 버튼",
+            "expected": "/items에서 해당 비품 '대여 가능' 상태로 표시"
+          },
+          "description": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "startPath": "/requests",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/requests"
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "role": "button",
+                  "name": "취소"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_text",
+                "contains": "대여 가능"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "revisedDod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            },
+            {
+              "key": "target",
+              "question": "사용자가 누르거나 입력할 화면 요소의 이름은 무엇인가요?",
+              "suggestions": [
+                "아직 신청한 비품이 없습니다"
+              ],
+              "recommendedSuggestion": "아직 신청한 비품이 없습니다",
+              "answer": "아직 신청한 비품이 없습니다"
+            }
+          ],
+          "questionCount": 3,
+          "contract": {
+            "version": 1,
+            "scenario": "empty_state",
+            "startPath": "/requests",
+            "precondition": "신청 내역이 없는 상태",
+            "expected": "'아직 신청한 비품이 없습니다' 문구 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "action": "클릭",
+            "target": "아직 신청한 비품이 없습니다"
+          },
+          "description": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "startPath": "/requests",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/requests",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/requests"
+              },
+              {
+                "atom": "expect_text",
+                "contains": "아직 신청한 비품이 없습니다"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "revisedDod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "requirements": [
+            {
+              "key": "precondition",
+              "question": "테스트 시작 전 어떤 상태가 필요한가요?",
+              "suggestions": [
+                "신청 내역이 있는 상태",
+                "신청 내역이 없는 상태"
+              ],
+              "recommendedSuggestion": "신청 내역이 있는 상태",
+              "answer": "신청 내역이 있는 상태"
+            },
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/admin",
+            "target": "신청 내역 테이블",
+            "expected": "'신청자', '비품명', '신청 사유', '상태' 컬럼 표시",
+            "precondition": "신청 내역이 있는 상태",
+            "action": "클릭"
+          },
+          "description": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "ungrounded_text",
+          "detail": "근거 없는 문구: 신청 내역 테이블",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "revisedDod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "requirements": [
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "'승인' 및 '반려' 버튼 표시",
+            "action": "클릭"
+          },
+          "description": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "revisedDod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'승인' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "신청 상태 '승인 완료'로 변경"
+          },
+          "description": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "revisedDod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'반려' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "신청 상태 '반려됨'으로 변경"
+          },
+          "description": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "revisedDod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            {
+              "key": "action",
+              "question": "테스트에서 어떤 행동을 수행해야 하나요?",
+              "suggestions": [
+                "'승인' 버튼 클릭",
+                "'반려' 버튼 클릭"
+              ],
+              "recommendedSuggestion": "'승인' 버튼 클릭",
+              "answer": "'승인' 버튼 클릭"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "state_persistence",
+            "startPath": "/admin",
+            "precondition": "'승인 완료' 상태의 신청이 있는 상태",
+            "target": "해당 비품",
+            "expected": "비품 '대여중' 상태 유지",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "action": "'승인' 버튼 클릭"
+          },
+          "description": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"'승인 완료' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "revisedDod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "requirements": [
+            {
+              "key": "action",
+              "question": "테스트에서 어떤 행동을 수행해야 하나요?",
+              "suggestions": [
+                "'승인' 버튼 클릭",
+                "'반려' 버튼 클릭"
+              ],
+              "recommendedSuggestion": "'반려' 버튼 클릭",
+              "answer": "'반려' 버튼 클릭"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'반려됨' 상태의 신청이 있는 상태",
+            "target": "해당 비품",
+            "expected": "비품 '대여 가능' 상태로 변경",
+            "action": "'반려' 버튼 클릭"
+          },
+          "description": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"'반려됨' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "revisedDod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/admin",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "action": "직접 접근",
+            "target": "/admin",
+            "expected": "/items로 리다이렉트 및 권한 오류 안내 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "startPath": "/admin",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/admin",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/admin"
+              },
+              {
+                "atom": "expect_path",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_error_feedback"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "revisedDod": "일반 사원 계정으로 로그인한 상태에서 상단 메뉴에 '승인 관리' 항목이 표시되지 않음을 확인.",
+          "requirements": [
+            {
+              "key": "startPath",
+              "question": "테스트 시작 시 접속할 경로는 무엇인가요?",
+              "suggestions": [
+                "/home",
+                "/dashboard",
+                "/main"
+              ],
+              "recommendedSuggestion": "/home",
+              "answer": "/home"
+            },
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "action": "상단 메뉴 확인",
+            "target": "승인 관리",
+            "expected": "항목 미표시",
+            "startPath": "/home",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "`/home`에서 일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "startPath": "/home",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/home",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/home"
+              },
+              {
+                "atom": "expect_none_text",
+                "contains": "승인 관리",
+                "target": {
+                  "role": "link",
+                  "name": "승인 관리"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        }
+      ]
+    },
+    {
+      "total": 21,
+      "automationReady": 7,
+      "rate": 33.3,
+      "byOutcome": {
+        "composed": 6,
+        "preset": 1,
+        "rejected": 14
+      },
+      "byRejectionReason": {
+        "llm_declined": 8,
+        "ungrounded_text": 1,
+        "schema_rejected": 1,
+        "llm_failed": 4
+      },
+      "byRejectionDetail": {
+        "(미기록)": 12,
+        "근거 없는 문구": 1,
+        "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음": 1
+      },
+      "records": [
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "revisedDod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "requirements": [
+            {
+              "key": "precondition",
+              "question": "테스트 시작 시 로그인 상태는 어떻게 되나요?",
+              "suggestions": [
+                "로그아웃 상태",
+                "로그인 상태"
+              ],
+              "recommendedSuggestion": "로그아웃 상태",
+              "answer": "로그아웃 상태"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "navigation",
+            "startPath": "/login",
+            "action": "로그인",
+            "target": "사내 계정 로그인 폼",
+            "input": "올바른 사내 계정 정보",
+            "expected": "/items로 이동",
+            "precondition": "로그아웃 상태"
+          },
+          "description": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "startPath": "/login",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "expect_path",
+                "path": "/items"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "revisedDod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "requirements": [
+            {
+              "key": "precondition",
+              "question": "테스트 시작 시 로그인 상태는 어떻게 되나요?",
+              "suggestions": [
+                "로그아웃 상태",
+                "로그인 상태"
+              ],
+              "recommendedSuggestion": "로그아웃 상태",
+              "answer": "로그아웃 상태"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/login",
+            "action": "로그인 시도",
+            "target": "사내 계정 로그인 폼",
+            "input": "잘못된 비밀번호",
+            "expected": "오류 메시지 표시",
+            "precondition": "로그아웃 상태"
+          },
+          "description": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "startPath": "/login",
+          "outcome": "preset",
+          "spec": {
+            "version": 1,
+            "kind": "managed_browser",
+            "preset": "login_invalid_password",
+            "startPath": "/login",
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "revisedDod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/items",
+            "precondition": "로그아웃 상태",
+            "action": "페이지 접근",
+            "target": "/items",
+            "expected": "/login으로 리다이렉트",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "startPath": "/items",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/items",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_path",
+                "path": "/login"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "revisedDod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "action": "페이지 확인",
+            "target": "비품 목록",
+            "expected": "'비품명', '분류', '상태' 컬럼 표시"
+          },
+          "description": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "startPath": "/items",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/items"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "비품명"
+                }
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "분류"
+                }
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "text": "상태"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "revisedDod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "list_filter",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "action": "필터 버튼 클릭",
+            "target": "상태 필터 버튼",
+            "input": "'대여 가능' 또는 '대여중'",
+            "expected": "해당 상태의 비품만 목록에 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "revisedDod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "navigation",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "action": "버튼 클릭",
+            "target": "'비품 신청' 버튼",
+            "expected": "대여 가능 비품 목록 표시"
+          },
+          "description": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "revisedDod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "validation_error",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "action": "신청하기 클릭",
+            "target": "비품 신청 폼",
+            "input": "사유 100자 초과",
+            "expected": "오류 메시지 표시"
+          },
+          "description": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "revisedDod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/items",
+            "precondition": "로그인 상태",
+            "action": "비품 신청",
+            "target": "비품 신청 폼",
+            "input": "유효한 신청 정보",
+            "expected": "'신청이 접수되었습니다' 문구 표시"
+          },
+          "description": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "startPath": "/items",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "revisedDod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "action": "페이지 확인",
+            "target": "신청 내역 목록",
+            "expected": "본인의 신청 내역만 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "/requests에서 본인의 신청 내역만 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "revisedDod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "action": "페이지 확인",
+            "target": "신청 내역 목록",
+            "expected": "'승인 대기' 상태의 신청에 '취소' 버튼 표시"
+          },
+          "description": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "startPath": "/requests",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/requests"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "role": "button",
+                  "name": "취소"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "revisedDod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "action": "페이지 확인",
+            "target": "신청 내역 목록",
+            "expected": "'승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시"
+          },
+          "description": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "startPath": "/requests",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/login",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/login"
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "email"
+                },
+                "value": {
+                  "ref": "email"
+                }
+              },
+              {
+                "atom": "fill",
+                "target": {
+                  "field": "password"
+                },
+                "value": {
+                  "ref": "password"
+                }
+              },
+              {
+                "atom": "click",
+                "target": {
+                  "field": "submit"
+                }
+              },
+              {
+                "atom": "goto",
+                "path": "/requests"
+              },
+              {
+                "atom": "expect_form_blocked",
+                "target": {
+                  "role": "button",
+                  "name": "취소"
+                }
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "revisedDod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/requests",
+            "precondition": "로그인 상태",
+            "action": "신청 취소",
+            "target": "신청 내역 목록",
+            "input": "취소할 신청 선택",
+            "expected": "/items에서 해당 비품 '대여 가능' 상태로 표시"
+          },
+          "description": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "startPath": "/requests",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "revisedDod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            },
+            {
+              "key": "target",
+              "question": "사용자가 누르거나 입력할 화면 요소의 이름은 무엇인가요?",
+              "suggestions": [
+                "아직 신청한 비품이 없습니다"
+              ],
+              "recommendedSuggestion": "아직 신청한 비품이 없습니다",
+              "answer": "아직 신청한 비품이 없습니다"
+            }
+          ],
+          "questionCount": 3,
+          "contract": {
+            "version": 1,
+            "scenario": "empty_state",
+            "startPath": "/requests",
+            "precondition": "신청 내역이 없는 상태",
+            "expected": "'아직 신청한 비품이 없습니다' 문구 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+            "action": "클릭",
+            "target": "아직 신청한 비품이 없습니다"
+          },
+          "description": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "startPath": "/requests",
+          "outcome": "composed",
+          "spec": {
+            "version": 3,
+            "kind": "managed_browser",
+            "startPath": "/requests",
+            "steps": [
+              {
+                "atom": "goto",
+                "path": "/requests"
+              },
+              {
+                "atom": "expect_text",
+                "contains": "아직 신청한 비품이 없습니다"
+              }
+            ],
+            "syntheticCredentials": {
+              "email": "test@example.com",
+              "password": "Test1234!",
+              "invalidPassword": "wrong-password"
+            }
+          },
+          "status": "automation_ready"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "revisedDod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "requirements": [
+            {
+              "key": "precondition",
+              "question": "테스트 시작 전 어떤 상태여야 하나요?",
+              "suggestions": [
+                "관리자 계정으로 로그인한 상태",
+                "로그인 상태 무관"
+              ],
+              "recommendedSuggestion": "관리자 계정으로 로그인한 상태",
+              "answer": "관리자 계정으로 로그인한 상태"
+            },
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/admin",
+            "fixture": "신청 내역이 여러 개 있는 상태",
+            "target": "신청 내역 테이블",
+            "expected": "'신청자', '비품명', '신청 사유', '상태' 컬럼 표시",
+            "precondition": "관리자 계정으로 로그인한 상태",
+            "action": "클릭"
+          },
+          "description": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "ungrounded_text",
+          "detail": "근거 없는 문구: 신청 내역 테이블",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "revisedDod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "requirements": [
+            {
+              "key": "action",
+              "question": "사용자가 화면에서 수행할 한 가지 행동은 무엇인가요?",
+              "suggestions": [
+                "클릭",
+                "값 입력 후 제출"
+              ],
+              "recommendedSuggestion": "클릭",
+              "answer": "클릭"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "generic_ui",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "'승인' 및 '반려' 버튼 표시",
+            "action": "클릭"
+          },
+          "description": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "schema_rejected",
+          "detail": "전제 미이행: 계약이 \"'승인 대기' 상태의 신청이 있는 상태\"를 요구하는데 데이터를 만드는 단계가 없음",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "revisedDod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'승인' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "신청 상태 '승인 완료'로 변경"
+          },
+          "description": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "revisedDod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'반려' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "신청 상태 '반려됨'으로 변경"
+          },
+          "description": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_declined",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "revisedDod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "state_persistence",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'승인' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "/items에서 해당 비품 '대여중' 상태 유지",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "revisedDod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "requirements": [],
+          "questionCount": 0,
+          "contract": {
+            "version": 1,
+            "scenario": "state_change",
+            "startPath": "/admin",
+            "precondition": "'승인 대기' 상태의 신청이 있는 상태",
+            "action": "'반려' 버튼 클릭",
+            "target": "'승인 대기' 상태의 신청",
+            "expected": "/items에서 해당 비품 '대여 가능' 상태로 변경"
+          },
+          "description": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "revisedDod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "requirements": [
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "startPath": "/admin",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "action": "직접 접근",
+            "target": "/admin",
+            "expected": "/items로 리다이렉트 및 권한 오류 안내 표시",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "startPath": "/admin",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "revisedDod": "일반 사원 계정으로 로그인한 상태에서 상단 메뉴에 '승인 관리' 항목이 표시되지 않음을 확인.",
+          "requirements": [
+            {
+              "key": "startPath",
+              "question": "테스트 시작 시 어떤 경로로 이동해야 하나요?",
+              "suggestions": [
+                "/home",
+                "/dashboard",
+                "/main"
+              ],
+              "recommendedSuggestion": "/home",
+              "answer": "/home"
+            },
+            {
+              "key": "fixture",
+              "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+              "suggestions": [
+                "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "새 테스트 계정의 초기 상태 사용"
+              ],
+              "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+              "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            }
+          ],
+          "questionCount": 2,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "action": "상단 메뉴 확인",
+            "target": "승인 관리 항목",
+            "expected": "미표시",
+            "startPath": "/home",
+            "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+          },
+          "description": "`/home`에서 일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "startPath": "/home",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        }
+      ]
+    }
+  ]
+}

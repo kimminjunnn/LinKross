@@ -9,7 +9,7 @@
 - 프리랜서 수행 제안서 제출, 원문 보존, 지원 현황, 기업 원문 검토와 한 명 선정
 - 기업/프리랜서 프로젝트 목록과 실제 상태 기반 대시보드
 - SOW 초안·마일스톤·완료조건 저장, 검토 요청, 동일 content hash 양측 승인, append-only 수정 요청
-- 입력 원문에 근거한 서버 측 OpenAI 마일스톤 분석·영문 SOW 초안 생성
+- 입력 원문에 근거한 서버 측 Gemini 마일스톤 분석·영문 SOW 초안 생성
 - GitHub App 설치 흐름, 공개·비공개 공식 저장소와 PR 확인, 40자리 head Commit SHA 고정 제출
 - 저장소 단위 Installation Access Token 발급·즉시 폐기, webhook HMAC 검증과 delivery ID 중복 방지 기록
 - 검수 실행 요청의 멱등 대기열 기록, 재실행 attempt, 조건별 결과·증거 조회, 발주자 수정 요청·승인

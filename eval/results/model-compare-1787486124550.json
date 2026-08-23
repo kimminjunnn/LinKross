@@ -1,0 +1,65 @@
+{
+  "promptVersion": "2026-08-23.atomize-preset",
+  "input": "eval/fixtures-laundry-input.txt",
+  "rows": [
+    {
+      "model": "gemini-3.5-flash",
+      "temperature": 0.2,
+      "run": 1,
+      "ms": 8193,
+      "milestones": 8,
+      "total": 79,
+      "withUrlPath": 79,
+      "withUrlPathLegacy": 79,
+      "capabilityStatements": 0,
+      "nounTerminated": 79,
+      "atomic": 79,
+      "urlPathRate": 100,
+      "urlPathRateLegacy": 100,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 100
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "temperature": 0.2,
+      "run": 1,
+      "ms": 2705,
+      "milestones": 7,
+      "total": 53,
+      "withUrlPath": 53,
+      "withUrlPathLegacy": 53,
+      "capabilityStatements": 0,
+      "nounTerminated": 53,
+      "atomic": 53,
+      "urlPathRate": 100,
+      "urlPathRateLegacy": 100,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 100
+    },
+    {
+      "model": "gemini-3.6-flash",
+      "temperature": 0.2,
+      "run": 1,
+      "ms": 33347,
+      "milestones": 6,
+      "total": 81,
+      "withUrlPath": 81,
+      "withUrlPathLegacy": 81,
+      "capabilityStatements": 0,
+      "nounTerminated": 81,
+      "atomic": 81,
+      "urlPathRate": 100,
+      "urlPathRateLegacy": 100,
+      "capabilityRate": 0,
+      "nounTerminationRate": 100,
+      "atomicRate": 100
+    }
+  ],
+  "samples": {
+    "gemini-3.5-flash@0.2#1": [],
+    "gemini-3.5-flash-lite@0.2#1": [],
+    "gemini-3.6-flash@0.2#1": []
+  }
+}

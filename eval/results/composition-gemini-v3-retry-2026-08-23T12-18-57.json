@@ -1,0 +1,539 @@
+{
+  "label": "gemini-v3-retry",
+  "runs": 3,
+  "summary": {
+    "runs": 3,
+    "total": 21,
+    "rates": [
+      0,
+      0,
+      0
+    ],
+    "meanRate": 0,
+    "minRate": 0,
+    "maxRate": 0,
+    "spread": 0,
+    "byRejectionDetail": {
+      "(미기록)": 1
+    },
+    "byRejectionReason": {
+      "llm_failed": 1
+    },
+    "byOutcome": {
+      "analysis_failed": 62,
+      "rejected": 1
+    }
+  },
+  "detail": [
+    {
+      "total": 21,
+      "automationReady": 0,
+      "rate": 0,
+      "byOutcome": {
+        "analysis_failed": 20,
+        "rejected": 1
+      },
+      "byRejectionReason": {
+        "llm_failed": 1
+      },
+      "byRejectionDetail": {
+        "(미기록)": 1
+      },
+      "records": [
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "revisedDod": "일반 사원 계정으로 로그인 시 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "requirements": [
+            {
+              "key": "startPath",
+              "question": "일반 사원이 로그인 후 처음 진입하여 상단 메뉴를 확인하는 화면의 경로는 무엇인가요?",
+              "suggestions": [
+                "/dashboard",
+                "/main",
+                "/home"
+              ],
+              "recommendedSuggestion": "/dashboard",
+              "answer": "/dashboard"
+            }
+          ],
+          "questionCount": 1,
+          "contract": {
+            "version": 1,
+            "scenario": "access_control",
+            "precondition": "일반 사원 계정으로 로그인한 상태",
+            "fixture": "일반 사원 테스트 계정 정보",
+            "action": "상단 메뉴 영역을 확인",
+            "target": "승인 관리 메뉴",
+            "expected": "화면에 '승인 관리' 텍스트가 나타나지 않음",
+            "startPath": "/dashboard"
+          },
+          "description": "`/dashboard`에서 일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "startPath": "/dashboard",
+          "outcome": "rejected",
+          "reason": "llm_failed",
+          "status": "human_review_required"
+        }
+      ]
+    },
+    {
+      "total": 21,
+      "automationReady": 0,
+      "rate": 0,
+      "byOutcome": {
+        "analysis_failed": 21
+      },
+      "byRejectionReason": {},
+      "byRejectionDetail": {},
+      "records": [
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        }
+      ]
+    },
+    {
+      "total": 21,
+      "automationReady": 0,
+      "rate": 0,
+      "byOutcome": {
+        "analysis_failed": 21
+      },
+      "byRejectionReason": {},
+      "byRejectionDetail": {},
+      "records": [
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 올바른 사내 계정으로 로그인 시 /items로 이동 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "로그인하지 않은 상태에서 /items 직접 접근 시 /login으로 리다이렉트 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 비품 목록의 '비품명', '분류', '상태' 컬럼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "로그인 및 비품 목록 구현",
+          "dod": "/items에서 '대여 가능'과 '대여중' 상태 필터 버튼 클릭 시 해당 상태의 비품만 목록에 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 '비품 신청' 버튼 클릭 시 대여 가능 비품 목록 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 시 사유 100자 초과 입력 후 '신청하기' 클릭 시 오류 메시지 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/items에서 비품 신청 완료 후 '신청이 접수되었습니다' 문구 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 본인의 신청 내역만 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 대기' 상태의 신청에 '취소' 버튼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 '승인 완료' 또는 '반려됨' 상태의 신청에 '취소' 버튼 미표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 취소 후 /items에서 해당 비품 '대여 가능' 상태로 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "비품 신청 및 내 신청 내역 구현",
+          "dod": "/requests에서 신청 내역이 없을 시 '아직 신청한 비품이 없습니다' 문구 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 모든 신청 내역의 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인 대기' 상태의 신청에 '승인' 및 '반려' 버튼 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 승인 후 /items에서 해당 비품 '대여중' 상태 유지 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "/admin에서 반려 후 /items에서 해당 비품 '대여 가능' 상태로 변경 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 /admin 직접 접근 시 /items로 리다이렉트 및 권한 오류 안내 표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        },
+        {
+          "scenarioId": "v3",
+          "milestoneTitle": "총무팀 승인 관리 화면 구현",
+          "dod": "일반 사원 계정으로 상단 메뉴에 '승인 관리' 항목 미표시 확인",
+          "failure": "analysis_error",
+          "outcome": "analysis_failed"
+        }
+      ]
+    }
+  ]
+}
