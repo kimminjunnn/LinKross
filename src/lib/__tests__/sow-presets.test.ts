@@ -7,6 +7,8 @@ import {
   SOW_PRESET_MATCH_THRESHOLD,
   findPresetDod,
   listSowPresets,
+  matchPresetEnglishSow,
+  matchPresetSowSummary,
   matchSowPreset,
   normalizeForPresetMatch,
   toPresetMilestoneInputs,
@@ -152,4 +154,49 @@ test("화면에 넘기는 마일스톤에는 확정된 검수 설계가 함께 �
     assert.equal(milestone.verificationDesigns?.length, milestone.dods.length);
     assert.ok(milestone.verificationDesigns?.every((design) => isSettledStatus(design)));
   }
+});
+
+/** 화면이 영문 SOW를 만들 때 넘기는 모양. 프리셋 그대로일 때를 흉내 낸다. */
+function presetMilestoneShape() {
+  return assetRental.milestones.map((milestone) => ({
+    dods: milestone.dods.map((dod) => dod.description),
+  }));
+}
+
+test("프리셋 원문과 완료조건이 그대로면 얼려 둔 영문 초안을 쓴다", () => {
+  const frozen = matchPresetEnglishSow(assetRental.sourceText, presetMilestoneShape());
+  assert.ok(frozen, "프리셋에 영문 초안이 실려 있어야 한다");
+  assert.equal(frozen.translatedMilestones.length, assetRental.milestones.length);
+  frozen.translatedMilestones.forEach((translated, index) => {
+    assert.equal(translated.dodsEn.length, assetRental.milestones[index].dods.length);
+  });
+  assert.ok(frozen.background.trim().length > 0);
+  assert.ok(frozen.acceptanceCriteria.length > 0);
+});
+
+test("완료조건 문장을 하나라도 고치면 얼려 둔 영문 초안을 쓰지 않는다", () => {
+  const edited = presetMilestoneShape();
+  edited[0].dods[0] = `${edited[0].dods[0]} 그리고 로그아웃 확인`;
+  assert.equal(matchPresetEnglishSow(assetRental.sourceText, edited), null);
+});
+
+test("마일스톤을 지우면 얼려 둔 영문 초안을 쓰지 않는다", () => {
+  assert.equal(matchPresetEnglishSow(assetRental.sourceText, presetMilestoneShape().slice(0, 2)), null);
+});
+
+test("다른 프로젝트 원문에는 얼려 둔 영문 초안을 쓰지 않는다", () => {
+  assert.equal(matchPresetEnglishSow("전혀 다른 프로젝트입니다. 쇼핑몰을 만들어 주세요.", presetMilestoneShape()), null);
+});
+
+test("승인 화면 요약은 원문이 프리셋이면 얼려 둔 값을 쓴다", () => {
+  const summary = matchPresetSowSummary(assetRental.sourceText);
+  assert.ok(summary, "프리셋에 승인 요약이 실려 있어야 한다");
+  for (const value of [summary.coreScope, summary.keyAcceptance, summary.needsReview]) {
+    assert.ok(value.trim().length > 0);
+  }
+  assert.ok(summary.english?.coreScope.trim());
+});
+
+test("다른 프로젝트 원문에는 얼려 둔 승인 요약을 쓰지 않는다", () => {
+  assert.equal(matchPresetSowSummary("전혀 다른 프로젝트입니다. 쇼핑몰을 만들어 주세요."), null);
 });

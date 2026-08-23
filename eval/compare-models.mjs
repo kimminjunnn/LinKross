@@ -6,7 +6,7 @@
  * `EXP_7_Laundry_Pickup_Delivery.md`(2026-08-21)의 "모델 생성 결과"에는 URL이
  * 대부분 들어 있다. 두 기록이 모순되므로 지금 프롬프트로 다시 측정해 확정한다.
  *
- * 프로덕션 `analyze.ts`는 `gpt-4o`를 하드코딩하므로 그 모델을 반드시 포함한다.
+ * 프로덕션 `analyze.ts`는 `geminiModel()`이 정한 기본 모델을 쓰므로 그 모델을 반드시 포함한다.
  *
  * 사용법:
  *   node --experimental-strip-types --import ./scripts/register-test-hooks.mjs \
@@ -15,7 +15,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import OpenAI from "openai";
+import { generateJson, geminiModel } from "@/lib/llm/gemini";
 
 import { buildSowPrompt, SOW_PROMPT_VERSION, SOW_RESPONSE_SCHEMA, SOW_SYSTEM_MESSAGE } from "@/lib/sow-prompt";
 import { measureDods } from "@/lib/dod-metrics";
@@ -26,11 +26,10 @@ loadEnv(path.join(ROOT, ".env.local"));
 const args = parseArgs(process.argv.slice(2));
 const INPUT = args.input ?? "eval/fixtures-laundry-input.txt";
 const RUNS = Number(args.runs ?? 2);
-const MODELS = (args.models ?? "gpt-4o,gpt-4o-mini").split(",");
+const MODELS = (args.models ?? `${geminiModel()},${geminiModel("light")}`).split(",");
 // 프로덕션 analyze.ts 는 0.2를 쓴다. 커버리지 변동의 원인인지 보려면 바꿔 볼 수 있어야 한다.
 const TEMPERATURES = (args.temperatures ?? "0.2").split(",").map(Number);
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const workDetail = fs.readFileSync(path.join(ROOT, INPUT), "utf8");
 
 const rows = [];
@@ -41,19 +40,14 @@ for (const model of MODELS) {
   for (let run = 1; run <= RUNS; run += 1) {
     const started = Date.now();
     try {
-      const completion = await openai.chat.completions.parse({
+      const { parsed } = await generateJson({
         model,
-        messages: [
-          { role: "system", content: SOW_SYSTEM_MESSAGE },
-          { role: "user", content: buildSowPrompt({ workDetail, startDate: "2026-09-01", endDate: "2026-12-31" }) },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: { name: "sow_analysis", schema: SOW_RESPONSE_SCHEMA, strict: true },
-        },
+        system: SOW_SYSTEM_MESSAGE,
+        user: buildSowPrompt({ workDetail, startDate: "2026-09-01", endDate: "2026-12-31" }),
+        schema: SOW_RESPONSE_SCHEMA,
         temperature,
       });
-      const milestones = completion.choices[0].message.parsed?.milestones ?? [];
+      const milestones = parsed?.milestones ?? [];
       const dods = milestones.flatMap((milestone) => milestone.dods ?? []);
       const metrics = measureDods(dods);
       rows.push({ model, temperature, run, ms: Date.now() - started, milestones: milestones.length, ...metrics });

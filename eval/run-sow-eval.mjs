@@ -12,12 +12,12 @@
  *
  * 사용법:
  *   node --experimental-strip-types --import ./scripts/register-test-hooks.mjs \
- *     eval/run-sow-eval.mjs [--limit 12] [--model gpt-4o-mini] [--label baseline]
+ *     eval/run-sow-eval.mjs [--limit 12] [--model gemini-2.5-flash] [--label baseline]
  */
 
 import fs from "node:fs";
 import path from "node:path";
-import OpenAI from "openai";
+import { generateJson, geminiModel, hasGeminiKey } from "@/lib/llm/gemini";
 
 import { buildSowPrompt, SOW_PROMPT_VERSION, SOW_RESPONSE_SCHEMA, SOW_SYSTEM_MESSAGE } from "@/lib/sow-prompt";
 import { evaluateTargets, findOutOfScopeCandidates, measureDods } from "@/lib/dod-metrics";
@@ -29,21 +29,21 @@ loadEnv(path.join(ROOT, ".env.local"));
 
 const args = parseArgs(process.argv.slice(2));
 const LIMIT = Number(args.limit ?? 12);
-const MODEL = args.model ?? "gpt-4o-mini";
+const MODEL = args.model ?? geminiModel();
 const LABEL = args.label ?? "baseline";
 const CONCURRENCY = Number(args.concurrency ?? 4);
 
 // 대략적인 단가(USD / 1M 토큰). 정확한 청구액이 아니라 상한 관리용 추정치다.
 const PRICING = {
-  "gpt-4o-mini": { input: 0.15, output: 0.6 },
-  "gpt-4o": { input: 2.5, output: 10 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
+  "gemini-2.5-pro": { input: 1.25, output: 10 },
 };
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const FALLBACK_PRICING = PRICING["gemini-2.5-flash"];
 
 async function main() {
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("OPENAI_API_KEY가 없습니다.");
+  if (!hasGeminiKey()) {
+    console.error("GEMINI_API_KEY가 없습니다.");
     process.exit(1);
   }
 
@@ -83,30 +83,22 @@ async function main() {
 async function generate(scenario, usage) {
   const startedAt = Date.now();
   try {
-    const completion = await openai.chat.completions.parse({
+    const result = await generateJson({
       model: MODEL,
-      messages: [
-        { role: "system", content: SOW_SYSTEM_MESSAGE },
-        {
-          role: "user",
-          content: buildSowPrompt({
-            workDetail: scenario.text,
-            startDate: "2026-09-01",
-            endDate: "2026-12-31",
-          }),
-        },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "sow_analysis", schema: SOW_RESPONSE_SCHEMA, strict: true },
-      },
+      system: SOW_SYSTEM_MESSAGE,
+      user: buildSowPrompt({
+        workDetail: scenario.text,
+        startDate: "2026-09-01",
+        endDate: "2026-12-31",
+      }),
+      schema: SOW_RESPONSE_SCHEMA,
       temperature: 0.2,
     });
 
-    usage.inputTokens += completion.usage?.prompt_tokens ?? 0;
-    usage.outputTokens += completion.usage?.completion_tokens ?? 0;
+    usage.inputTokens += result.usage.inputTokens;
+    usage.outputTokens += result.usage.outputTokens + result.usage.thoughtTokens;
 
-    const milestones = completion.choices[0].message.parsed?.milestones ?? [];
+    const milestones = result.parsed?.milestones ?? [];
     const dods = milestones.flatMap((milestone) => milestone.dods ?? []);
     return {
       id: scenario.id,
@@ -128,7 +120,7 @@ function summarize(results, usage) {
   const allDods = ok.flatMap((result) => result.dods);
   const metrics = measureDods(allDods);
   const targets = evaluateTargets(metrics);
-  const price = PRICING[MODEL] ?? PRICING["gpt-4o-mini"];
+  const price = PRICING[MODEL] ?? FALLBACK_PRICING;
   const estimatedCost =
     (usage.inputTokens / 1_000_000) * price.input + (usage.outputTokens / 1_000_000) * price.output;
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import OpenAI from "openai";
+import { GEMINI_KEY_MISSING_MESSAGE, generateJson, hasGeminiKey } from "@/lib/llm/gemini";
 
 import type {
   DodClarificationRequirement,
@@ -12,8 +12,6 @@ import {
   extractContractPath,
   normalizeContractRequirements,
 } from "@/lib/dod-test-contract";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const MAX_ANALYSIS_BATCH = 100;
 
@@ -74,8 +72,8 @@ export async function analyzeDodContracts(
   items: DodContractAnalysisItem[],
 ): Promise<DodContractAnalysis[]> {
   if (items.length === 0) return [];
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
+  if (!hasGeminiKey()) {
+    throw new Error(GEMINI_KEY_MISSING_MESSAGE);
   }
   if (items.length > MAX_ANALYSIS_BATCH) {
     throw new Error(`한 번에 분석할 완료조건은 ${MAX_ANALYSIS_BATCH}개 이하여야 합니다.`);
@@ -97,28 +95,19 @@ async function analyzeChunk(items: DodContractAnalysisItem[]): Promise<DodContra
 
   let parsed: { items: RawAnalysis[] } | null;
   try {
-    const completion = await openai.chat.completions.parse({
-      model: process.env.OPENAI_MODEL ?? "gpt-4o",
-      messages: [
-        { role: "system", content: buildSystemPrompt() },
-        {
-          role: "user",
-          content: JSON.stringify({
-            items: items.map((item, itemIndex) => ({
-              itemIndex,
-              milestoneTitle: item.milestoneTitle,
-              dod: item.dod,
-            })),
-          }),
-        },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "dod_verification_analysis", strict: true, schema: buildSchema() },
-      },
+    const result = await generateJson<{ items: RawAnalysis[] }>({
+      system: buildSystemPrompt(),
+      user: JSON.stringify({
+        items: items.map((item, itemIndex) => ({
+          itemIndex,
+          milestoneTitle: item.milestoneTitle,
+          dod: item.dod,
+        })),
+      }),
+      schema: buildSchema(),
       temperature: 0.1,
     });
-    parsed = completion.choices[0].message.parsed as { items: RawAnalysis[] } | null;
+    parsed = result.parsed;
   } catch (error) {
     // 인증·과금·네트워크 실패는 나눠도 똑같이 실패한다. 여기서 끝낸다.
     console.error("[dod-contract-analyzer] 분석 호출 실패", error);

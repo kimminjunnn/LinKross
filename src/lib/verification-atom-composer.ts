@@ -1,6 +1,6 @@
 import "server-only";
 
-import OpenAI from "openai";
+import { generateJson, hasGeminiKey } from "@/lib/llm/gemini";
 
 import {
   ATOM_NAMES,
@@ -25,8 +25,6 @@ import {
 } from "@/lib/verification-test-spec";
 
 export type { ComposeOutcome, ComposedSpec };
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // 한 번의 LLM 호출에 담는 완료조건 수. 너무 크면 응답이 출력 한도에 걸려
 // 파싱에 실패하고, 그러면 그 호출에 실린 완료조건이 한꺼번에 자동화를 잃는다.
@@ -56,7 +54,7 @@ export async function composeVerificationAtoms(
   requests: CompositionRequest[],
 ): Promise<ComposeOutcome[]> {
   if (requests.length === 0) return [];
-  if (!process.env.OPENAI_API_KEY) {
+  if (!hasGeminiKey()) {
     return requests.map(() => ({ spec: null, reason: "no_api_key" as const }));
   }
 
@@ -154,42 +152,32 @@ async function requestComposition(
   // 근거 검사를 통과해야 하므로 온도를 올려도 잘못된 판정이 늘지 않는다.
   const temperature = repairNotes ? 0.4 : 0;
   try {
-    const completion = await openai.chat.completions.parse({
-      model: process.env.OPENAI_MODEL || "gpt-4o",
-      messages: [
-        { role: "system", content: buildSystemPrompt() },
-        {
-          role: "user",
-          content:
-            (repairNotes
-              ? "아래 조합은 직전 시도에서 실행 가능한 형태가 아니어서 거부되었습니다. 같은 구조를 다시 내지 말고 지적된 부분을 실제로 고치세요.\n" +
-                "자주 나오는 거부와 고치는 방법:\n" +
-                "- '전제 미이행: 로그인한 상태' → steps 맨 앞에 로그인을 직접 넣으세요: goto(/login) → fill(targetKind=field, targetField=email, valueKind=ref, value=email) → fill(targetKind=field, targetField=password, valueKind=ref, value=password) → click(targetKind=field, targetField=submit) → goto(확인할 경로)\n" +
-                "- '전제 미이행: 데이터를 만드는 단계가 없음' → 확인 전에 그 데이터를 화면에서 직접 만드세요: 입력란에 fill 한 뒤 추가·저장 버튼을 click. 입력란과 버튼 이름은 완료조건이나 계약에 적힌 것만 쓰세요.\n" +
-                "- 'atom=fill field=submit' → 제출 버튼에는 값을 넣지 않습니다. click 으로 바꾸세요.\n" +
-                "- 'atom=fill field=(그 밖의 이름)' → 로그인 요소가 아닌 입력란입니다. targetKind=label 과 targetText 에 화면에 보이는 라벨을 쓰세요.\n" +
-                "- '대상 없음' 또는 '(빈 값)' → 고른 targetKind 에 대응하는 값을 채우거나, 문구 확인이면 expect_text 와 contains 를 쓰세요.\n" +
-                "- 누르거나 입력하는 단계에 role 만 있고 이름이 없음 → targetName 에 화면에 보이는 이름을 넣으세요. 이름을 모르면 automatable=none 입니다.\n" +
-                "고칠 수 없다면 automatable=none 을 고르세요. 없는 화면 요소를 지어내서는 안 됩니다.\n\n"
-              : "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n") +
-            "각 항목의 라벨(시작 URL, 사전 상태, 사용자 행동, 기대 결과 등)은 발주자가 질문에 답해 확정한 값입니다. 그 값을 그대로 사용하고 다시 추측하지 마세요.\n\n" +
-            bounded
-              .map((request, index) => {
-                const brief = contractToCompositionBrief(request.description, request.contract);
-                const note = repairNotes?.[index];
-                return note ? `[${index + 1}]\n${brief}\n거부된 이유: ${note}` : `[${index + 1}]\n${brief}`;
-              })
-              .join("\n\n"),
-        },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "verification_atom_composition", schema: buildSchema(), strict: true },
-      },
+    const { parsed } = await generateJson<{ items: FlatItem[] }>({
+      system: buildSystemPrompt(),
+      user:
+        (repairNotes
+          ? "아래 조합은 직전 시도에서 실행 가능한 형태가 아니어서 거부되었습니다. 같은 구조를 다시 내지 말고 지적된 부분을 실제로 고치세요.\n" +
+            "자주 나오는 거부와 고치는 방법:\n" +
+            "- '전제 미이행: 로그인한 상태' → steps 맨 앞에 로그인을 직접 넣으세요: goto(/login) → fill(targetKind=field, targetField=email, valueKind=ref, value=email) → fill(targetKind=field, targetField=password, valueKind=ref, value=password) → click(targetKind=field, targetField=submit) → goto(확인할 경로)\n" +
+            "- '전제 미이행: 데이터를 만드는 단계가 없음' → 확인 전에 그 데이터를 화면에서 직접 만드세요: 입력란에 fill 한 뒤 추가·저장 버튼을 click. 입력란과 버튼 이름은 완료조건이나 계약에 적힌 것만 쓰세요.\n" +
+            "- 'atom=fill field=submit' → 제출 버튼에는 값을 넣지 않습니다. click 으로 바꾸세요.\n" +
+            "- 'atom=fill field=(그 밖의 이름)' → 로그인 요소가 아닌 입력란입니다. targetKind=label 과 targetText 에 화면에 보이는 라벨을 쓰세요.\n" +
+            "- '대상 없음' 또는 '(빈 값)' → 고른 targetKind 에 대응하는 값을 채우거나, 문구 확인이면 expect_text 와 contains 를 쓰세요.\n" +
+            "- 누르거나 입력하는 단계에 role 만 있고 이름이 없음 → targetName 에 화면에 보이는 이름을 넣으세요. 이름을 모르면 automatable=none 입니다.\n" +
+            "고칠 수 없다면 automatable=none 을 고르세요. 없는 화면 요소를 지어내서는 안 됩니다.\n\n"
+          : "아래 완료 조건(DoD)마다 자동 검증 조합을 작성하세요.\n") +
+        "각 항목의 라벨(시작 URL, 사전 상태, 사용자 행동, 기대 결과 등)은 발주자가 질문에 답해 확정한 값입니다. 그 값을 그대로 사용하고 다시 추측하지 마세요.\n\n" +
+        bounded
+          .map((request, index) => {
+            const brief = contractToCompositionBrief(request.description, request.contract);
+            const note = repairNotes?.[index];
+            return note ? `[${index + 1}]\n${brief}\n거부된 이유: ${note}` : `[${index + 1}]\n${brief}`;
+          })
+          .join("\n\n"),
+      schema: buildSchema(),
       temperature,
     });
 
-    const parsed = completion.choices[0].message.parsed as { items: FlatItem[] } | null;
     if (!parsed || !Array.isArray(parsed.items) || parsed.items.length !== bounded.length) {
       // 응답이 출력 한도에 걸려 잘린 경우다. 나눠 담으면 통과할 수 있다.
       return null;

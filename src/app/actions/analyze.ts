@@ -1,6 +1,6 @@
 "use server";
 
-import OpenAI from "openai";
+import { GEMINI_KEY_MISSING_MESSAGE, generateJson, hasGeminiKey } from "@/lib/llm/gemini";
 
 import { assertActionRole } from "@/lib/auth/workspace-access";
 import type {
@@ -17,13 +17,15 @@ import {
 } from "@/lib/dod-test-contract";
 import { conversationFromRequirements, unansweredRequirements } from "@/lib/dod-verification-state";
 import { SOW_RESPONSE_SCHEMA, SOW_SYSTEM_MESSAGE, buildSowPrompt } from "@/lib/sow-prompt";
-import { matchSowPreset, toPresetMilestoneInputs } from "@/lib/sow-presets";
+import { matchPresetEnglishSow, matchSowPreset, toPresetMilestoneInputs } from "@/lib/sow-presets";
+import {
+  ENGLISH_SOW_RESPONSE_SCHEMA,
+  ENGLISH_SOW_SYSTEM_MESSAGE,
+  buildEnglishSowPrompt,
+  type EnglishSowDraft,
+} from "@/lib/sow-english-prompt";
 import type { EnglishSOWResult, MilestoneInput } from "@/lib/rag-translator";
 import { retrieveGlossaryTerms } from "@/lib/rag-translator";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export type AIAnalysisResult = {
   milestones: MilestoneInput[];
@@ -155,46 +157,29 @@ async function polishDodSentence(input: {
   testContract: DodTestContract;
   requirements: DodClarificationRequirement[];
 }): Promise<string | null> {
-  if (!process.env.OPENAI_API_KEY) return null;
-  const completion = await openai.chat.completions.parse({
-    model: process.env.OPENAI_MODEL ?? "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: [
+  if (!hasGeminiKey()) return null;
+  const { parsed } = await generateJson<{ revisedDod: string }>({
+    system: [
           "당신은 Playwright 자동 테스트용 Definition of Done 문장을 최종 확정하는 QA 설계자입니다.",
           "확정된 검수 계약과 질의응답만 사용해 최종 DoD 한 문장을 작성하세요.",
           "새 질문을 만들거나 원문에 없는 기능을 추가하지 마세요.",
           "계약의 시작 URL, 한 가지 사용자 행동, 입력·사전 상태, 화면에서 관찰 가능한 결과를 문장에 담으세요.",
           "여러 독립 조건을 합치지 말고 문장 끝은 확인·표시·이동·차단·완료 같은 명사형으로 끝내세요.",
-        ].join("\n"),
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          milestoneTitle: input.milestoneTitle,
-          originalDod: input.originalDod,
-          testContract: input.testContract,
-          answers: input.requirements.map(({ key, question, answer }) => ({ key, question, answer })),
-        }),
-      },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "finalized_dod",
-        strict: true,
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          properties: { revisedDod: { type: "string" } },
-          required: ["revisedDod"],
-        },
-      },
+    ].join("\n"),
+    user: JSON.stringify({
+      milestoneTitle: input.milestoneTitle,
+      originalDod: input.originalDod,
+      testContract: input.testContract,
+      answers: input.requirements.map(({ key, question, answer }) => ({ key, question, answer })),
+    }),
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      properties: { revisedDod: { type: "string" } },
+      required: ["revisedDod"],
     },
     temperature: 0.1,
   });
-  const parsed = completion.choices[0].message.parsed as { revisedDod: string } | null;
   return parsed?.revisedDod?.trim() || null;
 }
 
@@ -221,37 +206,25 @@ export async function analyzeWorkDetailWithLLM(
     };
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY가 설정되지 않았습니다. .env.local 파일에 키를 추가해주세요.");
+  if (!hasGeminiKey()) {
+    throw new Error(GEMINI_KEY_MISSING_MESSAGE);
   }
 
   const prompt = buildSowPrompt({ workDetail, startDate: currentStartDate, endDate: currentEndDate });
 
   try {
-    const completion = await openai.chat.completions.parse({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: SOW_SYSTEM_MESSAGE },
-        { role: "user", content: prompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "sow_analysis",
-          schema: SOW_RESPONSE_SCHEMA,
-          strict: true,
-        },
-      },
+    const { parsed } = await generateJson<AIAnalysisResult>({
+      system: SOW_SYSTEM_MESSAGE,
+      user: prompt,
+      schema: SOW_RESPONSE_SCHEMA,
       temperature: 0.2,
     });
-
-    const parsed = completion.choices[0].message.parsed;
 
     if (!parsed) {
       throw new Error("LLM Parsing failed");
     }
 
-    return parsed as AIAnalysisResult;
+    return parsed;
   } catch (error: unknown) {
     console.error("LLM Analysis Error:", error);
     throw new Error(
@@ -271,60 +244,16 @@ export async function generateEnglishSowWithLLM(input: {
   milestones: MilestoneInput[];
 }): Promise<EnglishSOWResult> {
   await assertActionRole("company");
-  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
   if (!input.workDetail.trim() || input.milestones.length === 0) throw new Error("SOW 원문과 마일스톤이 필요합니다.");
   if (input.workDetail.length > 20_000 || input.milestones.length > 10) throw new Error("SOW 입력은 20,000자와 마일스톤 10개 이하여야 합니다.");
 
+  // 용어집은 정규식 대조라 LLM이 필요 없다. 프리셋 경로에서도 그대로 계산한다.
   const retrievedTerms = retrieveGlossaryTerms(`${input.workDetail} ${input.milestones.flatMap((milestone) => [milestone.title, ...milestone.dods]).join(" ")}`);
-  const completion = await openai.chat.completions.parse({
-    model: process.env.OPENAI_MODEL ?? "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: "You draft plain-English software Statements of Work. Stay grounded in the supplied Korean source. Never invent escrow, automatic payment, legal conclusions, security guarantees, or automatic acceptance. Use TBD for missing terms. Acceptance criteria must be observable, and human approval remains explicit.",
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          source: input.workDetail,
-          period: { start: input.startDate, end: input.endDate },
-          milestones: input.milestones.map(({ title, dods }) => ({ title, completionConditions: dods })),
-          glossary: retrievedTerms,
-        }),
-      },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "grounded_sow_draft",
-        strict: true,
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            background: { type: "string" },
-            objective: { type: "string" },
-            inScope: { type: "array", items: { type: "string" } },
-            outOfScope: { type: "array", items: { type: "string" } },
-            translatedMilestones: { type: "array", items: { type: "object", additionalProperties: false, properties: { titleEn: { type: "string" }, dodsEn: { type: "array", items: { type: "string" } } }, required: ["titleEn", "dodsEn"] } },
-            acceptanceCriteria: { type: "array", items: { type: "string" } },
-            definitionOfDone: { type: "array", items: { type: "string" } },
-            clientResponsibilities: { type: "string" },
-            vendorResponsibilities: { type: "string" },
-            unmappedContent: { type: "array", items: { type: "string" } },
-          },
-          required: ["background", "objective", "inScope", "outOfScope", "translatedMilestones", "acceptanceCriteria", "definitionOfDone", "clientResponsibilities", "vendorResponsibilities", "unmappedContent"],
-        },
-      },
-    },
-    temperature: 0.1,
-  });
-  const draft = completion.choices[0].message.parsed as {
-    background: string; objective: string; inScope: string[]; outOfScope: string[];
-    translatedMilestones: Array<{ titleEn: string; dodsEn: string[] }>;
-    acceptanceCriteria: string[]; definitionOfDone: string[];
-    clientResponsibilities: string; vendorResponsibilities: string; unmappedContent: string[];
-  } | null;
+
+  // 시연용 프리셋에 확정해 둔 영문 초안이 있으면 LLM을 부르지 않는다.
+  // 마일스톤 구성과 완료조건 문장이 프리셋과 같을 때만 돌아온다.
+  const frozen = matchPresetEnglishSow(input.workDetail, input.milestones);
+  const draft: EnglishSowDraft | null = frozen ?? (await requestEnglishSowDraft(input, retrievedTerms));
   if (!draft || draft.translatedMilestones.length !== input.milestones.length) throw new Error("AI가 마일스톤 구조를 정확히 반환하지 못했습니다. 다시 시도해주세요.");
 
   return {
@@ -339,4 +268,25 @@ export async function generateEnglishSowWithLLM(input: {
     retrievedTerms,
     unmappedContent: draft.unmappedContent,
   };
+}
+
+/** 프리셋이 없을 때만 타는 경로. 프롬프트와 스키마는 프리셋 생성기와 공유한다. */
+async function requestEnglishSowDraft(
+  input: { workDetail: string; startDate: string; endDate: string; milestones: MilestoneInput[] },
+  glossary: Array<{ kr: string; en: string }>,
+): Promise<EnglishSowDraft | null> {
+  if (!hasGeminiKey()) throw new Error(GEMINI_KEY_MISSING_MESSAGE);
+  const { parsed } = await generateJson<EnglishSowDraft>({
+    system: ENGLISH_SOW_SYSTEM_MESSAGE,
+    user: buildEnglishSowPrompt({
+      workDetail: input.workDetail,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      milestones: input.milestones,
+      glossary,
+    }),
+    schema: ENGLISH_SOW_RESPONSE_SCHEMA,
+    temperature: 0.1,
+  });
+  return parsed;
 }

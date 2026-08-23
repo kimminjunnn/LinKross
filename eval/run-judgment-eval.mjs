@@ -28,6 +28,7 @@ import { createRequire } from "node:module";
 
 import { applyAnswersToContract, extractContractPath } from "@/lib/dod-test-contract";
 import { analyzeDodContracts } from "@/lib/dod-contract-analyzer";
+import { geminiModel } from "@/lib/llm/gemini";
 import { composeVerificationAtoms } from "@/lib/verification-atom-composer";
 import { compileManagedBrowserSpecToAtoms, createMvpVerificationDefinition } from "@/lib/verification-test-spec";
 import { MANAGED_PLAYWRIGHT_HARNESS } from "@/lib/verification-runner/playwright-harness";
@@ -45,7 +46,7 @@ const fixtures = JSON.parse(fs.readFileSync(path.join(ROOT, "eval/fixtures/todo-
 
 fs.mkdirSync(WORK, { recursive: true });
 
-console.log(`픽스처 완료조건 ${fixtures.length}개 · 반복 ${RUNS}회 · 모델 ${process.env.OPENAI_MODEL ?? "gpt-4o"}`);
+console.log(`픽스처 완료조건 ${fixtures.length}개 · 반복 ${RUNS}회 · 모델 ${geminiModel()}`);
 
 const runs = [];
 for (let run = 1; run <= RUNS; run += 1) {

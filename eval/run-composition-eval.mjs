@@ -28,6 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { analyzeDodContracts } from "@/lib/dod-contract-analyzer";
+import { geminiModel } from "@/lib/llm/gemini";
 import { applyAnswersToContract, extractContractPath } from "@/lib/dod-test-contract";
 import { resolveDesign, unansweredRequirements } from "@/lib/dod-verification-state";
 import { createMvpVerificationDefinition } from "@/lib/verification-test-spec";
@@ -41,7 +42,7 @@ const LABEL = args.label ?? "baseline";
 const ANALYSIS_CHUNK = 20;
 
 const items = loadItems();
-console.log(`완료조건 ${items.length}개 · 모델 ${process.env.OPENAI_MODEL ?? "gpt-4o"} · 반복 ${RUNS}회`);
+console.log(`완료조건 ${items.length}개 · 모델 ${geminiModel()} · 반복 ${RUNS}회`);
 
 const runs = [];
 for (let run = 1; run <= RUNS; run += 1) {

@@ -17,6 +17,7 @@
     "eval:fixture-selftest": "node eval/fixtures/todo-app/selftest.mjs"
   },
   "dependencies": {
+    "@google/genai": "^2.18.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "@vercel/sandbox": "^3.0.0",

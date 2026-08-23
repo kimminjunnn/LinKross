@@ -1,4 +1,6 @@
 import type { DodVerificationDesign, VerificationMethod } from "@/lib/backend/contracts";
+import type { EnglishSowDraft } from "@/lib/sow-english-prompt";
+import type { SowSummaryResult } from "@/lib/sow-summary-prompt";
 
 /**
  * 시연용 SOW 프리셋의 자료 구조.
@@ -36,9 +38,25 @@ export interface SowPreset {
   label: string;
   /** 이 프리셋을 고르는 기준이 되는 발주자 원문. */
   sourceText: string;
+  /**
+   * 확정해 둔 `sourceText`의 영문. SOW 승인 화면의 `Korean Work Details` 절이
+   * 이것을 꺼내 쓴다. 프리랜서가 문서를 열 때마다 8천 자 원문을 다시 번역하지
+   * 않기 위한 것이다. 없으면 평소의 번역 경로로 간다.
+   */
+  sourceTextEn?: string;
   /** 프리셋을 만든 근거. 어느 실행 결과에서 확정했는지 남긴다. */
   provenance: string;
   milestones: SowPresetMilestone[];
+  /**
+   * 확정해 둔 영문 SOW 초안. "AI 영문 명세 생성" 버튼이 이것을 꺼내 쓴다.
+   *
+   * 기간·금액·프로젝트명·용어집은 여기 없다. 실행 시점 값이거나 결정적으로
+   * 계산되는 값이라 얼려 두면 오히려 틀린 값을 보여주게 된다.
+   * 없으면 평소의 LLM 경로로 간다.
+   */
+  englishSow?: EnglishSowDraft;
+  /** 승인 화면 요약. 없으면 평소의 LLM 경로로 간다. */
+  sowSummary?: SowSummaryResult;
 }
 
 export interface SowPresetMatch {

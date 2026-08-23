@@ -3604,5 +3604,116 @@
         }
       ]
     }
-  ]
+  ],
+  "englishSow": {
+    "background": "A company with about 20 employees manages shared equipment (laptops, monitors, cameras, projectors) via an Excel sheet maintained by a single general affairs staff member. Inquiries made over Slack require manual spreadsheet checks, leading to double-booking and disputes. The client needs a simple web system so employees can self-check availability and submit requests, while the general affairs team can easily approve or reject incoming requests.",
+    "objective": "Build a multi-stage web application that enables employees to view available equipment and submit requests, while allowing general affairs staff to approve or reject requests and manage availability statuses.",
+    "inScope": [
+      "Stage 1: Login (/login) with email and password, validation error display, unauthenticated route protection, and equipment list screen (/items) with status filtering ('All', 'Available', 'In Use').",
+      "Stage 2: Equipment request modal on /items (restricted to available items, required item selection, mandatory request reason under 100 characters), submission confirmation notice, status updates to 'In Use', user request history screen (/requests) with cancellation capability for pending requests, and empty state messaging.",
+      "Stage 3: General affairs approval screen (/admin) listing all requests, approval and rejection actions, automatic status updating (rejections reset equipment to 'Available', approvals maintain 'In Use'), removal of cancel options on processed requests, and role-based access control hiding/blocking /admin for standard employees."
+    ],
+    "outOfScope": [
+      "User registration / sign-up flow",
+      "Password reset functionality",
+      "Equipment registration, editing, or deletion screens (CRUD)",
+      "Return processing workflows",
+      "Rental period limits or overdue management",
+      "Notifications (email, push, Slack, etc.)",
+      "Photo attachment features"
+    ],
+    "translatedMilestones": [
+      {
+        "titleEn": "Stage 1: Login and Equipment List Screen",
+        "dodsEn": [
+          "Verify redirection to /items after logging in with email and password at /login.",
+          "Verify error message display upon entering an incorrect password at /login.",
+          "Verify error message display when attempting login without entering an email at /login.",
+          "Verify redirection to /login when accessing /items while unauthenticated.",
+          "Verify presence of '비품명' text on /items.",
+          "Verify presence of '분류' text on /items.",
+          "Verify presence of '상태' text on /items.",
+          "Verify display of '대여 가능' text when clicking '전체' button on /items.",
+          "Verify display of '대여중' text when clicking '전체' button on /items.",
+          "Verify absence of '대여중' text in equipment table when clicking '대여 가능' button on /items.",
+          "Verify absence of '대여 가능' text in equipment table when clicking '대여중' button on /items."
+        ]
+      },
+      {
+        "titleEn": "Stage 2: Equipment Request and My Request History Screen",
+        "dodsEn": [
+          "Verify equipment request modal displays upon clicking '비품 신청' button on /items.",
+          "Verify equipment selection list in request modal displays '대여 가능' items on /items.",
+          "Verify equipment selection list in request modal excludes '대여중' items on /items.",
+          "Verify '신청하기' button is disabled when reason is entered without selecting an item on /items.",
+          "Verify '신청하기' button is disabled when request reason is empty on /items.",
+          "Verify error message display when submitting a reason exceeding 100 characters on /items.",
+          "Verify notice message '신청이 접수되었습니다' appears upon successful request submission on /items.",
+          "Verify item status changes to '대여중' upon successful request submission on /items.",
+          "Verify /requests displays only the logged-in user's requests.",
+          "Verify presence of '비품명' text on /requests.",
+          "Verify presence of '신청 사유' text on /requests.",
+          "Verify presence of '상태' text on /requests.",
+          "Verify display of '취소' button for '승인 대기' status requests on /requests.",
+          "Verify item status updates to '대여 가능' on /items after clicking '취소' button on /requests.",
+          "Verify display of '아직 신청한 비품이 없습니다' notice on /requests when no request history exists.",
+          "Verify redirection to /login when accessing /requests while unauthenticated."
+        ]
+      },
+      {
+        "titleEn": "Stage 3: General Affairs Approval Screen",
+        "dodsEn": [
+          "Verify presence of '신청자' text on /admin.",
+          "Verify presence of '비품명' text on /admin.",
+          "Verify presence of '신청 사유' text on /admin.",
+          "Verify presence of '상태' text on /admin.",
+          "Verify display of '아직 들어온 신청이 없습니다' notice on /admin when no requests exist.",
+          "Verify display of '승인' button for '승인 대기' status requests on /admin.",
+          "Verify display of '반려' button for '승인 대기' status requests on /admin.",
+          "Verify request status updates to '승인 완료' upon clicking '승인' button on /admin.",
+          "Verify request status updates to '반려됨' upon clicking '반려' button on /admin.",
+          "Verify absence of '승인' button for '승인 완료' status requests on /admin.",
+          "Verify absence of '반려' button for '승인 완료' status requests on /admin.",
+          "Verify absence of '승인' button for '반려됨' status requests on /admin.",
+          "Verify absence of '반려' button for '반려됨' status requests on /admin.",
+          "Verify rejected equipment status changes to '대여 가능' on /items.",
+          "Verify approved equipment status remains '대여중' on /items.",
+          "Verify absence of '취소' button for '승인 완료' status requests on /requests.",
+          "Verify absence of '취소' button for '반려됨' status requests on /requests.",
+          "Verify '승인 관리' menu is hidden from top navigation when logged in as a standard employee on /items.",
+          "Verify redirection to /items when a standard employee directly accesses /admin.",
+          "Verify access blocked notice displays when a standard employee directly accesses /admin."
+        ]
+      }
+    ],
+    "acceptanceCriteria": [
+      "Each of the 3 stages is delivered via an individual Pull Request, verified sequentially by the client prior to starting the next stage.",
+      "Unauthenticated users attempting to access /items, /requests, or /admin are redirected to /login.",
+      "Standard employee accounts cannot view '승인 관리' in navigation and are blocked with a notification message and redirected to /items if attempting direct URL access to /admin.",
+      "Equipment status dynamically reflects request states: pending/approved requests mark items '대여중', while cancellations and rejections return items to '대여가능'.",
+      "Request submissions require both an item selection and a request reason under 100 characters."
+    ],
+    "definitionOfDone": [
+      "All routes (/login, /items, /requests, /admin) are implemented per specification.",
+      "All milestone completion conditions are tested and confirmed functional.",
+      "Code for each stage is submitted via individual Pull Requests and explicitly approved by human review."
+    ],
+    "clientResponsibilities": "Pre-populate user account credentials (email and password) and initial equipment database records since registration and item management screens are out of scope. Review and approve each Pull Request stage sequentially.",
+    "vendorResponsibilities": "Develop the web application according to specified routes (/login, /items, /requests, /admin) and stage requirements. Deliver work in three separate Pull Requests and resolve any reported UI/functional bugs within scope.",
+    "unmappedContent": [
+      "Period: 2026-08-22 to 2026-09-12"
+    ]
+  },
+  "sowSummary": {
+    "coreScope": "20인 규모 회사의 비품 중복 대여 문제를 해결하기 위해 로그인, 비품 목록 조회, 비품 신청 및 내 내역 조회, 총무팀 승인·반려 관리 기능을 3단계 PR 방식으로 구축하는 프로젝트입니다.",
+    "keyAcceptance": "비인가 사용자의 인가되지 않은 경로 접근 차단, 신청 사유 100자 제한 및 입력 검증, 그리고 승인·반려·취소 상태에 따른 비품 대여 상태의 실시간 연동 검증을 완료해야 합니다.",
+    "needsReview": "총무팀 승인 화면(/admin)에 대한 일반 직원 접근 권한 제한 동작과 각 순차적 단계별 PR 단위 검수 방식을 주의 깊게 확인해야 합니다.",
+    "english": {
+      "coreScope": "This project builds a equipment reservation system across 3 sequential PR stages to resolve double-booking issues for a 20-person company, covering authentication, item listings, request submissions, and administrative approval/rejection workflows.",
+      "keyAcceptance": "Verification must cover blocking unauthorized route access, applying request reason validations under 100 characters, and ensuring real-time status sync of equipment availability based on approval, rejection, or cancellation actions.",
+      "needsReview": "Special attention should be given to validating strict access controls blocking standard employees from the general affairs approval page (/admin) and confirming the sequential PR review process for each delivery stage."
+    }
+  },
+  "englishSowProvenance": "gemini-3.5-flash로 2026-08-23에 생성. 사람이 읽고 확정한 값이다.",
+  "sourceTextEn": "We are a company of about 20 employees. Currently, a single member of our general affairs team manages shared equipment—such as laptops, monitors, cameras, and meeting room projectors—using an Excel spreadsheet.\n\nRight now, the process involves someone asking on Slack, \"Can I use the camera this week?\" and the manager opening the Excel file to check and reply. If the manager is out of the office, no one knows the status. Furthermore, if they forget to log a rental in Excel after lending something out, we end up with double-bookings two or three times a month. Every time this happens, it leads to awkward conflicts over who requested it first.\n\nWe do not need a massive asset management system. A few simple screens will suffice: employees should be able to check \"Is this available right now, and who has it?\" and submit a request, while the general affairs team simply approves or rejects incoming requests.\n\nWe envision the overall flow as follows: An employee logs in, views the equipment list, selects an item, writes a reason, and submits a request. The general affairs team then approves or rejects it from an approval screen. Approved equipment remains marked as \"Rented\" on the list, while rejected equipment becomes \"Available\" again.\n\nSince we do not have any developers on our team, we won't be able to verify what works and what doesn't if everything is built and delivered all at once. Therefore, we would like to divide the project into the following three phases, with one Pull Request submitted per phase so we can verify each step before moving on to the next.\n\n\n### [Phase 1] Login and Equipment List Screen\n\nWe do not need a sign-up feature. We will pre-create employee accounts, so users only need to log in with their email and password. Upon a successful login, they should be redirected immediately to the equipment list screen.\n\nIf a user enters an incorrect password and nothing happens on the screen, they will contact us for support. Therefore, an error message explaining why the login failed must be displayed on the screen. Similarly, if they click log in with the email field left blank, prevent the submission and display an error message.\n\nCrucially, users who are not logged in must not be able to access the equipment list screen directly by typing in the URL. Since this contains internal company equipment status, it must not be exposed externally. In such cases, redirect them back to the login screen.\n\nOn the list screen, display the equipment in a table. Three columns are sufficient: 'Equipment Name', 'Category', and 'Status'. The status should only have two values: 'Available' and 'Rented'.\n\nAt the top of the list, please provide 'All', 'Available', and 'Rented' buttons to filter the view. Clicking 'Available' should show only items that can be borrowed, 'Rented' should show only items currently checked out, and 'All' should show everything. Since \"viewing only what is currently available\" is the feature employees will use most, this is a must-have.\n\n\n### [Phase 2] Equipment Request and My Requests Screen\n\nWe would like to have a 'Request Equipment' button on the list screen that opens a request modal or window when clicked. In this window, users should select the 'Equipment' and enter a 'Reason for Request'. It makes no sense to allow users to select equipment that is already checked out, so the selection dropdown must only display items that are 'Available' and completely hide those that are 'Rented'.\n\nPrevent users from clicking the 'Submit Request' button if no equipment is selected. Similarly, they must not be able to submit if the 'Reason for Request' is left blank. If a request is submitted without a reason, the general affairs team has no basis for approval. Conversely, we want to avoid excessively long reasons, so if a user tries to submit a request exceeding 100 characters, block the submission and display an error message.\n\nTo prevent users from submitting duplicate requests because they are unsure if their submission went through, display a confirmation message such as \"Your request has been submitted.\" There is no need to redirect the user; displaying this message on the equipment list screen is sufficient. Additionally, the requested equipment's status must immediately change to 'Rented' on the list so other employees cannot submit duplicate requests for the same item.\n\nWe also need a screen where employees can check their own requests. The columns should be 'Equipment Name', 'Reason for Request', and 'Status', with the status categorized into 'Pending Approval', 'Approved', and 'Rejected'. This screen must only display requests made by the logged-in user; they should not be able to see other employees' requests.\n\nSince people sometimes change their minds, we want a 'Cancel' button for requests that are still 'Pending Approval' (not yet processed by the general affairs team) so users can retract them. Once canceled, the equipment's status must revert to 'Available' on the equipment list.\n\nIf an employee who hasn't requested anything yet visits this screen, a blank table might make them think the system is broken. Please display a message like \"You have not requested any equipment yet.\"\n\nThis screen must also be inaccessible via direct URL entry if the user is not logged in; redirect unauthorized users to the login screen.\n\n\n### [Phase 3] General Affairs Approval Screen\n\nThis screen is for the general affairs manager. It should display all requests submitted by employees, showing 'Requester', 'Equipment Name', 'Reason for Request', and 'Status' all in a single row. If no requests have been submitted yet, display a message like \"No requests received yet.\"\n\nFor requests that are 'Pending Approval', display 'Approve' and 'Reject' buttons. Once a request has been processed, both buttons must disappear to prevent the manager from accidentally clicking them again. Clicking 'Approve' changes the status to 'Approved', and clicking 'Reject' changes it to 'Rejected'.\n\nRejected equipment must be released back to 'Available' on the equipment list so other employees can request it, while approved equipment must remain 'Rented'.\n\nOnce the general affairs team has processed a request, the employee must not be able to retract it. The 'Cancel' button must disappear for requests marked 'Approved' or 'Rejected' on the employee's \"My Requests\" screen. If a request disappears after being approved, it becomes impossible to manage.\n\nThis screen is strictly for the general affairs team. For regular employee accounts, the 'Approval Management' menu must not be visible in the top navigation bar. Furthermore, if they attempt to access the page by typing the URL directly, block the access, redirect them to the equipment list screen, and display an explanation of why they were blocked. We want to ensure this is secure, as some requests may contain sensitive HR-related reasons.\n\n\n### [Out of Scope for This Version]\n\nSign-up and password reset features are not required; we will populate the accounts directly. Screens for registering, editing, or deleting equipment are also out of scope for now, as our inventory does not change frequently and we can manage the data directly for the time being. Return processing, rental periods, overdue management, notifications, and photo attachments are also excluded from this scope.\n\n\n### [Page URLs]\n\nTo avoid any confusion during development, we have pre-defined the page URLs. Please build them accordingly:\n\n- `/login` : Login Screen\n- `/items` : Equipment List Screen\n- `/requests` : My Requests Screen\n- `/admin` : General Affairs Approval Screen"
 }

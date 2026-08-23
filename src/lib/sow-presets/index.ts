@@ -14,9 +14,11 @@ import {
   trigramSimilarity,
 } from "@/lib/sow-presets/match";
 import type { SowPreset, SowPresetDod, SowPresetMatch } from "@/lib/sow-presets/types";
+import type { EnglishSowDraft as SowPresetEnglishSow } from "@/lib/sow-english-prompt";
+import type { SowSummaryResult as SowPresetSummary } from "@/lib/sow-summary-prompt";
 
 export { SOW_PRESET_MATCH_THRESHOLD, normalizeDodDescription, normalizeForPresetMatch, trigramSimilarity };
-export type { SowPreset, SowPresetDod, SowPresetMatch };
+export type { SowPreset, SowPresetDod, SowPresetMatch, SowPresetEnglishSow, SowPresetSummary };
 
 /**
  * 시연용 SOW 프리셋 목록.
@@ -208,4 +210,45 @@ export function toPresetMilestoneInputs(
     dods: milestone.dods.map((dod) => dod.description),
     verificationDesigns: milestone.dods.map((dod) => dod.design),
   }));
+}
+
+/**
+ * 프리셋이 보증하는 영문 SOW 초안을 꺼낸다.
+ *
+ * 원문이 프리셋과 맞아도 발주자가 완료조건 문장을 고쳤다면 얼려 둔 영문 초안은
+ * 더 이상 그 문서를 설명하지 못한다. 그래서 마일스톤 구성과 완료조건 문장이
+ * 프리셋과 완전히 같을 때만 돌려준다. 하나라도 다르면 null이고,
+ * 호출부는 평소의 LLM 경로로 간다. `findPresetDod`와 같은 판단 기준이다.
+ */
+export function matchPresetEnglishSow(
+  workDetail: string,
+  milestones: Array<{ dods: string[] }>,
+): SowPresetEnglishSow | null {
+  const matched = matchSowPreset(workDetail);
+  const englishSow = matched?.preset.englishSow;
+  if (!matched || !englishSow) return null;
+
+  const presetMilestones = matched.preset.milestones;
+  if (milestones.length !== presetMilestones.length) return null;
+  if (englishSow.translatedMilestones.length !== presetMilestones.length) return null;
+
+  const sameDods = milestones.every((milestone, index) => {
+    const presetDods = presetMilestones[index].dods;
+    if (milestone.dods.length !== presetDods.length) return false;
+    return milestone.dods.every(
+      (dod, dodIndex) => normalizeDodDescription(dod) === normalizeDodDescription(presetDods[dodIndex].description),
+    );
+  });
+  return sameDods ? englishSow : null;
+}
+
+/**
+ * 프리셋이 보증하는 승인 화면 요약을 꺼낸다.
+ *
+ * 요약은 완료조건 목록이 아니라 프로젝트 전체를 한 문장으로 줄인 것이라, 문장
+ * 하나가 바뀌어도 요약이 통째로 틀리지는 않는다. 그래서 영문 초안과 달리 원문
+ * 유사도만 본다. 프리셋을 고른 것과 같은 기준이다.
+ */
+export function matchPresetSowSummary(workDetailKo: string): SowPresetSummary | null {
+  return matchSowPreset(workDetailKo)?.preset.sowSummary ?? null;
 }

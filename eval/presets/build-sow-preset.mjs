@@ -100,6 +100,47 @@ for (const milestone of milestones) {
 }
 console.log(`\n합계 자동 ${autoTotal} · 사람 확인 ${manualTotal}`);
 
+// 영문 SOW 초안과 승인 요약은 `build-preset-english.mjs`가 한 번 만들어 원천 파일에
+// 적어 둔 값이다. 여기서는 다시 만들지 않고, 마일스톤 구성과 어긋나지 않는지만 본다.
+// 어긋난 채로 실어 보내면 화면이 프리셋을 꺼내 쓰고도 틀린 문서를 보여준다.
+const englishSow = definition.englishSow ?? null;
+if (englishSow) {
+  if (englishSow.translatedMilestones?.length !== milestones.length) {
+    problems.push(
+      `englishSow.translatedMilestones 개수가 마일스톤과 다릅니다: `
+      + `${englishSow.translatedMilestones?.length ?? 0} vs ${milestones.length}`,
+    );
+  } else {
+    englishSow.translatedMilestones.forEach((translated, index) => {
+      if (translated.dodsEn?.length !== milestones[index].dods.length) {
+        problems.push(
+          `${milestones[index].code} englishSow의 DoD 개수가 다릅니다: `
+          + `${translated.dodsEn?.length ?? 0} vs ${milestones[index].dods.length}`,
+        );
+      }
+    });
+  }
+}
+
+const sourceTextEn = typeof definition.sourceTextEn === "string" ? definition.sourceTextEn.trim() : "";
+if (definition.sourceTextEn !== undefined && !sourceTextEn) {
+  problems.push("sourceTextEn이 비어 있습니다. 지우거나 채우세요.");
+}
+
+const sowSummary = definition.sowSummary ?? null;
+if (sowSummary) {
+  for (const key of ["coreScope", "keyAcceptance", "needsReview"]) {
+    if (!sowSummary[key]?.trim()) problems.push(`sowSummary.${key}가 비어 있습니다.`);
+    if (!sowSummary.english?.[key]?.trim()) problems.push(`sowSummary.english.${key}가 비어 있습니다.`);
+  }
+}
+
+console.log(
+  `영문 초안 ${englishSow ? "있음" : "없음"} · 승인 요약 ${sowSummary ? "있음" : "없음"}`
+  + ` · 원문 영문 ${sourceTextEn ? "있음" : "없음"}`
+  + `${englishSow || sowSummary ? "" : " (해당 화면은 LLM 경로로 갑니다)"}`,
+);
+
 if (problems.length > 0) {
   console.error(`\n${problems.length}건을 고쳐야 합니다:`);
   for (const problem of problems) console.error(`  - ${problem}`);
@@ -111,15 +152,20 @@ const literal = (text) => "`" + text.replace(/\\/g, "\\\\").replace(/`/g, "\\`")
 const payload = {
   id: definition.id,
   label: definition.label,
-  provenance: `${definitionPath}에서 생성. 대상 저장소 ${definition.repository}. 자동 ${autoTotal}개는 eval/presets/verify-preset-locally.mjs로 실제 브라우저 통과를 확인했다.`,
+  provenance: `${definitionPath}에서 생성. 대상 저장소 ${definition.repository}. 자동 ${autoTotal}개는 eval/presets/verify-preset-locally.mjs로 실제 브라우저 통과를 확인했다.`
+    + (definition.englishSowProvenance ? ` 영문 초안·요약은 ${definition.englishSowProvenance}` : ""),
   sourceText: "__SOURCE_TEXT__",
+  ...(sourceTextEn ? { sourceTextEn: "__SOURCE_TEXT_EN__" } : {}),
   milestones,
+  ...(englishSow ? { englishSow } : {}),
+  ...(sowSummary ? { sowSummary } : {}),
 };
 
 const body = JSON.stringify(payload, null, 2)
   .replace(/^/gm, "  ")
   .trimStart()
-  .replace('"__SOURCE_TEXT__"', "SOURCE_TEXT");
+  .replace('"__SOURCE_TEXT__"', "SOURCE_TEXT")
+  .replace('"__SOURCE_TEXT_EN__"', "SOURCE_TEXT_EN");
 
 fs.writeFileSync(
   outputPath,
@@ -132,6 +178,7 @@ fs.writeFileSync(
 import type { SowPreset } from "@/lib/sow-presets/types";
 
 const SOURCE_TEXT = ${literal(sourceText)};
+${sourceTextEn ? `const SOURCE_TEXT_EN = ${literal(sourceTextEn)};\n` : ""}
 
 export const ${constantName}: SowPreset = ${body};
 `,
