@@ -35,6 +35,7 @@ export function CompanyProjectList({ projects, emptyMessage }: { projects: Compa
 
         const isCompleted = project.lifecycleStage === "completed";
         const isPreparing = project.lifecycleStage === "preparing";
+        const isInProgress = project.lifecycleStage === "in_progress";
 
         return (
           <article
@@ -68,6 +69,13 @@ export function CompanyProjectList({ projects, emptyMessage }: { projects: Compa
                 </h2>
 
                 <div className="flex flex-wrap items-center gap-4 text-xs text-app-muted">
+                  {isInProgress && project.milestoneCount > 0 ? (
+                    <MilestoneProgressDiamonds
+                      approved={project.approvedMilestoneCount}
+                      paid={project.paidMilestoneCount}
+                      total={project.milestoneCount}
+                    />
+                  ) : null}
                   <span className="inline-flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded-md text-slate-600">
                     <Wallet className="size-3.5 text-slate-400" />
                     계약금: {amount}
@@ -103,5 +111,39 @@ export function CompanyProjectList({ projects, emptyMessage }: { projects: Compa
         );
       })}
     </div>
+  );
+}
+
+function MilestoneProgressDiamonds({
+  approved,
+  paid,
+  total,
+}: {
+  approved: number;
+  paid: number;
+  total: number;
+}) {
+  // 왼쪽부터 지급 완료 → 검수 승인(지급 전) → 대기 순으로 색이 옅어진다.
+  const toneAt = (index: number) => {
+    if (index < paid) return "border-brand-600 bg-brand-500";
+    if (index < approved) return "border-brand-400 bg-brand-200";
+    return "border-slate-300 bg-white";
+  };
+
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-1"
+      aria-label={`마일스톤 ${total}개 중 검수 승인 ${approved}개, 그중 지급 완료 ${paid}개`}
+    >
+      <span aria-hidden className="flex flex-wrap items-center gap-1.5">
+        {Array.from({ length: total }, (_, index) => (
+          <span key={index} className={`size-2.5 rotate-45 rounded-xs border ${toneAt(index)}`} />
+        ))}
+      </span>
+      <span className="font-semibold text-slate-600">
+        마일스톤 {approved}/{total}
+      </span>
+      {paid > 0 ? <span className="text-slate-400">지급 {paid}</span> : null}
+    </span>
   );
 }

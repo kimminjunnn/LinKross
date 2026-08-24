@@ -373,10 +373,50 @@ async function listOwnedCompanyProjects(
     proposalCountByProject.set(row.project_id, (proposalCountByProject.get(row.project_id) ?? 0) + 1);
   }
 
+  const [approvedSowsResult, milestonesResult, paymentsResult] = await Promise.all([
+    supabase.from("sow_versions").select("id").in("project_id", projectIds).eq("status", "approved"),
+    supabase.from("milestones").select("id, project_id, sow_version_id, status").in("project_id", projectIds),
+    supabase
+      .from("payments")
+      .select("milestone_record_id")
+      .in("project_id", projectIds)
+      .eq("status", "completed"),
+  ]);
+
+  const milestoneAggregateError = approvedSowsResult.error ?? milestonesResult.error ?? paymentsResult.error;
+  if (milestoneAggregateError) {
+    return { ok: false, error: mapBackendError(milestoneAggregateError, "마일스톤 진행 정보를 불러오지 못했습니다.") };
+  }
+
+  const approvedSowIds = new Set(((approvedSowsResult.data ?? []) as { id: string }[]).map((sow) => sow.id));
+  const paidMilestoneIds = new Set(
+    ((paymentsResult.data ?? []) as { milestone_record_id: string | null }[])
+      .map((payment) => payment.milestone_record_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const milestoneCountByProject = new Map<string, { total: number; approved: number; paid: number }>();
+  for (const row of (milestonesResult.data ?? []) as {
+    id: string;
+    project_id: string;
+    sow_version_id: string;
+    status: string;
+  }[]) {
+    if (!approvedSowIds.has(row.sow_version_id)) continue;
+    const counts = milestoneCountByProject.get(row.project_id) ?? { total: 0, approved: 0, paid: 0 };
+    counts.total += 1;
+    if (row.status === "approved") {
+      counts.approved += 1;
+      // 지급은 승인 이후 단계라 승인된 마일스톤만 지급 완료로 센다.
+      if (paidMilestoneIds.has(row.id)) counts.paid += 1;
+    }
+    milestoneCountByProject.set(row.project_id, counts);
+  }
+
   const summaries: CompanyProjectSummary[] = visibleProjectRows.map((project) => {
     const version = project.current_requirement_version_id
       ? versionById.get(project.current_requirement_version_id)
       : undefined;
+    const milestoneCounts = milestoneCountByProject.get(project.id) ?? { total: 0, approved: 0, paid: 0 };
 
     return {
       id: project.id,
@@ -388,6 +428,9 @@ async function listOwnedCompanyProjects(
       currency: version?.currency ?? "USD",
       recruitmentEndAt: version?.recruitment_end_at ?? null,
       proposalCount: proposalCountByProject.get(project.id) ?? 0,
+      milestoneCount: milestoneCounts.total,
+      approvedMilestoneCount: milestoneCounts.approved,
+      paidMilestoneCount: milestoneCounts.paid,
       createdAt: project.created_at,
     };
   });

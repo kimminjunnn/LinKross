@@ -75,6 +75,9 @@ export interface CompanyProjectSummary {
   currency: string;
   recruitmentEndAt: string | null;
   proposalCount: number;
+  milestoneCount: number;
+  approvedMilestoneCount: number;
+  paidMilestoneCount: number;
   createdAt: string;
 }
 
