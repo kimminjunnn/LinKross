@@ -59,7 +59,7 @@ function sanitizeDod(presetId: string, dod: SowPresetDod): SowPresetDod {
       ...dod.design,
       status: "human_review_required",
       humanReviewAccepted: true,
-      message: "프리셋의 자동 테스트 스펙을 해석하지 못해 사람이 직접 확인하는 항목으로 두었습니다.",
+      message: "자동 테스트 스펙을 확인하지 못해 사람이 직접 확인하는 항목으로 두었습니다.",
     },
   };
 }

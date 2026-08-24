@@ -197,20 +197,22 @@ function SowDraftWorkspace({
     // 프리셋으로 받은 완료조건은 검수 계약과 실행 스펙이 이미 확정돼 있다.
     // 다시 분석하면 확정된 스펙을 LLM 응답으로 덮어쓸 뿐이고, 완료조건 수만큼
     // 호출이 늘어 화면이 몇 분을 기다린다.
-    presetLabel?: string,
+    hasSettledDesigns = false,
   ) => {
     const initialSignature = milestoneContentSignature(initialMilestones);
     const totalDodCount = initialMilestones.reduce((count, milestone) => count + milestone.dods.length, 0);
     setIsDesigningVerification(true);
+    // 확정된 설계로 들어왔는지는 화면 문구로 드러내지 않는다. 발주자가 보는 것은
+    // 어느 경로로 왔는지가 아니라 완료조건 몇 개가 어디까지 진행됐는지다.
     setStatusMessage(
-      presetLabel
-        ? `📋 '${presetLabel}' 프리셋의 완료조건 ${totalDodCount}개를 불러왔습니다 · 검수 계약을 저장하는 중...`
+      hasSettledDesigns
+        ? `🧪 DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`
         : `🔎 DoD 자동화 가능성을 분석하고 있습니다 · 0/${totalDodCount}`,
     );
 
     try {
       let analyzedMilestones = initialMilestones;
-      if (!presetLabel) {
+      if (!hasSettledDesigns) {
         const dodAnalysis = await analyzeDodsForVerificationWithLLM(initialMilestones);
         if (milestoneContentSignature(milestonesRef.current) !== initialSignature) {
           setStatusMessage("DoD가 수정되어 자동화 분석 결과를 적용하지 않았습니다. AI 분석을 다시 실행해 주세요.");
@@ -303,10 +305,7 @@ function SowDraftWorkspace({
       setMilestones(cleanedMilestones);
       // 첫 AI 응답만 기다린 뒤 바로 편집 화면을 연다. 이후 자동화 설계는 화면을
       // 막지 않고 진행하며, DoD를 수정하면 오래된 분석 결과를 적용하지 않는다.
-      void runVerificationDesignAnalysis(
-        cleanedMilestones,
-        analysis.presetId ? (analysis.presetLabel ?? analysis.presetId) : undefined,
-      );
+      void runVerificationDesignAnalysis(cleanedMilestones, Boolean(analysis.presetId));
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : "알 수 없는 오류";

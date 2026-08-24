@@ -34,7 +34,6 @@ export type AIAnalysisResult = {
   extractedBudget?: string | null;
   /** 프리셋으로 응답했을 때만 채워진다. 화면은 이 값을 보고 추가 분석을 건너뛴다. */
   presetId?: string;
-  presetLabel?: string;
 };
 
 export type DodVerificationAnalysisResult = {
@@ -197,7 +196,6 @@ export async function analyzeWorkDetailWithLLM(
   if (preset) {
     return {
       presetId: preset.preset.id,
-      presetLabel: preset.preset.label,
       milestones: toPresetMilestoneInputs(preset.preset, {
         startDate: currentStartDate,
         endDate: currentEndDate,
