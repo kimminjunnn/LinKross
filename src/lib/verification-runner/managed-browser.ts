@@ -12,6 +12,21 @@ import {
 
 const PLAYWRIGHT_ROOT = "/vercel/sandbox/linkross-runner";
 const PLAYWRIGHT_MODULE = `${PLAYWRIGHT_ROOT}/node_modules/playwright/index.mjs`;
+/**
+ * 하니스 한 번에 주는 시간.
+ *
+ * 완료조건 20개짜리 마일스톤이 139초에서 잘렸다(run 06ade301, 2026-08-24).
+ * 하니스는 완료조건을 한 프로세스에서 순차 실행하므로 잘리면 남은 항목은
+ * 판정을 받지 못한다. 이제는 항목마다 결과 파일을 다시 쓰기 때문에 잘려도
+ * 거기까지의 판정은 살아남지만, 그건 사고를 덜 아프게 할 뿐 예산 자체는
+ * 넉넉해야 한다.
+ *
+ * 천장은 Sandbox가 아니라 검수를 동기로 기다리는 페이지의 maxDuration(300초)다.
+ * 그 실행의 하니스 외 오버헤드가 41초였으므로 200초 남짓이 한계고, 여유를 두고
+ * 180초로 잡는다. 더 필요하면 시간을 늘릴 게 아니라 조정기를 비동기로 옮겨야 한다.
+ */
+const HARNESS_TIMEOUT_MS = 3 * 60 * 1_000;
+
 const PLAYWRIGHT_BROWSERS_PATH = `${PLAYWRIGHT_ROOT}/browsers`;
 const VERIFIER_HOME = "/home/linkross-verifier";
 const HARNESS_PATH = `${VERIFIER_HOME}/linkross-playwright-runner.mjs`;
@@ -171,28 +186,70 @@ export async function runManagedBrowserCriteria(input: {
     cmd: "node",
     args: [HARNESS_PATH, INPUT_PATH, OUTPUT_PATH, EVIDENCE_DIRECTORY],
     env: { PLAYWRIGHT_BROWSERS_PATH },
-    timeoutMs: 2 * 60 * 1_000,
+    timeoutMs: HARNESS_TIMEOUT_MS,
   });
+  const runnableIds = runnable.map((criterion) => criterion.id);
   if (run.exitCode !== 0) {
+    // 무엇이 죽였는지 남긴다. 제한 시간 초과와 하니스 크래시는 화면에서 같은
+    // 문장으로 보이지만 고치는 방법이 다르다. health check 분기와 같은 방식으로
+    // 합성 계정 값과 토큰을 지운 뒤 담는다.
+    const harnessOutput = await run.output().catch(() => "Harness output unavailable.");
+    const diagnostic = redactRuntimeDiagnostic(
+      `harness_exit=${run.exitCode ?? "unknown"} harness_duration_ms=${run.durationMs ?? "unknown"} harness=${harnessOutput}`,
+      [credentials.email, credentials.password, credentials.invalidPassword],
+    );
+    // 하니스는 완료조건마다 결과 파일을 다시 쓴다. 중간에 잘렸어도 거기까지 끝난
+    // 판정은 남아 있으므로 살리고, 판정을 받지 못한 항목만 실패로 채운다.
+    const salvaged = await readSalvagedOutcomes(input.verifierUser, runnableIds);
+    const salvagedById = new Map(
+      (await attachEvidence(input.verifierUser, salvaged)).map((outcome) => [outcome.criterionId, outcome]),
+    );
     return [
       ...missingSpecs,
-      ...runnable.map((criterion) => ({
-        criterionId: criterion.id,
-        status: "failed" as const,
-        observedResult: "LinKross Playwright 시나리오 실행이 완료되지 않았습니다.",
-        errorMessage: "격리 브라우저 실행에 실패했습니다.",
-        durationMs: run.durationMs ?? 0,
-      })),
+      ...runnable.map(
+        (criterion): ManagedBrowserOutcome =>
+          salvagedById.get(criterion.id) ?? {
+            criterionId: criterion.id,
+            status: "failed",
+            observedResult: salvagedById.size > 0
+              ? `LinKross Playwright 시나리오 실행이 앞선 ${salvagedById.size}건까지만 끝나고 중단되어 이 완료조건은 판정하지 못했습니다.`
+              : "LinKross Playwright 시나리오 실행이 완료되지 않았습니다.",
+            errorMessage: `격리 브라우저 실행에 실패했습니다. ${diagnostic}`,
+            durationMs: 0,
+          },
+      ),
     ];
   }
 
   const output = await input.verifierUser.readFileToBuffer({ path: OUTPUT_PATH });
-  const parsed = parseOutcomes(output, runnable.map((criterion) => criterion.id));
-  const outcomes: ManagedBrowserOutcome[] = [...missingSpecs];
+  const parsed = parseOutcomes(output);
+  assertOutcomesCoverCriteria(parsed, runnableIds);
+  return [...missingSpecs, ...(await attachEvidence(input.verifierUser, parsed))];
+}
+
+interface ParsedOutcome {
+  criterionId: string;
+  status: "passed" | "failed";
+  observedResult: string;
+  errorMessage?: string;
+  durationMs: number;
+  screenshotPath?: string;
+}
+
+/** 하니스가 남긴 판정에 증거 스크린샷을 붙인다. 정상 종료와 중단 양쪽에서 쓴다. */
+async function attachEvidence(
+  verifierUser: SandboxUser,
+  parsed: ParsedOutcome[],
+): Promise<ManagedBrowserOutcome[]> {
+  const outcomes: ManagedBrowserOutcome[] = [];
   for (const outcome of parsed) {
     let screenshot: Uint8Array | undefined;
     if (outcome.screenshotPath) {
-      const buffer = await input.verifierUser.readFileToBuffer({ path: outcome.screenshotPath });
+      // 스크린샷 한 장을 못 읽는다고 검수 전체를 버리지 않는다. 증거가 없는 통과는
+      // 아래에서 사람 확인으로 내린다.
+      const buffer = await verifierUser
+        .readFileToBuffer({ path: outcome.screenshotPath })
+        .catch(() => null);
       if (buffer && buffer.byteLength <= SCREENSHOT_MAX_BYTES) screenshot = buffer;
     }
     const status = outcome.status === "passed" && !screenshot ? "needs_review" : outcome.status;
@@ -210,14 +267,26 @@ export async function runManagedBrowserCriteria(input: {
   return outcomes;
 }
 
-function parseOutcomes(value: Buffer | null, expectedCriterionIds: string[]): Array<{
-  criterionId: string;
-  status: "passed" | "failed";
-  observedResult: string;
-  errorMessage?: string;
-  durationMs: number;
-  screenshotPath?: string;
-}> {
+/** 중단된 실행에서 읽어낸다. 결과 파일이 없거나 깨져 있으면 살릴 게 없는 것으로 본다. */
+async function readSalvagedOutcomes(
+  verifierUser: SandboxUser,
+  expectedCriterionIds: string[],
+): Promise<ParsedOutcome[]> {
+  const expected = new Set(expectedCriterionIds);
+  const seen = new Set<string>();
+  try {
+    const output = await verifierUser.readFileToBuffer({ path: OUTPUT_PATH });
+    return parseOutcomes(output).filter((outcome) => {
+      if (!expected.has(outcome.criterionId) || seen.has(outcome.criterionId)) return false;
+      seen.add(outcome.criterionId);
+      return true;
+    });
+  } catch {
+    return [];
+  }
+}
+
+function parseOutcomes(value: Buffer | null): ParsedOutcome[] {
   if (!value) throw new Error("Playwright result file is missing.");
   const parsed = JSON.parse(value.toString("utf8")) as unknown;
   if (!Array.isArray(parsed)) throw new Error("Playwright result format is invalid.");
@@ -246,6 +315,10 @@ function parseOutcomes(value: Buffer | null, expectedCriterionIds: string[]): Ar
         : {}),
     };
   });
+  return outcomes;
+}
+
+function assertOutcomesCoverCriteria(outcomes: ParsedOutcome[], expectedCriterionIds: string[]): void {
   const receivedIds = outcomes.map((outcome) => outcome.criterionId);
   if (
     outcomes.length !== expectedCriterionIds.length ||
@@ -254,7 +327,6 @@ function parseOutcomes(value: Buffer | null, expectedCriterionIds: string[]): Ar
   ) {
     throw new Error("Playwright result set is incomplete.");
   }
-  return outcomes;
 }
 
 function needsReview(criterionId: string, observedResult: string): ManagedBrowserOutcome {

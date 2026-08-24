@@ -1,7 +1,7 @@
 import "server-only";
 
 export const MANAGED_PLAYWRIGHT_HARNESS = String.raw`
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { chromium } from "/vercel/sandbox/linkross-runner/node_modules/playwright/index.mjs";
 
 const [inputPath, outputPath, evidenceDirectory] = process.argv.slice(2);
@@ -9,6 +9,18 @@ const criteria = JSON.parse(await readFile(inputPath, "utf8"));
 await mkdir(evidenceDirectory, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const outcomes = [];
+
+// 완료조건 하나가 끝날 때마다 결과 파일을 다시 쓴다.
+//
+// 예전에는 모든 완료조건을 다 돈 뒤에 한 번만 썼다. 그래서 제한 시간에 걸려
+// 잘리면 이미 판정이 끝난 항목의 결과까지 같이 사라지고, 전 항목이 "실행 실패"
+// 하나로 뭉뚱그려졌다. 임시 파일에 쓰고 이름을 바꾸므로 쓰는 도중에 죽어도
+// 읽는 쪽은 항상 온전한 JSON을 본다.
+async function persistOutcomes() {
+  const stagingPath = outputPath + ".partial";
+  await writeFile(stagingPath, JSON.stringify(outcomes), "utf8");
+  await rename(stagingPath, outputPath);
+}
 
 const VIEWPORTS = {
   mobile: { width: 375, height: 812 },
@@ -83,6 +95,36 @@ function stepFailure(step, message) {
   return error;
 }
 
+// 판정은 화면이 준비될 때까지 다시 본다.
+//
+// 예전에는 클릭 뒤에 고정으로 400ms 자고 판정을 한 번만 읽었다. 빠른 화면에서는
+// 낭비고(마일스톤 하나에서 22초), 느린 화면에서는 모자랐다. 대신 조건이 참이
+// 될 때까지 짧게 다시 읽는다. 통과하는 화면은 즉시 지나가고, 늦게 그려지는
+// 화면은 고정 대기보다 오래 기다려 준다.
+const ASSERTION_TIMEOUT_MS = 3000;
+const ASSERTION_POLL_MS = 100;
+// "없음"을 증명하는 판정은 화면이 아직 안 그려진 순간에도 참이 된다. 그래서
+// 그 판정만은 잠깐 참인 것과 계속 참인 것을 가른다.
+const ABSENCE_HOLD_MS = 400;
+
+async function holdsUntil(check, holdMs) {
+  const hold = holdMs ?? 0;
+  const deadline = Date.now() + ASSERTION_TIMEOUT_MS + hold;
+  let heldSince = null;
+  for (;;) {
+    const satisfied = await check();
+    if (satisfied) {
+      if (hold === 0) return true;
+      if (heldSince === null) heldSince = Date.now();
+      else if (Date.now() - heldSince >= hold) return true;
+    } else {
+      heldSince = null;
+    }
+    if (Date.now() >= deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, ASSERTION_POLL_MS));
+  }
+}
+
 async function runAtom(page, step, credentials) {
   switch (step.atom) {
     case "goto":
@@ -103,54 +145,60 @@ async function runAtom(page, step, credentials) {
       } catch {
         await locator.selectOption(value, { timeout: 10000 });
       }
-      await page.waitForTimeout(200);
       return;
     }
     case "click":
       await resolveTarget(page, step.target).click({ timeout: 10000 });
-      await page.waitForTimeout(400);
       return;
     case "press":
       await page.keyboard.press(step.key);
-      await page.waitForTimeout(150);
       return;
     case "set_viewport":
       await page.setViewportSize(VIEWPORTS[step.preset]);
-      await page.waitForTimeout(150);
       return;
     case "expect_visible": {
-      const visible = await resolveTarget(page, step.target).isVisible().catch(() => false);
+      const target = resolveTarget(page, step.target);
+      const visible = await holdsUntil(() => target.isVisible().catch(() => false));
       if (!visible) throw stepFailure(step, describeTarget(step.target) + "을 화면에서 찾지 못했습니다.");
       return;
     }
     case "expect_hidden": {
-      const visible = await resolveTarget(page, step.target).isVisible().catch(() => false);
-      if (visible) throw stepFailure(step, describeTarget(step.target) + "이 화면에 그대로 표시되고 있습니다.");
+      const target = resolveTarget(page, step.target);
+      // 아직 안 그려진 화면에서도 "안 보인다"는 참이다. 계속 안 보이는지까지 본다.
+      const hidden = await holdsUntil(
+        async () => !(await target.isVisible().catch(() => false)),
+        ABSENCE_HOLD_MS,
+      );
+      if (!hidden) throw stepFailure(step, describeTarget(step.target) + "이 화면에 그대로 표시되고 있습니다.");
       return;
     }
     case "expect_enabled": {
-      const enabled = await resolveTarget(page, step.target).isEnabled().catch(() => false);
+      const target = resolveTarget(page, step.target);
+      const enabled = await holdsUntil(() => target.isEnabled().catch(() => false));
       if (!enabled) throw stepFailure(step, describeTarget(step.target) + "이 사용 가능한 상태가 아닙니다.");
       return;
     }
     case "expect_disabled": {
-      const enabled = await resolveTarget(page, step.target).isEnabled().catch(() => true);
-      if (enabled) throw stepFailure(step, describeTarget(step.target) + "이 비활성화되어 있지 않습니다.");
+      const target = resolveTarget(page, step.target);
+      // 요소를 못 찾으면 isEnabled 가 던진다. 그건 비활성이 아니라 확인 실패다.
+      const disabled = await holdsUntil(async () => !(await target.isEnabled().catch(() => true)));
+      if (!disabled) throw stepFailure(step, describeTarget(step.target) + "이 비활성화되어 있지 않습니다.");
       return;
     }
     case "expect_focused": {
-      const focused = await resolveTarget(page, step.target)
-        .evaluate((element) => element === document.activeElement)
-        .catch(() => false);
+      const target = resolveTarget(page, step.target);
+      const focused = await holdsUntil(() =>
+        target.evaluate((element) => element === document.activeElement).catch(() => false));
       if (!focused) throw stepFailure(step, describeTarget(step.target) + "이 키보드 포커스를 받지 못했습니다.");
       return;
     }
     case "expect_text": {
       const scope = step.target ? resolveTarget(page, step.target) : page.locator("body");
-      const text = await scope.innerText().catch(() => "");
-      if (!text.includes(step.contains)) {
-        throw stepFailure(step, '"' + step.contains + '" 문구를 화면에서 찾지 못했습니다.');
-      }
+      const found = await holdsUntil(async () => {
+        const text = await scope.innerText().catch(() => "");
+        return text.includes(step.contains);
+      });
+      if (!found) throw stepFailure(step, '"' + step.contains + '" 문구를 화면에서 찾지 못했습니다.');
       return;
     }
     case "expect_path": {
@@ -165,50 +213,71 @@ async function runAtom(page, step, credentials) {
       return;
     }
     case "expect_within_viewport": {
-      const box = await resolveTarget(page, step.target).boundingBox().catch(() => null);
-      const size = page.viewportSize();
-      if (!box || !size) throw stepFailure(step, describeTarget(step.target) + "의 화면상 위치를 확인하지 못했습니다.");
-      const within = box.width > 0 && box.height > 0 && box.x >= 0 && box.x + box.width <= size.width + 1;
-      if (!within) {
-        throw stepFailure(step, describeTarget(step.target) + "이 화면 가로 범위를 벗어나 잘려 보입니다.");
-      }
+      const target = resolveTarget(page, step.target);
+      let reason = describeTarget(step.target) + "의 화면상 위치를 확인하지 못했습니다.";
+      const within = await holdsUntil(async () => {
+        const box = await target.boundingBox().catch(() => null);
+        const size = page.viewportSize();
+        if (!box || !size) {
+          reason = describeTarget(step.target) + "의 화면상 위치를 확인하지 못했습니다.";
+          return false;
+        }
+        const fits = box.width > 0 && box.height > 0 && box.x >= 0 && box.x + box.width <= size.width + 1;
+        if (!fits) reason = describeTarget(step.target) + "이 화면 가로 범위를 벗어나 잘려 보입니다.";
+        return fits;
+      });
+      if (!within) throw stepFailure(step, reason);
       return;
     }
     case "expect_error_feedback": {
       const feedback = page
         .locator('[role="alert"],[aria-live="assertive"],[data-error],.error,.text-red-500,.text-red-600,.text-red-700')
         .first();
-      const bodyText = await page.locator("body").innerText().catch(() => "");
-      const hasFeedback =
-        (await feedback.isVisible().catch(() => false)) ||
-        (await page.locator('[aria-invalid="true"]').first().isVisible().catch(() => false)) ||
-        /invalid|incorrect|wrong|오류|실패|잘못/i.test(bodyText);
+      const invalidField = page.locator('[aria-invalid="true"]').first();
+      const body = page.locator("body");
+      const hasFeedback = await holdsUntil(async () => {
+        if (await feedback.isVisible().catch(() => false)) return true;
+        if (await invalidField.isVisible().catch(() => false)) return true;
+        const bodyText = await body.innerText().catch(() => "");
+        return /invalid|incorrect|wrong|오류|실패|잘못/i.test(bodyText);
+      });
       if (!hasFeedback) throw stepFailure(step, "사용자에게 표시되는 오류 피드백을 찾지 못했습니다.");
       return;
     }
     case "expect_form_blocked": {
-      const blocked = await resolveTarget(page, step.target)
-        .evaluate((element) => {
-          const invalid = typeof element.checkValidity === "function" ? !element.checkValidity() : false;
-          return invalid || element.getAttribute("aria-invalid") === "true";
-        })
-        .catch(() => false);
+      const target = resolveTarget(page, step.target);
+      const blocked = await holdsUntil(() =>
+        target
+          .evaluate((element) => {
+            const invalid = typeof element.checkValidity === "function" ? !element.checkValidity() : false;
+            return invalid || element.getAttribute("aria-invalid") === "true";
+          })
+          .catch(() => false));
       if (!blocked) throw stepFailure(step, "입력값 검증으로 제출이 차단되는 것을 확인하지 못했습니다.");
       return;
     }
     case "expect_checked": {
-      const checked = await resolveTarget(page, step.target).isChecked().catch(() => false);
+      const target = resolveTarget(page, step.target);
+      const checked = await holdsUntil(() => target.isChecked().catch(() => false));
       if (!checked) throw stepFailure(step, describeTarget(step.target) + "이 선택된 상태가 아닙니다.");
       return;
     }
     case "expect_unchecked": {
-      const checked = await resolveTarget(page, step.target).isChecked().catch(() => true);
-      if (checked) throw stepFailure(step, describeTarget(step.target) + "이 선택된 상태로 남아 있습니다.");
+      const target = resolveTarget(page, step.target);
+      // 요소를 못 찾으면 isChecked 가 던진다. 그건 해제가 아니라 확인 실패다.
+      const unchecked = await holdsUntil(async () => !(await target.isChecked().catch(() => true)));
+      if (!unchecked) throw stepFailure(step, describeTarget(step.target) + "이 선택된 상태로 남아 있습니다.");
       return;
     }
     case "expect_count": {
-      const actual = await resolveTargetAll(page, step.target).count().catch(() => -1);
-      if (actual !== step.count) {
+      const target = resolveTargetAll(page, step.target);
+      let actual = -1;
+      // 0개를 기대하는 판정은 빈 화면에서도 참이므로 유지되는지까지 본다.
+      const matched = await holdsUntil(async () => {
+        actual = await target.count().catch(() => -1);
+        return actual === step.count;
+      }, step.count === 0 ? ABSENCE_HOLD_MS : 0);
+      if (!matched) {
         throw stepFailure(
           step,
           describeTarget(step.target) + "이 " + step.count + "개여야 하는데 " +
@@ -219,16 +288,26 @@ async function runAtom(page, step, credentials) {
     }
     case "expect_every_text":
     case "expect_none_text": {
-      const texts = await resolveTargetAll(page, step.target).allInnerTexts().catch(() => []);
-      // 대상이 하나도 없으면 "모두 그렇다"도 "아무것도 아니다"도 증명되지 않는다.
-      // 빈 화면을 통과로 처리하면 목록이 깨진 앱이 통과해 버린다.
-      if (texts.length === 0) {
-        throw stepFailure(step, describeTarget(step.target) + "을 화면에서 찾지 못해 목록 내용을 확인할 수 없습니다.");
-      }
-      const index = step.atom === "expect_every_text"
-        ? texts.findIndex((text) => !text.includes(step.contains))
-        : texts.findIndex((text) => text.includes(step.contains));
-      if (index >= 0) {
+      const target = resolveTargetAll(page, step.target);
+      let texts = [];
+      let index = -1;
+      const matched = await holdsUntil(async () => {
+        texts = await target.allInnerTexts().catch(() => []);
+        // 대상이 하나도 없으면 "모두 그렇다"도 "아무것도 아니다"도 증명되지 않는다.
+        // 빈 화면을 통과로 처리하면 목록이 깨진 앱이 통과해 버린다.
+        if (texts.length === 0) {
+          index = -1;
+          return false;
+        }
+        index = step.atom === "expect_every_text"
+          ? texts.findIndex((text) => !text.includes(step.contains))
+          : texts.findIndex((text) => text.includes(step.contains));
+        return index < 0;
+      });
+      if (!matched) {
+        if (texts.length === 0) {
+          throw stepFailure(step, describeTarget(step.target) + "을 화면에서 찾지 못해 목록 내용을 확인할 수 없습니다.");
+        }
         throw stepFailure(
           step,
           (index + 1) + "번째 " + describeTarget(step.target) + '에 "' + step.contains + '" 문구가 ' +
@@ -305,8 +384,9 @@ for (const criterion of criteria) {
     durationMs: Date.now() - startedAt,
     ...(hasScreenshot ? { screenshotPath } : {}),
   });
+  await persistOutcomes();
 }
 
 await browser.close();
-await writeFile(outputPath, JSON.stringify(outcomes), "utf8");
+await persistOutcomes();
 `;
