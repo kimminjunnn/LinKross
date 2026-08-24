@@ -1,4 +1,4 @@
-import { AlertCircle, TestTube2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import { getVerificationWorkspace } from "@/lib/backend";
 
@@ -44,22 +44,6 @@ export default async function VerificationPage({
         initialWorkspace={result.data}
         initialMessage={getGitHubSetupMessage(github)}
       />
-      <section className="rounded-card border border-accent-200 bg-accent-50 p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-control bg-accent-100 text-accent-800">
-            <TestTube2 className="size-4" />
-          </span>
-          <div>
-            <h2 className="text-sm font-semibold text-accent-900">
-              자동 검수 결과는 최종 승인 그 자체가 아닙니다.
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-accent-800">
-              LinKross는 같은 SHA에서 체크리스트가 작동한 근거를 제공합니다. 발주자는 실패와
-              확인 필요 항목을 검토한 뒤 직접 승인하거나 수정 요청합니다.
-            </p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

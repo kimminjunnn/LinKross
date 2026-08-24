@@ -1245,8 +1245,10 @@ function resolveMilestoneStatus(milestone: VerificationMilestoneRecord): {
     return milestoneVerificationStatusConfig.revision_required;
   }
 
-  const latestRun = latestSubmission?.runs[0];
-  if (latestRun && ACTIVE_RUN_STATUSES.includes(latestRun.status)) {
+  // '검수 준비 완료'는 프리랜서가 제출만 하고 발주자가 아직 검수를 시작하지 않은 상태다.
+  // 이번 제출본에 실행 기록이 하나라도 있으면 검수는 이미 시작된 것이므로 '검수 중'으로 본다.
+  // 실행이 끝나도 발주자가 승인이나 수정 요청을 결정하기 전까지는 검수가 진행 중이다.
+  if ((latestSubmission?.runs.length ?? 0) > 0) {
     return milestoneVerificationStatusConfig.verification_running;
   }
   if (milestone.submissions.length > 0) {
