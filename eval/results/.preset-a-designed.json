@@ -1,0 +1,2135 @@
+[
+  {
+    "milestone": {
+      "id": "m-1",
+      "code": "M1",
+      "title": "로그인과 비품 목록 화면",
+      "period": "26.08.22 - 26.08.28",
+      "amount": "3000",
+      "pr": 5,
+      "branch": "feat/m1-auth",
+      "commit": "a5466b9a3fe271f01cb2a94611b20b85bdc615c8",
+      "dods": [
+        "/login에서 이메일과 비밀번호 입력 후 로그인 시 /items로 이동 확인",
+        "/login에서 비밀번호를 잘못 입력 후 로그인 시도 시 오류 메시지 표시 확인",
+        "/login에서 이메일 미입력 상태로 로그인 시도 시 오류 메시지 표시 확인",
+        "/items에 로그인하지 않은 상태로 접근 시 /login으로 리다이렉트 확인",
+        "/items에서 '비품명', '분류', '상태' 컬럼 표시 확인",
+        "/items에서 '전체' 버튼 클릭 시 모든 비품 목록 표시 확인",
+        "/items에서 '대여 가능' 버튼 클릭 시 대여 가능한 비품만 목록 표시 확인",
+        "/items에서 '대여중' 버튼 클릭 시 대여중인 비품만 목록 표시 확인"
+      ]
+    },
+    "rows": [
+      {
+        "description": "/login에서 이메일과 비밀번호 입력 후 로그인 시 /items로 이동 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "expect_path",
+              "path": "/items"
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/login",
+            "testHint": "scenario: navigation / startPath: /login / precondition: 로그아웃 상태 / fixture: 테스트 계정이 존재하는 상태 / action: 로그인 버튼 클릭 / target: 로그인 버튼 / input: 올바른 이메일과 비밀번호 / expected: /items로 이동 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "navigation",
+              "startPath": "/login",
+              "precondition": "로그아웃 상태",
+              "fixture": "테스트 계정이 존재하는 상태",
+              "action": "로그인 버튼 클릭",
+              "target": "로그인 버튼",
+              "input": "올바른 이메일과 비밀번호",
+              "expected": "/items로 이동"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/login에서 비밀번호를 잘못 입력 후 로그인 시도 시 오류 메시지 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 1,
+          "kind": "managed_browser",
+          "preset": "login_invalid_password",
+          "startPath": "/login",
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/login",
+            "testHint": "scenario: validation_error / startPath: /login / precondition: 로그아웃 상태 / fixture: 테스트 계정이 존재하는 상태 / action: 로그인 버튼 클릭 / target: 로그인 버튼 / input: 올바른 이메일과 잘못된 비밀번호 / expected: 오류 메시지 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/login",
+              "precondition": "로그아웃 상태",
+              "fixture": "테스트 계정이 존재하는 상태",
+              "action": "로그인 버튼 클릭",
+              "target": "로그인 버튼",
+              "input": "올바른 이메일과 잘못된 비밀번호",
+              "expected": "오류 메시지 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/login에서 이메일 미입력 상태로 로그인 시도 시 오류 메시지 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 1,
+          "kind": "managed_browser",
+          "preset": "login_email_required",
+          "startPath": "/login",
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/login",
+            "testHint": "scenario: validation_error / startPath: /login / precondition: 로그아웃 상태 / fixture:  / action: 로그인 버튼 클릭 / target: 로그인 버튼 / input: 비밀번호만 입력 / expected: 오류 메시지 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/login",
+              "precondition": "로그아웃 상태",
+              "action": "로그인 버튼 클릭",
+              "target": "로그인 버튼",
+              "input": "비밀번호만 입력",
+              "expected": "오류 메시지 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에 로그인하지 않은 상태로 접근 시 /login으로 리다이렉트 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "expect_path",
+              "path": "/login"
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: access_control / startPath: /items / precondition: 로그아웃 상태 / fixture: 테스트 계정에 필요한 데이터를 화면에서 미리 생성 / action: 페이지 접근 / target: /items / input:  / expected: /login으로 리다이렉트 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+                "suggestions": [
+                  "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                  "새 테스트 계정의 초기 상태 사용"
+                ],
+                "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "access_control",
+              "startPath": "/items",
+              "precondition": "로그아웃 상태",
+              "action": "페이지 접근",
+              "target": "/items",
+              "expected": "/login으로 리다이렉트",
+              "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 '비품명', '분류', '상태' 컬럼 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "비품명"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "분류"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "상태"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: generic_ui / startPath: /items / precondition: 테스트 계정으로 로그인한 상태 / fixture:  / action: 페이지 로드 / target: 비품 목록 테이블 / input:  / expected: '비품명', '분류', '상태' 컬럼 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/items",
+              "precondition": "테스트 계정으로 로그인한 상태",
+              "action": "페이지 로드",
+              "target": "비품 목록 테이블",
+              "expected": "'비품명', '분류', '상태' 컬럼 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 '전체' 버튼 클릭 시 모든 비품 목록 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "click",
+              "target": {
+                "role": "button",
+                "name": "전체"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "role": "list"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: list_filter / startPath: /items / precondition: 테스트 계정으로 로그인한 상태 / fixture: 비품 목록이 존재하는 상태 / action: '전체' 버튼 클릭 / target: '전체' 버튼 / input:  / expected: 모든 비품 목록 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "list_filter",
+              "startPath": "/items",
+              "precondition": "테스트 계정으로 로그인한 상태",
+              "fixture": "비품 목록이 존재하는 상태",
+              "action": "'전체' 버튼 클릭",
+              "target": "'전체' 버튼",
+              "expected": "모든 비품 목록 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 '대여 가능' 버튼 클릭 시 대여 가능한 비품만 목록 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "click",
+              "target": {
+                "role": "button",
+                "name": "대여 가능"
+              }
+            },
+            {
+              "atom": "expect_every_text",
+              "contains": "대여 가능",
+              "target": {
+                "role": "listitem"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: list_filter / startPath: /items / precondition: 테스트 계정으로 로그인한 상태 / fixture: 대여 가능한 비품이 존재하는 상태 / action: '대여 가능' 버튼 클릭 / target: '대여 가능' 버튼 / input:  / expected: 대여 가능한 비품만 목록 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "list_filter",
+              "startPath": "/items",
+              "precondition": "테스트 계정으로 로그인한 상태",
+              "fixture": "대여 가능한 비품이 존재하는 상태",
+              "action": "'대여 가능' 버튼 클릭",
+              "target": "'대여 가능' 버튼",
+              "expected": "대여 가능한 비품만 목록 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 '대여중' 버튼 클릭 시 대여중인 비품만 목록 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "click",
+              "target": {
+                "role": "button",
+                "name": "대여중"
+              }
+            },
+            {
+              "atom": "expect_every_text",
+              "contains": "대여중",
+              "target": {
+                "role": "listitem"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: list_filter / startPath: /items / precondition: 테스트 계정으로 로그인한 상태 / fixture: 대여중인 비품이 존재하는 상태 / action: '대여중' 버튼 클릭 / target: '대여중' 버튼 / input:  / expected: 대여중인 비품만 목록 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "list_filter",
+              "startPath": "/items",
+              "precondition": "테스트 계정으로 로그인한 상태",
+              "fixture": "대여중인 비품이 존재하는 상태",
+              "action": "'대여중' 버튼 클릭",
+              "target": "'대여중' 버튼",
+              "expected": "대여중인 비품만 목록 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      }
+    ]
+  },
+  {
+    "milestone": {
+      "id": "m-2",
+      "code": "M2",
+      "title": "비품 신청과 내 신청 내역 화면",
+      "period": "26.08.29 - 26.09.04",
+      "amount": "2500",
+      "pr": 6,
+      "branch": "feat/m2-rental",
+      "commit": "7f10d0ff3b1e958268bb7a92178031897aae24b0",
+      "dods": [
+        "/items에서 '비품 신청' 버튼 클릭 시 신청 창 표시 확인",
+        "/items에서 신청 창에 '대여 가능' 비품만 선택 가능 확인",
+        "/items에서 신청 창에 '대여중' 비품 미표시 확인",
+        "/items에서 비품 미선택 상태로 '신청하기' 버튼 비활성화 확인",
+        "/items에서 '신청 사유' 미입력 상태로 '신청하기' 버튼 비활성화 확인",
+        "/items에서 '신청 사유' 100자 초과 시 오류 문구 표시 확인",
+        "/items에서 신청 후 '신청이 접수되었습니다' 문구 표시 확인",
+        "/items에서 신청 후 해당 비품 상태 '대여중'으로 변경 확인",
+        "/requests에서 본인 신청만 표시 확인",
+        "/requests에서 '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+        "/requests에서 '승인 대기' 상태 신청에 '취소' 버튼 표시 확인",
+        "/requests에서 '취소' 버튼 클릭 후 /items에서 해당 비품 상태 '대여 가능'으로 변경 확인",
+        "/requests에 신청 내역이 없을 때 '아직 신청한 비품이 없습니다' 안내 문구 표시 확인",
+        "/requests에 로그인하지 않은 상태로 접근 시 /login으로 리다이렉트 확인"
+      ]
+    },
+    "rows": [
+      {
+        "description": "/items에서 '비품 신청' 버튼 클릭 시 신청 창 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "click",
+              "target": {
+                "role": "button",
+                "name": "비품 신청"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "role": "dialog"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: navigation / startPath: /items / precondition: 로그인 상태 / fixture:  / action: 클릭 / target: 비품 신청 버튼 / input:  / expected: 신청 창 표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "테스트 시작 시 로그인 상태는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "로그인 상태"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "precondition",
+                "question": "테스트 시작 시 로그인 상태는 무엇인가요?",
+                "suggestions": [
+                  "로그인 상태",
+                  "로그아웃 상태"
+                ],
+                "recommendedSuggestion": "로그인 상태",
+                "answer": "로그인 상태"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "navigation",
+              "startPath": "/items",
+              "action": "클릭",
+              "target": "비품 신청 버튼",
+              "expected": "신청 창 표시",
+              "precondition": "로그인 상태"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 신청 창에 '대여 가능' 비품만 선택 가능 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "'/items' 페이지의 신청 창",
+          "method": "비품 목록에서 선택 가능한 항목을 클릭",
+          "expected": "'대여 가능' 상태의 비품만 선택할 수 있어야 합니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: validation_error / startPath: /items / precondition: 신청 창 열림 / fixture: 대여 가능 비품 존재 / action: 선택 / target: 비품 목록 / input: 대여 가능 비품 / expected: 선택 가능 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "fixture": "대여 가능 비품 존재",
+              "action": "선택",
+              "target": "비품 목록",
+              "input": "대여 가능 비품",
+              "expected": "선택 가능"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: '/items' 페이지의 신청 창\n확인 방법: 비품 목록에서 선택 가능한 항목을 클릭\n기대 결과: '대여 가능' 상태의 비품만 선택할 수 있어야 합니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/items에서 신청 창에 '대여중' 비품 미표시 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "'/items' 페이지의 신청 창",
+          "method": "비품 목록을 확인",
+          "expected": "'대여중' 상태의 비품은 목록에 나타나지 않아야 합니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: validation_error / startPath: /items / precondition: 신청 창 열림 / fixture: 대여중 비품 존재 / action: 확인 / target: 비품 목록 / input: 고정된 합성 테스트 값 사용 / expected: 대여중 비품 미표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "테스트에서 사용할 구체적인 입력값은 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "input",
+                "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+                "suggestions": [
+                  "고정된 합성 테스트 값 사용",
+                  "AI 추천 테스트 값 사용"
+                ],
+                "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+                "answer": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "fixture": "대여중 비품 존재",
+              "action": "확인",
+              "target": "비품 목록",
+              "expected": "대여중 비품 미표시",
+              "input": "고정된 합성 테스트 값 사용"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: '/items' 페이지의 신청 창\n확인 방법: 비품 목록을 확인\n기대 결과: '대여중' 상태의 비품은 목록에 나타나지 않아야 합니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/items에서 비품 미선택 상태로 '신청하기' 버튼 비활성화 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "role": "button",
+                "name": "신청하기 버튼"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: validation_error / startPath: /items / precondition: 신청 창 열림 / fixture:  / action: 확인 / target: 신청하기 버튼 / input: 고정된 합성 테스트 값 사용 / expected: 비활성화 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "테스트에서 사용할 구체적인 입력값은 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "input",
+                "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+                "suggestions": [
+                  "고정된 합성 테스트 값 사용",
+                  "AI 추천 테스트 값 사용"
+                ],
+                "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+                "answer": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "action": "확인",
+              "target": "신청하기 버튼",
+              "expected": "비활성화",
+              "input": "고정된 합성 테스트 값 사용"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 '신청 사유' 미입력 상태로 '신청하기' 버튼 비활성화 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/items",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/items"
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "role": "button",
+                "name": "신청하기 버튼"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/items",
+            "testHint": "scenario: validation_error / startPath: /items / precondition: 신청 창 열림 / fixture:  / action: 확인 / target: 신청하기 버튼 / input: 고정된 합성 테스트 값 사용 / expected: 비활성화 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "테스트에서 사용할 구체적인 입력값은 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "input",
+                "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+                "suggestions": [
+                  "고정된 합성 테스트 값 사용",
+                  "AI 추천 테스트 값 사용"
+                ],
+                "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+                "answer": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "action": "확인",
+              "target": "신청하기 버튼",
+              "expected": "비활성화",
+              "input": "고정된 합성 테스트 값 사용"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/items에서 '신청 사유' 100자 초과 시 오류 문구 표시 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "'/items' 페이지의 신청 창",
+          "method": "'신청 사유' 입력란에 101자 이상의 텍스트를 입력",
+          "expected": "오류 문구가 나타나며, 입력을 제한해야 합니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: validation_error / startPath: /items / precondition: 신청 창 열림 / fixture:  / action: 입력 / target: 신청 사유 입력란 / input: 100자 초과 텍스트 / expected: 오류 문구 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "validation_error",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "action": "입력",
+              "target": "신청 사유 입력란",
+              "input": "100자 초과 텍스트",
+              "expected": "오류 문구 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: '/items' 페이지의 신청 창\n확인 방법: '신청 사유' 입력란에 101자 이상의 텍스트를 입력\n기대 결과: 오류 문구가 나타나며, 입력을 제한해야 합니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/items에서 신청 후 '신청이 접수되었습니다' 문구 표시 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "'/items' 페이지의 신청 창",
+          "method": "비품을 선택하고 신청 버튼을 클릭",
+          "expected": "신청 후 '신청이 접수되었습니다'라는 문구가 화면에 나타나야 합니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: form_submission / startPath: /items / precondition: 신청 창 열림 / fixture: 대여 가능 비품 선택 / action: 클릭 / target: 신청하기 버튼 / input: 고정된 합성 테스트 값 사용 / expected: 신청이 접수되었습니다 문구 표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "테스트에서 사용할 구체적인 입력값은 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "input",
+                "question": "테스트에서 사용할 구체적인 입력값은 무엇인가요?",
+                "suggestions": [
+                  "고정된 합성 테스트 값 사용",
+                  "AI 추천 테스트 값 사용"
+                ],
+                "recommendedSuggestion": "고정된 합성 테스트 값 사용",
+                "answer": "고정된 합성 테스트 값 사용"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "form_submission",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "fixture": "대여 가능 비품 선택",
+              "action": "클릭",
+              "target": "신청하기 버튼",
+              "expected": "신청이 접수되었습니다 문구 표시",
+              "input": "고정된 합성 테스트 값 사용"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: '/items' 페이지의 신청 창\n확인 방법: 비품을 선택하고 신청 버튼을 클릭\n기대 결과: 신청 후 '신청이 접수되었습니다'라는 문구가 화면에 나타나야 합니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/items에서 신청 후 해당 비품 상태 '대여중'으로 변경 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "'/items' 페이지의 신청 창",
+          "method": "비품을 신청한 후 해당 비품의 상태를 확인",
+          "expected": "신청한 비품의 상태가 '대여중'으로 변경되어야 합니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: state_change / startPath: /items / precondition: 신청 창 열림 / fixture: 대여 가능 비품 선택 / action: 클릭 / target: 신청하기 버튼 / input:  / expected: 해당 비품 상태 '대여중'으로 변경 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "state_change",
+              "startPath": "/items",
+              "precondition": "신청 창 열림",
+              "fixture": "대여 가능 비품 선택",
+              "action": "클릭",
+              "target": "신청하기 버튼",
+              "expected": "해당 비품 상태 '대여중'으로 변경"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: '/items' 페이지의 신청 창\n확인 방법: 비품을 신청한 후 해당 비품의 상태를 확인\n기대 결과: 신청한 비품의 상태가 '대여중'으로 변경되어야 합니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/requests에서 본인 신청만 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/requests"
+            },
+            {
+              "atom": "expect_every_text",
+              "contains": "본인 신청",
+              "target": {
+                "role": "listitem"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/requests",
+            "testHint": "scenario: access_control / startPath: /requests / precondition: 로그인 상태 / fixture: 본인 신청 존재 / action: 확인 / target: 신청 목록 / input:  / expected: 본인 신청만 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "access_control",
+              "startPath": "/requests",
+              "precondition": "로그인 상태",
+              "fixture": "본인 신청 존재",
+              "action": "확인",
+              "target": "신청 목록",
+              "expected": "본인 신청만 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/requests에서 '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/requests"
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "비품명"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "신청 사유"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "상태"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/requests",
+            "testHint": "scenario: generic_ui / startPath: /requests / precondition: 로그인 상태 / fixture:  / action: 확인 / target: 신청 목록 / input:  / expected: 비품명, 신청 사유, 상태 컬럼 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/requests",
+              "precondition": "로그인 상태",
+              "action": "확인",
+              "target": "신청 목록",
+              "expected": "비품명, 신청 사유, 상태 컬럼 표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/requests에서 '승인 대기' 상태 신청에 '취소' 버튼 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/requests"
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "role": "button",
+                "name": "취소"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/requests",
+            "testHint": "scenario: generic_ui / startPath: /requests / precondition: 로그인 상태 / fixture: 승인 대기 상태 신청 존재 / action: 확인 / target: 취소 버튼 / input:  / expected: 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/requests",
+              "precondition": "로그인 상태",
+              "fixture": "승인 대기 상태 신청 존재",
+              "action": "확인",
+              "target": "취소 버튼",
+              "expected": "표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/requests에서 '취소' 버튼 클릭 후 /items에서 해당 비품 상태 '대여 가능'으로 변경 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "'/requests' 페이지에서",
+          "method": "'취소' 버튼을 클릭한 후 '/items' 페이지로 이동하여 해당 비품의 상태를 확인",
+          "expected": "해당 비품의 상태가 '대여 가능'으로 변경되어야 합니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/requests",
+            "testHint": "scenario: state_change / startPath: /requests / precondition: 로그인 상태 / fixture: 승인 대기 상태 신청 존재 / action: 클릭 / target: 취소 버튼 / input:  / expected: /items에서 해당 비품 상태 '대여 가능'으로 변경 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "state_change",
+              "startPath": "/requests",
+              "precondition": "로그인 상태",
+              "fixture": "승인 대기 상태 신청 존재",
+              "action": "클릭",
+              "target": "취소 버튼",
+              "expected": "/items에서 해당 비품 상태 '대여 가능'으로 변경"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: '/requests' 페이지에서\n확인 방법: '취소' 버튼을 클릭한 후 '/items' 페이지로 이동하여 해당 비품의 상태를 확인\n기대 결과: 해당 비품의 상태가 '대여 가능'으로 변경되어야 합니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/requests에 신청 내역이 없을 때 '아직 신청한 비품이 없습니다' 안내 문구 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/requests"
+            },
+            {
+              "atom": "expect_text",
+              "contains": "아직 신청한 비품이 없습니다"
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/requests",
+            "testHint": "scenario: empty_state / startPath: /requests / precondition: 신청 내역이 없는 상태 / fixture: 테스트 계정으로 로그인 후 모든 신청 삭제 / action: 페이지 로드 / target: 신청 내역 안내 문구 / input:  / expected: '아직 신청한 비품이 없습니다' 안내 문구 표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "신청 내역이 없는 상태를 어떻게 준비하시겠습니까?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정으로 로그인 후 모든 신청 삭제"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "신청 내역이 없는 상태를 어떻게 준비하시겠습니까?",
+                "suggestions": [
+                  "테스트 계정으로 로그인 후 모든 신청 삭제",
+                  "신규 테스트 계정 생성 후 로그인"
+                ],
+                "recommendedSuggestion": "테스트 계정으로 로그인 후 모든 신청 삭제",
+                "answer": "테스트 계정으로 로그인 후 모든 신청 삭제"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "empty_state",
+              "startPath": "/requests",
+              "precondition": "신청 내역이 없는 상태",
+              "action": "페이지 로드",
+              "target": "신청 내역 안내 문구",
+              "expected": "'아직 신청한 비품이 없습니다' 안내 문구 표시",
+              "fixture": "테스트 계정으로 로그인 후 모든 신청 삭제"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/requests에 로그인하지 않은 상태로 접근 시 /login으로 리다이렉트 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/requests",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/requests"
+            },
+            {
+              "atom": "expect_path",
+              "path": "/login"
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/requests",
+            "testHint": "scenario: access_control / startPath: /requests / precondition: 로그아웃 상태 / fixture: 테스트 계정에 필요한 데이터를 화면에서 미리 생성 / action: 페이지 접근 / target: 로그인 페이지 / input:  / expected: /login으로 리다이렉트 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+                "suggestions": [
+                  "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                  "새 테스트 계정의 초기 상태 사용"
+                ],
+                "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "access_control",
+              "startPath": "/requests",
+              "precondition": "로그아웃 상태",
+              "action": "페이지 접근",
+              "target": "로그인 페이지",
+              "expected": "/login으로 리다이렉트",
+              "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      }
+    ]
+  },
+  {
+    "milestone": {
+      "id": "m-3",
+      "code": "M3",
+      "title": "총무팀 승인 화면",
+      "period": "26.09.05 - 26.09.12",
+      "amount": "3500",
+      "pr": 7,
+      "branch": "feat/m3-admin",
+      "commit": "8a5f838d7945ac3c19c2757923799ac23aea256a",
+      "dods": [
+        "/admin에서 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+        "/admin에서 신청 내역이 없을 때 '아직 들어온 신청이 없습니다' 안내 문구 표시 확인",
+        "/admin에서 '승인 대기' 상태 신청에 '승인' 및 '반려' 버튼 표시 확인",
+        "/admin에서 '승인 완료' 및 '반려됨' 상태 신청에 '승인' 및 '반려' 버튼 미표시 확인",
+        "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+        "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+        "/items에서 반려된 비품 상태 '대여 가능'으로 변경 확인",
+        "/items에서 승인된 비품 상태 '대여중'으로 유지 확인",
+        "/requests에서 '승인 완료' 및 '반려됨' 상태 신청에 '취소' 버튼 미표시 확인",
+        "/admin에 일반 직원 계정으로 접근 시 상단 메뉴에 '승인 관리' 미표시 확인",
+        "/admin에 일반 직원 계정으로 직접 접근 시 /items로 리다이렉트 및 안내 문구 표시 확인"
+      ]
+    },
+    "rows": [
+      {
+        "description": "/admin에서 '신청자', '비품명', '신청 사유', '상태' 컬럼 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/login",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/admin"
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "신청자"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "비품명"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "신청 사유"
+              }
+            },
+            {
+              "atom": "expect_form_blocked",
+              "target": {
+                "text": "상태"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/admin",
+            "testHint": "scenario: generic_ui / startPath: /admin / precondition: 관리자 계정으로 로그인한 상태 / fixture:  / action: 화면 확인 / target: 신청자, 비품명, 신청 사유, 상태 컬럼 / input:  / expected: 표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "테스트 시작 시 로그인 상태는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "관리자 계정으로 로그인한 상태"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "precondition",
+                "question": "테스트 시작 시 로그인 상태는 무엇인가요?",
+                "suggestions": [
+                  "관리자 계정으로 로그인한 상태",
+                  "로그아웃 상태"
+                ],
+                "recommendedSuggestion": "관리자 계정으로 로그인한 상태",
+                "answer": "관리자 계정으로 로그인한 상태"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/admin",
+              "action": "화면 확인",
+              "target": "신청자, 비품명, 신청 사유, 상태 컬럼",
+              "expected": "표시",
+              "precondition": "관리자 계정으로 로그인한 상태"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/admin에서 신청 내역이 없을 때 '아직 들어온 신청이 없습니다' 안내 문구 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/admin",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/admin"
+            },
+            {
+              "atom": "expect_text",
+              "contains": "아직 들어온 신청이 없습니다"
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/admin",
+            "testHint": "scenario: empty_state / startPath: /admin / precondition: 신청 내역이 없는 상태 / fixture: 테스트 계정에 필요한 데이터를 화면에서 미리 생성 / action: 화면 확인 / target: '아직 들어온 신청이 없습니다' 안내 문구 / input:  / expected: 표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+                "suggestions": [
+                  "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                  "새 테스트 계정의 초기 상태 사용"
+                ],
+                "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "empty_state",
+              "startPath": "/admin",
+              "precondition": "신청 내역이 없는 상태",
+              "action": "화면 확인",
+              "target": "'아직 들어온 신청이 없습니다' 안내 문구",
+              "expected": "표시",
+              "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/admin에서 '승인 대기' 상태 신청에 '승인' 및 '반려' 버튼 표시 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "관리자 페이지의 신청 목록 화면",
+          "method": "'승인 대기' 상태의 신청을 찾아 클릭",
+          "expected": "신청 항목에 '승인' 및 '반려' 버튼이 보입니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/admin",
+            "testHint": "scenario: generic_ui / startPath: /admin / precondition: '승인 대기' 상태 신청이 있는 상태 / fixture:  / action: 화면 확인 / target: '승인' 및 '반려' 버튼 / input:  / expected: 표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/admin",
+              "precondition": "'승인 대기' 상태 신청이 있는 상태",
+              "action": "화면 확인",
+              "target": "'승인' 및 '반려' 버튼",
+              "expected": "표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 관리자 페이지의 신청 목록 화면\n확인 방법: '승인 대기' 상태의 신청을 찾아 클릭\n기대 결과: 신청 항목에 '승인' 및 '반려' 버튼이 보입니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/admin에서 '승인 완료' 및 '반려됨' 상태 신청에 '승인' 및 '반려' 버튼 미표시 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "관리자 페이지의 신청 목록 화면",
+          "method": "'승인 완료' 또는 '반려됨' 상태의 신청을 찾아 클릭",
+          "expected": "신청 항목에 '승인' 및 '반려' 버튼이 보이지 않습니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/admin",
+            "testHint": "scenario: generic_ui / startPath: /admin / precondition: '승인 완료' 및 '반려됨' 상태 신청이 있는 상태 / fixture:  / action: 화면 확인 / target: '승인' 및 '반려' 버튼 / input:  / expected: 미표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/admin",
+              "precondition": "'승인 완료' 및 '반려됨' 상태 신청이 있는 상태",
+              "action": "화면 확인",
+              "target": "'승인' 및 '반려' 버튼",
+              "expected": "미표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 관리자 페이지의 신청 목록 화면\n확인 방법: '승인 완료' 또는 '반려됨' 상태의 신청을 찾아 클릭\n기대 결과: 신청 항목에 '승인' 및 '반려' 버튼이 보이지 않습니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/admin에서 '승인' 버튼 클릭 시 신청 상태 '승인 완료'로 변경 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "관리자 페이지의 신청 목록 화면",
+          "method": "'승인 대기' 상태의 신청에서 '승인' 버튼을 클릭",
+          "expected": "신청 상태가 '승인 완료'로 변경됩니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/admin",
+            "testHint": "scenario: state_change / startPath: /admin / precondition: '승인 대기' 상태 신청이 있는 상태 / fixture:  / action: '승인' 버튼 클릭 / target: 신청 상태 / input:  / expected: '승인 완료'로 변경 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "state_change",
+              "startPath": "/admin",
+              "precondition": "'승인 대기' 상태 신청이 있는 상태",
+              "action": "'승인' 버튼 클릭",
+              "target": "신청 상태",
+              "expected": "'승인 완료'로 변경"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 관리자 페이지의 신청 목록 화면\n확인 방법: '승인 대기' 상태의 신청에서 '승인' 버튼을 클릭\n기대 결과: 신청 상태가 '승인 완료'로 변경됩니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/admin에서 '반려' 버튼 클릭 시 신청 상태 '반려됨'으로 변경 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "관리자 페이지의 신청 목록 화면",
+          "method": "'승인 대기' 상태의 신청에서 '반려' 버튼을 클릭",
+          "expected": "신청 상태가 '반려됨'으로 변경됩니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/admin",
+            "testHint": "scenario: state_change / startPath: /admin / precondition: '승인 대기' 상태 신청이 있는 상태 / fixture:  / action: '반려' 버튼 클릭 / target: 신청 상태 / input:  / expected: '반려됨'으로 변경 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "state_change",
+              "startPath": "/admin",
+              "precondition": "'승인 대기' 상태 신청이 있는 상태",
+              "action": "'반려' 버튼 클릭",
+              "target": "신청 상태",
+              "expected": "'반려됨'으로 변경"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 관리자 페이지의 신청 목록 화면\n확인 방법: '승인 대기' 상태의 신청에서 '반려' 버튼을 클릭\n기대 결과: 신청 상태가 '반려됨'으로 변경됩니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/items에서 반려된 비품 상태 '대여 가능'으로 변경 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "비품 목록 페이지",
+          "method": "반려된 비품을 찾아 상태를 확인",
+          "expected": "비품 상태가 '대여 가능'으로 표시됩니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: state_change / startPath: /items / precondition: 반려된 비품이 있는 상태 / fixture:  / action: 화면 확인 / target: 비품 상태 / input:  / expected: '대여 가능'으로 변경 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "state_change",
+              "startPath": "/items",
+              "precondition": "반려된 비품이 있는 상태",
+              "action": "화면 확인",
+              "target": "비품 상태",
+              "expected": "'대여 가능'으로 변경"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 비품 목록 페이지\n확인 방법: 반려된 비품을 찾아 상태를 확인\n기대 결과: 비품 상태가 '대여 가능'으로 표시됩니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/items에서 승인된 비품 상태 '대여중'으로 유지 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "비품 목록 페이지",
+          "method": "승인된 비품을 찾아 상태를 확인",
+          "expected": "비품 상태가 '대여중'으로 유지됩니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/items",
+            "testHint": "scenario: state_persistence / startPath: /items / precondition: 승인된 비품이 있는 상태 / fixture: 테스트 계정에 필요한 데이터를 화면에서 미리 생성 / action: 화면 확인 / target: 비품 상태 / input:  / expected: '대여중'으로 유지 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+                "suggestions": [
+                  "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                  "새 테스트 계정의 초기 상태 사용"
+                ],
+                "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "state_persistence",
+              "startPath": "/items",
+              "precondition": "승인된 비품이 있는 상태",
+              "action": "화면 확인",
+              "target": "비품 상태",
+              "expected": "'대여중'으로 유지",
+              "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 비품 목록 페이지\n확인 방법: 승인된 비품을 찾아 상태를 확인\n기대 결과: 비품 상태가 '대여중'으로 유지됩니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/requests에서 '승인 완료' 및 '반려됨' 상태 신청에 '취소' 버튼 미표시 확인",
+        "method": "manual",
+        "testSpec": {
+          "version": 1,
+          "kind": "manual_guidance",
+          "location": "신청 목록 페이지",
+          "method": "'승인 완료' 또는 '반려됨' 상태의 신청을 찾아 클릭",
+          "expected": "신청 항목에 '취소' 버튼이 보이지 않습니다.",
+          "verificationDesign": {
+            "version": 1,
+            "status": "human_review_required",
+            "startPath": "/requests",
+            "testHint": "scenario: generic_ui / startPath: /requests / precondition: '승인 완료' 및 '반려됨' 상태 신청이 있는 상태 / fixture:  / action: 화면 확인 / target: '취소' 버튼 / input:  / expected: 미표시 / cleanup: ",
+            "conversation": [],
+            "requirements": [],
+            "testContract": {
+              "version": 1,
+              "scenario": "generic_ui",
+              "startPath": "/requests",
+              "precondition": "'승인 완료' 및 '반려됨' 상태 신청이 있는 상태",
+              "action": "화면 확인",
+              "target": "'취소' 버튼",
+              "expected": "미표시"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "자동 테스트로 판정할 수 없어 직접 확인이 필요합니다.\n확인 위치: 신청 목록 페이지\n확인 방법: '승인 완료' 또는 '반려됨' 상태의 신청을 찾아 클릭\n기대 결과: 신청 항목에 '취소' 버튼이 보이지 않습니다."
+          }
+        },
+        "status": "human_review_required"
+      },
+      {
+        "description": "/admin에 일반 직원 계정으로 접근 시 상단 메뉴에 '승인 관리' 미표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/admin",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/admin"
+            },
+            {
+              "atom": "expect_none_text",
+              "contains": "승인 관리",
+              "target": {
+                "role": "link",
+                "name": "승인 관리"
+              }
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/admin",
+            "testHint": "scenario: access_control / startPath: /admin / precondition: 일반 직원 계정으로 로그인한 상태 / fixture: 테스트 계정에 필요한 데이터를 화면에서 미리 생성 / action: 화면 확인 / target: 상단 메뉴 '승인 관리' / input:  / expected: 미표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+                "suggestions": [
+                  "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                  "새 테스트 계정의 초기 상태 사용"
+                ],
+                "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "access_control",
+              "startPath": "/admin",
+              "precondition": "일반 직원 계정으로 로그인한 상태",
+              "action": "화면 확인",
+              "target": "상단 메뉴 '승인 관리'",
+              "expected": "미표시",
+              "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      },
+      {
+        "description": "/admin에 일반 직원 계정으로 직접 접근 시 /items로 리다이렉트 및 안내 문구 표시 확인",
+        "method": "automated_e2e",
+        "testSpec": {
+          "version": 3,
+          "kind": "managed_browser",
+          "startPath": "/admin",
+          "steps": [
+            {
+              "atom": "goto",
+              "path": "/login"
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "email"
+              },
+              "value": {
+                "ref": "email"
+              }
+            },
+            {
+              "atom": "fill",
+              "target": {
+                "field": "password"
+              },
+              "value": {
+                "ref": "password"
+              }
+            },
+            {
+              "atom": "click",
+              "target": {
+                "field": "submit"
+              }
+            },
+            {
+              "atom": "goto",
+              "path": "/admin"
+            },
+            {
+              "atom": "expect_path",
+              "path": "/items"
+            },
+            {
+              "atom": "expect_text",
+              "contains": "안내 문구"
+            }
+          ],
+          "syntheticCredentials": {
+            "email": "test@example.com",
+            "password": "Test1234!",
+            "invalidPassword": "wrong-password"
+          },
+          "verificationDesign": {
+            "version": 1,
+            "status": "automation_ready",
+            "startPath": "/admin",
+            "testHint": "scenario: access_control / startPath: /admin / precondition: 일반 직원 계정으로 로그인한 상태 / fixture: 테스트 계정에 필요한 데이터를 화면에서 미리 생성 / action: 직접 접근 / target: 리다이렉트 및 안내 문구 / input:  / expected: /items로 리다이렉트 및 안내 문구 표시 / cleanup: ",
+            "conversation": [
+              {
+                "role": "assistant",
+                "content": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?"
+              },
+              {
+                "role": "user",
+                "content": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "requirements": [
+              {
+                "key": "fixture",
+                "question": "이 상태를 반복해서 만들 수 있는 테스트 데이터 또는 준비 절차는 무엇인가요?",
+                "suggestions": [
+                  "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                  "새 테스트 계정의 초기 상태 사용"
+                ],
+                "recommendedSuggestion": "테스트 계정에 필요한 데이터를 화면에서 미리 생성",
+                "answer": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+              }
+            ],
+            "testContract": {
+              "version": 1,
+              "scenario": "access_control",
+              "startPath": "/admin",
+              "precondition": "일반 직원 계정으로 로그인한 상태",
+              "action": "직접 접근",
+              "target": "리다이렉트 및 안내 문구",
+              "expected": "/items로 리다이렉트 및 안내 문구 표시",
+              "fixture": "테스트 계정에 필요한 데이터를 화면에서 미리 생성"
+            },
+            "questionSetLocked": true,
+            "humanReviewAccepted": false,
+            "message": "이 완료조건으로 실행할 자동 테스트가 준비되었습니다."
+          }
+        },
+        "status": "automation_ready"
+      }
+    ]
+  }
+]
