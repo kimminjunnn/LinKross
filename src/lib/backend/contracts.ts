@@ -790,7 +790,7 @@ export interface SubscriptionRecord {
 
 export interface CompanySubscriptionOverview {
   subscription: SubscriptionRecord | null;
-  projectCount: number;
+  monthlyVerificationRunCount: number;
   recommendedPlanId: SubscriptionPlanId;
 }
 

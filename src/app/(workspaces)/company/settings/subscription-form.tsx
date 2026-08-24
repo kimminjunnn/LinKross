@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Check, Loader2, XCircle } from "lucide-react";
 
 import { upsertCompanySubscriptionAction } from "@/app/actions/subscriptions";
-import { formatProjectRange, getSubscriptionPlanTier, SUBSCRIPTION_PLAN_TIERS } from "@/config/subscription-plan";
+import { formatRunRange, getSubscriptionPlanTier, SUBSCRIPTION_PLAN_TIERS } from "@/config/subscription-plan";
 import { subscriptionStatusLabel } from "@/config/subscription-status";
 import type { CompanySubscriptionOverview, SubscriptionPlanId } from "@/lib/backend";
 
@@ -12,7 +12,7 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
   const [message, setMessage] = useState<string | null>(null);
   const [pendingPlanId, setPendingPlanId] = useState<SubscriptionPlanId | null>(null);
   const [pending, startTransition] = useTransition();
-  const { subscription, projectCount, recommendedPlanId } = overview;
+  const { subscription, monthlyVerificationRunCount, recommendedPlanId } = overview;
   const activePlanId = subscription?.status === "active" ? subscription.planId : null;
   // amount는 저장 시점 스냅샷이라 플랜 요금표가 바뀌면 옛 값이 남을 수 있다 —
   // 화면에는 항상 현재 요금표 기준 금액을 보여준다.
@@ -40,7 +40,7 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
     <section className="mt-5 rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <h2 className="font-semibold text-app-foreground">구독 플랜</h2>
       <p className="mt-2 text-sm leading-6 text-app-muted">
-        구독 플랜 정보 (결제 연동 없음 — 추후 안내 예정). 진행 중인 프로젝트 개수에 따라 추천 플랜이 달라지며, 원하는 플랜을 직접 선택해 구독할 수 있습니다.
+        프로젝트 등록·모집·SOW 협의는 구독 여부와 상관없이 무료로 이용할 수 있습니다. 실제로 돈이 드는 자동 검수 기능을 이번 달 몇 번 사용했는지에 따라 추천 플랜이 달라지며, 원하는 플랜을 직접 선택해 구독할 수 있습니다.
       </p>
 
       <div className="mt-4 rounded-control border border-app-border-strong bg-app-surface-subtle p-4">
@@ -73,20 +73,20 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
             >
               {isRecommended ? (
                 <span className="mb-2 inline-flex w-fit items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700">
-                  프로젝트 {projectCount}개 기준 추천
+                  이번 달 검수 {monthlyVerificationRunCount}회 기준 추천
                 </span>
               ) : null}
               <p className="font-semibold text-app-foreground">{tier.name}</p>
-              <p className="mt-1 text-xs text-app-muted">{formatProjectRange(tier)}</p>
+              <p className="mt-1 text-xs text-app-muted">{formatRunRange(tier)}</p>
               <p className="mt-3 text-2xl font-bold text-app-foreground">
                 {tier.monthlyPrice.toLocaleString()}원<span className="text-xs font-normal text-app-muted">/월</span>
               </p>
               <ul className="mt-4 space-y-1.5 text-xs text-app-muted">
                 <li className="flex items-center gap-1.5">
-                  <Check className="size-3.5 shrink-0 text-accent-600" />동시 진행 가능 · {formatProjectRange(tier)}
+                  <Check className="size-3.5 shrink-0 text-accent-600" />자동 검수 {formatRunRange(tier)}
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <Check className="size-3.5 shrink-0 text-accent-600" />검수·SOW·증빙 전체 기능
+                  <Check className="size-3.5 shrink-0 text-accent-600" />프로젝트 등록·모집·SOW 협의는 무제한 무료
                 </li>
               </ul>
               <button
