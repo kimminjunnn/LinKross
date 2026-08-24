@@ -21,10 +21,9 @@ import {
   Sparkles,
   Check,
   Clock,
-  ThumbsDown,
-  ThumbsUp,
   UserCheck,
   X,
+  XCircle,
   CreditCard,
   ArrowRight,
 } from "lucide-react";
@@ -934,7 +933,25 @@ function MilestoneDetail({
                             </p>
                           </div>
                         )}
-                        {editing && (
+                        {result?.evidence.some((artifact) => artifact.url) && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {result.evidence.map((artifact) =>
+                              artifact.url ? (
+                                <a
+                                  key={artifact.id}
+                                  href={artifact.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-pill border border-app-border px-2.5 py-1 text-xs font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-50"
+                                >
+                                  {evidenceLabel(artifact.type)}
+                                  <ExternalLink aria-hidden="true" className="size-3" />
+                                </a>
+                              ) : null,
+                            )}
+                          </div>
+                        )}
+                        {editing ? (
                           <form
                             action={submitManualDecision}
                             className="mt-2 rounded border border-brand-200 bg-brand-50/40 p-2"
@@ -957,50 +974,23 @@ function MilestoneDetail({
                             <div className="mt-1.5 flex gap-1.5">
                               <button
                                 disabled={disabled}
-                                className="inline-flex min-h-8 items-center gap-1 rounded-control bg-brand-600 px-2.5 text-xs font-semibold text-white disabled:opacity-50"
+                                className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-control bg-brand-500 px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <Check aria-hidden="true" className="size-3" />
+                                <Check aria-hidden="true" className="size-3.5" />
                                 판정 저장
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setManualTarget(null)}
-                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-app-border px-2.5 text-xs font-semibold text-app-muted"
+                                className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-control border border-app-border-strong px-3 text-xs font-semibold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <X aria-hidden="true" className="size-3" />
+                                <X aria-hidden="true" className="size-3.5" />
                                 취소
                               </button>
                             </div>
                           </form>
-                        )}
-                        {result?.evidence.some((artifact) => artifact.url) && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {result.evidence.map((artifact) =>
-                              artifact.url ? (
-                                <a
-                                  key={artifact.id}
-                                  href={artifact.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 rounded-pill border border-app-border px-2.5 py-1 text-xs font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-50"
-                                >
-                                  {evidenceLabel(artifact.type)}
-                                  <ExternalLink aria-hidden="true" className="size-3" />
-                                </a>
-                              ) : null,
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1.5">
-                        <StatusBadge tone={criterionStatus.tone}>
-                          {criterionStatus.manual ? (
-                            <UserCheck aria-hidden="true" className="mr-1 size-3" />
-                          ) : null}
-                          {criterionStatus.label}
-                        </StatusBadge>
-                        {decisionOptions.length > 0 && !editing ? (
-                          <div className="flex gap-1">
+                        ) : decisionOptions.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
                             {decisionOptions.includes("passed") ? (
                               <button
                                 type="button"
@@ -1008,9 +998,9 @@ function MilestoneDetail({
                                 onClick={() =>
                                   setManualTarget({ criterionId: criterion.id, decision: "passed" })
                                 }
-                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-success disabled:opacity-50"
+                                className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-control border border-app-border-strong px-3 text-xs font-semibold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <ThumbsUp aria-hidden="true" className="size-3" />
+                                <CheckCircle2 aria-hidden="true" className="size-3.5" />
                                 통과 처리
                               </button>
                             ) : null}
@@ -1021,15 +1011,21 @@ function MilestoneDetail({
                                 onClick={() =>
                                   setManualTarget({ criterionId: criterion.id, decision: "failed" })
                                 }
-                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-red-200 bg-red-50 px-2 text-xs font-semibold text-danger disabled:opacity-50"
+                                className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-control border border-app-border-strong px-3 text-xs font-semibold text-app-foreground transition-colors hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                <ThumbsDown aria-hidden="true" className="size-3" />
+                                <XCircle aria-hidden="true" className="size-3.5" />
                                 실패 처리
                               </button>
                             ) : null}
                           </div>
                         ) : null}
                       </div>
+                      <StatusBadge tone={criterionStatus.tone}>
+                        {criterionStatus.manual ? (
+                          <UserCheck aria-hidden="true" className="mr-1 size-3" />
+                        ) : null}
+                        {criterionStatus.label}
+                      </StatusBadge>
                     </li>
                   );
                 })}
