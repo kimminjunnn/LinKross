@@ -20,6 +20,7 @@ export type {
   EvidenceBundleDetail,
   FreelancerApplicationStatus,
   FreelancerApplicationSummary,
+  FreelancerProjectProposal,
   FreelancerProjectSummary,
   FreelancerProfileSettings,
   FinancialMilestoneRecord,
@@ -100,7 +101,11 @@ export {
 } from "@/lib/backend/projects";
 
 export { deleteProjectDraft, getProjectDraft, saveProjectDraft } from "@/lib/backend/drafts";
-export { listFreelancerApplications, listFreelancerProjects } from "@/lib/backend/freelancer";
+export {
+  getFreelancerProjectProposal,
+  listFreelancerApplications,
+  listFreelancerProjects,
+} from "@/lib/backend/freelancer";
 export { listCompanyNotifications, listFreelancerNotifications } from "@/lib/backend/notifications";
 export { getCompanyProfileSettings, getFreelancerProfileSettings, updateCompanyProfileSettings, updateFreelancerProfileSettings } from "@/lib/backend/profiles";
 export { advancePaymentStatus, completeProject, generateEvidenceBundle, getEvidenceBundleDetail, getProjectFinancialWorkspace, listFreelancerInvoices, requestPayment, reviewInvoice, submitInvoice, verifyWalletPayment } from "@/lib/backend/finance";

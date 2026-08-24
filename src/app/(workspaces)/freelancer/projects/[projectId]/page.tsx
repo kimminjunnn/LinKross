@@ -1,8 +1,8 @@
 import { CalendarRange, CircleAlert, FileText, Handshake, WalletCards } from "lucide-react";
 
 import {
+  getFreelancerProjectProposal,
   getSowApprovalState,
-  listFreelancerApplications,
   listFreelancerProjects,
 } from "@/lib/backend";
 
@@ -14,29 +14,22 @@ export default async function FreelancerProjectPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const [projectsResult, applicationsResult, sowResult] = await Promise.all([
-    listFreelancerProjects(),
-    listFreelancerApplications(),
-    getSowApprovalState(projectId, undefined, "freelancer"),
-  ]);
+  const projectsResult = await listFreelancerProjects();
 
-  if (!projectsResult.ok || !applicationsResult.ok || !sowResult.ok) {
-    const message = !projectsResult.ok
-      ? projectsResult.error.message
-      : !applicationsResult.ok
-        ? applicationsResult.error.message
-        : !sowResult.ok
-          ? sowResult.error.message
-          : "The project could not be loaded.";
-    return <TabError message={message} />;
-  }
+  if (!projectsResult.ok) return <TabError message={projectsResult.error.message} />;
 
   const project = projectsResult.data.find((item) => item.projectId === projectId);
   if (!project) return <TabError message="The selected project could not be found." />;
 
-  const proposal = applicationsResult.data.find(
-    (item) => item.projectId === projectId && item.proposalId === project.proposalId,
-  );
+  const [proposalResult, sowResult] = await Promise.all([
+    getFreelancerProjectProposal(projectId, project.proposalId),
+    getSowApprovalState(projectId, undefined, "freelancer"),
+  ]);
+
+  if (!proposalResult.ok) return <TabError message={proposalResult.error.message} />;
+  if (!sowResult.ok) return <TabError message={sowResult.error.message} />;
+
+  const proposal = proposalResult.data;
   const sow = sowResult.data;
 
   return (

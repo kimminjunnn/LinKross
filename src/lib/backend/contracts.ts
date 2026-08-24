@@ -482,6 +482,14 @@ export interface FreelancerProjectSummary {
   approvedMilestoneCount: number;
 }
 
+export interface FreelancerProjectProposal {
+  proposalId: string;
+  projectId: string;
+  content: string;
+  optionalNotes: string | null;
+  submittedAt: string;
+}
+
 export type VerificationRunStatus =
   | "queued"
   | "provisioning"

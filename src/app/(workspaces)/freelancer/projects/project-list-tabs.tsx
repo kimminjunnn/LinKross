@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ArrowRight, FolderKanban } from "lucide-react";
 
 import type { FreelancerProjectSummary } from "@/lib/backend";
@@ -59,9 +58,9 @@ export function ProjectListTabs({ projects }: { projects: FreelancerProjectSumma
                     {project.approvedMilestoneCount}/{project.milestoneCount} milestones approved · {project.lifecycleStage.replaceAll("_", " ")}
                   </p>
                 </div>
-                <Link href={`/freelancer/projects/${project.projectId}`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+                <a href={`/freelancer/projects/${project.projectId}`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
                   Open workspace <ArrowRight className="size-4" />
-                </Link>
+                </a>
               </div>
             </article>
           ))}

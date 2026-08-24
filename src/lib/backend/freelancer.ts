@@ -3,10 +3,12 @@ import { cache } from "react";
 import type {
   BackendResult,
   FreelancerApplicationSummary,
+  FreelancerProjectProposal,
   FreelancerProjectSummary,
 } from "@/lib/backend/contracts";
 import { mapBackendError } from "@/lib/backend/errors";
 import { translateToEnglish } from "@/lib/backend/translation";
+import { isUuid } from "@/lib/backend/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ProposalRow = {
@@ -171,6 +173,62 @@ export async function listFreelancerApplications(): Promise<
   return {
     ok: true,
     data,
+  };
+}
+
+export async function getFreelancerProjectProposal(
+  projectId: string,
+  proposalId: string,
+): Promise<BackendResult<FreelancerProjectProposal | null>> {
+  if (!isUuid(projectId) || !isUuid(proposalId)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 프로젝트가 아닙니다." } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    return { ok: false, error: { code: "AUTH_REQUIRED", message: "로그인이 필요합니다." } };
+  }
+
+  const [proposalResult, selectionResult] = await Promise.all([
+    supabase
+      .from("proposals")
+      .select("id, project_id, content, optional_notes, submitted_at")
+      .eq("id", proposalId)
+      .eq("project_id", projectId)
+      .eq("freelancer_id", authData.user.id)
+      .maybeSingle(),
+    supabase
+      .from("selections")
+      .select("proposal_id")
+      .eq("project_id", projectId)
+      .eq("proposal_id", proposalId)
+      .maybeSingle(),
+  ]);
+
+  if (proposalResult.error || selectionResult.error) {
+    return {
+      ok: false,
+      error: mapBackendError(
+        proposalResult.error ?? selectionResult.error,
+        "선정된 수행 제안서를 불러오지 못했습니다.",
+      ),
+    };
+  }
+
+  if (!proposalResult.data || !selectionResult.data) {
+    return { ok: true, data: null };
+  }
+
+  return {
+    ok: true,
+    data: {
+      proposalId: proposalResult.data.id,
+      projectId: proposalResult.data.project_id,
+      content: proposalResult.data.content,
+      optionalNotes: proposalResult.data.optional_notes,
+      submittedAt: proposalResult.data.submitted_at,
+    },
   };
 }
 
