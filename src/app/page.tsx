@@ -111,33 +111,33 @@ export default async function HomePage() {
             {/* Value 1: Domestic vs Offshore Freelancer Cost Reduction */}
             <div className="p-7 rounded-3xl bg-slate-50 border border-slate-200/90 hover:border-orange-500/80 transition-all shadow-sm hover:shadow-md space-y-3.5">
               <div className="inline-flex items-center px-3 py-1 rounded-lg bg-orange-100 text-orange-700 font-semibold text-xs">
-                01. 비용 절감 & 외주 리스크 차단
+                01. 해외 개발자 비용 비교
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 tracking-tight break-keep">CTO 채용 없이 외주비 낭비 방지</h3>
+              <h3 className="text-lg font-semibold text-slate-900 tracking-tight break-keep">비용 부담을 낮춘 개발자 선택</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed break-keep">
-                국내 프리랜서 대비 <strong className="text-orange-600">해외 개발자 매칭으로 개발비 60% 절감</strong>, 사내 CTO/QA 채용 대비 <strong className="text-orange-600">인건비를 70% 이상 절감</strong>하여 외주 리스크를 차단합니다.
+                월평균 비용 기준, 인도·파키스탄 등 해외 개발자 매칭으로 <strong className="text-orange-600">국내 대비 약 41% 절감</strong>할 수 있습니다. 수행 제안서를 직접 비교하고 프로젝트에 적합한 개발자를 선택하세요.
               </p>
             </div>
 
             {/* Value 2: AI SOW Headline & Highlight Metric */}
             <div className="p-7 rounded-3xl bg-slate-50 border border-slate-200/90 hover:border-orange-500/80 transition-all shadow-sm hover:shadow-md space-y-3.5">
               <div className="inline-flex items-center px-3 py-1 rounded-lg bg-orange-100 text-orange-700 font-semibold text-xs">
-                02. 비개발자 맞춤 소통 편의성
+                02. 확인 가능한 업무 합의
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 tracking-tight break-keep">어려운 업무명세서 작업, AI로 한 번에 해결하세요</h3>
+              <h3 className="text-lg font-semibold text-slate-900 tracking-tight break-keep">모호한 요구사항을 확인 가능한 조건으로</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed break-keep">
-                작성에 며칠씩 걸리던 SOW(업무명세서)를 <strong className="text-orange-600">AI 자동 생성으로 작성 시간 90% 단축</strong>하고, 비개발자도 직관 확인 가능한 조건으로 합의합니다.
+                프로젝트 요구사항과 선정된 개발자의 수행 제안서를 바탕으로 <strong className="text-orange-600">AI가 SOW 초안 작성을 지원</strong>합니다. 화면과 사용자 행동 중심의 완료조건을 같은 버전에서 검토하고 합의하세요.
               </p>
             </div>
 
             {/* Value 3: Automated Verification Highlight Metric */}
             <div className="p-7 rounded-3xl bg-slate-50 border border-slate-200/90 hover:border-orange-500/80 transition-all shadow-sm hover:shadow-md space-y-3.5">
               <div className="inline-flex items-center px-3 py-1 rounded-lg bg-orange-100 text-orange-700 font-semibold text-xs">
-                03. 확실한 결과물 검수 & 승인
+                03. 실행 증거 기반 검수
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 tracking-tight break-keep">작동 화면과 증거로 직접 승인</h3>
+              <h3 className="text-lg font-semibold text-slate-900 tracking-tight break-keep">코드를 읽지 않아도 결과물 검수</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed break-keep">
-                코드를 읽지 못해도 괜찮습니다. <strong className="text-orange-600">자동 판정 정확도 90%</strong>와 시연 영상 증거로 <strong className="text-orange-600">검수 확인 시간을 30% 단축</strong>하여 안심 승인하세요.
+                제출된 Commit SHA를 기준으로 완료조건별 실행 결과를 확인하세요. <strong className="text-orange-600">스크린샷, 실행 로그와 Preview</strong>를 검토한 뒤 직접 승인하거나 수정을 요청할 수 있습니다.
               </p>
             </div>
           </div>
@@ -189,20 +189,8 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {/* 데모 체험하기 우회 링크 */}
-          <div className="mb-24 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm text-slate-500 select-none">
-            <span>가입 없이 워크스페이스 대시보드가 궁금하신가요?</span>
-            <Link
-              href="/demo/projects/quarterly-improvement"
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 hover:text-orange-700 transition-all hover:scale-[1.03] shadow-xs border border-orange-200/50 cursor-pointer ml-1 active:scale-[0.98]"
-            >
-              <span>데모 체험하기</span>
-              <span className="text-xs transition-transform group-hover:translate-x-0.5">→</span>
-            </Link>
-          </div>
-
           {/* Interactive Web Dashboard Mockup Section */}
-          <div className="w-full max-w-5xl text-left space-y-6 mb-24">
+          <div className="w-full max-w-5xl text-left space-y-6 mt-16 mb-24">
             <div className="text-center max-w-2xl mx-auto mb-10">
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                 비개발자 맞춤형 검수 대시보드 미리보기
@@ -221,7 +209,7 @@ export default async function HomePage() {
                   <span className="w-3 h-3 rounded-full bg-green-400"></span>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-lg text-xs px-8 py-1 text-slate-500">
-                  linkross.com/demo/projects/quarterly-improvement
+                  linkross.com/projects/quarterly-improvement
                 </div>
                 <div className="w-12"></div>
               </div>
