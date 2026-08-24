@@ -1305,16 +1305,17 @@ function resolveCriterionView(
 /**
  * 발주자가 지금 이 완료조건을 어느 쪽으로 판정할 수 있는지.
  *
- * 서버가 허용하는 전이와 같은 규칙이다. 이미 사람이 판정한 항목은 같은 쪽으로
- * 다시 누를 이유가 없으므로 반대쪽만 남겨 뒤집기로 쓴다.
+ * 이미 사람이 판정한 항목은 판정이 끝난 것이므로 버튼을 남기지 않는다. 결론이
+ * 난 줄에 반대쪽 버튼이 계속 떠 있으면 판정이 아직 열려 있는 것처럼 보인다.
  */
 function manualDecisionOptions(
   status: VerificationResultRecord["status"] | undefined,
   manual: VerificationResultRecord["manualDecision"],
 ): Array<"passed" | "failed"> {
-  const allowed: Array<"passed" | "failed"> =
-    status === "failed" ? ["passed"] : status === "needs_review" ? ["passed", "failed"] : [];
-  return manual ? allowed.filter((option) => option !== manual.decision) : allowed;
+  if (manual) return [];
+  if (status === "failed") return ["passed"];
+  if (status === "needs_review") return ["passed", "failed"];
+  return [];
 }
 
 function resolveCriterionStatus(
