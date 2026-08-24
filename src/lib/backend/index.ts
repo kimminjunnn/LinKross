@@ -14,6 +14,8 @@ export type {
   ConnectRepositoryInput,
   CreateProjectInput,
   CreateProjectOutput,
+  CriterionManualDecisionRecord,
+  DecideCriterionManuallyInput,
   DecideMilestoneInput,
   EvidenceBundleDetail,
   FreelancerApplicationStatus,
@@ -108,6 +110,7 @@ export { listCompanyProposals, listProjectProposals, selectProposal, submitPropo
 export {
   cancelVerificationRun,
   connectProjectRepository,
+  decideCriterionManually,
   decideMilestone,
   getVerificationWorkspace,
   requestVerificationRun,

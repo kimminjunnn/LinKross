@@ -503,18 +503,43 @@ export interface ProjectRepositoryRecord {
   companyConfirmedAt: string | null;
 }
 
+/**
+ * 자동 판정을 발주자가 뒤집은 기록.
+ *
+ * 자동 결과(`status`)는 그대로 두고 이것만 덧붙인다. 화면은 사람 판정을 현재
+ * 상태로 보여주되 무엇을 뒤집었는지 함께 보여줘야 근거가 남는다.
+ */
+export interface CriterionManualDecisionRecord {
+  decision: "passed" | "failed";
+  /** 뒤집기 직전의 자동 판정. */
+  automatedStatus: VerificationResultRecord["status"] | null;
+  reason: string;
+  decidedAt: string;
+}
+
 export interface VerificationResultRecord {
   id: string;
   criterionId: string;
+  /** 자동 검수가 내린 판정. 사람이 뒤집어도 이 값은 바뀌지 않는다. */
   status: "queued" | "running" | "passed" | "failed" | "needs_review" | "not_run";
   observedResult: string | null;
   errorMessage: string | null;
+  /** 발주자의 최신 수동 판정. 없으면 null. */
+  manualDecision: CriterionManualDecisionRecord | null;
   evidence: Array<{
     id: string;
     type: string;
     url: string | null;
     storagePath: string | null;
   }>;
+}
+
+export interface DecideCriterionManuallyInput {
+  projectId: string;
+  runId: string;
+  criterionId: string;
+  decision: "passed" | "failed";
+  reason: string;
 }
 
 export interface VerificationRunRecord {

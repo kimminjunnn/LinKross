@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import type {
   BackendResult,
   ConnectRepositoryInput,
+  DecideCriterionManuallyInput,
   DecideMilestoneInput,
   MilestoneSubmissionReceipt,
   RequestVerificationInput,
@@ -15,6 +16,7 @@ import type {
 import {
   cancelVerificationRun,
   connectProjectRepository,
+  decideCriterionManually,
   decideMilestone,
   requestVerificationRun,
   submitMilestonePullRequest,
@@ -94,6 +96,14 @@ export async function decideMilestoneAction(
   input: DecideMilestoneInput,
 ): Promise<BackendResult<{ decisionId: string }>> {
   const result = await decideMilestone(input);
+  if (result.ok) revalidateVerification(input.projectId);
+  return result;
+}
+
+export async function decideCriterionManuallyAction(
+  input: DecideCriterionManuallyInput,
+): Promise<BackendResult<{ decidedAt: string }>> {
+  const result = await decideCriterionManually(input);
   if (result.ok) revalidateVerification(input.projectId);
   return result;
 }

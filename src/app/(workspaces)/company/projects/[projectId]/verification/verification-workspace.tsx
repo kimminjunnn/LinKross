@@ -21,12 +21,17 @@ import {
   Sparkles,
   Check,
   Clock,
+  ThumbsDown,
+  ThumbsUp,
+  UserCheck,
+  X,
   CreditCard,
   ArrowRight,
 } from "lucide-react";
 
 import {
   connectProjectRepositoryAction,
+  decideCriterionManuallyAction,
   decideMilestoneAction,
   cancelVerificationRunAction,
   requestVerificationRunAction,
@@ -737,6 +742,38 @@ function MilestoneDetail({
   }
 
   const runInProgress = latestRun ? ACTIVE_RUN_STATUSES.includes(latestRun.status) : false;
+  // 어떤 완료조건을 어느 쪽으로 판정하려는지. 사유 없이 뒤집으면 증빙에 근거가
+  // 남지 않으므로 버튼을 누르면 바로 저장하지 않고 사유 입력을 먼저 연다.
+  const [manualTarget, setManualTarget] = useState<
+    { criterionId: string; decision: "passed" | "failed" } | null
+  >(null);
+
+  function submitManualDecision(formData: FormData) {
+    if (!latestRun || !manualTarget) return;
+    const reason = String(formData.get("manualReason") ?? "").trim();
+    if (!reason) {
+      setMessage("판정 사유를 입력해주세요.");
+      return;
+    }
+    const target = manualTarget;
+    setManualTarget(null);
+    run(async () => {
+      const result = await decideCriterionManuallyAction({
+        projectId,
+        runId: latestRun.id,
+        criterionId: target.criterionId,
+        decision: target.decision,
+        reason,
+      });
+      setMessage(
+        result.ok
+          ? target.decision === "passed"
+            ? "완료조건을 통과로 판정했습니다. 자동 판정 결과는 그대로 보존됩니다."
+            : "완료조건을 실패로 판정했습니다. 자동 판정 결과는 그대로 보존됩니다."
+          : result.error.message,
+      );
+    });
+  }
 
   return (
     <section className="bg-app-surface">
@@ -836,10 +873,14 @@ function MilestoneDetail({
               <ul className="mt-4 space-y-2 max-h-[320px] overflow-y-auto pr-1">
                 {milestone.checklist.map((criterion, index) => {
                   const result = resultsByCriterion.get(criterion.id);
-                  const criterionStatus = resolveCriterionStatus(
+                  const criterionStatus = resolveCriterionView(
                     result,
                     latestSubmission?.claimedCriterionIds.includes(criterion.id) ?? false,
                   );
+                  const decisionOptions = runInProgress || !latestRun
+                    ? []
+                    : manualDecisionOptions(result?.status, result?.manualDecision ?? null);
+                  const editing = manualTarget?.criterionId === criterion.id;
                   return (
                     <li
                       key={criterion.id}
@@ -872,6 +913,66 @@ function MilestoneDetail({
                             {result.errorMessage}
                           </p>
                         )}
+                        {criterionStatus.manual && (
+                          <div className="mt-2 rounded border border-app-border-strong/50 bg-app-surface-subtle p-2 text-xs leading-relaxed">
+                            <p className="font-semibold text-app-foreground">
+                              발주자가 직접 판정 ·{" "}
+                              {formatMoment(criterionStatus.manual.decidedAt) ?? "시점 미상"}
+                            </p>
+                            <p className="mt-0.5 text-app-muted">
+                              자동 판정{" "}
+                              {criterionStatus.manual.automatedStatus
+                                ? checklistStatusConfig[
+                                    criterionStatus.manual.automatedStatus as ChecklistStatus
+                                  ].label
+                                : "없음"}
+                              {" → "}
+                              {checklistStatusConfig[criterionStatus.manual.decision].label}
+                            </p>
+                            <p className="mt-0.5 whitespace-pre-wrap text-app-muted">
+                              사유: {criterionStatus.manual.reason}
+                            </p>
+                          </div>
+                        )}
+                        {editing && (
+                          <form
+                            action={submitManualDecision}
+                            className="mt-2 rounded border border-brand-200 bg-brand-50/40 p-2"
+                          >
+                            <label
+                              htmlFor={`manual-reason-${criterion.id}`}
+                              className="text-xs font-semibold text-app-foreground"
+                            >
+                              {manualTarget?.decision === "passed" ? "통과" : "실패"}로 판정하는 사유
+                            </label>
+                            <textarea
+                              id={`manual-reason-${criterion.id}`}
+                              name="manualReason"
+                              required
+                              autoFocus
+                              disabled={disabled}
+                              placeholder="Preview에서 무엇을 확인했는지 적어주세요. 통합 증빙에 그대로 남습니다."
+                              className="mt-1.5 min-h-16 w-full rounded-control border border-app-border-strong bg-app-surface p-2 text-xs focus:border-brand-500 focus:outline-none disabled:opacity-50"
+                            />
+                            <div className="mt-1.5 flex gap-1.5">
+                              <button
+                                disabled={disabled}
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control bg-brand-600 px-2.5 text-xs font-semibold text-white disabled:opacity-50"
+                              >
+                                <Check aria-hidden="true" className="size-3" />
+                                판정 저장
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setManualTarget(null)}
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-app-border px-2.5 text-xs font-semibold text-app-muted"
+                              >
+                                <X aria-hidden="true" className="size-3" />
+                                취소
+                              </button>
+                            </div>
+                          </form>
+                        )}
                         {result?.evidence.some((artifact) => artifact.url) && (
                           <div className="mt-2 flex flex-wrap gap-2">
                             {result.evidence.map((artifact) =>
@@ -891,9 +992,44 @@ function MilestoneDetail({
                           </div>
                         )}
                       </div>
-                      <StatusBadge tone={criterionStatus.tone}>
-                        {criterionStatus.label}
-                      </StatusBadge>
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <StatusBadge tone={criterionStatus.tone}>
+                          {criterionStatus.manual ? (
+                            <UserCheck aria-hidden="true" className="mr-1 size-3" />
+                          ) : null}
+                          {criterionStatus.label}
+                        </StatusBadge>
+                        {decisionOptions.length > 0 && !editing ? (
+                          <div className="flex gap-1">
+                            {decisionOptions.includes("passed") ? (
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() =>
+                                  setManualTarget({ criterionId: criterion.id, decision: "passed" })
+                                }
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-success disabled:opacity-50"
+                              >
+                                <ThumbsUp aria-hidden="true" className="size-3" />
+                                통과 처리
+                              </button>
+                            ) : null}
+                            {decisionOptions.includes("failed") ? (
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() =>
+                                  setManualTarget({ criterionId: criterion.id, decision: "failed" })
+                                }
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-red-200 bg-red-50 px-2 text-xs font-semibold text-danger disabled:opacity-50"
+                              >
+                                <ThumbsDown aria-hidden="true" className="size-3" />
+                                실패 처리
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
                     </li>
                   );
                 })}
@@ -1059,11 +1195,22 @@ function MilestoneHeader({
 
 function RunResult({ run }: { run: VerificationRunRecord }) {
   const status = resolveRunStatus(run.status);
+  const moment = resolveRunMoment(run);
+  const elapsed = formatElapsed(run.startedAt, run.completedAt);
 
   return (
     <div className="rounded-control border border-app-border bg-app-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-app-foreground">검수 #{run.attemptNumber}</p>
+        <div className="min-w-0">
+          <p className="text-sm text-app-foreground">검수 #{run.attemptNumber}</p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-app-muted">
+            <span className="inline-flex items-center gap-1">
+              <Clock aria-hidden="true" className="size-3" />
+              {moment.label} {moment.value}
+            </span>
+            {elapsed ? <span>· 소요 {elapsed}</span> : null}
+          </p>
+        </div>
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
       </div>
       {ACTIVE_RUN_STATUSES.includes(run.status) && (
@@ -1116,6 +1263,60 @@ function resolveMilestoneStatus(milestone: VerificationMilestoneRecord): {
   );
 }
 
+/**
+ * 날짜와 시각을 발주자가 읽는 형식으로. 초 단위는 의사결정에 쓸모가 없다.
+ *
+ * 시간대를 고정한다. 클라이언트 컴포넌트라 서버(UTC)와 브라우저(로컬)가 각각
+ * 렌더링하는데, 시간대를 비워 두면 두 결과가 달라져 hydration이 어긋난다.
+ * 검수 시각은 양측이 같은 값을 봐야 하는 계약상의 기록이기도 하다.
+ */
+function formatMoment(value: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}
+
+/**
+ * 화면에 보일 완료조건 상태.
+ *
+ * 사람이 내린 판정이 있으면 그것이 현재 상태다. 다만 자동 판정을 지우지 않고
+ * 함께 돌려줘, 무엇을 뒤집은 결과인지 화면에서 같이 보여줄 수 있게 한다.
+ */
+function resolveCriterionView(
+  result: VerificationResultRecord | undefined,
+  isClaimed: boolean,
+): { label: string; tone: StatusTone; manual: VerificationResultRecord["manualDecision"] } {
+  const automated = resolveCriterionStatus(result, isClaimed);
+  const manual = result?.manualDecision ?? null;
+  if (!manual) return { ...automated, manual: null };
+  const decided = checklistStatusConfig[manual.decision];
+  return { label: `발주자 ${decided.label}`, tone: decided.tone, manual };
+}
+
+/**
+ * 발주자가 지금 이 완료조건을 어느 쪽으로 판정할 수 있는지.
+ *
+ * 서버가 허용하는 전이와 같은 규칙이다. 이미 사람이 판정한 항목은 같은 쪽으로
+ * 다시 누를 이유가 없으므로 반대쪽만 남겨 뒤집기로 쓴다.
+ */
+function manualDecisionOptions(
+  status: VerificationResultRecord["status"] | undefined,
+  manual: VerificationResultRecord["manualDecision"],
+): Array<"passed" | "failed"> {
+  const allowed: Array<"passed" | "failed"> =
+    status === "failed" ? ["passed"] : status === "needs_review" ? ["passed", "failed"] : [];
+  return manual ? allowed.filter((option) => option !== manual.decision) : allowed;
+}
+
 function resolveCriterionStatus(
   result: VerificationResultRecord | undefined,
   isClaimed: boolean,
@@ -1130,6 +1331,32 @@ function resolveCriterionStatus(
       ? "submitted"
       : "not_submitted";
   return checklistStatusConfig[key];
+}
+
+/**
+ * 실행 카드에 보여줄 시각.
+ *
+ * 발주자가 알고 싶은 건 "이 결과가 언제 나온 것인가"다. 끝난 실행은 완료 시각을,
+ * 아직 도는 실행은 시작 또는 대기 시각을 기준으로 보여준다.
+ */
+function resolveRunMoment(run: VerificationRunRecord): { label: string; value: string } {
+  const completed = formatMoment(run.completedAt);
+  if (completed) return { label: "완료", value: completed };
+  const started = formatMoment(run.startedAt);
+  if (started) return { label: "시작", value: started };
+  return { label: "요청", value: formatMoment(run.queuedAt) ?? "시점 미상" };
+}
+
+/** 검수에 걸린 시간. 재검수가 쌓일 때 실행끼리 비교할 수 있게 함께 보여준다. */
+function formatElapsed(startedAt: string | null, completedAt: string | null): string | null {
+  if (!startedAt || !completedAt) return null;
+  const ms = new Date(completedAt).getTime() - new Date(startedAt).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  const seconds = Math.round(ms / 1000);
+  if (seconds < 60) return `${seconds}초`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return rest ? `${minutes}분 ${rest}초` : `${minutes}분`;
 }
 
 function resolveRunStatus(status: VerificationRunRecord["status"]): {

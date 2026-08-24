@@ -1,6 +1,7 @@
 import type {
   BackendResult,
   ConnectRepositoryInput,
+  DecideCriterionManuallyInput,
   DecideMilestoneInput,
   MilestoneSubmissionReceipt,
   MilestoneSubmissionRecord,
@@ -169,6 +170,28 @@ export async function getVerificationWorkspace(
 
   const resultRows = resultsResult.data ?? [];
   const resultIds = resultRows.map((row) => row.id);
+
+  // 발주자의 수동 판정. 같은 완료조건을 여러 번 뒤집을 수 있으므로 최신순으로
+  // 받아 실행·완료조건 쌍마다 첫 행만 쓴다.
+  const manualResult = runIds.length
+    ? await supabase
+        .from("criterion_manual_decisions")
+        .select("run_id, criterion_id, decision, automated_status, reason, decided_at")
+        .in("run_id", runIds)
+        .order("decided_at", { ascending: false })
+    : { data: [], error: null };
+  if (manualResult.error) {
+    return {
+      ok: false,
+      error: mapBackendError(manualResult.error, "완료조건 수동 판정을 불러오지 못했습니다."),
+    };
+  }
+  const manualByRunCriterion = new Map<string, ManualDecisionRow>();
+  for (const row of (manualResult.data ?? []) as ManualDecisionRow[]) {
+    const key = `${row.run_id}:${row.criterion_id}`;
+    if (!manualByRunCriterion.has(key)) manualByRunCriterion.set(key, row);
+  }
+
   const evidenceResult = resultIds.length
     ? await supabase
         .from("evidence_artifacts")
@@ -247,6 +270,7 @@ export async function getVerificationWorkspace(
             resultsByRun,
             evidenceByResult,
             signedUrlByPath,
+            manualByRunCriterion,
             shouldTranslate,
           ),
         ),
@@ -710,6 +734,104 @@ function toSubmissionReceipt(
   return { submissionId: submission.id, headCommitSha: submission.head_commit_sha };
 }
 
+/** 어떤 자동 판정을 어느 쪽으로 뒤집을 수 있는지. */
+const MANUAL_DECISION_SOURCES: Record<"passed" | "failed", ReadonlyArray<string>> = {
+  // 통과 처리는 자동이 못 넘긴 것과 판단을 보류한 것 둘 다에 쓴다.
+  passed: ["failed", "needs_review"],
+  // 실패 처리는 보류된 것만. 이미 실패한 항목을 다시 실패로 만들 이유가 없고,
+  // 통과한 항목을 실패로 뒤집는 건 재검수로 다뤄야 할 다른 문제다.
+  failed: ["needs_review"],
+};
+
+/**
+ * 완료조건 하나를 발주자가 직접 통과 또는 실패로 판정한다.
+ *
+ * 자동 검수가 실패했거나 판단을 보류한 항목을 사람이 Preview에서 확인하고
+ * 확정하는 경로다. 자동 판정 원문(`criterion_results`)은 건드리지 않고 결정을
+ * 새 행으로 쌓아, 무엇을 무엇으로 뒤집었는지가 증빙에 남는다.
+ *
+ * 어떤 자동 판정을 뒤집을 수 있는지는 서버에서 검증한다. 버튼을 숨기는 것만으로
+ * 권한과 상태 전이를 보장하지 않는다(CLAUDE.md 10장).
+ */
+export async function decideCriterionManually(
+  input: DecideCriterionManuallyInput,
+): Promise<BackendResult<{ decidedAt: string }>> {
+  if (![input.projectId, input.runId, input.criterionId].every(isUuid)) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "올바른 완료조건 판정 대상이 아닙니다." } };
+  }
+  const reason = input.reason.trim();
+  if (!reason) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "판정 사유를 입력해주세요." } };
+  }
+  if (reason.length > 2_000) {
+    return { ok: false, error: { code: "INVALID_INPUT", message: "판정 사유는 2000자를 넘을 수 없습니다." } };
+  }
+
+  const access = await getProjectAccess(input.projectId);
+  if (!access.ok) return access;
+  if (!access.data.isCompany) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "발주자만 완료조건을 직접 판정할 수 있습니다." } };
+  }
+
+  const { data: run, error: runError } = await access.data.supabase
+    .from("verification_runs")
+    .select("id, milestone_id, status")
+    .eq("id", input.runId)
+    .eq("project_id", input.projectId)
+    .maybeSingle();
+  if (runError || !run) {
+    return { ok: false, error: mapBackendError(runError, "검수 실행을 확인하지 못했습니다.") };
+  }
+  if (ACTIVE_RUN_STATUSES.includes(run.status as never)) {
+    return {
+      ok: false,
+      error: { code: "CONFLICT", message: "검수가 진행 중입니다. 끝난 뒤에 판정할 수 있습니다." },
+    };
+  }
+
+  const { data: result, error: resultError } = await access.data.supabase
+    .from("criterion_results")
+    .select("status")
+    .eq("run_id", input.runId)
+    .eq("criterion_id", input.criterionId)
+    .maybeSingle();
+  if (resultError) {
+    return { ok: false, error: mapBackendError(resultError, "완료조건 결과를 확인하지 못했습니다.") };
+  }
+
+  const automatedStatus = result?.status ?? null;
+  if (!automatedStatus || !MANUAL_DECISION_SOURCES[input.decision].includes(automatedStatus)) {
+    return {
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        message: input.decision === "passed"
+          ? "실패 또는 확인 필요 상태인 완료조건만 통과 처리할 수 있습니다."
+          : "확인 필요 상태인 완료조건만 실패 처리할 수 있습니다.",
+      },
+    };
+  }
+
+  const { data: decision, error: decisionError } = await access.data.supabase
+    .from("criterion_manual_decisions")
+    .insert({
+      project_id: input.projectId,
+      milestone_id: run.milestone_id,
+      run_id: input.runId,
+      criterion_id: input.criterionId,
+      decision: input.decision,
+      automated_status: automatedStatus,
+      reason,
+      decided_by: access.data.userId,
+    })
+    .select("decided_at")
+    .single();
+  if (decisionError || !decision) {
+    return { ok: false, error: mapBackendError(decisionError, "완료조건 판정을 저장하지 못했습니다.") };
+  }
+  return { ok: true, data: { decidedAt: decision.decided_at } };
+}
+
 /**
  * 진행 중인 검수 실행을 사용자가 중단한다.
  *
@@ -939,6 +1061,16 @@ function toRepository(row: {
   };
 }
 
+/** criterion_manual_decisions 한 행. 화면과 조회 코드가 같은 모양을 쓴다. */
+type ManualDecisionRow = {
+  run_id: string;
+  criterion_id: string;
+  decision: "passed" | "failed";
+  automated_status: VerificationResultRecord["status"] | null;
+  reason: string;
+  decided_at: string;
+};
+
 async function toSubmission(
   submission: {
     id: string;
@@ -978,6 +1110,7 @@ async function toSubmission(
     storage_path: string | null;
   }>>,
   signedUrlByPath: Map<string, string>,
+  manualByRunCriterion: Map<string, ManualDecisionRow>,
   translate = false,
 ): Promise<MilestoneSubmissionRecord> {
   const implementationNote = translate && submission.implementation_note
@@ -999,12 +1132,22 @@ async function toSubmission(
             ? await translateToEnglish(result.error_message)
             : result.error_message;
 
+          const manual = manualByRunCriterion.get(`${run.id}:${result.criterion_id}`);
+
           return {
             id: result.id,
             criterionId: result.criterion_id,
             status: result.status,
             observedResult,
             errorMessage,
+            manualDecision: manual
+              ? {
+                  decision: manual.decision,
+                  automatedStatus: manual.automated_status,
+                  reason: manual.reason,
+                  decidedAt: manual.decided_at,
+                }
+              : null,
             evidence: (evidenceByResult.get(result.id) ?? []).map((artifact) => ({
               id: artifact.id,
               type: artifact.artifact_type,
