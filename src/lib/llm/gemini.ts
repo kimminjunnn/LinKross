@@ -13,15 +13,42 @@
 import { GoogleGenAI, ThinkingLevel, type GenerateContentResponseUsageMetadata } from "@google/genai";
 
 /**
- * 구조화 출력과 긴 한국어 입력을 다루는 기본 모델.
+ * 하루 한도가 소진되면 순서대로 갈아탈 모델 목록.
  *
- * 2026-08-23 실측으로 고른 값이다. `gemini-2.5-*`는 목록에는 보이지만 신규 키에
- * 404를 돌려준다. `gemini-3.7-flash`는 503(수요 초과)이 났고, `gemini-3.6-flash`는
- * 같은 호출에 12~14초가 걸렸다. `gemini-3.5-flash`가 1초 안팎으로 안정적이었다.
+ * 하루 한도(RPD)가 큰 모델을 앞에 둔다. 전환할 때마다 그 모델이 처음 받아보는
+ * 설정 조합에서 실패할 여지가 생기므로, 전환 횟수 자체를 줄이는 편이 안전하다.
+ * lite 둘로 1,000회를 먼저 쓰고 나면 20회짜리는 사실상 예비 전력이다.
+ *
+ * 괄호 안은 AI Studio 비율 제한 화면 기준(무료 등급, 2026-08-24).
+ * 지연시간 메모는 2026-08-23 실측이다.
+ *
+ * `gemini-2.5-*`는 목록에는 보이지만 신규 키에 404를 돌려주므로 넣지 않는다.
+ * `gemma-4-*`는 RPD가 14.4K로 크지만 TPM이 16K뿐이라 긴 한국어 원문 하나에
+ * 막힌다. 이것도 넣지 않는다.
  */
-export const GEMINI_DEFAULT_MODEL = "gemini-3.5-flash";
-/** 번역·요약처럼 짧고 값싼 호출에 쓰는 모델. 같은 실측에서 0.8초. */
-export const GEMINI_LIGHT_MODEL = "gemini-3.5-flash-lite";
+export const MODEL_FALLBACK_CHAIN: readonly string[] = [
+  "gemini-3.5-flash-lite", // 15 RPM / 500 RPD - 0.8초
+  "gemini-3.1-flash-lite", // 15 RPM / 500 RPD - 미검증
+  "gemini-3.5-flash", //      5 RPM /  20 RPD - 1초 안팎
+  "gemini-3-flash", //        5 RPM /  20 RPD - 미검증
+  "gemini-3.6-flash", //      5 RPM /  20 RPD - 12~14초로 느리다
+  "gemini-3.7-flash", //      5 RPM /  20 RPD - 503(수요 초과)이 잦다
+];
+
+/**
+ * 기본 진입 모델. 체인 맨 앞을 그대로 쓴다.
+ *
+ * 품질만 보면 `gemini-3.5-flash`가 앞이지만 하루 20회로는 시연 리허설 몇 번에
+ * 끝난다. 예산이 25배인 lite로 시작하고, 품질을 다시 재고 싶으면 `GEMINI_MODEL`로
+ * 고정한다. 그때도 소진되면 체인 아래로 계속 내려간다.
+ */
+export const GEMINI_DEFAULT_MODEL = MODEL_FALLBACK_CHAIN[0];
+/** 번역·요약처럼 짧고 값싼 호출. 지금은 기본과 같은 모델에서 출발한다. */
+export const GEMINI_LIGHT_MODEL = MODEL_FALLBACK_CHAIN[0];
+
+const DAILY_QUOTA_MESSAGE =
+  "Gemini 하루 요청 한도를 모두 썼습니다. 대체 모델도 남아 있지 않아 기다려도 오늘은 " +
+  "풀리지 않습니다. 태평양 시간 자정(한국시간 오후 4시)에 리셋됩니다.";
 
 export const GEMINI_KEY_MISSING_MESSAGE =
   "GEMINI_API_KEY가 설정되지 않았습니다. .env.local 파일에 키를 추가해주세요.";
@@ -83,9 +110,17 @@ function isTransient(error: unknown): boolean {
 /**
  * 오늘 치 할당량을 다 쓴 429인지.
  *
- * 무료 등급은 분당 한도와 일 단위 한도를 함께 건다(실측: `gemini-3.5-flash`가
- * 분당 5회, 하루 20회). 분당 한도는 기다리면 풀리지만 일 단위 한도는 그렇지 않다.
- * 구분하지 않으면 하루치가 끝난 뒤에도 호출마다 수십 초를 헛되이 기다린다.
+ * 무료 등급은 분당 한도와 일 단위 한도를 함께 건다. 분당 한도는 기다리면 풀리지만
+ * 일 단위 한도는 그렇지 않다. 구분하지 않으면 하루치가 끝난 뒤에도 호출마다
+ * 수십 초를 헛되이 기다린다.
+ *
+ * 한도는 프로젝트 x 모델 단위로 따로 센다. 그래서 한 모델이 소진돼도 다른 모델은
+ * 그대로 남아 있고, `withModelFallback`이 MODEL_FALLBACK_CHAIN을 따라 갈아탄다.
+ * 모델별 수치는 그 목록에 적어 뒀다.
+ *
+ * 구글은 모델별 표를 문서에 싣지 않으므로 이 숫자는 프로젝트마다 다르다.
+ * 현재 값은 aistudio.google.com/rate-limit에서 확인한다. 이 판별식 자체는
+ * 숫자를 몰라도 동작한다 - 쿼터 ID의 `PerDay`만 본다.
  */
 function isDailyQuotaExhausted(error: unknown): boolean {
   const message = (error as { message?: string } | null)?.message;
@@ -97,7 +132,7 @@ function isDailyQuotaExhausted(error: unknown): boolean {
  *
  * 429 응답에는 `RetryInfo.retryDelay`와 "Please retry in 3.83s" 문구가 함께 온다.
  * 이 값을 무시하고 짧게 재시도하면 한도가 풀리기 전에 시도 횟수만 태운다.
- * 무료 등급은 분당 요청 수가 낮아서 실제로 이 경로를 자주 밟는다.
+ * 분당 요청 수 한도가 낮은 등급에서는 실제로 이 경로를 자주 밟는다.
  */
 function serverRetryDelayMs(error: unknown): number | null {
   const message = (error as { message?: string } | null)?.message;
@@ -114,7 +149,7 @@ function serverRetryDelayMs(error: unknown): number | null {
  *
  * 직전까지 쓰던 openai SDK는 429·5xx를 스스로 두 번 재시도했다. `@google/genai`는
  * 하지 않으므로 여기서 채운다. 실측에서 `gemini-3.7-flash`가 "수요 초과" 503을,
- * 무료 등급 키가 분당 요청 한도 429를 돌려줬다. 없으면 시연 도중 호출 하나가
+ * 개발 키가 분당 요청 한도 429를 돌려줬다. 없으면 시연 도중 호출 하나가
  * 그대로 실패하고, 완료조건 한 묶음이 통째로 사람 확인으로 떨어진다.
  *
  * 한도 초과는 다른 실패보다 더 오래, 더 여러 번 기다린다. 서버가 대기 시간을
@@ -126,13 +161,9 @@ async function withRetry<T>(call: () => Promise<T>): Promise<T> {
       return await call();
     } catch (error) {
       const rateLimited = (error as { status?: number } | null)?.status === 429;
-      if (rateLimited && isDailyQuotaExhausted(error)) {
-        throw new Error(
-          "Gemini 무료 등급의 하루 요청 한도를 모두 썼습니다. 기다려도 오늘은 풀리지 않습니다. " +
-            "Google AI Studio에서 결제를 연결하거나 다음 날 다시 시도하세요.",
-          { cause: error },
-        );
-      }
+      // 하루 한도는 기다려도 안 풀린다. 재시도하지 않고 원본을 그대로 올려보내
+      // withModelFallback이 다음 모델로 갈아타게 한다.
+      if (rateLimited && isDailyQuotaExhausted(error)) throw error;
       const maxAttempts = rateLimited ? 5 : 3;
       if (attempt >= maxAttempts || !isTransient(error)) throw error;
       const advisedMs = serverRetryDelayMs(error);
@@ -146,6 +177,112 @@ async function withRetry<T>(call: () => Promise<T>): Promise<T> {
       await new Promise((resolve) => setTimeout(resolve, backoffMs));
     }
   }
+}
+
+/**
+ * 모델별로 "지금은 쓸 수 없다"고 판정된 상태. 값은 다시 시도해도 되는 시각(ms).
+ *
+ * 프로세스 메모리에만 둔다. 서버리스에서 프로세스가 새로 뜨면 비지만, 그때는
+ * 체인 맨 앞부터 다시 시도할 뿐이라 손해가 429 한 번(할당량을 쓰지 않는다)이다.
+ * 반대로 살아 있는 동안에는 이미 소진된 모델을 매번 다시 찌르지 않는다.
+ */
+const unavailableUntil = new Map<string, number>();
+
+/** 테스트에서 모델 가용성 기록을 비운다. */
+export function resetModelAvailability(): void {
+  unavailableUntil.clear();
+}
+
+/**
+ * 다음 하루 한도 리셋 시각(ms).
+ *
+ * RPD는 태평양 시간 자정에 리셋된다. 서버가 어느 시간대에 있든 같은 시점을
+ * 가리켜야 하므로 로컬 자정이 아니라 America/Los_Angeles 기준으로 계산한다.
+ */
+function nextDailyResetMs(now: number = Date.now()): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(now));
+  const value = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? "0");
+  const elapsedMs = ((value("hour") % 24) * 3_600 + value("minute") * 60 + value("second")) * 1_000;
+  return now + (86_400_000 - elapsedMs);
+}
+
+/** 갈아타서 해결될 실패인지, 갈아타도 같을 실패인지 가른다. */
+function classifyModelFailure(error: unknown): "daily" | "unusable" | "overloaded" | null {
+  if (isDailyQuotaExhausted(error)) return "daily";
+  const status = (error as { status?: number } | null)?.status;
+  // 404는 이 키가 못 쓰는 모델, 400은 이 모델이 거부하는 설정 조합이다.
+  // 둘 다 같은 프로세스에서 다시 시도할 이유가 없다.
+  if (status === 404 || status === 400) return "unusable";
+  // 재시도까지 하고도 남은 503은 그 모델이 지금 붐비는 것이다. 잠시 뒤에는 돌아온다.
+  if (status === 503) return "overloaded";
+  return null;
+}
+
+const OVERLOADED_COOLDOWN_MS = 10 * 60 * 1_000;
+
+/** 선호 모델을 앞에 두고, 지금 쓸 수 있는 후보만 순서대로 남긴다. */
+function candidateModels(preferred: string, now: number = Date.now()): string[] {
+  const ordered = [preferred, ...MODEL_FALLBACK_CHAIN.filter((model) => model !== preferred)];
+  return ordered.filter((model) => {
+    const until = unavailableUntil.get(model);
+    if (until === undefined) return true;
+    if (until > now) return false;
+    unavailableUntil.delete(model);
+    return true;
+  });
+}
+
+/**
+ * 하루 한도가 소진되면 다음 모델로 갈아타며 호출한다.
+ *
+ * 전환 자체가 새로운 실패 지점이다. 어떤 모델은 이 키에서 404고, 어떤 모델은
+ * 우리가 보내는 설정 조합을 400으로 거부한다. 그래서 전환 뒤 실패도 같은 기준으로
+ * 분류해서, 갈아타서 해결될 실패면 계속 내려가고 아니면 그대로 올려보낸다.
+ * 실제로 쓴 모델을 함께 돌려줘 호출부가 무엇으로 만든 결과인지 기록할 수 있게 한다.
+ */
+export async function withModelFallback<T>(
+  preferred: string,
+  call: (model: string) => Promise<T>,
+): Promise<{ result: T; model: string }> {
+  const candidates = candidateModels(preferred);
+  if (candidates.length === 0) throw new Error(DAILY_QUOTA_MESSAGE);
+
+  let lastError: unknown;
+  for (let index = 0; index < candidates.length; index += 1) {
+    const model = candidates[index];
+    try {
+      return { result: await withRetry(() => call(model)), model };
+    } catch (error) {
+      const reason = classifyModelFailure(error);
+      if (reason === null) throw error; // 갈아타도 같은 결과다.
+      lastError = error;
+      unavailableUntil.set(
+        model,
+        reason === "daily"
+          ? nextDailyResetMs()
+          : reason === "overloaded"
+            ? Date.now() + OVERLOADED_COOLDOWN_MS
+            : Number.MAX_SAFE_INTEGER,
+      );
+      const next = candidates[index + 1];
+      const label =
+        reason === "daily" ? "하루 한도 소진" : reason === "overloaded" ? "수요 초과" : "사용 불가";
+      console.warn(
+        `[gemini] ${model} ${label} - ${next ? `${next}(으)로 전환` : "남은 대체 모델 없음"}`,
+      );
+    }
+  }
+
+  if (classifyModelFailure(lastError) === "daily") {
+    throw new Error(DAILY_QUOTA_MESSAGE, { cause: lastError });
+  }
+  throw lastError;
 }
 
 let cachedClient: { apiKey: string; client: GoogleGenAI } | null = null;
@@ -190,19 +327,21 @@ export type GeminiJsonRequest = {
  * 뒤의 것(인증·과금·네트워크·안전 차단)은 쪼개도 같으므로 throw 한다.
  */
 export async function generateJson<T>(request: GeminiJsonRequest): Promise<GeminiJsonResult<T>> {
-  const model = request.model ?? geminiModel();
-  const response = await withRetry(() => getClient().models.generateContent({
-    model,
-    contents: request.user,
-    config: {
-      systemInstruction: request.system,
-      temperature: request.temperature,
-      maxOutputTokens: request.maxOutputTokens ?? 32_768,
-      responseMimeType: "application/json",
-      responseJsonSchema: request.schema,
-      ...thinkingConfig(),
-    },
-  }));
+  const { result: response, model } = await withModelFallback(
+    request.model ?? geminiModel(),
+    (candidate) => getClient().models.generateContent({
+      model: candidate,
+      contents: request.user,
+      config: {
+        systemInstruction: request.system,
+        temperature: request.temperature,
+        maxOutputTokens: request.maxOutputTokens ?? 32_768,
+        responseMimeType: "application/json",
+        responseJsonSchema: request.schema,
+        ...thinkingConfig(),
+      },
+    }),
+  );
 
   const usage = readUsage(response);
   const candidate = response.candidates?.[0];
@@ -236,17 +375,19 @@ export type GeminiTextRequest = {
 
 /** 스키마 없이 평문 한 덩이만 받는 호출(번역 등). */
 export async function generateText(request: GeminiTextRequest): Promise<string> {
-  const model = request.model ?? geminiModel("light");
-  const response = await withRetry(() => getClient().models.generateContent({
-    model,
-    contents: request.user,
-    config: {
-      systemInstruction: request.system,
-      temperature: request.temperature,
-      maxOutputTokens: request.maxOutputTokens ?? 4_096,
-      ...thinkingConfig(),
-    },
-  }));
+  const { result: response } = await withModelFallback(
+    request.model ?? geminiModel("light"),
+    (candidate) => getClient().models.generateContent({
+      model: candidate,
+      contents: request.user,
+      config: {
+        systemInstruction: request.system,
+        temperature: request.temperature,
+        maxOutputTokens: request.maxOutputTokens ?? 4_096,
+        ...thinkingConfig(),
+      },
+    }),
+  );
   return response.text?.trim() ?? "";
 }
 
