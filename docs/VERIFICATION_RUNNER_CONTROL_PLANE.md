@@ -18,11 +18,12 @@
 ## 적용
 
 1. [`supabase/verification_runner_control_plane.sql`](../supabase/verification_runner_control_plane.sql)을 Supabase SQL Editor에서 적용한다.
-2. 서버 환경에 `SUPABASE_SERVICE_ROLE_KEY`를 설정한다.
-3. 최소 32자의 무작위 `VERIFICATION_RUNNER_SECRET`을 설정한다.
-4. 같은 secret을 신뢰된 Runner 조정기에만 설정한다.
-5. Vercel 배포에서는 OIDC를 사용한다. 로컬 또는 외부 조정기에서는 `VERCEL_TOKEN`, `VERCEL_TEAM_ID`, `VERCEL_PROJECT_ID`를 함께 설정한다.
-6. `npm run sandbox:snapshot`으로 Playwright 1.62.1과 Chromium이 포함된 snapshot을 만들고 출력된 ID를 `VERIFICATION_SANDBOX_SNAPSHOT_ID`에 설정한다. 이 명령은 Vercel Sandbox 자원을 생성하므로 비용이 발생할 수 있다.
+2. 기존 DB에는 [`supabase/add_verification_preview_expiry.sql`](../supabase/add_verification_preview_expiry.sql)을 적용해 Preview 만료 시각과 5분 만료 트리거를 추가한다.
+3. 서버 환경에 `SUPABASE_SERVICE_ROLE_KEY`를 설정한다.
+4. 최소 32자의 무작위 `VERIFICATION_RUNNER_SECRET`을 설정한다.
+5. 같은 secret을 신뢰된 Runner 조정기에만 설정한다.
+6. Vercel 배포에서는 OIDC를 사용한다. 로컬 또는 외부 조정기에서는 `VERCEL_TOKEN`, `VERCEL_TEAM_ID`, `VERCEL_PROJECT_ID`를 함께 설정한다.
+7. `npm run sandbox:snapshot`으로 Playwright 1.62.1과 Chromium이 포함된 snapshot을 만들고 출력된 ID를 `VERIFICATION_SANDBOX_SNAPSHOT_ID`에 설정한다. 이 명령은 Vercel Sandbox 자원을 생성하므로 비용이 발생할 수 있다.
 
 아직 이 SQL은 원격 Supabase에 자동 적용되지 않는다.
 
@@ -129,13 +130,14 @@ Content-Type: application/json
 
 1. GitHub App Installation Token을 Next.js 서버 메모리에서만 발급한다.
 2. 선택 저장소의 고정 Commit SHA archive를 최대 100MB로 내려받고 SHA-256을 계산한다.
-3. archive와 token 없는 manifest를 1 vCPU, 12분 제한의 비영속 Vercel Sandbox에 업로드한다.
+3. archive와 token 없는 manifest를 1 vCPU 비영속 Vercel Sandbox에 업로드한다. 각 검수 단계의 heartbeat마다 자동 종료 시각을 5분 앞으로 갱신한다.
 4. `package-lock.json`을 기준으로 lifecycle script를 끈 `npm ci --ignore-scripts`를 수행한다.
 5. 패키지 다운로드가 끝나면 Sandbox egress를 `deny-all`로 변경하고 `npm rebuild`로 lifecycle script를 실행한다.
 6. 외부 포트를 열지 않은 상태로 `npm run build`와 `npm run start`를 실행하고 내부 `127.0.0.1:3000`에서만 앱 준비 상태를 확인한다.
 7. 저장소 테스트 대신 LinKross가 주입한 Playwright 스크립트로 로그인 완료조건을 각각 독립된 browser context에서 실행한다.
 8. 입력값과 토큰 패턴을 지운 스크린샷과 마스킹 로그를 `linkross-evidence` 버킷에 저장하고 조건별 결과를 완료 API로 고정한다.
-9. 성공과 실패에 관계없이 Sandbox를 중지한다.
+9. 앱 실행이 성공하면 검수 완료 후에만 3000번 포트를 공개하고 발주자용 HTTPS Preview URL을 저장한다. 완료 시점부터 5분 동안 동일 Sandbox를 유지하며, 화면의 카운트다운이 끝나면 링크를 숨기고 Sandbox는 자동 폐기한다.
+10. Preview를 만들 수 없거나 검수 실행 자체가 중단되면 Sandbox를 즉시 중지한다.
 
 저장소 자체의 E2E 스크립트는 실행하지 않는다. 현재 LinKross 관리형 `automated_e2e` 프리셋은 로그인 입력란, 정상 로그인 후 `/dashboard` 이동, 잘못된 비밀번호 오류, 이메일 필수 입력 네 가지다. SOW 생성 시 해당 문장을 선언형 `test_spec`으로 고정하며, 기존 로그인 MVP 문장은 실행 시 같은 프리셋으로 해석한다. 임의 selector, JavaScript 또는 셸 명령은 `test_spec`에 허용하지 않는다. `manual`, `document` 조건과 프리셋이 없는 자동 조건은 `needs_review`로 남긴다.
 
@@ -143,5 +145,5 @@ Content-Type: application/json
 
 - 로그인 외 완료조건을 위한 선언형 Playwright 시나리오 모델과 검토 UI
 - 프레임워크별 합성 DB와 seed 규약
-- Playwright trace·영상 업로드와 Preview 접근
+- Playwright trace·영상 업로드
 - 배포 환경의 rate limit, OIDC 기반 조정기 인증과 운영 모니터링

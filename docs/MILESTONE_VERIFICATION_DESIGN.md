@@ -631,6 +631,8 @@ Runner 조정기는 `FOR UPDATE SKIP LOCKED` 기반으로 대기 실행을 하�
 
 LinKross 관리형 실행기는 GitHub App이 만든 선택 저장소 전용 토큰으로 최대 100MB의 고정 SHA archive를 서버에서 받고 SHA-256을 계산한다. archive만 비영속 Vercel Sandbox에 업로드하며 설치 단계 이후 egress를 차단한다. Sandbox에는 운영 환경변수, GitHub token, Supabase key와 작업 lease를 넣지 않는다. 독립 시나리오가 없는 저장소 자체 테스트는 보조 신호로만 사용하고 자동 승인 근거로 과장하지 않는다.
 
+앱 실행이 성공한 검수는 완료 후 동일 Sandbox의 3000번 포트만 공개해 발주자에게 HTTPS Preview를 제공한다. `preview_expires_at`은 완료 시각에서 5분 뒤로 고정하며, 발주자 화면은 남은 시간을 초 단위로 표시하고 만료 즉시 링크를 숨긴다. Runner는 검수 중 heartbeat마다 Sandbox 종료 시각을 5분 앞으로 갱신하고, 완료 후에는 갱신을 멈춰 Preview 만료 뒤 환경이 자동 폐기되게 한다. Preview 확인은 자동 판정이나 최종 승인으로 처리하지 않는다.
+
 #### `checklist_results`
 
 - `id`

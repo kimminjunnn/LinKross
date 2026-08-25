@@ -16,8 +16,12 @@ import {
   uploadVerificationArtifact,
   uploadVerificationLog,
 } from "@/lib/verification-runner/service";
+import { VERIFICATION_PREVIEW_DURATION_MS } from "@/lib/verification-preview";
 
-const SANDBOX_TIMEOUT_MS = 12 * 60 * 1_000;
+const SANDBOX_ACTIVE_WINDOW_MS = 5 * 60 * 1_000;
+const PREVIEW_SHUTDOWN_GRACE_MS = 10_000;
+const PREVIEW_PORT = 3000;
+const PREVIEW_SERVER_TIMEOUT_MS = 6 * 60 * 1_000;
 const INSTALL_TIMEOUT_MS = 3 * 60 * 1_000;
 const REBUILD_TIMEOUT_MS = 2 * 60 * 1_000;
 const BUILD_TIMEOUT_MS = 3 * 60 * 1_000;
@@ -25,6 +29,37 @@ const MAX_COMMAND_LOG_CHARS = 200_000;
 const MAX_PACKAGE_JSON_BYTES = 1_000_000;
 const WORKSPACE = "/home/linkross-app/workspace";
 const ARCHIVE_PATH = "/home/linkross-app/source.tgz";
+const PREVIEW_HEALTH_CHECK_SCRIPT = String.raw`
+(async () => {
+  let lastError = "No response from the application.";
+  for (let attempt = 1; attempt <= 30; attempt += 1) {
+    try {
+      const response = await fetch("http://127.0.0.1:3000/", {
+        redirect: "manual",
+        signal: AbortSignal.timeout(2000),
+      });
+      if (response.status >= 200 && response.status < 400) process.exit(0);
+      lastError = "Unexpected HTTP status " + response.status + ".";
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "Health check request failed.";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  console.error(lastError);
+  process.exit(1);
+})().catch((error) => {
+  console.error(error instanceof Error ? error.message : "Health check failed.");
+  process.exit(1);
+});
+`;
+const PREVIEW_QUICK_HEALTH_CHECK_SCRIPT = String.raw`
+fetch("http://127.0.0.1:3000/", {
+  redirect: "manual",
+  signal: AbortSignal.timeout(2000),
+}).then((response) => {
+  process.exit(response.status >= 200 && response.status < 400 ? 0 : 1);
+}).catch(() => process.exit(1));
+`;
 
 const INSTALL_NETWORK_POLICY = {
   allow: [
@@ -69,6 +104,7 @@ export async function executeNextVerificationInVercelSandbox(
   let sandbox: SandboxInstance | null = null;
   let appUser: SandboxUser | null = null;
   let verifierUser: SandboxUser | null = null;
+  let keepSandboxForPreview = false;
   let currentStatus: ActiveStatus = "provisioning";
   const commandLog: CommandSummary[] = [];
 
@@ -114,6 +150,7 @@ export async function executeNextVerificationInVercelSandbox(
       environmentReference: sandbox.name,
     });
     currentStatus = "installing";
+    await refreshSandboxDeadline(sandbox);
 
     const install = await runLoggedCommand(
       appUser,
@@ -127,6 +164,7 @@ export async function executeNextVerificationInVercelSandbox(
     }
 
     await heartbeatVerificationJob(manifest.run.id, lease);
+    await refreshSandboxDeadline(sandbox);
     await sandbox.update({ networkPolicy: RUNTIME_NETWORK_POLICY });
     const rebuild = await runLoggedCommand(
       appUser,
@@ -144,6 +182,7 @@ export async function executeNextVerificationInVercelSandbox(
       nextStatus: "building",
     });
     currentStatus = "building";
+    await refreshSandboxDeadline(sandbox);
 
     const build = await runLoggedCommand(appUser, "npm build", "npm run build", BUILD_TIMEOUT_MS);
     commandLog.push(build);
@@ -157,13 +196,20 @@ export async function executeNextVerificationInVercelSandbox(
     });
     currentStatus = "running";
 
+    const heartbeatAndRefreshSandbox = async () => {
+      await Promise.all([
+        heartbeatVerificationJob(manifest.run.id, lease),
+        refreshSandboxDeadline(sandbox!),
+      ]);
+    };
+
     const browserOutcomes = await runManagedBrowserCriteria({
       appUser,
       verifierUser,
       manifest,
       workspace: WORKSPACE,
       hasStartScript: Boolean(packageJson.scripts?.start),
-      onProgress: () => heartbeatVerificationJob(manifest.run.id, lease).then(() => undefined),
+      onProgress: heartbeatAndRefreshSandbox,
     });
     const apiCheckOutcomes = await runManagedApiCheckCriteria({
       appUser,
@@ -171,7 +217,7 @@ export async function executeNextVerificationInVercelSandbox(
       manifest,
       workspace: WORKSPACE,
       hasStartScript: Boolean(packageJson.scripts?.start),
-      onProgress: () => heartbeatVerificationJob(manifest.run.id, lease).then(() => undefined),
+      onProgress: heartbeatAndRefreshSandbox,
     });
     const automatedOutcomes = [...browserOutcomes, ...apiCheckOutcomes];
     const browserOutcomesByCriterion = new Map(
@@ -247,13 +293,43 @@ export async function executeNextVerificationInVercelSandbox(
       : results.every((result) => result.status === "passed")
         ? "passed" as const
         : "needs_review" as const;
+    let previewUrl = await preparePreview({
+      sandbox,
+      appUser,
+      verifierUser,
+      manifest,
+      workspace: WORKSPACE,
+      hasStartScript: Boolean(packageJson.scripts?.start),
+    }).catch((previewError) => {
+      console.error("[verification-runner] Preview preparation failed", {
+        runId: manifest.run.id,
+        error: describeSandboxFailure(previewError),
+      });
+      return undefined;
+    });
+    if (previewUrl) {
+      try {
+        await refreshSandboxDeadline(
+          sandbox,
+          VERIFICATION_PREVIEW_DURATION_MS + PREVIEW_SHUTDOWN_GRACE_MS,
+        );
+      } catch (previewLifetimeError) {
+        console.error("[verification-runner] Preview lifetime extension failed", {
+          runId: manifest.run.id,
+          error: describeSandboxFailure(previewLifetimeError),
+        });
+        previewUrl = undefined;
+      }
+    }
     const completed = await completeVerificationJob(manifest.run.id, lease, {
       status: finalStatus,
       results,
+      previewUrl,
       durationMs:
         commandLog.reduce((total, command) => total + (command.durationMs ?? 0), 0)
         + automatedOutcomes.reduce((total, outcome) => total + outcome.durationMs, 0),
     });
+    keepSandboxForPreview = Boolean(previewUrl);
 
     return {
       claimed: true,
@@ -287,7 +363,7 @@ export async function executeNextVerificationInVercelSandbox(
       sandboxName: sandbox?.name,
     };
   } finally {
-    if (sandbox) {
+    if (sandbox && !keepSandboxForPreview) {
       try {
         await sandbox.stop();
       } catch {
@@ -297,13 +373,74 @@ export async function executeNextVerificationInVercelSandbox(
   }
 }
 
+async function refreshSandboxDeadline(
+  sandbox: SandboxInstance,
+  remainingMs = SANDBOX_ACTIVE_WINDOW_MS,
+): Promise<void> {
+  const elapsedMs = Math.max(0, Date.now() - sandbox.createdAt.getTime());
+  const targetTimeoutMs = elapsedMs + remainingMs;
+  if ((sandbox.timeout ?? 0) < targetTimeoutMs) {
+    await sandbox.update({ timeout: targetTimeoutMs });
+  }
+}
+
+async function preparePreview(input: {
+  sandbox: SandboxInstance;
+  appUser: SandboxUser;
+  verifierUser: SandboxUser;
+  manifest: VerificationJobManifest;
+  workspace: string;
+  hasStartScript: boolean;
+}): Promise<string | undefined> {
+  if (!input.hasStartScript) return undefined;
+
+  const existingServer = await input.verifierUser.runCommand({
+    cmd: "node",
+    args: ["-e", PREVIEW_QUICK_HEALTH_CHECK_SCRIPT],
+    timeoutMs: 5_000,
+  });
+
+  if (existingServer.exitCode !== 0) {
+    const browserSpec = input.manifest.criteria
+      .map((criterion) => criterion.testSpec)
+      .find((testSpec) => testSpec?.kind === "managed_browser");
+    const env: Record<string, string> = browserSpec
+      ? {
+          NODE_ENV: "production",
+          LINKROSS_TEST_EMAIL: browserSpec.syntheticCredentials.email,
+          LINKROSS_TEST_PASSWORD: browserSpec.syntheticCredentials.password,
+        }
+      : { NODE_ENV: "production" };
+    const server = await input.appUser.runCommand({
+      cmd: "npm",
+      args: ["run", "start", "--", "--hostname", "127.0.0.1", "--port", String(PREVIEW_PORT)],
+      cwd: input.workspace,
+      env,
+      detached: true,
+      timeoutMs: PREVIEW_SERVER_TIMEOUT_MS,
+    });
+    const ready = await input.verifierUser.runCommand({
+      cmd: "node",
+      args: ["-e", PREVIEW_HEALTH_CHECK_SCRIPT],
+      timeoutMs: 40_000,
+    });
+    if (ready.exitCode !== 0) {
+      await server.kill().catch(() => undefined);
+      return undefined;
+    }
+  }
+
+  await input.sandbox.update({ ports: [PREVIEW_PORT] });
+  return input.sandbox.domain(PREVIEW_PORT);
+}
+
 async function createSandbox(manifest: VerificationJobManifest): Promise<SandboxInstance> {
   const snapshotId = process.env.VERIFICATION_SANDBOX_SNAPSHOT_ID?.trim();
   const credentials = readSandboxCredentials();
   const common = {
     ...credentials,
     name: `linkross-${manifest.run.id.slice(0, 8)}-${randomBytes(3).toString("hex")}`,
-    timeout: SANDBOX_TIMEOUT_MS,
+    timeout: SANDBOX_ACTIVE_WINDOW_MS,
     resources: { vcpus: 1 },
     persistent: false,
     networkPolicy: INSTALL_NETWORK_POLICY,

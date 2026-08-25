@@ -142,7 +142,7 @@ export async function getVerificationWorkspace(
           .in("submission_id", submissionIds),
         supabase
           .from("verification_runs")
-          .select("id, submission_id, scope, requested_criterion_id, attempt_number, status, queued_at, started_at, completed_at, preview_url, error_summary")
+          .select("id, submission_id, scope, requested_criterion_id, attempt_number, status, queued_at, started_at, completed_at, preview_url, preview_expires_at, error_summary")
           .in("submission_id", submissionIds)
           .order("queued_at", { ascending: false }),
       ])
@@ -272,6 +272,7 @@ export async function getVerificationWorkspace(
             signedUrlByPath,
             manualByRunCriterion,
             shouldTranslate,
+            isCompany,
           ),
         ),
       );
@@ -1094,6 +1095,7 @@ async function toSubmission(
     started_at: string | null;
     completed_at: string | null;
     preview_url: string | null;
+    preview_expires_at: string | null;
     error_summary: string | null;
   }>,
   resultsByRun: Map<string, Array<{
@@ -1112,6 +1114,7 @@ async function toSubmission(
   signedUrlByPath: Map<string, string>,
   manualByRunCriterion: Map<string, ManualDecisionRow>,
   translate = false,
+  includePreview = false,
 ): Promise<MilestoneSubmissionRecord> {
   const implementationNote = translate && submission.implementation_note
     ? await translateToEnglish(submission.implementation_note)
@@ -1168,7 +1171,8 @@ async function toSubmission(
         queuedAt: run.queued_at,
         startedAt: run.started_at,
         completedAt: run.completed_at,
-        previewUrl: run.preview_url,
+        previewUrl: includePreview ? run.preview_url : null,
+        previewExpiresAt: includePreview ? run.preview_expires_at : null,
         errorSummary,
         results,
       };

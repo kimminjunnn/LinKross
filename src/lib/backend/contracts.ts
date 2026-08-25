@@ -563,6 +563,7 @@ export interface VerificationRunRecord {
   startedAt: string | null;
   completedAt: string | null;
   previewUrl: string | null;
+  previewExpiresAt: string | null;
   errorSummary: string | null;
   results: VerificationResultRecord[];
 }

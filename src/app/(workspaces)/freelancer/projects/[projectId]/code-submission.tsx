@@ -328,11 +328,6 @@ function VerificationSummary({ milestone, submission }: {
         })}
       </ul>
 
-      {latestRun?.previewUrl ? (
-        <a href={latestRun.previewUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline">
-          Open preview<ExternalLink aria-hidden="true" className="size-3.5" />
-        </a>
-      ) : null}
     </section>
   );
 }

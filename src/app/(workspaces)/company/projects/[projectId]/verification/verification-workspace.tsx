@@ -49,6 +49,10 @@ import type {
   VerificationRunRecord,
   VerificationWorkspace,
 } from "@/lib/backend";
+import {
+  formatVerificationPreviewRemaining,
+  getVerificationPreviewRemainingMs,
+} from "@/lib/verification-preview";
 
 type StatusTone = "neutral" | "brand" | "accent" | "success" | "warning" | "danger";
 
@@ -1215,18 +1219,47 @@ function RunResult({ run }: { run: VerificationRunRecord }) {
         </p>
       )}
       {run.errorSummary && <p className="mt-2 text-sm text-red-700">{run.errorSummary}</p>}
-      {run.previewUrl && (
-        <a
-          href={run.previewUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
-        >
-          Preview 열기
-          <ExternalLink aria-hidden="true" className="size-3.5" />
-        </a>
-      )}
+      <RunPreviewAccess run={run} />
     </div>
+  );
+}
+
+function RunPreviewAccess({ run }: { run: VerificationRunRecord }) {
+  const [nowMs, setNowMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!run.previewUrl || !run.previewExpiresAt) return;
+
+    const updateNow = () => setNowMs(Date.now());
+    updateNow();
+    const timer = window.setInterval(updateNow, 1_000);
+    return () => window.clearInterval(timer);
+  }, [run.previewExpiresAt, run.previewUrl]);
+
+  if (!run.previewUrl) return null;
+  if (!run.previewExpiresAt) {
+    return <p className="mt-2 text-sm text-app-muted">Preview 이용 시간이 종료되었습니다.</p>;
+  }
+  if (nowMs === null) {
+    return <p className="mt-2 text-sm text-app-muted">Preview 이용 시간을 확인하고 있습니다...</p>;
+  }
+
+  const remainingMs = getVerificationPreviewRemainingMs(run.previewExpiresAt, nowMs);
+  if (remainingMs <= 0) {
+    return <p className="mt-2 text-sm text-app-muted">Preview 이용 시간이 종료되었습니다.</p>;
+  }
+
+  return (
+    <a
+      href={run.previewUrl}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
+      aria-label={`실제 화면 확인, ${formatVerificationPreviewRemaining(remainingMs)} 남음`}
+    >
+      실제 화면 확인 · {formatVerificationPreviewRemaining(remainingMs)} 남음
+      <ExternalLink aria-hidden="true" className="size-3.5" />
+    </a>
   );
 }
 

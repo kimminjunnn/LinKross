@@ -26,6 +26,7 @@ const PLAYWRIGHT_MODULE = `${PLAYWRIGHT_ROOT}/node_modules/playwright/index.mjs`
  * 180초로 잡는다. 더 필요하면 시간을 늘릴 게 아니라 조정기를 비동기로 옮겨야 한다.
  */
 const HARNESS_TIMEOUT_MS = 3 * 60 * 1_000;
+const APP_SERVER_TIMEOUT_MS = 10 * 60 * 1_000;
 
 const PLAYWRIGHT_BROWSERS_PATH = `${PLAYWRIGHT_ROOT}/browsers`;
 const VERIFIER_HOME = "/home/linkross-verifier";
@@ -150,7 +151,7 @@ export async function runManagedBrowserCriteria(input: {
       LINKROSS_TEST_PASSWORD: credentials.password,
     },
     detached: true,
-    timeoutMs: 4 * 60 * 1_000,
+    timeoutMs: APP_SERVER_TIMEOUT_MS,
   });
 
   const ready = await input.verifierUser.runCommand({
