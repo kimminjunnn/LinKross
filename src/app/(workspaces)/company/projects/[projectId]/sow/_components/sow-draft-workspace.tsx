@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CircleAlert, Loader2, MessageSquareText } from "lucide-react";
+import { CheckCircle2, CircleAlert, Loader2, MessageSquareText, X } from "lucide-react";
 
 const ApprovalPage = dynamic(() => import("../../approval/page"));
 
 import { SowKoreanForm } from "@/components/sow/sow-korean-form";
 import { SowEnglishPreview } from "@/components/sow/sow-english-preview";
 import { LinkrossLoadingMark } from "@/components/layout/linkross-loading-mark";
+import { ScrollToTopButton } from "@/components/navigation/scroll-to-top-button";
 import {
   EnglishSOWResult,
   MilestoneInput,
@@ -175,6 +176,7 @@ function SowDraftWorkspace({
     isEnglishSowResult(revisionDraft?.englishSow) ? revisionDraft.englishSow : null,
   );
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEnglishCompletionModalOpen, setIsEnglishCompletionModalOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -199,6 +201,19 @@ function SowDraftWorkspace({
     shouldScrollToTopAfterEnglishGenerationRef.current = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [englishSow]);
+
+  useEffect(() => {
+    if (!isEnglishCompletionModalOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsEnglishCompletionModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isEnglishCompletionModalOpen]);
 
   const runVerificationDesignAnalysis = async (
     initialMilestones: MilestoneInput[],
@@ -500,6 +515,7 @@ function SowDraftWorkspace({
     }
 
     if (!textToAnalyze.trim() && milestones.length === 0) {
+      setIsError(true);
       setStatusMessage("업무 상세를 먼저 입력하거나 AI 분석을 진행해 주세요.");
       return;
     }
@@ -516,6 +532,7 @@ function SowDraftWorkspace({
           !milestone.dods.some((dod) => String(dod || "").trim()),
       );
     if (hasIncompleteMilestone) {
+      setIsError(true);
       setStatusMessage(
         "마일스톤의 제목, 기간, 금액과 완료 조건을 모두 확인해 주세요.",
       );
@@ -523,21 +540,33 @@ function SowDraftWorkspace({
     }
 
     setIsGenerating(true);
+    setIsError(false);
     setStatusMessage(
       "🔍 AI 번역 엔진이 문맥을 분석하여 영문 SOW를 실시간 생성 중입니다...",
     );
 
     try {
-      const result = await generateEnglishSowWithLLM({ projectTitle: context.title, assigneeName: context.assigneeName, workDetail: textToAnalyze, startDate: context.startDate, endDate: context.endDate, milestones });
+      const result = await generateEnglishSowWithLLM({
+        projectTitle: context.title,
+        assigneeName: context.assigneeName,
+        workDetail: textToAnalyze,
+        startDate: context.startDate,
+        endDate: context.endDate,
+        milestones,
+      });
       shouldScrollToTopAfterEnglishGenerationRef.current = true;
       setEnglishSow(result);
       if (isRevisionMode) {
         setHasRegeneratedRevisionSow(true);
       }
-      setStatusMessage("✅ AI 번역 기반 영문 업무 명세서 생성이 완료되었습니다!");
+      setStatusMessage(null);
+      setIsEnglishCompletionModalOpen(true);
     } catch (e) {
       console.error(e);
-      setStatusMessage(`❌ 영문 SOW 생성 실패: ${e instanceof Error ? e.message : "AI 호출을 완료하지 못했습니다."}`);
+      setIsError(true);
+      setStatusMessage(
+        `❌ 영문 SOW 생성 실패: ${e instanceof Error ? e.message : "AI 호출을 완료하지 못했습니다."}`,
+      );
     } finally {
       setIsGenerating(false);
       setTimeout(() => setStatusMessage(null), 4000);
@@ -686,6 +715,78 @@ function SowDraftWorkspace({
         </div>
       )}
 
+      {isEnglishCompletionModalOpen ? (
+        <div className="fixed inset-0 z-[130] grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <section
+            aria-labelledby="english-sow-complete-title"
+            aria-modal="true"
+            className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-2xl sm:p-8"
+            role="dialog"
+          >
+            <button
+              aria-label="완료 안내 닫기"
+              className="absolute right-4 top-4 grid size-9 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              onClick={() => setIsEnglishCompletionModalOpen(false)}
+              type="button"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </button>
+            <span className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+              <CheckCircle2 className="size-8" aria-hidden="true" />
+            </span>
+            <h2 id="english-sow-complete-title" className="mt-5 text-xl font-bold text-slate-950">
+              영문 업무 명세서 생성 완료
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              한국어 요구사항을 바탕으로 영문 SOW를 생성했습니다. 내용을 확인한 뒤 승인 요청을 진행해 주세요.
+            </p>
+            <button
+              autoFocus
+              className="mt-6 w-full rounded-control bg-[#F95803] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#E94F00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F95803]"
+              onClick={() => setIsEnglishCompletionModalOpen(false)}
+              type="button"
+            >
+              영문 명세 확인
+            </button>
+          </section>
+        </div>
+      ) : null}
+
+      {statusMessage ? (
+        <div
+          aria-live="polite"
+          className="pointer-events-none fixed inset-x-0 top-6 z-[120] flex justify-center px-4"
+          role="status"
+        >
+          <div
+            className={`pointer-events-auto flex w-full max-w-xl items-start gap-3 rounded-control border px-4 py-3 text-sm shadow-xl animate-fade-in ${
+              isError
+                ? "border-red-200 bg-red-50 text-red-800"
+                : isSubmitting || isAnalyzing || isGenerating || isSavingDraft || isDesigningVerification
+                  ? "border-brand-200 bg-brand-50 text-brand-900"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-900"
+            }`}
+          >
+            {isError ? (
+              <CircleAlert className="mt-0.5 size-4 shrink-0 text-red-600" aria-hidden="true" />
+            ) : isSubmitting || isAnalyzing || isGenerating || isSavingDraft || isDesigningVerification ? (
+              <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-brand-600" aria-hidden="true" />
+            ) : (
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+            )}
+            <span className="min-w-0 flex-1 leading-5">{statusMessage}</span>
+            <button
+              aria-label="알림 닫기"
+              className="grid size-6 shrink-0 place-items-center rounded-full opacity-70 transition hover:bg-black/5 hover:opacity-100"
+              onClick={() => setStatusMessage(null)}
+              type="button"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {isRevisionMode ? (
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <p className="text-xs font-semibold tracking-[0.1em] text-[#F95803] uppercase">
@@ -697,28 +798,6 @@ function SowDraftWorkspace({
           </p>
         </section>
       ) : null}
-      {/* 상태 메시지 알림 바 */}
-      {statusMessage && (
-        <div
-          className={`flex items-center gap-2 rounded-control border p-3.5 text-xs animate-fade-in ${
-            isError
-              ? "border-red-200 bg-red-50 text-red-800"
-              : isSubmitting
-                ? "border-brand-200 bg-brand-50 text-brand-900"
-                : "border-emerald-200 bg-emerald-50 text-emerald-900"
-          }`}
-        >
-          {isError ? (
-            <CircleAlert className="size-4 text-red-600 shrink-0" />
-          ) : isSubmitting ? (
-            <Loader2 className="size-4 animate-spin text-brand-600 shrink-0" />
-          ) : (
-            <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
-          )}
-          <span>{statusMessage}</span>
-        </div>
-      )}
-
       {/* 2. 메인 2컬럼 레이아웃 (한국어 작성 Form vs 영어 업무 명세서 AI 생성) */}
       {isRevisionMode ? (
         <section className="rounded-card border border-[#F95803]/30 bg-[#FFF3ED] p-5 shadow-card">
@@ -803,9 +882,7 @@ function SowDraftWorkspace({
           </div>
         )}
       </div>
-      {isSubmitting ? (
-        <p className="text-xs text-app-muted">검토 요청을 저장하는 중입니다...</p>
-      ) : null}
+      <ScrollToTopButton />
     </div>
   );
 }

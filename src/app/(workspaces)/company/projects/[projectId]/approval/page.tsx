@@ -7,10 +7,9 @@ import { FileText, LockKeyhole, MessageSquareText, PencilLine, UserCheck, X } fr
 import {
   approveSowAsCompanyAction,
   getSowApprovalStateAction,
-  generateSowSummaryAction,
   markSowRevisionRequestsReadAction,
-  type SowSummaryResult,
 } from "@/app/actions/sow";
+import { ScrollToTopButton } from "@/components/navigation/scroll-to-top-button";
 import { StatusBadge } from "@/components/project/status-badge";
 import type { SowApprovalState, SowRevisionRequestRecord } from "@/lib/backend";
 
@@ -28,12 +27,6 @@ const acceptanceCriteria = [
 const definitionOfDone = [
   "승인 요청이 완료되면 해당 업무 명세서 버전이 승인 기준으로 고정됩니다.",
 ];
-
-const fallbackSummary = {
-  coreScope: "승인 요청된 업무 명세서 없음",
-  keyAcceptance: "업무 명세서 탭에서 영문 SOW 승인 요청 필요",
-  needsReview: "업무명세서 탭에서 작성된 원본 내용을 확인",
-};
 
 function formatVerificationMethod(method: string) {
   const labels: Record<string, string> = {
@@ -72,6 +65,10 @@ function getRevisionRequesterName(request: SowRevisionRequestRecord) {
   return request.requesterName ?? (request.requesterRole === "freelancer" ? "프리랜서" : "발주자");
 }
 
+function shouldSpanDocumentWidth(title: string, body: string) {
+  return title === "한국어 업무 상세" || body.length >= 600;
+}
+
 export default function ApprovalPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
@@ -79,14 +76,11 @@ export default function ApprovalPage() {
   const [isPoApproved, setIsPoApproved] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isRevisionRequestsOpen, setIsRevisionRequestsOpen] = useState(false);
-  const [isOriginalSummaryVisible, setIsOriginalSummaryVisible] = useState(false);
   const [approvalState, setApprovalState] = useState<SowApprovalState | null>(null);
   const [isApprovalLoading, setIsApprovalLoading] = useState(true);
   const [approvalLoadError, setApprovalLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isApproving, setIsApproving] = useState(false);
-  const [aiSummary, setAiSummary] = useState<SowSummaryResult | null>(null);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [isRevisionRequestsReadSaving, setIsRevisionRequestsReadSaving] = useState(false);
   const [locallyReadRevisionRequestIds, setLocallyReadRevisionRequestIds] = useState<Set<string>>(
     () => new Set(),
@@ -99,33 +93,6 @@ export default function ApprovalPage() {
     const result = await getSowApprovalStateAction(projectId);
     if (result.ok) {
       setApprovalState(result.data);
-      
-      const sow = result.data?.document;
-      if (sow) {
-        setIsSummaryLoading(true);
-        const workDetailKo = sow.documentSections.find(s => s.title === "한국어 업무 상세")?.body || "";
-        const overviewSec = sow.documentSections.find(s => s.title === "Project Overview & Objectives")?.body || "";
-        
-        let background = "";
-        let objective = "";
-        const bgMatch = overviewSec.match(/Background:\s*([\s\S]*?)(?=Objective:|$)/);
-        const objMatch = overviewSec.match(/Objective:\s*([\s\S]*)/);
-        if (bgMatch) background = bgMatch[1].trim();
-        if (objMatch) objective = objMatch[1].trim();
-
-        const summaryResult = await generateSowSummaryAction(
-          workDetailKo,
-          background,
-          objective,
-          sow.acceptanceCriteria,
-          sow.definitionOfDone
-        );
-
-        if (summaryResult.ok) {
-          setAiSummary(summaryResult.data);
-        }
-        setIsSummaryLoading(false);
-      }
     } else {
       setApprovalState(null);
       setApprovalLoadError(result.error.message);
@@ -147,7 +114,6 @@ export default function ApprovalPage() {
   const activeDocumentSections = sowDocument?.documentSections ?? fallbackDocumentSections;
   const activeAcceptanceCriteria = sowDocument?.acceptanceCriteria ?? acceptanceCriteria;
   const activeDefinitionOfDone = sowDocument?.definitionOfDone ?? definitionOfDone;
-  const activeSummary = sowDocument?.summary ?? fallbackSummary;
   const milestoneCriteriaRows =
     approvalState?.milestones.map((milestone) => {
       const milestoneAcceptanceCriteria = milestone.acceptanceCriteria.map((item) => item.description);
@@ -169,36 +135,6 @@ export default function ApprovalPage() {
           : ["PO 직접 확인"],
       };
     }) ?? [];
-  const translatedSummary = {
-    coreScope: aiSummary
-      ? aiSummary.coreScope
-      : (sowDocument
-          ? "영문 SOW 원본의 Scope of Work 항목을 기준으로 이번 개발 범위를 확인합니다."
-          : "업무 명세서 탭에서 승인 요청한 원본 문서가 아직 없습니다."),
-    keyAcceptance: aiSummary
-      ? aiSummary.keyAcceptance
-      : (sowDocument
-          ? `${activeAcceptanceCriteria.length}개 Acceptance Criteria와 ${activeDefinitionOfDone.length}개 Definition of Done을 다음 검수 기준으로 사용합니다.`
-          : "승인 요청 후 완료조건과 검수 기준이 이곳에 표시됩니다."),
-    needsReview: aiSummary
-      ? aiSummary.needsReview
-      : (sowDocument
-          ? `${documentVersion} 원본 문서가 업무 명세서 탭에서 승인 요청한 버전과 같은지 확인하세요.`
-          : "업무 명세서 탭에서 SOW를 생성하고 승인 요청을 진행하세요."),
-  };
-  const originalSummary = aiSummary?.english ?? activeSummary;
-  const summaryItems = isOriginalSummaryVisible
-    ? [
-        { label: "Core Scope", value: originalSummary.coreScope },
-        { label: "Key Acceptance", value: originalSummary.keyAcceptance },
-        { label: "Needs Review", value: originalSummary.needsReview },
-      ]
-    : [
-        { label: "핵심 범위", value: translatedSummary.coreScope },
-        { label: "주요 승인 기준", value: translatedSummary.keyAcceptance },
-        { label: "확인 포인트", value: translatedSummary.needsReview },
-      ];
-
   const isCompanyApproved =
     isPoApproved || Boolean(approvalState?.approvals.company);
   const isFreelancerApproved = Boolean(approvalState?.approvals.freelancer);
@@ -304,16 +240,19 @@ export default function ApprovalPage() {
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
-              {isReadOnly ? "Approved SOW" : "PO approval"}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-app-foreground">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
+                {isReadOnly ? "Approved SOW" : "PO approval"}
+              </p>
+              <span className="text-xs text-app-muted">승인 기준 문서 {documentVersion}</span>
+            </div>
+            <h1 className="mt-2 text-2xl font-semibold text-app-foreground">
               {isReadOnly ? "승인된 업무 명세서" : "업무 명세서 승인"}
-            </h2>
+            </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-app-muted">
               {isReadOnly
-                ? "기업과 프리랜서가 동일한 버전에 승인한 업무 명세서와 승인 기록을 확인합니다. 승인된 문서는 읽기 전용입니다."
-                : "PO가 프리랜서 승인 완료 상태를 확인한 뒤, 같은 업무 명세서 원본 버전을 승인합니다. 이 화면은 개발 시작 전 합의를 확정하는 단계입니다."}
+                ? "기업과 프리랜서가 동일한 버전에 승인한 업무 명세서와 승인 기록을 확인합니다."
+                : "동일한 업무 명세서 원본 버전을 양측이 확인하고 승인합니다."}
             </p>
           </div>
           <StatusBadge tone={isApprovalComplete ? "success" : "warning"}>
@@ -321,9 +260,91 @@ export default function ApprovalPage() {
               ? "승인 정보 확인 중"
               : isApprovalComplete
                 ? "양측 승인 완료"
-                : "PO 승인 대기"}
+                : "승인 진행 중"}
           </StatusBadge>
         </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+          <article className="flex items-center justify-between gap-4 rounded-control border border-app-border bg-app-surface-subtle p-4">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-app-muted">
+                {approvalState?.participants.company.roleLabel ?? "PO"}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold text-app-foreground">
+                {approvalState?.participants.company.displayName ?? "PO"}
+              </p>
+            </div>
+            <StatusBadge tone={isCompanyApproved ? "success" : "warning"}>
+              {isCompanyApproved ? "승인 완료" : "승인 대기"}
+            </StatusBadge>
+          </article>
+
+          <div className="hidden w-8 items-center sm:flex" aria-hidden="true">
+            <span className="h-px w-full bg-app-border-strong" />
+          </div>
+
+          <article className="flex items-center justify-between gap-4 rounded-control border border-app-border bg-app-surface-subtle p-4">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-app-muted">
+                {approvalState?.participants.freelancer.roleLabel ?? "Freelancer"}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold text-app-foreground">
+                {approvalState?.participants.freelancer.displayName ?? "Freelancer"}
+              </p>
+            </div>
+            <StatusBadge tone={isFreelancerApproved ? "success" : "warning"}>
+              {isFreelancerApproved ? "승인 완료" : "승인 대기"}
+            </StatusBadge>
+          </article>
+        </div>
+
+        {hasRevisionRequest ? (
+          <div
+            className={`mt-4 flex flex-col gap-4 rounded-control border p-4 sm:flex-row sm:items-center sm:justify-between ${
+              hasUnreadRevisionRequest
+                ? "border-[#F95803]/30 bg-[#FFF3ED]"
+                : "border-app-border bg-app-surface-subtle"
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                {hasUnreadRevisionRequest ? (
+                  <span className="size-2 shrink-0 rounded-full bg-[#F95803]" aria-hidden="true" />
+                ) : null}
+                <p className="text-sm font-semibold text-app-foreground">수정 요청</p>
+                <span className="text-xs text-app-muted">
+                  {revisionRequestDisplay.requesterName} · {revisionRequestDisplay.requestedAt}
+                </span>
+              </div>
+              <p className="mt-1 truncate text-sm text-app-muted">{revisionRequestDisplay.summary}</p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => {
+                  void handleOpenRevisionRequests();
+                }}
+                disabled={isRevisionRequestsReadSaving}
+                className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold ${
+                  hasUnreadRevisionRequest
+                    ? "bg-[#F95803] text-white hover:opacity-90"
+                    : "border border-app-border-strong bg-app-surface text-app-foreground hover:bg-app-surface-subtle"
+                }`}
+              >
+                <MessageSquareText aria-hidden="true" className="size-4" />
+                요청 확인
+              </button>
+              <button
+                type="button"
+                onClick={handleGoToRevisionEditor}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-semibold text-app-foreground hover:bg-app-surface-subtle"
+              >
+                <PencilLine aria-hidden="true" className="size-4" />
+                수정하기
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {approvalLoadError ? (
@@ -333,13 +354,26 @@ export default function ApprovalPage() {
       ) : null}
 
       {statusMessage ? (
-        <div className="rounded-control border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
-          {statusMessage}
+        <div
+          aria-live="polite"
+          className="pointer-events-none fixed inset-x-0 top-6 z-40 flex justify-center px-4"
+          role="status"
+        >
+          <div className="pointer-events-auto flex w-full max-w-xl items-start gap-3 rounded-control border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800 shadow-floating">
+            <span className="min-w-0 flex-1">{statusMessage}</span>
+            <button
+              type="button"
+              onClick={() => setStatusMessage(null)}
+              aria-label="알림 닫기"
+              className="grid size-6 shrink-0 place-items-center rounded-full hover:bg-black/5"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          </div>
         </div>
       ) : null}
 
-      <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-        <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
+      <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2 text-brand-700">
@@ -360,15 +394,18 @@ export default function ApprovalPage() {
             </StatusBadge>
           </div>
 
-          <div className="mt-6 rounded-control border border-app-border bg-app-surface-subtle p-5">
-            <div className="rounded-control border border-app-border bg-app-surface p-5">
+          <div className="mt-6 rounded-control border border-app-border bg-app-surface-subtle p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-app-foreground">업무명세서 탭 원본 데이터</h3>
               {sowDocument ? (
-                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="mt-4 grid gap-4 xl:grid-cols-2">
                   {activeDocumentSections.map((section) => (
                     <article
                       key={section.title}
-                      className="rounded-control border border-app-border bg-app-surface-subtle p-4"
+                      className={`rounded-control border border-app-border bg-app-surface p-4 sm:p-5 ${
+                        shouldSpanDocumentWidth(section.title, section.body)
+                          ? "xl:col-span-2"
+                          : ""
+                      }`}
                     >
                       <h4 className="text-sm font-semibold text-app-foreground">{section.title}</h4>
                       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-app-muted">
@@ -382,12 +419,14 @@ export default function ApprovalPage() {
                   업무명세서 탭에서 승인 요청한 DB 원본이 아직 없습니다. 영문 SOW를 생성한 뒤 승인 요청을 진행해주세요.
                 </p>
               )}
-            </div>
+          </div>
+      </section>
 
-            <div className="mt-6 border-t border-app-border pt-5">
-              <h3 className="text-sm font-semibold text-app-foreground">
-                마일스톤 검증 정보
-              </h3>
+      <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
+              <h2 className="text-lg font-semibold text-app-foreground">마일스톤 검증 정보</h2>
+              <p className="mt-2 text-sm leading-6 text-app-muted">
+                승인 후 동일한 완료조건과 검수 방식을 마일스톤 검수 기준으로 사용합니다.
+              </p>
               <div className="mt-3 overflow-hidden rounded-control border border-app-border bg-app-surface">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-app-border text-left text-sm">
@@ -457,142 +496,31 @@ export default function ApprovalPage() {
                   </table>
                 </div>
               </div>
-            </div>
+      </section>
+
+      {!isReadOnly && !isCompanyApproved ? (
+        <section className="sticky bottom-4 z-30 flex flex-col gap-4 rounded-card border border-brand-200 bg-app-surface/95 p-4 shadow-floating backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-app-foreground">업무 명세서 {documentVersion} 승인</p>
+            <p className="mt-1 text-xs leading-5 text-app-muted">
+              위 원본과 마일스톤 검수 기준을 확인한 뒤 해당 버전을 승인합니다.
+            </p>
           </div>
-
-          {!isReadOnly ? (
-            <div className="mt-5 rounded-control border border-brand-200 bg-brand-50 p-4">
-              <p className="text-sm leading-6 text-brand-700">
-                이 업무 명세서 {documentVersion} 원본을 확인했고, 해당 버전을 승인합니다.
-              </p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => setIsConfirmOpen(true)}
-                  disabled={!approvalState || approvalState.status !== "in_review" || isCompanyApproved || isApproving}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                >
-                  <UserCheck aria-hidden="true" className="size-4" />
-                  {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </section>
-
-        <div className="space-y-5">
-          <section
-            className={`rounded-card border p-5 shadow-card sm:p-6 ${
-              hasUnreadRevisionRequest
-                ? "border-[#F95803]/30 bg-[#FFF3ED]"
-                : "border-app-border bg-app-surface"
-            }`}
+          <button
+            type="button"
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={!approvalState || approvalState.status !== "in_review" || isCompanyApproved || isApproving}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className={`flex items-center gap-2 ${hasUnreadRevisionRequest ? "text-[#F95803]" : "text-app-foreground"}`}>
-                  {hasUnreadRevisionRequest ? (
-                    <span className="size-2 rounded-full bg-[#F95803]" aria-hidden="true" />
-                  ) : null}
-                  <h2 className="text-lg font-semibold">수정 요청</h2>
-                </div>
-                <p className="mt-2 text-xs text-app-muted">
-                  {hasRevisionRequest
-                    ? `${revisionRequestDisplay.requesterName} · ${revisionRequestDisplay.requestedAt}`
-                    : "수정 요청 없음"}
-                </p>
-                <p className="mt-3 text-sm leading-6 text-app-foreground">
-                  {revisionRequestDisplay.summary}
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleOpenRevisionRequests();
-                  }}
-                  disabled={isRevisionRequestsReadSaving}
-                  className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold ${
-                    hasUnreadRevisionRequest
-                      ? "bg-[#F95803] text-white hover:opacity-90"
-                      : "border border-app-border-strong bg-app-surface text-app-foreground hover:bg-app-surface-subtle"
-                  }`}
-                >
-                  <MessageSquareText aria-hidden="true" className="size-4" />
-                  수정 요청 확인
-                </button>
-                <button
-                  type="button"
-                  onClick={handleGoToRevisionEditor}
-                  disabled={!hasRevisionRequest}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-4 text-sm font-semibold text-app-foreground hover:bg-app-surface-subtle disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  <PencilLine aria-hidden="true" className="size-4" />
-                  업무명세서 수정하기
-                </button>
-              </div>
-            </div>
-          </section>
+            <UserCheck aria-hidden="true" className="size-4" />
+            {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
+          </button>
+        </section>
+      ) : null}
 
-          <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="text-lg font-semibold text-app-foreground">업무명세서 요약</h2>
-              <button
-                type="button"
-                onClick={() => setIsOriginalSummaryVisible((current) => !current)}
-                className="shrink-0 rounded-control border border-app-border-strong px-3 py-1.5 text-xs text-app-foreground hover:bg-app-surface-subtle"
-              >
-                {isOriginalSummaryVisible ? "번역 보기" : "원문 보기"}
-              </button>
-            </div>
-            <dl className="mt-5 space-y-4">
-              {isSummaryLoading ? (
-                <div className="py-8 text-center text-xs text-app-muted animate-pulse">
-                  Gemini AI가 업무 명세서 요약을 생성하고 있습니다...
-                </div>
-              ) : (
-                summaryItems.map((item) => (
-                  <div key={item.label}>
-                    <dt className="text-xs text-app-muted">{item.label}</dt>
-                    <dd className="mt-1 text-sm leading-6 text-app-foreground">
-                      {item.value}
-                    </dd>
-                  </div>
-                ))
-              )}
-            </dl>
-          </section>
-
-          <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-            <h2 className="text-lg font-semibold text-app-foreground">승인 진행 상태</h2>
-            <div className="mt-5 space-y-3">
-              <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-medium text-app-muted">{approvalState?.participants.company.roleLabel ?? "PO"}</p>
-                    <h3 className="mt-1 text-sm font-semibold text-app-foreground">{approvalState?.participants.company.displayName ?? "PO"}</h3>
-                  </div>
-                  <StatusBadge tone={isCompanyApproved ? "success" : "warning"}>
-                    {isCompanyApproved ? "승인 완료" : "승인 대기"}
-                  </StatusBadge>
-                </div>
-              </article>
-
-              <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-medium text-app-muted">{approvalState?.participants.freelancer.roleLabel ?? "Freelancer"}</p>
-                    <h3 className="mt-1 text-sm font-semibold text-app-foreground">{approvalState?.participants.freelancer.displayName ?? "Freelancer"}</h3>
-                  </div>
-                  <StatusBadge tone={isFreelancerApproved ? "success" : "warning"}>
-                    {isFreelancerApproved ? "승인 완료" : "승인 대기"}
-                  </StatusBadge>
-                </div>
-              </article>
-            </div>
-          </section>
-        </div>
-      </div>
+      <ScrollToTopButton
+        className={!isReadOnly && !isCompanyApproved ? "bottom-28 sm:bottom-24" : "bottom-5"}
+      />
 
       {!isReadOnly && isConfirmOpen ? (
         <div
