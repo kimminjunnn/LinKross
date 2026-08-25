@@ -2,6 +2,7 @@ import { ArrowLeftRight, LogOut } from "lucide-react";
 
 import { switchWorkspace } from "@/app/actions/workspace";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { DesktopSidebarHeader } from "@/components/layout/desktop-sidebar-header";
 import { HeaderTabs } from "@/components/layout/header-tabs";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -27,20 +28,21 @@ export async function AppHeader({ workspace }: { workspace: WorkspaceRole }) {
   return (
     <header className="sticky top-0 z-40 h-[var(--app-header-height)] border-b border-app-border bg-app-surface print:hidden">
       <div className="mx-auto flex h-full w-full max-w-[var(--app-max-width)]">
-        <div
-          className={`flex items-center gap-2 px-3 sm:px-4 lg:px-5 ${
-            isFreelancer
-              ? "lg:w-auto lg:border-r-0"
-              : "lg:w-[var(--app-sidebar-width)] lg:border-r lg:border-app-border"
-          }`}
-        >
-          <MobileNavigation workspace={workspace} />
-          <BrandLogo
-            ariaLabel={isFreelancer ? "Go to freelancer home" : "기업 홈으로 이동"}
-            href={isFreelancer ? "/freelancer" : "/company"}
-          />
-          {isFreelancer && <HeaderTabs />}
-        </div>
+        {isFreelancer ? (
+          <div className="flex items-center gap-2 px-3 sm:px-4 lg:w-auto lg:border-r-0 lg:px-5">
+            <MobileNavigation workspace={workspace} />
+            <BrandLogo ariaLabel="Go to freelancer home" href="/freelancer" />
+            <HeaderTabs />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 px-3 sm:px-4 lg:hidden">
+              <MobileNavigation workspace={workspace} />
+              <BrandLogo ariaLabel="기업 홈으로 이동" href="/company" />
+            </div>
+            <DesktopSidebarHeader />
+          </>
+        )}
 
         <div className="flex min-w-0 flex-1 items-center justify-end gap-4 px-3 sm:px-5 lg:px-6">
           <div className="ml-auto flex items-center gap-2 sm:gap-3">

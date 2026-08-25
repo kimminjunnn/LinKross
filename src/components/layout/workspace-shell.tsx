@@ -1,6 +1,7 @@
 import { AppFooter } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { SidebarStateProvider } from "@/components/layout/sidebar-state";
 import type { WorkspaceRole } from "@/config/navigation";
 
 export function WorkspaceShell({
@@ -10,7 +11,7 @@ export function WorkspaceShell({
   children: React.ReactNode;
   workspace: WorkspaceRole;
 }) {
-  return (
+  const shell = (
     <div className="flex min-h-screen flex-col bg-app-canvas">
       <AppHeader workspace={workspace} />
       <div className="mx-auto flex w-full max-w-[var(--app-max-width)] flex-1">
@@ -24,5 +25,11 @@ export function WorkspaceShell({
       </div>
       <AppFooter />
     </div>
+  );
+
+  return workspace === "company" ? (
+    <SidebarStateProvider>{shell}</SidebarStateProvider>
+  ) : (
+    shell
   );
 }

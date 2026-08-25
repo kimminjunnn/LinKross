@@ -35,18 +35,21 @@ type SidebarNavigationProps = {
   sections: readonly NavigationSection[];
   ariaLabel: string;
   onNavigate?: () => void;
+  isCollapsed?: boolean;
 };
 
 type NavigationLinkProps = {
   item: NavigationItem;
   isActive: boolean;
   onNavigate?: () => void;
+  isCollapsed: boolean;
 };
 
 function NavigationLink({
   item,
   isActive,
   onNavigate,
+  isCollapsed,
 }: NavigationLinkProps) {
   const Icon = navigationIcons[item.icon];
 
@@ -55,7 +58,10 @@ function NavigationLink({
       href={item.href}
       onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
-      className={`group flex min-h-11 items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors ${
+      title={isCollapsed ? item.label : undefined}
+      className={`group flex min-h-11 items-center rounded-control py-2.5 text-sm transition-colors ${
+        isCollapsed ? "justify-center px-2" : "gap-3 px-3"
+      } ${
         isActive
           ? "bg-brand-50 text-brand-700"
           : "text-app-muted hover:bg-app-surface-subtle hover:text-app-foreground"
@@ -70,8 +76,8 @@ function NavigationLink({
         }`}
         strokeWidth={2}
       />
-      <span>{item.label}</span>
-      {isActive ? (
+      <span className={isCollapsed ? "sr-only" : undefined}>{item.label}</span>
+      {isActive && !isCollapsed ? (
         <span
           aria-hidden="true"
           className="ml-auto h-5 w-1 rounded-pill bg-brand-500"
@@ -93,6 +99,7 @@ export function SidebarNavigation({
   sections,
   ariaLabel,
   onNavigate,
+  isCollapsed = false,
 }: SidebarNavigationProps) {
   const pathname = usePathname();
 
@@ -100,7 +107,11 @@ export function SidebarNavigation({
     <nav aria-label={ariaLabel} className="flex flex-col gap-6">
       {sections.map((section) => (
         <div key={section.label}>
-          <p className="px-3 text-xs font-semibold tracking-[0.14em] text-app-muted uppercase">
+          <p
+            className={`px-3 text-xs font-semibold tracking-[0.14em] text-app-muted uppercase ${
+              isCollapsed ? "sr-only" : ""
+            }`}
+          >
             {section.label}
           </p>
           <ul className="mt-2 space-y-1">
@@ -110,6 +121,7 @@ export function SidebarNavigation({
                   item={item}
                   isActive={matchesPath(pathname, item.href)}
                   onNavigate={onNavigate}
+                  isCollapsed={isCollapsed}
                 />
               </li>
             ))}

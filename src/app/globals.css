@@ -16,6 +16,7 @@
   --app-max-width: 100rem;
   --app-header-height: 4rem;
   --app-sidebar-width: 16rem;
+  --app-sidebar-collapsed-width: 4.5rem;
   --app-content-padding: clamp(1rem, 2vw, 2rem);
 
   /* Typography */

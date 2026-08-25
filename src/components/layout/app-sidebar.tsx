@@ -1,4 +1,7 @@
+"use client";
+
 import { SidebarNavigation } from "@/components/layout/sidebar-navigation";
+import { useSidebarState } from "@/components/layout/sidebar-state";
 import {
   workspaceNavigation,
   type WorkspaceRole,
@@ -15,13 +18,27 @@ const sidebarCopy = {
 
 export function AppSidebar({ workspace }: { workspace: WorkspaceRole }) {
   const copy = sidebarCopy[workspace];
+  const { isCollapsed } = useSidebarState();
 
   return (
-    <aside className="hidden w-[var(--app-sidebar-width)] shrink-0 border-r border-app-border bg-app-surface lg:flex lg:flex-col print:hidden">
-      <div className="sticky top-[var(--app-header-height)] flex max-h-[calc(100vh-var(--app-header-height))] min-h-[calc(100vh-var(--app-header-height))] flex-col overflow-y-auto px-3 py-5">
+    <aside
+      id="desktop-sidebar"
+      aria-label={copy.navigation}
+      className={`sticky top-[var(--app-header-height)] hidden h-[calc(100vh-var(--app-header-height))] shrink-0 self-start overflow-hidden border-r border-app-border bg-app-surface transition-[width] duration-200 motion-reduce:transition-none lg:flex lg:flex-col print:hidden ${
+        isCollapsed
+          ? "w-[var(--app-sidebar-collapsed-width)]"
+          : "w-[var(--app-sidebar-width)]"
+      }`}
+    >
+      <div
+        className={`flex h-full flex-col overflow-y-auto py-4 ${
+          isCollapsed ? "px-2" : "px-3"
+        }`}
+      >
         <SidebarNavigation
           sections={workspaceNavigation[workspace]}
           ariaLabel={copy.navigation}
+          isCollapsed={isCollapsed}
         />
       </div>
     </aside>
