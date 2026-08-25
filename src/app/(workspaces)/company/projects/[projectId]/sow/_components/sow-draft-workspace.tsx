@@ -556,6 +556,7 @@ function SowDraftWorkspace({
       });
       shouldScrollToTopAfterEnglishGenerationRef.current = true;
       setEnglishSow(result);
+      setExpandedPane("english");
       if (isRevisionMode) {
         setHasRegeneratedRevisionSow(true);
       }
@@ -703,7 +704,11 @@ function SowDraftWorkspace({
       {/* 로딩 오버레이 (화면 정중앙) */}
       {(isGenerating || isAnalyzing) && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl">
+          <div
+            aria-live="polite"
+            className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl"
+            role="status"
+          >
             <LinkrossLoadingMark className="size-14 animate-lk-mark-flow" />
             <p className="text-xl font-semibold text-slate-900">
               {isGenerating ? "AI 영문 명세서 생성 중..." : "AI 마일스톤·DoD 검수 설계 중..."}
@@ -752,7 +757,7 @@ function SowDraftWorkspace({
         </div>
       ) : null}
 
-      {statusMessage ? (
+      {statusMessage && !isGenerating && !isAnalyzing ? (
         <div
           aria-live="polite"
           className="pointer-events-none fixed inset-x-0 top-6 z-[120] flex justify-center px-4"

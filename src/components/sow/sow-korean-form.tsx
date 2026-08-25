@@ -140,12 +140,14 @@ export function SowKoreanForm({
           <button
             type="button"
             onClick={onToggleExpand}
-            className="flex shrink-0 items-center gap-1.5 rounded-control border border-app-border bg-app-surface-subtle px-2.5 py-1.5 text-xs font-bold text-app-foreground hover:bg-app-border hover:text-brand-600 transition-colors"
+            aria-label={isExpanded ? "반으로 접기" : "화면 꽉 채우기"}
+            title={isExpanded ? "반으로 접기" : "화면 꽉 채우기"}
+            className="grid size-8 shrink-0 place-items-center rounded-control border border-app-border bg-app-surface-subtle text-app-muted transition-colors hover:bg-app-border hover:text-brand-600"
           >
             {isExpanded ? (
-              <><Minimize2 className="size-3.5" /> 반으로 접기</>
+              <Minimize2 aria-hidden="true" className="size-4" />
             ) : (
-              <><Maximize2 className="size-3.5" /> 화면 꽉 채우기</>
+              <Maximize2 aria-hidden="true" className="size-4" />
             )}
           </button>
         )}

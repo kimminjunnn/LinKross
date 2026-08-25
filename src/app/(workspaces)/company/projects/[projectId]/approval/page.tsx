@@ -499,7 +499,7 @@ export default function ApprovalPage() {
       </section>
 
       {!isReadOnly && !isCompanyApproved ? (
-        <section className="sticky bottom-4 z-30 flex flex-col gap-4 rounded-card border border-brand-200 bg-app-surface/95 p-4 shadow-floating backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <section className="sticky bottom-4 z-30 mx-4 flex flex-col gap-4 rounded-card border border-brand-200 bg-app-surface/95 p-4 shadow-floating backdrop-blur sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-app-foreground">업무 명세서 {documentVersion} 승인</p>
             <p className="mt-1 text-xs leading-5 text-app-muted">
@@ -519,7 +519,7 @@ export default function ApprovalPage() {
       ) : null}
 
       <ScrollToTopButton
-        className={!isReadOnly && !isCompanyApproved ? "bottom-28 sm:bottom-24" : "bottom-5"}
+        className={!isReadOnly && !isCompanyApproved ? "bottom-32 sm:bottom-28" : "bottom-5"}
       />
 
       {!isReadOnly && isConfirmOpen ? (
