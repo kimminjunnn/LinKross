@@ -1,0 +1,70 @@
+{"kind":"deck","id":"pr/4mi091","name":"Deck"}
+{"kind":"layout","layoutId":"398e5fd8-9f7d-4905-bf54-11a2f2cc90a5","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"6f192faa-d2c0-4b03-a4e1-af739fc3138c","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/xjqpu6","slide":1,"title":"서비스 기획자/PM을 위한 AI 활용 데이터 실무 프로젝트 과정","textShapes":40}
+{"kind":"textbox","id":"sh/14nahone","slide":1,"text":"서비스 기획자/PM을 위한 AI 활용 데이터 실무 프로젝트 과정","textPreview":"서비스 기획자/PM을 위한 AI 활용 데이터 실무 프로젝트 과정","textChars":35,"textLines":1,"bbox":[800,38,425,24]}
+{"kind":"textbox","id":"sh/g3e9oj69","slide":1,"text":"TECH STACK","textPreview":"TECH STACK","textChars":10,"textLines":1,"bbox":[64,100,150,22]}
+{"kind":"textbox","id":"sh/365sje5k","slide":1,"text":"LinKross를 구성한 기술 스택입니다","textPreview":"LinKross를 구성한 기술 스택입니다","textChars":22,"textLines":1,"bbox":[64,128,900,50]}
+{"kind":"textbox","id":"sh/25wrqtoz","slide":1,"text":"Next.js 풀스택을 중심으로 AI 명세, 실행형 검수, 테스트넷 지급을 연결했습니다.","textPreview":"Next.js 풀스택을 중심으로 AI 명세, 실행형 검수, 테스트넷 지급을 연결했습니다.","textChars":49,"textLines":1,"bbox":[64,181,1050,28]}
+{"kind":"shape","id":"sh/ps7alonq","slide":1,"bbox":[351,248,1,305]}
+{"kind":"shape","id":"sh/o7etsjm5","slide":1,"bbox":[653,248,1,305]}
+{"kind":"shape","id":"sh/bupsny5w","slide":1,"bbox":[955,248,1,305]}
+{"kind":"textbox","id":"sh/qtgbut4b","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,246,30,22]}
+{"kind":"textbox","id":"sh/kfqtcbm1","slide":1,"text":"APPLICATION","textPreview":"APPLICATION","textChars":11,"textLines":1,"bbox":[98,244,210,24]}
+{"kind":"textbox","id":"sh/5gzu5g3m","slide":1,"text":"화면과 백엔드를 하나의 앱으로 구성","textPreview":"화면과 백엔드를 하나의 앱으로 구성","textChars":19,"textLines":1,"bbox":[64,278,250,24]}
+{"kind":"shape","id":"sh/idoba14v","slide":1,"bbox":[91,331,76,76]}
+{"kind":"textbox","id":"sh/sjqtgvmx","slide":1,"text":"Next.js","textPreview":"Next.js","textChars":7,"textLines":1,"bbox":[81,418,96,24]}
+{"kind":"shape","id":"sh/t4zu903i","slide":1,"bbox":[207,331,76,76]}
+{"kind":"textbox","id":"sh/7ihc7qlc","slide":1,"text":"TypeScript","textPreview":"TypeScript","textChars":10,"textLines":1,"bbox":[197,418,96,24]}
+{"kind":"textbox","id":"sh/g7atkv29","slide":1,"text":"Server Actions · Route Handlers","textPreview":"Server Actions · Route Handlers","textChars":31,"textLines":1,"bbox":[64,465,250,25]}
+{"kind":"textbox","id":"sh/h8jud03e","slide":1,"text":"Frontend + Backend","textPreview":"Frontend + Backend","textChars":18,"textLines":1,"bbox":[64,498,250,22]}
+{"kind":"textbox","id":"sh/p4fux0vy","slide":1,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[379,246,30,22]}
+{"kind":"textbox","id":"sh/o36tovud","slide":1,"text":"AI & DATA","textPreview":"AI & DATA","textChars":9,"textLines":1,"bbox":[413,244,210,24]}
+{"kind":"textbox","id":"sh/32xcvqds","slide":1,"text":"명세를 만들고 프로젝트 이력을 보존","textPreview":"명세를 만들고 프로젝트 이력을 보존","textChars":19,"textLines":1,"bbox":[379,278,250,24]}
+{"kind":"shape","id":"sh/21obmlc7","slide":1,"bbox":[386,331,76,76]}
+{"kind":"textbox","id":"sh/cr6tsfu9","slide":1,"text":"Gemini","textPreview":"Gemini","textChars":6,"textLines":1,"bbox":[376,418,96,24]}
+{"kind":"shape","id":"sh/bqxczado","slide":1,"bbox":[478,331,76,76]}
+{"kind":"textbox","id":"sh/twvapgvq","slide":1,"text":"Supabase","textPreview":"Supabase","textChars":8,"textLines":1,"bbox":[468,418,96,24]}
+{"kind":"shape","id":"sh/svmtgbe5","slide":1,"bbox":[570,331,76,76]}
+{"kind":"textbox","id":"sh/j2t8zmt8","slide":1,"text":"PostgreSQL","textPreview":"PostgreSQL","textChars":10,"textLines":1,"bbox":[560,418,96,24]}
+{"kind":"textbox","id":"sh/4329srat","slide":1,"text":"Preset · RAG · Auth · RLS · Storage","textPreview":"Preset · RAG · Auth · RLS · Storage","textChars":35,"textLines":1,"bbox":[379,465,250,25]}
+{"kind":"textbox","id":"sh/54bq1cbe","slide":1,"text":"명세 생성 + 데이터 계층","textPreview":"명세 생성 + 데이터 계층","textChars":14,"textLines":1,"bbox":[379,498,250,22]}
+{"kind":"textbox","id":"sh/65kruhsz","slide":1,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[681,246,30,22]}
+{"kind":"textbox","id":"sh/r6t83mtk","slide":1,"text":"VERIFICATION","textPreview":"VERIFICATION","textChars":12,"textLines":1,"bbox":[715,244,210,24]}
+{"kind":"textbox","id":"sh/s729wra5","slide":1,"text":"제출 커밋을 실제로 설치하고 실행","textPreview":"제출 커밋을 실제로 설치하고 실행","textChars":18,"textLines":1,"bbox":[681,278,250,24]}
+{"kind":"shape","id":"sh/t8bq5wbq","slide":1,"bbox":[688,331,76,76]}
+{"kind":"textbox","id":"sh/7a98r2tg","slide":1,"text":"GitHub","textPreview":"GitHub","textChars":6,"textLines":1,"bbox":[678,418,96,24]}
+{"kind":"shape","id":"sh/3uhwzuhs","slide":1,"bbox":[780,331,76,76]}
+{"kind":"textbox","id":"sh/pwzy14zy","slide":1,"text":"Vercel","textPreview":"Vercel","textChars":6,"textLines":1,"bbox":[770,418,96,24]}
+{"kind":"shape","id":"sh/ovqx8zid","slide":1,"bbox":[872,331,76,76]}
+{"kind":"textbox","id":"sh/qh8fa90j","slide":1,"text":"Playwright","textPreview":"Playwright","textChars":10,"textLines":1,"bbox":[862,418,96,24]}
+{"kind":"textbox","id":"sh/dkjy54zu","slide":1,"text":"Commit SHA · Sandbox · Test Atom","textPreview":"Commit SHA · Sandbox · Test Atom","textChars":32,"textLines":1,"bbox":[681,465,250,25]}
+{"kind":"textbox","id":"sh/cjqxczi9","slide":1,"text":"격리 실행 + 검수 증거","textPreview":"격리 실행 + 검수 증거","textChars":13,"textLines":1,"bbox":[681,498,250,22]}
+{"kind":"textbox","id":"sh/zm1g7eh0","slide":1,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[983,246,30,22]}
+{"kind":"textbox","id":"sh/ylsfe90f","slide":1,"text":"PAYMENT & EVIDENCE","textPreview":"PAYMENT & EVIDENCE","textChars":18,"textLines":1,"bbox":[1017,244,205,24]}
+{"kind":"textbox","id":"sh/wrux4jet","slide":1,"text":"테스트넷 송금 결과를 서버에서 검증","textPreview":"테스트넷 송금 결과를 서버에서 검증","textChars":19,"textLines":1,"bbox":[983,278,240,24]}
+{"kind":"shape","id":"sh/hs3exofy","slide":1,"bbox":[1002,331,76,76]}
+{"kind":"textbox","id":"sh/vq1wvex8","slide":1,"text":"Base Sepolia","textPreview":"Base Sepolia","textChars":12,"textLines":1,"bbox":[992,418,96,24]}
+{"kind":"shape","id":"sh/8nad0zeh","slide":1,"bbox":[1110,331,76,76]}
+{"kind":"textbox","id":"sh/9ojet4f2","slide":1,"text":"USDC","textPreview":"USDC","textChars":4,"textLines":1,"bbox":[1120,350,56,37]}
+{"kind":"textbox","id":"sh/mlsvy9wb","slide":1,"text":"Testnet USDC","textPreview":"Testnet USDC","textChars":12,"textLines":1,"bbox":[1100,418,96,24]}
+{"kind":"textbox","id":"sh/nm1wrexw","slide":1,"text":"ethers.js · MetaMask · 온체인 검증","textPreview":"ethers.js · MetaMask · 온체인 검증","textChars":29,"textLines":1,"bbox":[983,465,240,25]}
+{"kind":"textbox","id":"sh/0jqdwzel","slide":1,"text":"지급 기록 + 통합 증빙","textPreview":"지급 기록 + 통합 증빙","textChars":13,"textLines":1,"bbox":[983,498,240,22]}
+{"kind":"shape","id":"sh/lkjep4f6","slide":1,"bbox":[64,575,1152,80]}
+{"kind":"shape","id":"sh/1gbut07u","slide":1,"bbox":[64,575,7,80]}
+{"kind":"textbox","id":"sh/0fitkvq9","slide":1,"text":"하나의 백엔드가 전체 이력을 연결합니다","textPreview":"하나의 백엔드가 전체 이력을 연결합니다","textChars":21,"textLines":1,"bbox":[93,592,395,28]}
+{"kind":"textbox","id":"sh/fe9crqpo","slide":1,"text":"요구사항 버전  →  SOW 승인  →  Commit SHA  →  검수 결과  →  지급·통합 증빙","textPreview":"요구사항 버전  →  SOW 승인  →  Commit SHA  →  검수 결과  →  지급·통합 증빙","textChars":56,"textLines":1,"bbox":[506,592,674,27]}
+{"kind":"textbox","id":"sh/ed0bil83","slide":1,"text":"Base Sepolia 테스트넷 시연 · 실제 가치 없음 · LinKross가 자금을 보관하는 에스크로 구조 아님","textPreview":"Base Sepolia 테스트넷 시연 · 실제 가치 없음 · LinKross가 자금을 보관하는 에스크로 구조 아님","textChars":63,"textLines":1,"bbox":[506,625,674,18]}
+{"kind":"textbox","id":"sh/dcrupg7i","slide":1,"text":"새싹 양천 1조 · Passion Five","textPreview":"새싹 양천 1조 · Passion Five","textChars":23,"textLines":1,"bbox":[64,688,280,18]}
+{"kind":"textbox","id":"sh/sritgbqd","slide":1,"text":"LinKross","textPreview":"LinKross","textChars":8,"textLines":1,"bbox":[1118,688,98,18]}
+{"kind":"image","id":"im/b6d8vq5s","slide":1,"name":"","alt":"LinKross","bbox":[54,31,185,43]}
+{"kind":"image","id":"im/g72pwz2t","slide":1,"name":"","alt":"Next.js","bbox":[105,345,48,48]}
+{"kind":"image","id":"im/t4bq1432","slide":1,"name":"","alt":"TypeScript","bbox":[221,345,48,48]}
+{"kind":"image","id":"im/ax8byx4f","slide":1,"name":"","alt":"Gemini","bbox":[400,345,48,48]}
+{"kind":"image","id":"im/xkja9cnq","slide":1,"name":"","alt":"Supabase","bbox":[492,345,48,48]}
+{"kind":"image","id":"im/tsnmh0ba","slide":1,"name":"","alt":"PostgreSQL","bbox":[584,345,48,48]}
+{"kind":"image","id":"im/x03m9gb2","slide":1,"name":"","alt":"GitHub","bbox":[702,345,48,48]}
+{"kind":"image","id":"im/lgbqxovq","slide":1,"name":"","alt":"Vercel","bbox":[794,345,48,48]}
+{"kind":"image","id":"im/cripkjut","slide":1,"name":"","alt":"Playwright","bbox":[886,345,48,48]}
+{"kind":"image","id":"im/tk7q14fa","slide":1,"name":"","alt":"Base Sepolia","bbox":[1016,345,48,48]}
+{"kind":"notes","id":"nt/xjqpu6","slide":1,"text":"[Sources]\n- /Users/mj/Dev/LinKross/package.json (technology dependencies)\n- /Users/mj/Dev/LinKross/src/lib/backend and src/app/actions (Next.js server layer)\n- /Users/mj/Dev/LinKross/src/lib/verification-runner/vercel-sandbox.ts (verification stack)\n- /Users/mj/Dev/LinKross/src/lib/onchain-payment.ts (Base Sepolia USDC verification)\n- https://simpleicons.org/ (Gemini, PostgreSQL, GitHub, Vercel icons)\n- https://github.com/base/brand-kit (official Base logo)\n- /Users/mj/Dev/LinKross/public/presentation/backend-vibe/assets/logos (Next.js, TypeScript, Supabase icons)\n- /Users/mj/Dev/LinKross/node_modules/playwright-core/lib/vite/recorder/playwright-logo.svg (Playwright icon)\n[/Sources]"}

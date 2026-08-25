@@ -1,0 +1,19 @@
+LinKross 기술 스택 슬라이드 근거
+
+- package.json: Next.js 16, React 19, TypeScript, Supabase, Vercel Sandbox, ethers, Playwright
+- src/lib/llm/gemini.ts: Google Gemini 모델 호출과 fallback
+- src/app/actions 및 src/lib/backend: Next.js Server Actions와 서버 도메인 로직
+- src/lib/supabase: Auth, PostgreSQL, RLS 및 관리자 경계
+- src/lib/github/app.ts: GitHub App, PR 및 Commit SHA archive
+- src/lib/verification-runner/vercel-sandbox.ts: 비영속 격리 실행, Playwright, 증거 업로드
+- src/lib/onchain-payment.ts: Base Sepolia USDC Transfer 영수증 검증
+- src/lib/backend/finance.ts: 인보이스, 지급 상태, 통합 증빙 번들
+- simpleicons.org: Gemini, PostgreSQL, GitHub, Vercel SVG 아이콘
+- github.com/base/brand-kit: 공식 Base SVG 아이콘
+- public/presentation/backend-vibe/assets/logos: Next.js, TypeScript, Supabase SVG 아이콘
+- node_modules/playwright-core/lib/vite/recorder/playwright-logo.svg: Playwright 로고
+
+표현 경계
+- Base Sepolia와 USDC는 실제 가치가 없는 테스트넷 시연으로 표현한다.
+- LinKross가 자금을 보관하는 에스크로라고 표현하지 않는다.
+- 별도 Express 백엔드가 아니라 Next.js Server Actions와 Route Handlers 기반 풀스택 구조로 표현한다.

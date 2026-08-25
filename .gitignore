@@ -39,3 +39,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 eval/.work/
+
+# local presentation build runtime links
+.tmp/**/node_modules

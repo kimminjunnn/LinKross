@@ -1,0 +1,69 @@
+{"kind":"deck","id":"pr/op93vm","name":"Deck"}
+{"kind":"layout","layoutId":"c301ccb0-4a37-41a5-afc5-ac84986db889","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"a51dfc46-6640-4123-9135-e7292bef4a71","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/p87a19","slide":1,"title":"서비스 기획자/PM을 위한 AI 활용 데이터 실무 프로젝트 과정","textShapes":50}
+{"kind":"textbox","id":"sh/je5szm90","slide":1,"text":"서비스 기획자/PM을 위한 AI 활용 데이터 실무 프로젝트 과정","textPreview":"서비스 기획자/PM을 위한 AI 활용 데이터 실무 프로젝트 과정","textChars":35,"textLines":1,"bbox":[800,39,425,24]}
+{"kind":"textbox","id":"sh/idwbqhsf","slide":1,"text":"CORE FEATURE 02","textPreview":"CORE FEATURE 02","textChars":15,"textLines":1,"bbox":[64,105,190,22]}
+{"kind":"textbox","id":"sh/xcnaxcru","slide":1,"text":"Test Atom은 검수 동작을 레고처럼 조립합니다","textPreview":"Test Atom은 검수 동작을 레고처럼 조립합니다","textChars":28,"textLines":1,"bbox":[64,132,1060,56]}
+{"kind":"textbox","id":"sh/wbeto7a9","slide":1,"text":"예시 DoD  ·  /login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인","textPreview":"예시 DoD  ·  /login에서 잘못된 비밀번호 입력 시 오류 메시지 표시 확인","textChars":46,"textLines":1,"bbox":[64,192,1090,30]}
+{"kind":"shape","id":"sh/va5sv29o","slide":1,"bbox":[58,250,1164,332]}
+{"kind":"shape","id":"sh/apwbmxs3","slide":1,"bbox":[298,409,67,3]}
+{"kind":"textbox","id":"sh/h8ru9gry","slide":1,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[313,392,32,38]}
+{"kind":"textbox","id":"sh/g7yt0bqd","slide":1,"text":"01  APPROVED DoD","textPreview":"01  APPROVED DoD","textChars":16,"textLines":1,"bbox":[82,278,235,22]}
+{"kind":"textbox","id":"sh/qh8falsv","slide":1,"text":"검수 기준","textPreview":"검수 기준","textChars":5,"textLines":1,"bbox":[82,311,232,32]}
+{"kind":"shape","id":"sh/rihgjq9g","slide":1,"bbox":[82,356,216,150]}
+{"kind":"shape","id":"sh/cjqxcba1","slide":1,"bbox":[82,356,5,150]}
+{"kind":"textbox","id":"sh/dkzylgr6","slide":1,"text":"/login","textPreview":"/login","textChars":6,"textLines":1,"bbox":[103,376,95,23]}
+{"kind":"textbox","id":"sh/2tof61sj","slide":1,"text":"잘못된 비밀번호 입력 시\n오류 메시지 표시 확인","textPreview":"잘못된 비밀번호 입력 시 | 오류 메시지 표시 확인","textChars":26,"textLines":2,"bbox":[103,411,170,60]}
+{"kind":"textbox","id":"sh/3ehwf694","slide":1,"text":"사람이 승인한 완료조건","textPreview":"사람이 승인한 완료조건","textChars":12,"textLines":1,"bbox":[82,526,216,22]}
+{"kind":"shape","id":"sh/4fqx8bap","slide":1,"bbox":[365,274,832,291]}
+{"kind":"textbox","id":"sh/pgzehgra","slide":1,"text":"02  TEST ATOM  ·  Playwright가 순서대로 실행","textPreview":"02  TEST ATOM  ·  Playwright가 순서대로 실행","textChars":37,"textLines":1,"bbox":[393,294,650,22]}
+{"kind":"textbox","id":"sh/m9sfi5s3","slide":1,"text":"준비","textPreview":"준비","textChars":2,"textLines":1,"bbox":[393,325,287,20]}
+{"kind":"textbox","id":"sh/na1gra9o","slide":1,"text":"검수 행동","textPreview":"검수 행동","textChars":5,"textLines":1,"bbox":[707,325,287,20]}
+{"kind":"textbox","id":"sh/jutcj2p0","slide":1,"text":"판정","textPreview":"판정","textChars":2,"textLines":1,"bbox":[1021,325,148,20]}
+{"kind":"shape","id":"sh/itkbax8f","slide":1,"bbox":[393,352,142,118]}
+{"kind":"textbox","id":"sh/5wvuls76","slide":1,"text":"goto","textPreview":"goto","textChars":4,"textLines":1,"bbox":[403,366,122,24]}
+{"kind":"textbox","id":"sh/kvmdc7ql","slide":1,"text":"화면 이동","textPreview":"화면 이동","textChars":5,"textLines":1,"bbox":[403,400,122,22]}
+{"kind":"textbox","id":"sh/7ydcn2pw","slide":1,"text":"/login 열기","textPreview":"/login 열기","textChars":9,"textLines":1,"bbox":[401,434,126,23]}
+{"kind":"textbox","id":"sh/6x4vex8b","slide":1,"text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[537,390,12,35]}
+{"kind":"shape","id":"sh/tkvupc72","slide":1,"bbox":[550,352,142,118]}
+{"kind":"textbox","id":"sh/szmdg7qh","slide":1,"text":"fill","textPreview":"fill","textChars":4,"textLines":1,"bbox":[560,366,122,24]}
+{"kind":"textbox","id":"sh/fmdcrmp8","slide":1,"text":"값 입력","textPreview":"값 입력","textChars":4,"textLines":1,"bbox":[560,400,122,22]}
+{"kind":"textbox","id":"sh/ul4vih8n","slide":1,"text":"정상 이메일","textPreview":"정상 이메일","textChars":6,"textLines":1,"bbox":[558,434,126,23]}
+{"kind":"textbox","id":"sh/cr6t8rml","slide":1,"text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[694,390,12,35]}
+{"kind":"shape","id":"sh/dsfuhwn6","slide":1,"bbox":[707,352,142,118]}
+{"kind":"textbox","id":"sh/qpob6h4v","slide":1,"text":"fill","textPreview":"fill","textChars":4,"textLines":1,"bbox":[717,366,122,24]}
+{"kind":"textbox","id":"sh/rqxcfm5g","slide":1,"text":"값 입력","textPreview":"값 입력","textChars":4,"textLines":1,"bbox":[717,400,122,22]}
+{"kind":"textbox","id":"sh/4n6t476p","slide":1,"text":"잘못된 비밀번호","textPreview":"잘못된 비밀번호","textChars":8,"textLines":1,"bbox":[715,434,126,23]}
+{"kind":"textbox","id":"sh/pofudcna","slide":1,"text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[851,390,12,35]}
+{"kind":"shape","id":"sh/2l4b2xoj","slide":1,"bbox":[864,352,142,118]}
+{"kind":"textbox","id":"sh/3mxsb254","slide":1,"text":"click","textPreview":"click","textChars":5,"textLines":1,"bbox":[874,366,122,24]}
+{"kind":"textbox","id":"sh/gzmt076d","slide":1,"text":"버튼 선택","textPreview":"버튼 선택","textChars":5,"textLines":1,"bbox":[874,400,122,22]}
+{"kind":"textbox","id":"sh/h0va9cny","slide":1,"text":"로그인 시도","textPreview":"로그인 시도","textChars":6,"textLines":1,"bbox":[872,434,126,23]}
+{"kind":"textbox","id":"sh/lsril4zu","slide":1,"text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[1008,390,12,35]}
+{"kind":"shape","id":"sh/krihszy9","slide":1,"bbox":[1021,352,142,118]}
+{"kind":"textbox","id":"sh/jq90juho","slide":1,"text":"expect_*","textPreview":"expect_*","textChars":8,"textLines":1,"bbox":[1031,366,122,24]}
+{"kind":"textbox","id":"sh/ypgzqp03","slide":1,"text":"결과 확인","textPreview":"결과 확인","textChars":5,"textLines":1,"bbox":[1031,400,122,22]}
+{"kind":"textbox","id":"sh/tgripozq","slide":1,"text":"오류 안내 표시","textPreview":"오류 안내 표시","textChars":8,"textLines":1,"bbox":[1029,434,126,23]}
+{"kind":"shape","id":"sh/8vihwjy5","slide":1,"bbox":[393,487,776,57]}
+{"kind":"textbox","id":"sh/7u90nehk","slide":1,"text":"ATOM LIBRARY","textPreview":"ATOM LIBRARY","textChars":12,"textLines":1,"bbox":[408,497,115,18]}
+{"kind":"textbox","id":"sh/6t0zu9gz","slide":1,"text":"이동","textPreview":"이동","textChars":2,"textLines":1,"bbox":[535,496,58,18]}
+{"kind":"textbox","id":"sh/9k7ydkzm","slide":1,"text":"goto","textPreview":"goto","textChars":4,"textLines":1,"bbox":[535,517,58,17]}
+{"kind":"textbox","id":"sh/ozyhkfi1","slide":1,"text":"입력","textPreview":"입력","textChars":2,"textLines":1,"bbox":[610,496,88,18]}
+{"kind":"textbox","id":"sh/e5cfelgz","slide":1,"text":"fill · press","textPreview":"fill · press","textChars":12,"textLines":1,"bbox":[610,517,88,17]}
+{"kind":"textbox","id":"sh/f6lwnqx4","slide":1,"text":"선택","textPreview":"선택","textChars":2,"textLines":1,"bbox":[714,496,128,18]}
+{"kind":"textbox","id":"sh/0rexgvyp","slide":1,"text":"click · select_option","textPreview":"click · select_option","textChars":21,"textLines":1,"bbox":[714,517,128,17]}
+{"kind":"textbox","id":"sh/1snep0fa","slide":1,"text":"화면 확인","textPreview":"화면 확인","textChars":5,"textLines":1,"bbox":[858,496,143,18]}
+{"kind":"textbox","id":"sh/2twfi5wv","slide":1,"text":"expect_visible · text","textPreview":"expect_visible · text","textChars":21,"textLines":1,"bbox":[858,517,143,17]}
+{"kind":"textbox","id":"sh/nu5wrqxg","slide":1,"text":"상태 확인","textPreview":"상태 확인","textChars":5,"textLines":1,"bbox":[1017,496,137,18]}
+{"kind":"textbox","id":"sh/ovexkve1","slide":1,"text":"path · count · checked","textPreview":"path · count · checked","textChars":22,"textLines":1,"bbox":[1017,517,137,17]}
+{"kind":"shape","id":"sh/9wnet0fm","slide":1,"bbox":[58,600,1164,78]}
+{"kind":"shape","id":"sh/ixsv61gr","slide":1,"bbox":[58,600,7,78]}
+{"kind":"textbox","id":"sh/3y1wf6xc","slide":1,"text":"FALSE PASS","textPreview":"FALSE PASS","textChars":10,"textLines":1,"bbox":[88,616,118,18]}
+{"kind":"textbox","id":"sh/72hcn2d4","slide":1,"text":"16.7%  →  3.8%","textPreview":"16.7%  →  3.8%","textChars":14,"textLines":1,"bbox":[88,636,282,29]}
+{"kind":"textbox","id":"sh/618bexwj","slide":1,"text":"고장난 결과물을 잘못 통과시키는 비율 12.9%p 감소","textPreview":"고장난 결과물을 잘못 통과시키는 비율 12.9%p 감소","textChars":30,"textLines":1,"bbox":[411,615,710,27]}
+{"kind":"textbox","id":"sh/t4zupcvu","slide":1,"text":"엄격한 Atom 조합 검증을 통과하지 못하면 자동 판정하지 않고 사람 확인으로 전환","textPreview":"엄격한 Atom 조합 검증을 통과하지 못하면 자동 판정하지 않고 사람 확인으로 전환","textChars":46,"textLines":1,"bbox":[411,646,710,18]}
+{"kind":"textbox","id":"sh/83qtg7e9","slide":1,"text":"새싹 양천 1조 · Passion Five","textPreview":"새싹 양천 1조 · Passion Five","textChars":23,"textLines":1,"bbox":[64,684,280,18]}
+{"kind":"textbox","id":"sh/jexcjids","slide":1,"text":"LinKross","textPreview":"LinKross","textChars":8,"textLines":1,"bbox":[1120,684,98,18]}
+{"kind":"image","id":"im/pgzuxkfa","slide":1,"name":"","alt":"LinKross","bbox":[54,34,185,43]}
+{"kind":"notes","id":"nt/p87a19","slide":1,"text":"[Sources]\n- /Users/mj/Dev/LinKross/src/lib/verification-atom-composer.ts (Test Atom 조합 및 엄격 파서)\n- /Users/mj/Dev/LinKross/src/lib/verification-runner/playwright-harness.ts (Atom 실행 의미)\n- /Users/mj/Dev/LinKross/eval/results/judgment-compiled-2026-08-21T16-48-20.md (False PASS 16.7%)\n- /Users/mj/Dev/LinKross/eval/results/judgment-target-names-2026-08-21T18-27-05.md (False PASS 3.8%)\n[/Sources]"}

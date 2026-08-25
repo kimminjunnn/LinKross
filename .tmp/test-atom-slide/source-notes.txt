@@ -1,0 +1,14 @@
+Test Atom 슬라이드 근거
+
+- Atom 정의 및 조합 제한: src/lib/verification-atom-composer.ts
+- Playwright Atom 실행 의미: src/lib/verification-runner/playwright-harness.ts
+- 초기 판정 평가: eval/results/judgment-compiled-2026-08-21T16-48-20.md
+  - False PASS 16.7%
+- 개선 후 판정 평가: eval/results/judgment-target-names-2026-08-21T18-27-05.md
+  - False PASS 3.8%
+
+표현 원칙:
+- 16.7%에서 3.8%로 12.9%p 감소했다고 표기한다.
+- False PASS는 고장난 결과물을 통과로 판정하는 비율이라고 설명한다.
+- 해당 변화 전부를 Atom 한 기능 하나의 인과로 단정하지 않고, 엄격한 조합 검증과
+  불확실한 항목의 사람 확인 전환을 포함한 검수 파이프라인 개선 결과로 설명한다.
