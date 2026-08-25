@@ -112,7 +112,7 @@ button:not(:disabled) {
 }
 
 .primary-action {
-  border: 1px solid #d9773f;
+  border: 1px solid var(--color-brand-500, #f97316);
   background: #fffbf7;
   color: var(--app-foreground);
   box-shadow: 0 1px 2px rgb(15 23 42 / 7%);
@@ -121,13 +121,13 @@ button:not(:disabled) {
 }
 
 .primary-action:hover:not(:disabled) {
-  border-color: #c86630;
-  background: #fff3e8;
+  border-color: var(--color-brand-600, #ea580c);
+  background: var(--color-brand-50, #fff7ed);
   box-shadow: 0 2px 4px rgb(15 23 42 / 9%);
 }
 
 .primary-action:focus-visible {
-  outline-color: rgb(217 119 63 / 35%);
+  outline-color: rgb(249 115 22 / 38%);
 }
 
 .primary-action:disabled {
