@@ -67,7 +67,7 @@ export function AssessmentsList({
         <div className="flex items-center gap-3">
           <Link
             href="/company/projects/new"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-brand-500 px-5 text-xs font-bold text-white! shadow-xs transition-colors hover:bg-brand-600"
+            className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 text-xs font-bold"
           >
             <Plus aria-hidden="true" className="h-4 w-4" />
             새 프로젝트 만들기
@@ -99,7 +99,7 @@ export function AssessmentsList({
           </p>
           <Link
             href="/company/projects/new"
-            className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-black text-white! shadow-sm transition-colors hover:bg-brand-600"
+            className="primary-action mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-5 text-sm font-black"
           >
             <Plus aria-hidden="true" className="size-4" />
             새 프로젝트 만들기
@@ -169,7 +169,7 @@ export function AssessmentsList({
                 <div className="shrink-0 flex items-center gap-3 border-t md:border-t-0 border-app-border pt-4 md:pt-0">
                   <Link
                     href={`/company/assessments/${project.id}/candidates`}
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-control bg-brand-500 px-5 text-xs font-bold text-white transition-colors hover:bg-brand-600 sm:text-sm"
+                    className="primary-action inline-flex h-10 items-center justify-center gap-1.5 rounded-control px-5 text-xs font-bold sm:text-sm"
                   >
                     지원자 현황 보기
                     <Eye className="size-4 transition-transform group-hover:translate-x-0.5" />

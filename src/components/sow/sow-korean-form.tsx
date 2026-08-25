@@ -263,11 +263,7 @@ export function SowKoreanForm({
               type="button"
               onClick={handleAnalyzeClick}
               disabled={isParsing || isAnalyzing}
-              className={`inline-flex min-h-10 cursor-pointer items-center justify-center gap-1 rounded-lg px-6 text-[9px] font-black text-white hover:opacity-95 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-                isRevisionMode
-                  ? "bg-[#F95803] shadow-[#F95803]/20"
-                  : "bg-[#F95803] shadow-[#F95803]/20"
-              }`}
+              className="primary-action inline-flex min-h-10 items-center justify-center gap-1 rounded-control px-6 text-[9px] font-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Sparkles aria-hidden="true" className={`size-3.5 ${isRevisionMode ? "text-white" : "text-brand-300"} ${(isParsing || isAnalyzing) ? 'animate-spin' : ''}`} />
               <span className="whitespace-nowrap">

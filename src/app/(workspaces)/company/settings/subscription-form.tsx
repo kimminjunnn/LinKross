@@ -96,7 +96,7 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
                 className={`mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold disabled:cursor-not-allowed ${
                   isActive
                     ? "border border-app-border-strong bg-app-surface-subtle text-app-muted"
-                    : "bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
+                    : "primary-action"
                 }`}
               >
                 {isBusy ? <Loader2 className="size-4 animate-spin" /> : null}

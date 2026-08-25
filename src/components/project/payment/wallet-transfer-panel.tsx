@@ -142,7 +142,7 @@ export function WalletTransferPanel({
         type="button"
         onClick={handleTransfer}
         disabled={isBusy}
-        className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white disabled:opacity-60"
+        className="primary-action inline-flex min-h-10 items-center gap-2 rounded-control px-4 text-sm font-bold"
       >
         {isBusy ? <Loader2 className="size-4 animate-spin" /> : <Wallet className="size-4" />}
         {state.step === "connecting"

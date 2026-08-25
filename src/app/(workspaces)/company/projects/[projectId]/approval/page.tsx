@@ -327,7 +327,7 @@ export default function ApprovalPage() {
                 disabled={isRevisionRequestsReadSaving}
                 className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold ${
                   hasUnreadRevisionRequest
-                    ? "bg-[#F95803] text-white hover:opacity-90"
+                    ? "primary-action"
                     : "border border-app-border-strong bg-app-surface text-app-foreground hover:bg-app-surface-subtle"
                 }`}
               >
@@ -510,7 +510,7 @@ export default function ApprovalPage() {
             type="button"
             onClick={() => setIsConfirmOpen(true)}
             disabled={!approvalState || approvalState.status !== "in_review" || isCompanyApproved || isApproving}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="primary-action inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
           >
             <UserCheck aria-hidden="true" className="size-4" />
             {isCompanyApproved ? `${documentVersion} 승인 완료` : `${documentVersion} 승인`}
@@ -547,7 +547,7 @@ export default function ApprovalPage() {
                 type="button"
                 onClick={handleFinalApproval}
                 disabled={isApproving}
-                className="min-h-11 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="primary-action min-h-11 rounded-control px-4 text-sm font-semibold"
               >
                 {isApproving ? "저장 중" : "예"}
               </button>

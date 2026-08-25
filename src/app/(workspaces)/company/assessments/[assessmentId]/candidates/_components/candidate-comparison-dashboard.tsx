@@ -197,7 +197,7 @@ export function CandidateComparisonDashboard({
                       type="button"
                       disabled={isPending}
                       onClick={() => chooseCandidate(proposal.id)}
-                      className="mt-5 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="primary-action mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control px-4 text-sm font-bold"
                     >
                       <UserCheck className="size-4" />
                       {isPending ? "선정 저장 중..." : "이 프리랜서 선정"}

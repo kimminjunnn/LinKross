@@ -200,7 +200,7 @@ export default function FreelancerApplicationEditorPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
             >
               {isSubmitting ? "Submitting..." : "Submit proposal"}
               <ArrowRight className="size-4" />

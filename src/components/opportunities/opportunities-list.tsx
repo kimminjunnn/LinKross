@@ -78,7 +78,7 @@ export function OpportunitiesList({
               onClick={() => setSelectedTechnology(null)}
               className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-all ${
                 selectedTechnology === null
-                  ? "bg-brand-500 text-white shadow-sm"
+                  ? "bg-app-foreground text-white"
                   : "bg-slate-100 text-slate-650 hover:bg-slate-200"
               }`}
             >
@@ -91,7 +91,7 @@ export function OpportunitiesList({
                 onClick={() => setSelectedTechnology(technology)}
                 className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-all ${
                   selectedTechnology === technology
-                    ? "bg-brand-500 text-white shadow-sm"
+                    ? "bg-app-foreground text-white"
                     : "bg-slate-100 text-slate-650 hover:bg-slate-200"
                 }`}
               >

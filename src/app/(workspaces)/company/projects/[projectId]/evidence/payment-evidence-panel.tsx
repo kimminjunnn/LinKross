@@ -51,7 +51,7 @@ export function PaymentEvidencePanel({
         <Link
           href={`/company/projects/${projectId}/evidence/receipt`}
           target="_blank"
-          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
+          className="primary-action mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control px-4 text-sm font-bold"
         >
           <Download className="size-4" />
           지급 증빙 전체 PDF 다운로드

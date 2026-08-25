@@ -203,7 +203,7 @@ export default async function OpportunityDetailPage({
             {isFreelancerWorkspaceActive ? (
               <Link
                 href={applicationPath}
-                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                className="primary-action mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
               >
                 Write SOW Proposal
                 <ArrowRight className="size-4" />
@@ -214,7 +214,7 @@ export default async function OpportunityDetailPage({
                 <input type="hidden" name="next" value={applicationPath} />
                 <button
                   type="submit"
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                  className="primary-action inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
                 >
                   Switch to Freelancer and Apply
                   <ArrowRight className="size-4" />
@@ -223,7 +223,7 @@ export default async function OpportunityDetailPage({
             ) : (
               <Link
                 href={loginHref}
-                className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg"
+                className="primary-action mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
               >
                 Login and Apply
                 <ArrowRight className="size-4" />

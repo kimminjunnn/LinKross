@@ -204,7 +204,7 @@ export function OnboardingFlow() {
                       <span
                         className={`grid size-12 place-items-center rounded-xl border transition-all duration-300 shadow-xs ${
                           isSelected
-                            ? "bg-brand-500 text-white border-brand-600 shadow-sm shadow-brand-500/25"
+                            ? "border-app-foreground bg-app-foreground text-white"
                             : "bg-brand-50 text-brand-700 border-brand-100 group-hover:bg-brand-100/70 group-hover:text-brand-850"
                         }`}
                       >
@@ -240,7 +240,7 @@ export function OnboardingFlow() {
                         aria-hidden="true"
                         className={`absolute right-6 top-6 grid size-6 place-items-center rounded-full border transition-all duration-300 ${
                           isSelected
-                            ? "border-brand-500 bg-brand-500 text-white scale-100 shadow-xs"
+                            ? "border-app-foreground bg-app-foreground text-white scale-100"
                             : "border-slate-200 bg-white text-transparent scale-95 group-hover:border-slate-350"
                         }`}
                       >
@@ -264,7 +264,7 @@ export function OnboardingFlow() {
                   type="button"
                   disabled={!intent}
                   onClick={continueToProfile}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-app-border-strong disabled:text-app-surface"
+                  className="primary-action inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-6 text-sm font-black disabled:bg-app-border-strong disabled:text-app-surface"
                 >
                   계속하기
                   <ArrowRight aria-hidden="true" className="size-4" />
@@ -333,7 +333,7 @@ export function OnboardingFlow() {
                     </p>
                     <button
                       type="submit"
-                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-black text-white shadow-sm transition-colors hover:bg-brand-600"
+                      className="primary-action inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-6 text-sm font-black"
                     >
                       {intent === "recruit"
                         ? "프로젝트 등록하기"

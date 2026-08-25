@@ -18,7 +18,7 @@ export function GenerateEvidenceBundleButton({ projectId }: { projectId: string 
           const result = await generateEvidenceBundleAction(projectId);
           setMessage(result.ok ? `v${result.data.versionNumber} 번들을 생성했습니다.` : result.error.message);
         })}
-        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50"
+        className="primary-action inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold"
       >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <FileArchive className="size-4" />}
         통합 증빙 번들 생성

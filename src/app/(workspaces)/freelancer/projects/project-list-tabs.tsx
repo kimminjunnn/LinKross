@@ -58,7 +58,7 @@ export function ProjectListTabs({ projects }: { projects: FreelancerProjectSumma
                     {project.approvedMilestoneCount}/{project.milestoneCount} milestones approved · {project.lifecycleStage.replaceAll("_", " ")}
                   </p>
                 </div>
-                <a href={`/freelancer/projects/${project.projectId}`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+                <a href={`/freelancer/projects/${project.projectId}`} className="primary-action inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold">
                   Open workspace <ArrowRight className="size-4" />
                 </a>
               </div>

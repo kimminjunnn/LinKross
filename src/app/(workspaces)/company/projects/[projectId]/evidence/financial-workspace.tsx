@@ -93,7 +93,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
             <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
               <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="검토 메모 (반려 시 필수)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
               <button type="button" disabled={pending} onClick={() => review("rejected", note)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-app-border-strong px-4 text-sm font-semibold text-app-foreground disabled:opacity-50"><XCircle className="size-4" />반려</button>
-              <button type="button" disabled={pending} onClick={() => review("approved", note)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">{pending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}승인</button>
+              <button type="button" disabled={pending} onClick={() => review("approved", note)} className="primary-action inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold">{pending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}승인</button>
             </div>
           )}
         </div>
@@ -113,7 +113,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
           milestone.invoice?.status === "approved" && (
             <div className="mt-3 space-y-3">
               <PaymentMethodPicker value={method} onChange={setMethod} disabled={pending} />
-              <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
+              <button type="button" disabled={pending} onClick={() => requestPayment(method)} className="primary-action inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold">
                 {pending ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}지급
               </button>
               {method === "wallet_testnet" && !freelancerWalletAddress && (

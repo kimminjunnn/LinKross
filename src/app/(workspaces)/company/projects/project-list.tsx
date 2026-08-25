@@ -96,7 +96,7 @@ export function CompanyProjectList({ projects, emptyMessage }: { projects: Compa
                 ) : (
                   <Link
                     href={nextHref}
-                    className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control bg-brand-500 px-5 text-xs font-semibold text-white transition-colors hover:bg-brand-600 sm:text-sm"
+                    className="primary-action inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control px-5 text-xs font-semibold sm:text-sm"
                   >
                     {isCompleted ? "증빙 확인" : "검수 현황 확인"}
                     <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />

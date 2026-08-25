@@ -57,7 +57,7 @@ export function CommissionPaymentForm({ charge }: { charge: CommissionChargeReco
             placeholder="Transfer memo or receipt number"
             className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm disabled:opacity-50"
           />
-          <button disabled={pending} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
+          <button disabled={pending} className="primary-action inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold">
             {pending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}Report as paid
           </button>
           {message ? <p className="text-xs text-app-muted sm:col-span-2">{message}</p> : null}
@@ -162,7 +162,7 @@ function CommissionWalletTransferPanel({ chargeId, totalDue }: { chargeId: strin
         type="button"
         onClick={handleTransfer}
         disabled={isBusy}
-        className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+        className="primary-action inline-flex min-h-10 items-center gap-2 rounded-control px-4 text-sm font-semibold"
       >
         {isBusy ? <Loader2 className="size-4 animate-spin" /> : <Wallet className="size-4" />}
         {state.step === "connecting" ? "Connecting wallet" : state.step === "confirming" ? "Confirming transaction" : state.step === "verifying" ? "Verifying on-chain" : "Pay with wallet"}

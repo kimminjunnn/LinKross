@@ -87,7 +87,7 @@ export function ProjectSummaryModal({
             type="button"
             onClick={onConfirm}
             disabled={isSubmitting}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-6 text-sm font-semibold"
           >
             {isSubmitting ? "등록 중..." : "공고 등록하기"}
           </button>

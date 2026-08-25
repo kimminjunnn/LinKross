@@ -19,7 +19,7 @@ export default async function FreelancerApplicationsPage() {
         title="My Proposals"
         description="Submitted proposal text and selection status are read from the immutable project records."
         actions={
-          <Link href="/opportunities" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+          <Link href="/opportunities" className="primary-action inline-flex min-h-11 items-center gap-2 rounded-control px-5 text-sm font-semibold">
             Find projects <ArrowRight className="size-4" />
           </Link>
         }
@@ -57,7 +57,7 @@ export default async function FreelancerApplicationsPage() {
                     <p className="mt-1 text-sm text-app-muted">{application.organizationName} · {budget}</p>
                   </div>
                   {application.status === "selected" ? (
-                    <Link href={`/freelancer/projects/${application.projectId}`} className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600">
+                    <Link href={`/freelancer/projects/${application.projectId}`} className="primary-action inline-flex min-h-10 items-center gap-2 rounded-control px-4 text-sm font-semibold">
                       Open project <ArrowRight className="size-4" />
                     </Link>
                   ) : null}

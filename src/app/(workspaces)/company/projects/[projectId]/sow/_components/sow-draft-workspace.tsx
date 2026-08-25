@@ -727,7 +727,7 @@ function SowDraftWorkspace({
             </p>
             <button
               autoFocus
-              className="mt-6 w-full rounded-control bg-[#F95803] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#E94F00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F95803]"
+              className="primary-action mt-6 w-full rounded-control px-4 py-3 text-sm font-semibold"
               onClick={() => setIsEnglishCompletionModalOpen(false)}
               type="button"
             >

@@ -111,6 +111,31 @@ button:not(:disabled) {
   cursor: pointer;
 }
 
+.primary-action {
+  border: 1px solid #d9773f;
+  background: #fffbf7;
+  color: var(--app-foreground);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 7%);
+  transition: background-color 150ms ease, border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.primary-action:hover:not(:disabled) {
+  border-color: #c86630;
+  background: #fff3e8;
+  box-shadow: 0 2px 4px rgb(15 23 42 / 9%);
+}
+
+.primary-action:focus-visible {
+  outline-color: rgb(217 119 63 / 35%);
+}
+
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
 :focus-visible {
   outline: 3px solid rgb(249 115 22 / 38%);
   outline-offset: 2px;

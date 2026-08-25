@@ -573,7 +573,7 @@ function RepositorySummary({
             />
             <button
               disabled={pending}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+              className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold"
             >
               {pending && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
               2. 저장소 확인 및 연결
@@ -939,7 +939,7 @@ function MilestoneDetail({
                             <div className="mt-1.5 flex gap-1.5">
                               <button
                                 disabled={disabled}
-                                className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-control bg-brand-500 px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="primary-action inline-flex min-h-9 items-center gap-1.5 rounded-control px-3 text-xs font-semibold"
                               >
                                 <Check aria-hidden="true" className="size-3.5" />
                                 판정 저장
@@ -1016,7 +1016,7 @@ function MilestoneDetail({
             type="button"
             disabled={runInProgress ? false : disabled || !latestSubmission}
             onClick={runInProgress ? onReopenOverlay : requestRun}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white disabled:border disabled:border-app-border disabled:bg-app-surface disabled:text-app-muted disabled:opacity-60 cursor-pointer"
+            className="primary-action inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold disabled:border disabled:border-app-border disabled:bg-app-surface disabled:text-app-muted"
           >
             {(disabled || runInProgress) && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
             {!disabled && !runInProgress && <Play aria-hidden="true" className="size-4" />}
@@ -1204,7 +1204,7 @@ function RunPreviewAccess({ run }: { run: VerificationRunRecord }) {
         href={run.previewUrl}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
+        className="primary-action inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
         aria-label="실행 화면 새 창에서 열기"
       >
         실행 화면 열기

@@ -147,9 +147,9 @@ export default async function HomePage() {
             {/* 기존 회원 (로그인 화면 /login 으로 이동) */}
             <Link
               href="/login"
-              className="group relative p-8 bg-white border-2 border-slate-200 hover:border-orange-500 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
+              className="group relative flex flex-col items-center overflow-hidden rounded-3xl border-2 border-slate-200 bg-white p-8 text-center shadow-xs transition-colors duration-200 hover:border-slate-900"
             >
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 group-hover:bg-orange-100 text-slate-700 group-hover:text-orange-600 flex items-center justify-center mb-6 transition-colors duration-300 shadow-xs">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition-colors duration-200 group-hover:bg-slate-200 group-hover:text-slate-950">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
@@ -160,25 +160,25 @@ export default async function HomePage() {
                 로그인 화면으로 이동하여 내 프로젝트 진행 상황과 검수 내역을 확인하세요.
               </p>
               
-              <div className="mt-auto w-full py-3 px-4 rounded-xl bg-slate-100 group-hover:bg-orange-500 text-slate-700 group-hover:text-white font-semibold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-slate-200 group-hover:border-orange-500">
+              <div className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-700 transition-colors duration-200 group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white sm:text-sm">
                 <span>로그인 화면으로 이동</span>
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </Link>
 
-            {/* 신규 회원 (온보딩 역할 선택 화면으로 이동 - Orange style restored) */}
+            {/* 신규 회원 (온보딩 역할 선택 화면으로 이동) */}
             <Link
               href="/onboarding"
-              className="group relative p-8 bg-orange-500 hover:bg-orange-600 text-white rounded-3xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center overflow-hidden border border-orange-400"
+              className="primary-action group relative flex flex-col items-center overflow-hidden rounded-3xl border p-8 text-center"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-6 shadow-xs backdrop-blur-xs">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#e7b18f] bg-white/70 text-[#c86630]">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
               </div>
 
-              <h2 className="text-xl font-semibold text-white mb-2">신규 회원이신가요?</h2>
-              <p className="text-xs sm:text-sm text-orange-100 mb-6 leading-relaxed break-keep">
+              <h2 className="mb-2 text-xl font-semibold text-app-foreground">신규 회원이신가요?</h2>
+              <p className="mb-6 break-keep text-xs leading-relaxed text-app-muted sm:text-sm">
                 발주자 또는 외주 개발자 맞춤형 역할을 선택하고 3초 만에 시작하세요.
               </p>
               

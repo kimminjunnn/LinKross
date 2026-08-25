@@ -196,7 +196,7 @@ export function NewProjectForm({
               type="button"
               onClick={handleReviewClick}
               disabled={isPending}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-5 text-sm font-semibold"
             >
               프로젝트 만들기
               <ChevronRight aria-hidden="true" className="size-4" />
@@ -551,7 +551,7 @@ export function NewProjectForm({
                 type="button"
                 onClick={handleReviewClick}
                 disabled={isPending}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-500 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="primary-action inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-6 text-sm font-semibold"
               >
                 <Plus aria-hidden="true" className="size-4" />
                 프로젝트 만들기

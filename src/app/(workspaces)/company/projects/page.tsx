@@ -19,7 +19,7 @@ export default async function ProjectsPage() {
         actions={
           <Link
             href="/company/projects/new"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-control bg-brand-500 px-4 text-xs font-semibold text-white transition-colors hover:bg-brand-600 sm:text-sm"
+            className="primary-action inline-flex min-h-10 items-center gap-1.5 rounded-control px-4 text-xs font-semibold sm:text-sm"
           >
             <Plus className="size-4" />새 프로젝트
           </Link>
@@ -42,7 +42,7 @@ export default async function ProjectsPage() {
           </div>
           <Link
             href="/company/projects/new"
-            className="inline-flex h-9 items-center gap-1.5 rounded-control bg-brand-500 px-4 text-xs font-semibold text-white transition-colors hover:bg-brand-600"
+            className="primary-action inline-flex h-9 items-center gap-1.5 rounded-control px-4 text-xs font-semibold"
           >
             <Plus className="size-4" /> 첫 프로젝트 만들기
           </Link>

@@ -243,7 +243,7 @@ function SubmissionCard({ projectId, milestone, repositoryReady, pending, submit
             <label htmlFor={noteInputId} className="text-xs text-app-foreground">Implementation note <span className="text-app-muted">(optional)</span></label>
             <textarea id={noteInputId} name="implementationNote" disabled={pending} placeholder="Known limitations or test instructions" className="mt-2 min-h-24 w-full rounded-control border border-app-border-strong p-3 text-sm disabled:opacity-50" />
           </div>
-          <button disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
+          <button disabled={pending} className="primary-action inline-flex min-h-11 items-center gap-2 rounded-control px-4 text-sm font-semibold">
             {pending ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <GitPullRequest aria-hidden="true" className="size-4" />}Submit PR
           </button>
           <p className="text-xs leading-5 text-app-muted">

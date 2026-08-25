@@ -22,7 +22,7 @@ export function CompanyProfileForm({ initialProfile }: { initialProfile: Company
         <Field label="웹사이트" name="website" value={initialProfile.website} type="url" optional />
       </div>
       {message && <p className="mt-4 text-sm text-app-muted">{message}</p>}
-      <button disabled={pending} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-control bg-brand-600 px-5 text-sm font-semibold text-white disabled:opacity-50">{pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}저장</button>
+      <button disabled={pending} className="primary-action mt-5 inline-flex min-h-11 items-center gap-2 rounded-control px-5 text-sm font-semibold">{pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}저장</button>
     </form>
   );
 }

@@ -138,7 +138,7 @@ export function DodDesignPanel({
                           }
                           className={`rounded-full border px-3 py-1.5 text-[0.7rem] font-semibold transition-colors disabled:opacity-40 ${
                             isChosen
-                              ? "border-brand-500 bg-brand-600 text-white"
+                              ? "border-app-foreground bg-app-foreground text-white"
                               : isRecommended
                                 ? "border-brand-400 bg-white text-brand-800"
                                 : "border-brand-200 bg-white text-brand-800 hover:border-brand-400"
@@ -169,7 +169,7 @@ export function DodDesignPanel({
             type="button"
             disabled={!allAnswered || isBusy || !onSubmitAnswers}
             onClick={submit}
-            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-brand-600 px-3 text-[0.7rem] font-semibold text-white disabled:opacity-40"
+            className="primary-action inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control px-3 text-[0.7rem] font-semibold disabled:opacity-40"
           >
             {isBusy ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
             {isAnswering

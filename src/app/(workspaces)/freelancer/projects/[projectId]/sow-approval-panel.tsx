@@ -78,7 +78,7 @@ export function FreelancerSowApprovalPanel({ initialState }: { initialState: Sow
         type="button"
         onClick={approve}
         disabled={isPending || isApproved || state.status !== "in_review"}
-        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+        className="primary-action inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold"
       >
         <UserCheck className="size-4" />
         {isApproved ? "SOW approved" : isPending ? "Saving approval..." : "Approve this exact SOW version"}

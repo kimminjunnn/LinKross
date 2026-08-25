@@ -51,7 +51,7 @@ export function FreelancerInvoicePanel({
                 <input name="invoiceNumber" required placeholder="Invoice number" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
                 <input name="externalReference" placeholder="External reference (optional)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
                 <input name="vatAmount" type="number" min="0" step="0.01" placeholder="VAT amount (optional, 0 if none)" className="min-h-10 rounded-control border border-app-border-strong px-3 text-sm" />
-                <button disabled={pending} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">{pending && <Loader2 className="size-4 animate-spin" />}Submit</button>
+                <button disabled={pending} className="primary-action inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold">{pending && <Loader2 className="size-4 animate-spin" />}Submit</button>
               </form>
             )}
             {milestone.invoice && milestone.invoice.vatAmount > 0 && (

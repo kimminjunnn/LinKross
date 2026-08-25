@@ -18,7 +18,7 @@ export function ActionLink({
       href={href}
       className={`inline-flex min-h-11 items-center justify-center rounded-control px-4 text-sm font-semibold transition-colors ${
         variant === "primary"
-          ? "bg-brand-500 text-white hover:bg-brand-600"
+          ? "primary-action"
           : "border border-app-border-strong bg-app-surface text-app-foreground hover:border-brand-300 hover:text-brand-700"
       } ${className}`}
     >
