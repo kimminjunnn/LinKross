@@ -31,7 +31,9 @@ do $seed$
 declare
   v_company    uuid := '97ef85c7-dea9-41ed-9907-17a7815633ca';
   v_freelancer uuid := '0a93c5d0-2d40-40af-90a5-8ed34179f0de';
-  v_title      text := '사내 비품 대여 관리 프로젝트';
+  v_base_title text := '사내 비품 대여 관리';
+  v_title      text := v_base_title;
+  v_title_no   integer := 1;
 
   -- 지원자 제안서까지 넣을지 정한다. false로 두면 모집 중 공고만 만들어지고,
   -- 제안서 제출부터 화면에서 직접 보여줄 수 있다.
@@ -40,21 +42,18 @@ declare
   v_project    uuid := gen_random_uuid();
   v_req        uuid := gen_random_uuid();
   v_proposal   uuid := gen_random_uuid();
-  v_existing   uuid;
 begin
-  -- 같은 이름의 모집 중 프로젝트가 이미 있으면 멈춘다. 시드를 두 번 실행해
-  -- 목록에 같은 카드가 두 장 뜨는 일을 막는다. 선정까지 끝난 확정 시연본은
-  -- 모집 중이 아니므로 여기 걸리지 않는다.
-  select id into v_existing
-  from public.projects
-  where company_id = v_company
-    and title = v_title
-    and status = 'recruiting'::public.project_status
-  limit 1;
-
-  if v_existing is not null then
-    raise exception '같은 이름의 모집 중 프로젝트가 이미 있습니다: %. 파일 끝의 정리 블록으로 지운 뒤 다시 실행하세요.', v_existing;
-  end if;
+  -- 같은 회사에 같은 제목이 있으면 비어 있는 다음 번호를 붙인다.
+  -- 예: 사내 비품 대여 관리 -> 사내 비품 대여 관리 2 -> 3 -> 4
+  while exists (
+    select 1
+    from public.projects
+    where company_id = v_company
+      and title = v_title
+  ) loop
+    v_title_no := v_title_no + 1;
+    v_title := v_base_title || ' ' || v_title_no;
+  end loop;
 
   -- ── 발주자로 행동 ────────────────────────────────────────────────────────
   perform set_config('request.jwt.claims', json_build_object('sub', v_company)::text, true);
@@ -192,7 +191,8 @@ Pull Request 하나씩 올려주시고, 저희가 그 단계만 확인한 뒤 �
     '회원가입, 비밀번호 재설정, 비품 등록·수정·삭제, 반납 처리, 대여 기간과 연체 관리, 알림, 사진 첨부',
     'github.com/kimminjunnn/linkross-github-app-test (마일스톤별 PR #5, #6, #7)',
     '구현 순서와 각 화면을 브라우저에서 확인하는 방법을 제안서에 포함해 주세요.',
-    9000, 'fixed', 'USD',
+    -- 세 개의 마일스톤을 각각 1 USDC로 구성한다.
+    3, 'fixed', 'USDC',
     current_date, current_date + 21,
     now() - interval '1 hour', now() + interval '7 days',
     v_company

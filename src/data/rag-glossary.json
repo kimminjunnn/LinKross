@@ -1,429 +1,2187 @@
 [
-  { "pattern": "스켈레톤\\s*(API|보일러플레이트|코드)?", "english": "Skeleton API & Boilerplate Setup", "category": "architecture" },
-  { "pattern": "초기\\s*시스템\\s*구현|시스템\\s*아키텍처", "english": "Initial System Setup & Architecture", "category": "architecture" },
-  { "pattern": "데이터베이스|DB\\s*설계|스키마|마이그레이션", "english": "Database Schema Design & Migration", "category": "architecture" },
-  { "pattern": "인프라\\s*구축|서버\\s*세팅|클라우드\\s*환경", "english": "Infrastructure Setup & Server Configuration", "category": "architecture" },
-  { "pattern": "마이크로서비스|MSA", "english": "Microservices Architecture Implementation", "category": "architecture" },
-  { "pattern": "모노레포|Monorepo", "english": "Monorepo Project Structure", "category": "architecture" },
-  { "pattern": "캐싱|Redis|캐시|인메모리", "english": "Caching Layer Implementation (Redis)", "category": "architecture" },
-  { "pattern": "메시지\\s*큐|Kafka|RabbitMQ|SQS", "english": "Message Queue & Async Processing", "category": "architecture" },
-  { "pattern": "CDN|콘텐츠\\s*전송\\s*네트워크", "english": "CDN Configuration & Static Asset Delivery", "category": "architecture" },
-  { "pattern": "서버리스|Lambda|Cloud\\s*Function", "english": "Serverless Function Deployment", "category": "architecture" },
-  { "pattern": "도커|컨테이너|Docker|Dockerfile", "english": "Docker Containerization & Multi-stage Build", "category": "architecture" },
-  { "pattern": "쿠버네티스|K8s|오케스트레이션", "english": "Kubernetes Cluster & Orchestration Deployment", "category": "architecture" },
-  { "pattern": "로드\\s*밸런서|부하\\s*분산|ALB|Nginx", "english": "Load Balancer & Reverse Proxy Configuration", "category": "architecture" },
-  { "pattern": "수행\\s*제안서|제안서|수행계획서", "english": "Proposal / Statement of Capability", "category": "sow_workflow" },
-  { "pattern": "SOW|작업\\s*범위\\s*확인서|계약\\s*명세", "english": "Statement of Work (SOW)", "category": "sow_workflow" },
-  { "pattern": "마일스톤|단계별\\s*목표", "english": "Milestone", "category": "sow_workflow" },
-  { "pattern": "완료\\s*조건|DoD|검수\\s*기준", "english": "Definition of Done (DoD)", "category": "sow_workflow" },
-  { "pattern": "발주자|클라이언트|발주사", "english": "Client (Project Owner)", "category": "sow_workflow" },
-  { "pattern": "개발자|프리랜서|수행자|외주사", "english": "Vendor / Freelancer Developer", "category": "sow_workflow" },
-  { "pattern": "검수|결과물\\s*검증|수락\\s*검사", "english": "Deliverable Verification", "category": "sow_workflow" },
-  { "pattern": "승인|최종\\s*확인|검수\\s*승인", "english": "Client Approval", "category": "sow_workflow" },
-  { "pattern": "수정\\s*요청|재검수|보완\\s*요청", "english": "Revision Request & Re-verification", "category": "sow_workflow" },
-  { "pattern": "Commit\\s*SHA|커밋\\s*해시|커밋SHA", "english": "Immutable Commit SHA (Verification Anchor)", "category": "sow_workflow" },
-  { "pattern": "PR|풀\\s*리퀘스트|Pull\\s*Request", "english": "Pull Request", "category": "sow_workflow" },
-  { "pattern": "인보이스|정산|지급\\s*요청|대금\\s*지급", "english": "Invoice & Payment Settlement", "category": "sow_workflow" },
-  { "pattern": "모집\\s*기간|지원\\s*마감|공고\\s*기간", "english": "Recruitment Period & Application Deadline", "category": "sow_workflow" },
-  { "pattern": "통합\\s*증빙|감사\\s*이력|검증\\s*기록", "english": "Integrated Evidence & Audit Trail", "category": "sow_workflow" },
-  { "pattern": "범위\\s*외\\s*제외\\s*사항|Out\\s*of\\s*Scope|제외\\s*범위", "english": "Out-of-Scope Exclusions", "category": "sow_workflow" },
-  { "pattern": "인증|로그인|회원가입|OAuth|JWT", "english": "Authentication System (OAuth/JWT Login & Signup)", "category": "feature" },
-  { "pattern": "결제|PG|샌드박스|결제\\s*연동", "english": "Payment Gateway Sandbox Integration & Webhook", "category": "feature" },
-  { "pattern": "핵심\\s*기능|결과물\\s*구현", "english": "Core Features & Deliverables Implementation", "category": "feature" },
-  { "pattern": "관리자\\s*페이지|어드민|관리자\\s*대시보드", "english": "Admin Dashboard & Management Portal", "category": "feature" },
-  { "pattern": "검색|필터링|상세\\s*검색", "english": "Advanced Search & Filtering Functionality", "category": "feature" },
-  { "pattern": "푸시\\s*알림|알림\\s*센터|웹푸시", "english": "Real-time Push Notifications System", "category": "feature" },
-  { "pattern": "다국어|번역|i18n|로컬라이제이션", "english": "Internationalization (i18n) & Localization Support", "category": "feature" },
-  { "pattern": "웹훅|Webhook|콜백", "english": "Webhook Endpoint Implementation & Integration", "category": "feature" },
-  { "pattern": "파일\\s*업로드|첨부\\s*파일|이미지\\s*업로드|S3\\s*업로드", "english": "File & Image Upload with S3 Storage", "category": "feature" },
-  { "pattern": "채팅|메시지|DM|실시간\\s*대화", "english": "Real-time Chat & Messaging System", "category": "feature" },
-  { "pattern": "이메일\\s*발송|메일\\s*전송|SMTP|SES", "english": "Transactional Email Delivery (SMTP/SES)", "category": "feature" },
-  { "pattern": "페이지네이션|무한\\s*스크롤|더\\s*보기", "english": "Pagination & Infinite Scroll for Large Data Sets", "category": "feature" },
-  { "pattern": "권한|역할|RBAC|접근\\s*제어", "english": "Role-Based Access Control (RBAC)", "category": "feature" },
-  { "pattern": "소셜\\s*로그인|카카오\\s*로그인|네이버\\s*로그인|구글\\s*로그인", "english": "Social Login Integration (Kakao/Naver/Google OAuth)", "category": "feature" },
-  { "pattern": "북마크|찜|즐겨찾기|저장한\\s*목록", "english": "Bookmarking & Favorites Feature", "category": "feature" },
-  { "pattern": "리뷰|평점|별점|사용자\\s*후기", "english": "User Review & Rating System", "category": "feature" },
-  { "pattern": "지도|위치|GPS|좌표|지도\\s*API", "english": "Map & Geolocation Integration (Google Maps/Kakao Maps)", "category": "feature" },
-  { "pattern": "QR\\s*코드|바코드|스캔", "english": "QR Code / Barcode Generation & Scanning", "category": "feature" },
-  { "pattern": "통계|차트|대시보드\\s*시각화|그래프", "english": "Analytics Dashboard & Data Visualization", "category": "feature" },
-  { "pattern": "공유|링크\\s*복사|SNS\\s*공유|딥링크", "english": "Social Share & Deep Link Functionality", "category": "feature" },
-  { "pattern": "단위\\s*테스트|유닛\\s*테스트|Jest|Vitest", "english": "Unit Test Pass & Coverage", "category": "testing" },
-  { "pattern": "통합\\s*테스트|E2E\\s*테스트|E2E", "english": "End-to-End Integration Test Pass", "category": "testing" },
-  { "pattern": "CI\\s*(통과|연동|빌드|파이프라인)?", "english": "CI Build & Test Pipeline Pass", "category": "testing" },
-  { "pattern": "오류|에러\\s*표시|차단|예외\\s*처리", "english": "Error Handling & User Feedback Validation", "category": "testing" },
-  { "pattern": "대시보드\\s*이동|페이지\\s*리다이렉트|리디렉션", "english": "Post-authentication Redirect & State Management", "category": "testing" },
-  { "pattern": "QA|품질\\s*보증|검수\\s*절차", "english": "Quality Assurance & Final Verification", "category": "testing" },
-  { "pattern": "부하\\s*테스트|스트레스\\s*테스트|k6", "english": "Load & Stress Testing Verification", "category": "testing" },
-  { "pattern": "Playwright|E2E\\s*자동화", "english": "Playwright End-to-End Automated Test", "category": "testing" },
-  { "pattern": "스크린샷|증거\\s*캡처|동영상\\s*녹화", "english": "Visual Evidence Capture (Screenshot / Video)", "category": "testing" },
-  { "pattern": "비활성화|disabled|버튼\\s*잠금", "english": "UI Component Disabled State Assertion", "category": "testing" },
-  { "pattern": "에러\\s*메시지|오류\\s*문구|경고\\s*텍스트|토스트\\s*알림", "english": "Error Message Text Assertion", "category": "testing" },
-  { "pattern": "라우팅\\s*확인|URL\\s*이동|페이지\\s*전환", "english": "Page Routing & URL Navigation Assertion", "category": "testing" },
-  { "pattern": "중복\\s*방지|중복\\s*차단|더블클릭\\s*방지", "english": "Duplicate Submission Prevention Assertion", "category": "testing" },
-  { "pattern": "로딩\\s*상태|스피너|인디케이터", "english": "Loading State & Spinner Display Assertion", "category": "testing" },
-  { "pattern": "문서화|인수인계|가이드|핸드오버", "english": "Documentation & Technical Handover", "category": "documentation" },
-  { "pattern": "PR\\s*머지|GitHub\\s*연동|코드\\s*리뷰", "english": "GitHub Pull Request Review & Merge", "category": "documentation" },
-  { "pattern": "운영|배포|프로덕션\\s*배포", "english": "Deployment Readiness & Environment Configuration", "category": "documentation" },
-  { "pattern": "API\\s*명세서|스웨거|Swagger|Postman", "english": "API Specification & Swagger Documentation", "category": "documentation" },
-  { "pattern": "사용자\\s*매뉴얼|운영\\s*가이드", "english": "End-User Operational Manual", "category": "documentation" },
-  { "pattern": "README|설치\\s*가이드|환경설정\\s*문서", "english": "README & Installation Guide", "category": "documentation" },
-  { "pattern": "ERD|엔티티\\s*관계\\s*다이어그램|데이터베이스\\s*설계서", "english": "Entity-Relationship Diagram (ERD)", "category": "documentation" },
-  { "pattern": "아키텍처\\s*문서|시스템\\s*설계서", "english": "System Architecture Document", "category": "documentation" },
-  { "pattern": "디자인|UI|UX|피그마|Figma", "english": "UI/UX Design Implementation (Figma to Code)", "category": "design" },
-  { "pattern": "반응형|모바일\\s*대응|태블릿\\s*대응", "english": "Responsive Web Design for Mobile & Desktop", "category": "design" },
-  { "pattern": "접근성|A11y|웹\\s*접근성", "english": "Web Accessibility (A11y) Standards Compliance", "category": "design" },
-  { "pattern": "다크\\s*모드|테마\\s*전환|라이트\\s*모드", "english": "Dark Mode & Theme Toggle", "category": "design" },
-  { "pattern": "스켈레톤\\s*UI|로딩\\s*화면|빈\\s*화면", "english": "Skeleton Loading UI & Empty State Design", "category": "design" },
-  { "pattern": "애니메이션|트랜지션|인터랙션|마이크로\\s*인터랙션", "english": "UI Animation & Micro-interaction", "category": "design" },
-  { "pattern": "디자인\\s*시스템|컴포넌트\\s*라이브러리|Storybook", "english": "Design System & Component Library (Storybook)", "category": "design" },
-  { "pattern": "장바구니|카트|담기", "english": "Shopping Cart Management", "category": "ecommerce" },
-  { "pattern": "상품\\s*등록|상품\\s*관리|재고|재고\\s*관리", "english": "Product Listing & Inventory Management", "category": "ecommerce" },
-  { "pattern": "주문\\s*내역|주문\\s*조회|주문\\s*관리", "english": "Order History & Tracking", "category": "ecommerce" },
-  { "pattern": "쿠폰|할인|프로모션|이벤트\\s*할인", "english": "Coupon & Discount Promotion System", "category": "ecommerce" },
-  { "pattern": "환불|반품|취소|교환", "english": "Refund & Return Processing", "category": "ecommerce" },
-  { "pattern": "배송\\s*추적|배송\\s*상태|택배\\s*연동", "english": "Shipping Status Tracking & Notification", "category": "ecommerce" },
-  { "pattern": "위시리스트|관심\\s*상품", "english": "Wishlist & Saved Items Feature", "category": "ecommerce" },
-  { "pattern": "정기\\s*결제|구독|빌링키|자동\\s*결제", "english": "Recurring Billing & Subscription Management", "category": "ecommerce" },
-  { "pattern": "세금\\s*계산서|영수증|현금영수증", "english": "Tax Invoice & Receipt Generation", "category": "ecommerce" },
-  { "pattern": "포인트\\s*적립|마일리지|리워드\\s*지급", "english": "Loyalty Points & Rewards Accumulation", "category": "ecommerce" },
-  { "pattern": "예약\\s*접수|진료\\s*예약|병원\\s*예약", "english": "Appointment Booking & Scheduling System", "category": "healthcare" },
-  { "pattern": "전자\\s*의무기록|EMR|EHR|진료\\s*차트", "english": "Electronic Medical Record (EMR/EHR) Integration", "category": "healthcare" },
-  { "pattern": "처방|처방전|전자\\s*처방", "english": "Prescription Management & Digital Prescription", "category": "healthcare" },
-  { "pattern": "진단|증상|문진|자가\\s*진단", "english": "Symptom Input & Diagnostic Screening Form", "category": "healthcare" },
-  { "pattern": "환자\\s*관리|환자\\s*정보|진료\\s*기록", "english": "Patient Record Management & Medical Chart", "category": "healthcare" },
-  { "pattern": "원격\\s*진료|비대면\\s*진료|화상\\s*진료", "english": "Telemedicine / Remote Consultation Feature", "category": "healthcare" },
-  { "pattern": "건강\\s*검진|검사\\s*결과|수치\\s*추이", "english": "Health Checkup Result Display & History", "category": "healthcare" },
-  { "pattern": "복약\\s*알림|약\\s*알림|복용\\s*체크", "english": "Medication Reminder & Dosage Alert", "category": "healthcare" },
-  { "pattern": "강의|강의\\s*목록|수강|수강\\s*신청|LMS", "english": "Course Listing & Enrollment System (LMS)", "category": "education" },
-  { "pattern": "퀴즈|시험|평가|채점", "english": "Quiz & Assessment Module", "category": "education" },
-  { "pattern": "수료증|이수증|자격증\\s*발급", "english": "Certificate of Completion Issuance", "category": "education" },
-  { "pattern": "학습\\s*진도|진도율|수강\\s*현황", "english": "Learning Progress Tracking & Completion Rate", "category": "education" },
-  { "pattern": "과제\\s*제출|숙제|과제\\s*평가", "english": "Assignment Submission & Grading System", "category": "education" },
-  { "pattern": "라이브\\s*강의|실시간\\s*수업|웨비나", "english": "Live Class & Real-time Video Lecture", "category": "education" },
-  { "pattern": "커리큘럼|교육\\s*과정|강의계획서", "english": "Curriculum & Syllabus Management", "category": "education" },
-  { "pattern": "토론|Q&A|질문\\s*게시판|학습\\s*포럼", "english": "Discussion Board & Q&A Forum", "category": "education" },
-  { "pattern": "계좌\\s*연동|오픈\\s*뱅킹|계좌\\s*조회", "english": "Open Banking Account Integration", "category": "finance" },
-  { "pattern": "이체|송금|출금|입금", "english": "Fund Transfer & Withdrawal Processing", "category": "finance" },
-  { "pattern": "가계부|지출\\s*내역|예산\\s*관리|소비\\s*분석", "english": "Expense Tracking & Budget Management", "category": "finance" },
-  { "pattern": "환전|환율|실시간\\s*환율", "english": "Currency Exchange & Real-time FX Rate Display", "category": "finance" },
-  { "pattern": "대출\\s*심사|한도\\s*조회|신용\\s*평가", "english": "Loan Application & Credit Limit Assessment", "category": "finance" },
-  { "pattern": "투자|포트폴리오|자산\\s*관리|수익률", "english": "Investment Portfolio & Asset Management", "category": "finance" },
-  { "pattern": "세금|납부|신고|원천징수", "english": "Tax Calculation & Filing Integration", "category": "finance" },
-  { "pattern": "보험|보장\\s*분석|보험금\\s*청구", "english": "Insurance Coverage Analysis & Claim Submission", "category": "finance" },
-  { "pattern": "배차|기사\\s*배정|배달원|기사\\s*호출", "english": "Driver Assignment & Dispatch System", "category": "logistics" },
-  { "pattern": "물류\\s*센터|창고|입출고|WMS", "english": "Warehouse & Inventory In/Out Management (WMS)", "category": "logistics" },
-  { "pattern": "운송장|송장|송장\\s*출력", "english": "Shipping Label & Waybill Generation", "category": "logistics" },
-  { "pattern": "경로\\s*최적화|최단\\s*경로|배송\\s*루트", "english": "Route Optimization & Shortest Path Calculation", "category": "logistics" },
-  { "pattern": "실시간\\s*위치|차량\\s*추적|화물\\s*위치", "english": "Real-time Vehicle & Package Tracking", "category": "logistics" },
-  { "pattern": "매물|부동산\\s*목록|리스트|매물\\s*검색", "english": "Property Listing & Real Estate Search", "category": "real_estate" },
-  { "pattern": "임대|월세|전세|임대차\\s*계약", "english": "Rental & Lease Contract Management", "category": "real_estate" },
-  { "pattern": "매매|계약\\s*체결|부동산\\s*매매", "english": "Property Sale & Contract Execution", "category": "real_estate" },
-  { "pattern": "시세|호가|실거래가|국토부\\s*실거래가", "english": "Market Price & Actual Transaction Price Display", "category": "real_estate" },
-  { "pattern": "중개사|부동산\\s*에이전트|공인중개사", "english": "Real Estate Agent Profile & Matching", "category": "real_estate" },
-  { "pattern": "채용|구인|지원서|채용\\s*공고", "english": "Job Posting & Application Submission", "category": "hr" },
-  { "pattern": "이력서|포트폴리오\\s*제출|서류\\s*심사", "english": "Resume & Portfolio Submission", "category": "hr" },
-  { "pattern": "면접\\s*일정|면접\\s*조율|인터뷰\\s*예약", "english": "Interview Scheduling & Coordination", "category": "hr" },
-  { "pattern": "근태|출퇴근|근무\\s*시간|출퇴근\\s*기록", "english": "Attendance & Work Hour Tracking", "category": "hr" },
-  { "pattern": "급여|연봉|페이롤|급여\\s*명세서", "english": "Payroll & Salary Calculation", "category": "hr" },
-  { "pattern": "온보딩|신규\\s*입사|사원\\s*등록", "english": "Employee Onboarding Workflow", "category": "hr" },
-  { "pattern": "연차|휴가\\s*신청|휴가\\s*결재", "english": "Leave Request & Approval System", "category": "hr" },
-  { "pattern": "2FA|이중\\s*인증|OTP|SMS\\s*인증", "english": "Two-Factor Authentication (2FA / OTP)", "category": "security" },
-  { "pattern": "HTTPS|SSL|TLS|보안\\s*인증서", "english": "HTTPS / TLS Secure Communication", "category": "security" },
-  { "pattern": "XSS|CSRF|SQL\\s*인젝션|보안\\s*취약점", "english": "OWASP Top 10 Security Vulnerability Prevention", "category": "security" },
-  { "pattern": "비밀번호\\s*암호화|해싱|bcrypt|Argon2", "english": "Password Hashing & Encryption (bcrypt)", "category": "security" },
-  { "pattern": "Rate\\s*Limit|요청\\s*제한|과요청\\s*차단|DDoS\\s*방어", "english": "Rate Limiting & Brute-force Prevention", "category": "security" },
-  { "pattern": "감사\\s*로그|접근\\s*기록|보안\\s*로그", "english": "Audit Log & Access History Recording", "category": "security" },
-  { "pattern": "개인\\s*정보\\s*처리|GDPR|개인정보\\s*보호|마스킹", "english": "Personal Data Protection & Masking (GDPR)", "category": "security" },
-  { "pattern": "RAG|검색\\s*증강\\s*생성|벡터\\s*검색", "english": "Retrieval-Augmented Generation (RAG) & Vector Search", "category": "ai_data" },
-  { "pattern": "임베딩|벡터\\s*임베딩|유사도\\s*검색|코사인\\s*유사도", "english": "Vector Embedding & Cosine Similarity Retrieval", "category": "ai_data" },
-  { "pattern": "벡터\\s*DB|Vector\\s*DB|Pinecone|Chroma|Qdrant|Milvus|pgvector", "english": "Vector Database Integration (pgvector/Pinecone)", "category": "ai_data" },
-  { "pattern": "파인튜닝|미세조정|Fine-tuning", "english": "LLM Fine-tuning & Parameter-Efficient Adaptation", "category": "ai_data" },
-  { "pattern": "프롬프트|프롬프트\\s*엔지니어링|시스템\\s*프롬프트", "english": "Prompt Engineering & Few-shot Template Optimization", "category": "ai_data" },
-  { "pattern": "데이터\\s*파이프라인|ETL|데이터\\s*수집|배치\\s*처리", "english": "ETL Data Pipeline & Scheduled Batch Processing", "category": "ai_data" },
-  { "pattern": "모델\\s*서빙|추론\\s*API|Inference|GPU\\s*가속", "english": "Model Serving & Low-Latency Inference API", "category": "ai_data" },
-  { "pattern": "AI\\s*에이전트|자율\\s*에이전트|Agent\\s*워크플로우", "english": "AI Agent & Multi-step Autonomous Workflow", "category": "ai_data" },
-  { "pattern": "OCR|문자\\s*인식|광학\\s*문자\\s*인식|문서\\s*파싱", "english": "OCR & Document Text Extraction Pipeline", "category": "ai_data" },
-  { "pattern": "STT|음성\\s*인식|Speech-to-Text|Whisper", "english": "Speech-to-Text (STT) Transcription Pipeline", "category": "ai_data" },
-  { "pattern": "TTS|음성\\s*합성|Text-to-Speech|음성\\s*생성", "english": "Text-to-Speech (TTS) Voice Synthesis", "category": "ai_data" },
-  { "pattern": "추천\\s*알고리즘|추천\\s*시스템|개인화\\s*추천|협업\\s*필터링", "english": "Personalized Recommendation Engine & Collaborative Filtering", "category": "ai_data" },
-  { "pattern": "멀티테넌시|테넌트\\s*격리|Multi-tenant", "english": "Multi-tenant Architecture & Tenant Data Isolation", "category": "saas_enterprise" },
-  { "pattern": "워크스페이스|조직\\s*관리|팀\\s*멤버\\s*초대", "english": "Workspace & Team Member Invitation Management", "category": "saas_enterprise" },
-  { "pattern": "SSO|싱글\\s*사인온|SAML|Okta|Azure\\s*AD", "english": "Enterprise SSO & SAML / Okta Integration", "category": "saas_enterprise" },
-  { "pattern": "사용량\\s*기반\\s*과금|미터링|크레딧\\s*차감", "english": "Usage-based Metered Billing & Credit Consumption", "category": "saas_enterprise" },
-  { "pattern": "엑셀\\s*다운로드|CSV\\s*내보내기|데이터\\s*익스포트", "english": "Data Export & Batch CSV/Excel Download", "category": "saas_enterprise" },
-  { "pattern": "활동\\s*로그|액티비티\\s*로그|유저\\s*행동\\s*추적", "english": "User Activity Log & Event Stream Tracking", "category": "saas_enterprise" },
-  { "pattern": "자동\\s*백업|재해\\s*복구|DR\\s*시나리오", "english": "Automated Backup & Disaster Recovery (DR)", "category": "saas_enterprise" },
-  { "pattern": "API\\s*키\\s*발급|API\\s*토큰\\s*관리|사용량\\s*할당량", "english": "API Key Management & Rate Quota Enforcement", "category": "saas_enterprise" },
-  { "pattern": "동영상\\s*스트리밍|VOD|HLS|비디오\\s*재생", "english": "Video on Demand & HLS Adaptive Bitrate Streaming", "category": "media_streaming" },
-  { "pattern": "라이브\\s*스트리밍|실시간\\s*방송|WebRTC", "english": "Live Video Streaming & WebRTC Broadcast", "category": "media_streaming" },
-  { "pattern": "미디어\\s*트랜스코딩|인코딩|비디오\\s*변환", "english": "Media Transcoding & Multi-bitrate Video Encoding", "category": "media_streaming" },
-  { "pattern": "썸네일\\s*추출|미리보기\\s*생성", "english": "Automated Thumbnail & Video Preview Extraction", "category": "media_streaming" },
-  { "pattern": "소셜\\s*피드|타임라인|뉴스피드|인기\\s*게시글", "english": "Social Feed & Activity Timeline Curation", "category": "media_streaming" },
-  { "pattern": "에디터|위지윅|WYSIWYG|마크다운\\s*에디터|리치\\s*텍스트", "english": "Rich Text WYSIWYG & Markdown Editor Component", "category": "media_streaming" },
-  { "pattern": "음원\\s*스트리밍|플레이리스트|오디오\\s*플레이어", "english": "Audio Streaming & Playlist Management", "category": "media_streaming" },
-  { "pattern": "칸반\\s*보드|드래그\\s*앤\\s*드롭|태스크\\s*카드", "english": "Kanban Board & Drag-and-Drop Task Management", "category": "collaboration_community" },
-  { "pattern": "실시간\\s*협업|동시\\s*편집|WebSocket\\s*동기화|CRDT", "english": "Real-time Collaborative Multi-user Editing", "category": "collaboration_community" },
-  { "pattern": "투표|설문조사|투표\\s*집계|서베이", "english": "Poll & Survey Creation / Real-time Voting System", "category": "collaboration_community" },
-  { "pattern": "신고하기|악성\\s*유저\\s*차단|콘텐츠\\s*검수|모더레이션", "english": "User Reporting & Content Moderation System", "category": "collaboration_community" },
-  { "pattern": "멘션|태그|해시태그|유저\\s*호출", "english": "User Mention & Tagging Notification System", "category": "collaboration_community" },
-  { "pattern": "댓글|대댓글|스레드|답글", "english": "Nested Comments & Threaded Discussion System", "category": "collaboration_community" },
-  { "pattern": "숙박\\s*예약|객실\\s*예약|체크인\\s*체크아웃|예약\\s*캘린더", "english": "Accommodation & Room Booking Calendar System", "category": "mobility_travel" },
-  { "pattern": "길안내|내비게이션|경로\\s*안내|도보\\s*경로", "english": "Turn-by-Turn Navigation & GPS Route Guidance", "category": "mobility_travel" },
-  { "pattern": "차량\\s*호출|택시\\s*호출|승차\\s*매칭|기사\\s*매칭", "english": "Ride Hailing & Real-time Vehicle Dispatch Matching", "category": "mobility_travel" },
-  { "pattern": "요금\\s*계산|거리\\s*비례\\s*요금|야간\\s*할증", "english": "Dynamic Fare Calculation & Distance-based Surcharge", "category": "mobility_travel" },
-  { "pattern": "위치\\s*체크인|방문\\s*인증|장소\\s*저장", "english": "Location-based Photo Check-in & Visit Verification", "category": "mobility_travel" },
-  { "pattern": "랭킹|리더보드|순위\\s*시스템", "english": "Real-time Leaderboard & Ranking System", "category": "gaming_rewards" },
-  { "pattern": "퀘스트|미션\\s*달성|업적\\s*뱃지|도전\\s*과제", "english": "Quest, Mission & Badge Achievement System", "category": "gaming_rewards" },
-  { "pattern": "인벤토리|아이템\\s*보관함|아이템\\s*장착", "english": "Inventory & In-Game Item Management", "category": "gaming_rewards" },
-  { "pattern": "출석체크|연속\\s*출석|출석\\s*보상", "english": "Daily Attendance Check-in & Streak Reward", "category": "gaming_rewards" },
-  { "pattern": "가챠|뽑기|룰렛|랜덤\\s*박스|확률형\\s*보상", "english": "Gacha & Roulette Random Reward System", "category": "gaming_rewards" },
-  { "pattern": "전자서명|서명\\s*날인|전자\\s*서명\\s*패드", "english": "Electronic Signature & Timestamping", "category": "legal_contract" },
-  { "pattern": "계약서\\s*템플릿|계약\\s*조항|표준\\s*계약서", "english": "Contract Template & Clause Customization", "category": "legal_contract" },
-  { "pattern": "본인인증|PASS\\s*인증|휴대폰\\s*본인확인|KYC", "english": "Identity Verification & Mobile KYC (PASS Integration)", "category": "legal_contract" },
-  { "pattern": "약관\\s*동의|이용약관|개인정보\\s*수집\\s*동의", "english": "Terms of Service Consent & Legal Agreement Checkbox", "category": "legal_contract" },
-  { "pattern": "블루투스|BLE|디바이스\\s*페어링|기기\\s*연결", "english": "BLE Device Pairing & Bluetooth Communication", "category": "iot_smart" },
-  { "pattern": "MQTT|센서\\s*데이터|IoT\\s*데이터|텔레메트리", "english": "MQTT Protocol & Real-time Sensor Telemetry", "category": "iot_smart" },
-  { "pattern": "원격\\s*제어|기기\\s*제어|전원\\s*온오프|스마트홈", "english": "Remote Device Control & Smart Home Integration", "category": "iot_smart" },
-  { "pattern": "OTA|펌웨어\\s*업데이트|무선\\s*업데이트", "english": "Firmware Over-the-Air (OTA) Update", "category": "iot_smart" },
-  { "pattern": "이상\\s*감지|센서\\s*경보|임계치\\s*초과", "english": "Sensor Anomaly Detection & Push Alert Trigger", "category": "iot_smart" },
-  { "pattern": "테이블\\s*오더|QR\\s*주문|스마트\\s*오더|자리\\s*주문", "english": "Table QR Smart Ordering System", "category": "food_delivery" },
-  { "pattern": "주방\\s*주문\\s*접수|주방\\s*디스플레이|KDS|주문\\s*큐", "english": "Kitchen Display System (KDS) & Order Processing", "category": "food_delivery" },
-  { "pattern": "메뉴\\s*옵션|토핑\\s*추가|맛\\s*선택|사이즈\\s*선택", "english": "Menu Customization & Option Modifier", "category": "food_delivery" },
-  { "pattern": "라이더\\s*배차|배달원\\s*위치|실시간\\s*배달\\s*현황", "english": "Delivery Rider Dispatch & Real-time Delivery Tracking", "category": "food_delivery" },
-  { "pattern": "포장\\s*주문|픽업\\s*예약|방문\\s*수령", "english": "Takeout & Scheduled Pickup Ordering System", "category": "food_delivery" },
-  { "pattern": "스마트\\s*컨트랙트|Solidity|EVM|스마트\\s*계약", "english": "Smart Contract Execution & EVM Compatibility", "category": "blockchain_web3" },
-  { "pattern": "지갑\\s*연결|메타마스크|Web3\\s*인증|WalletConnect", "english": "Web3 Wallet Connect & Signature Authentication", "category": "blockchain_web3" },
-  { "pattern": "NFT\\s*발행|민팅|토큰\\s*전송|ERC-721", "english": "NFT Minting & Token Transfer Protocol", "category": "blockchain_web3" },
-  { "pattern": "가스비|트랜잭션\\s*서명|블록체인\\s*익스플로러", "english": "Gas Fee Optimization & Transaction Tracking", "category": "blockchain_web3" },
-  { "pattern": "GitHub\\s*Actions|파이프라인\\s*구축|CI/CD\\s*자동화", "english": "GitHub Actions CI/CD Pipeline Automation", "category": "devops_cicd" },
-  { "pattern": "무중단\\s*배포|블루그린|카나리\\s*배포|롤링\\s*업데이트", "english": "Zero-Downtime Blue-Green & Canary Deployment", "category": "devops_cicd" },
-  { "pattern": "Terraform|IaC|인프라\\s*코드화", "english": "Infrastructure as Code (IaC) with Terraform", "category": "devops_cicd" },
-  { "pattern": "시크릿\\s*관리|Vault|환경변수\\s*암호화", "english": "Secrets Management & Environment Encryption", "category": "devops_cicd" },
-  { "pattern": "엘라스틱서치|Elasticsearch|OpenSearch|인덱싱", "english": "Elasticsearch & OpenSearch Full-text Indexing", "category": "search_indexing" },
-  { "pattern": "자동완성|추천\\s*검색어|검색어\\s*제안", "english": "Autocomplete & Search Suggestion Engine", "category": "search_indexing" },
-  { "pattern": "형태소\\s*분석|Nori\\s*토크나이저|한국어\\s*형태소", "english": "Korean Morphological Analysis & Tokenization (Nori)", "category": "search_indexing" },
-  { "pattern": "동의어\\s*사전|불용어\\s*처리|오타\\s*교정", "english": "Synonym Dictionary & Typo Correction", "category": "search_indexing" },
-  { "pattern": "APM|성능\\s*모니터링|Datadog|New\\s*Relic", "english": "Application Performance Monitoring (APM)", "category": "observability_monitoring" },
-  { "pattern": "분산\\s*추적|트레이싱|Jaeger|OpenTelemetry", "english": "Distributed Tracing & OpenTelemetry Instrumentation", "category": "observability_monitoring" },
-  { "pattern": "에러\\s*트래킹|Sentry|센트리\\s*연동", "english": "Real-time Error Tracking & Sentry Alerting", "category": "observability_monitoring" },
-  { "pattern": "프로메테우스|그라파나|Grafana|Prometheus", "english": "Prometheus Metrics & Grafana Dashboard", "category": "observability_monitoring" },
-  { "pattern": "패스키|Passkey|FIDO2|WebAuthn", "english": "FIDO2 & Passkey Passwordless Authentication", "category": "cyber_authentication" },
-  { "pattern": "생체\\s*인증|지문\\s*인식|FaceID|얼굴\\s*인식", "english": "Biometric Authentication (FaceID/Fingerprint)", "category": "cyber_authentication" },
-  { "pattern": "세션\\s*탈취\\s*방지|토큰\\s*블랙리스트|리프레시\\s*토큰\\s*로테이션", "english": "Refresh Token Rotation & Session Revocation", "category": "cyber_authentication" },
-  { "pattern": "광고\\s*입찰|RTB|실시간\\s*경매|DSP|SSP", "english": "Real-Time Bidding (RTB) & DSP/SSP Ad Exchange", "category": "advertising_adtech" },
-  { "pattern": "광고\\s*트래킹|픽셀\\s*추적|어트리뷰션|UTM", "english": "Conversion Tracking Pixel & Ad Attribution", "category": "advertising_adtech" },
-  { "pattern": "배너\\s*광고|전면\\s*광고|네이티브\\s*광고\\s*SDK", "english": "Banner & Native In-App Ad SDK Integration", "category": "advertising_adtech" },
-  { "pattern": "마케팅\\s*자동화|CRM\\s*캠페인|고객\\s*세그먼트", "english": "Marketing Automation & CRM Customer Segmentation", "category": "marketing_automation" },
-  { "pattern": "A/B\\s*테스트|스플릿\\s*테스트|전환율\\s*최적화", "english": "A/B Testing & Conversion Rate Optimization (CRO)", "category": "marketing_automation" },
-  { "pattern": "리타게팅|개인화\\s*메시지|카카오\\s*알림톡\\s*발송", "english": "Personalized Retargeting & Kakao Alimtalk Delivery", "category": "marketing_automation" },
-  { "pattern": "헬프데스크|고객센터|1:1\\s*문의|CS\\s*티켓", "english": "Helpdesk Ticketing & Customer Inquiry Management", "category": "customer_support" },
-  { "pattern": "자주\\s*묻는\\s*질문|FAQ|고객\\s*지원\\s*센터", "english": "FAQ Knowledge Base & Self-Service Portal", "category": "customer_support" },
-  { "pattern": "상담\\s*챗봇|인입\\s*상담원\\s*배정|채널톡", "english": "Live Support Chatbot & Agent Assignment Routing", "category": "customer_support" },
-  { "pattern": "스마트팜|온습도\\s*제어|양액\\s*자동\\s*공급", "english": "Smart Farm Environmental Control & Nutrient Dosing", "category": "agriculture_agtech" },
-  { "pattern": "작물\\s*생육\\s*진단|병충해\\s*인식|수확량\\s*예측", "english": "Crop Growth Monitoring & Disease Image Recognition", "category": "agriculture_agtech" },
-  { "pattern": "토양\\s*센서|일조량\\s*데이터|농업\\s*관측", "english": "Soil Moisture & Sunlight Sensor Analytics", "category": "agriculture_agtech" },
-  { "pattern": "임상\\s*시험|EDC|임상\\s*데이터\\s*관리", "english": "Electronic Data Capture (EDC) for Clinical Trials", "category": "biotech_pharma" },
-  { "pattern": "유전체\\s*분석|DNA\\s*시퀀싱|바이오\\s*마커", "english": "Genomic Sequence Analysis & Biomarker Detection", "category": "biotech_pharma" },
-  { "pattern": "약물\\s*상호작용|DUR\\s*점검|의약품\\s*안전성", "english": "Drug-Drug Interaction (DUR) Safety Screening", "category": "biotech_pharma" },
-  { "pattern": "OBD|차량\\s*진단|CAN\\s*통신|엔진\\s*경고등", "english": "OBD-II Telematics & CAN Bus Vehicle Diagnostics", "category": "automotive_connected" },
-  { "pattern": "원격\\s*시동|차량\\s*도어\\s*제어|디지털\\s*키", "english": "Remote Engine Start & Digital Key Door Control", "category": "automotive_connected" },
-  { "pattern": "배터리\\s*잔량|충전\\s*상태|EV\\s*전기차\\s*충전소", "english": "EV Battery State of Charge (SoC) & Charging Station Locator", "category": "automotive_connected" },
-  { "pattern": "태양광\\s*발전|인버터\\s*모니터링|발전량\\s*예측", "english": "Solar Power Inverter Monitoring & Yield Forecasting", "category": "energy_greentech" },
-  { "pattern": "탄소\\s*배출량|ESG\\s*보고서|온실가스\\s*산정", "english": "Carbon Emission Accounting & ESG Compliance Report", "category": "energy_greentech" },
-  { "pattern": "스마트그리드|전력\\s*수요\\s*반응|DR\\s*시장", "english": "Smart Grid Demand Response & Peak Shaving", "category": "energy_greentech" },
-  { "pattern": "MES|제조\\s*실행\\s*시스템|생산\\s*실적", "english": "Manufacturing Execution System (MES) & Production Tracking", "category": "manufacturing_smartfactory" },
-  { "pattern": "설비\\s*가동률|예지\\s*보전|진동\\s*센서", "english": "Equipment OEE Calculation & Predictive Maintenance", "category": "manufacturing_smartfactory" },
-  { "pattern": "불량\\s*검출|비전\\s*검사|품질\\s*관리\\s*QC", "english": "Automated Optical Inspection (AOI) & Defect Classification", "category": "manufacturing_smartfactory" },
-  { "pattern": "BIM|3D\\s*설계\\s*도면|건축\\s*정보\\s*모델", "english": "Building Information Modeling (BIM) Viewer Integration", "category": "construction_contech" },
-  { "pattern": "현장\\s*출역\\s*관리|공사\\s*일보|안전\\s*점검", "english": "Jobsite Daily Log & Worker Safety Inspection Checklist", "category": "construction_contech" },
-  { "pattern": "위험\\s*구역\\s*접근\\s*경보|스마트\\s*안전모|CCTV\\s*관제", "english": "Hazard Zone Geo-fencing & Smart Helmet Beacon Alert", "category": "construction_contech" },
-  { "pattern": "보험금\\s*청구|서류\\s*촬영\\s*접수|진료비\\s*영수증\\s*OCR", "english": "Mobile Insurance Claim Filing & Receipt OCR", "category": "insurance_insurtech" },
-  { "pattern": "보험\\s*심사|언더라이팅|사고\\s*조사", "english": "Automated Underwriting & Claim Fraud Detection", "category": "insurance_insurtech" },
-  { "pattern": "다이렉트\\s*보험|보험료\\s*산출|맞춤\\s*보장\\s*설계", "english": "Direct Insurance Premium Quoting & Policy Customization", "category": "insurance_insurtech" },
-  { "pattern": "가상\\s*피팅|AR\\s*착용|사이즈\\s*추천", "english": "Virtual AR Fitting & AI Body Size Recommendation", "category": "fashion_beauty" },
-  { "pattern": "피부\\s*진단|퍼스널\\s*컬러|화장품\\s*성분\\s*분석", "english": "Skin Condition Diagnostic & Cosmetic Ingredient Analysis", "category": "fashion_beauty" },
-  { "pattern": "코디\\s*추천|스타일링\\s*북|착장\\s*공유", "english": "Outfit Styling Recommendation & Lookbook Showcase", "category": "fashion_beauty" },
-  { "pattern": "반려동물\\s*등록|반려동물\\s*건강수첩|예방접종\\s*일정", "english": "Pet Profile Registration & Vaccination Schedule Tracker", "category": "petcare" },
-  { "pattern": "펫시터|산책\\s*대행|돌봄\\s*라이브\\s*일지", "english": "Pet Sitter Matching & GPS Walking Route Journal", "category": "petcare" },
-  { "pattern": "사료\\s*성분\\s*분석|맞춤\\s*영양\\s*추천", "english": "Pet Food Ingredient Analysis & Tailored Diet Plan", "category": "petcare" },
-  { "pattern": "운동\\s*기록|칼로리\\s*소모|심박수\\s*연동", "english": "Workout Logging & Wearable Heart Rate Sync", "category": "sports_fitness" },
-  { "pattern": "PT\\s*예약|헬스장\\s*입장\\s*바코드|수강권\\s*차감", "english": "Personal Training Booking & Gym Access Barcode", "category": "sports_fitness" },
-  { "pattern": "자세\\s*교정|모션\\s*인식|홈트레이닝\\s*코칭", "english": "AI Pose Estimation & Home Workout Form Correction", "category": "sports_fitness" },
-  { "pattern": "티켓팅|좌석\\s*선점|예매\\s*대기열", "english": "Concert Ticketing & Real-time Seat Map Reservation", "category": "entertainment_fandom" },
-  { "pattern": "팬클럽\\s*멤버십|팬레터|아티스트\\s*소통", "english": "Fan Club Membership & Exclusive Artist Feed", "category": "entertainment_fandom" },
-  { "pattern": "굿즈\\s*예약\\s*구매|한정판\\s*래플|포토카드", "english": "Merchandise Pre-order & Limited Edition Raffle System", "category": "entertainment_fandom" },
-  { "pattern": "기사\\s*작성\\s*CMS|뉴스\\s*발행|송고\\s*시스템", "english": "Newsroom CMS Editorial & Article Publishing Pipeline", "category": "news_publishing" },
-  { "pattern": "헤드라인\\s*A/B\\s*테스트|속보\\s*알림|기사\\s*스크랩", "english": "Breaking News Push Alert & Article Scraping", "category": "news_publishing" },
-  { "pattern": "저널리즘\\s*구독|페이월|유료\\s*기사", "english": "Digital Journalism Paywall & Subscription Access", "category": "news_publishing" },
-  { "pattern": "헤드헌팅|인재\\s*풀\\s*검색|포지션\\s*제안", "english": "Executive Search Talent Pool & Position Outreach", "category": "recruitment_headhunting" },
-  { "pattern": "이력서\\s*파싱|ATS|채용\\s*파이프라인\\s*관리", "english": "Applicant Tracking System (ATS) & Resume Parsing", "category": "recruitment_headhunting" },
-  { "pattern": "평판\\s*조회|레퍼런스\\s*체크|경력\\s*검증", "english": "Reference Check & Career Verification Workflow", "category": "recruitment_headhunting" },
-  { "pattern": "설문\\s*문항\\s*로직|분기\\s*조건|리커트\\s*척도", "english": "Survey Branching Logic & Likert Scale Questionnaire", "category": "survey_research" },
-  { "pattern": "표본\\s*추출|패널\\s*스크리닝|응답\\s*검증", "english": "Sample Panel Screening & Response Quality Filter", "category": "survey_research" },
-  { "pattern": "교차\\s*분석|통계\\s*리포트\\s*생성|데이터\\s*시각화", "english": "Cross-tabulation & Statistical Survey Analytics", "category": "survey_research" },
-  { "pattern": "웨비나\\s*등록|참가자\\s*체크인|명찰\\s*출력", "english": "Webinar Registration & Onsite Badge Printing Check-in", "category": "event_webinar" },
-  { "pattern": "실시간\\s*Q&A|슬라이도|청중\\s*투표", "english": "Audience Live Q&A & Interactive Slido-style Polling", "category": "event_webinar" },
-  { "pattern": "부스\\s*스탬프\\s*투어|전시회\\s*리드\\s*수집", "english": "Exhibition Booth Stamp Tour & Lead Capture Scanner", "category": "event_webinar" },
-  { "pattern": "펀딩\\s*달성률|목표\\s*금액|후원자\\s*리스트", "english": "Crowdfunding Goal Percentage & Backer Milestone Tracker", "category": "donation_crowdfunding" },
-  { "pattern": "리워드\\s*선택|얼리버드\\s*패키지|배송지\\s*수합", "english": "Early Bird Reward Tier Selection & Backer Shipping Intake", "category": "donation_crowdfunding" },
-  { "pattern": "정기\\s*기부|기부금\\s*영수증\\s*발급|후원금\\s*사용\\s*내역", "english": "Monthly Donation & Tax-Deductible Receipt Generation", "category": "donation_crowdfunding" },
-  { "pattern": "선박\\s*위치|AIS\\s*관제|항로\\s*추적", "english": "Automatic Identification System (AIS) Vessel Tracking", "category": "maritime_shipping" },
-  { "pattern": "선복\\s*예약|부킹\\s*접수|해상\\s*운임", "english": "Ocean Freight Booking & Shipping Rate Estimation", "category": "maritime_shipping" },
-  { "pattern": "컨테이너\\s*추적|항만\\s*터미널\\s*반출입|B/L\\s*선하증권", "english": "Container Terminal Tracking & Bill of Lading (B/L)", "category": "maritime_shipping" },
-  { "pattern": "항공권\\s*예약|PNR\\s*생성|GDS\\s*연동", "english": "Flight Booking & Passenger Name Record (PNR) Integration", "category": "aviation_aerospace" },
-  { "pattern": "모바일\\s*탑승권|체크인|좌석\\s*지정", "english": "Mobile Boarding Pass & Online Seat Selection", "category": "aviation_aerospace" },
-  { "pattern": "운항\\s*상태|지연\\s*결항\\s*알림|수하물\\s*추적", "english": "Flight Status Tracker & Baggage Location Notification", "category": "aviation_aerospace" },
-  { "pattern": "민원\\s*신청|전자\\s*정부\\s*프레임워크|공공\\s*데이터\\s*API", "english": "e-Government Framework & Citizen Petition Portal", "category": "public_govtech" },
-  { "pattern": "디지털\\s*원패스|공공\\s*인증서|모바일\\s*신분증", "english": "Mobile ID & Single Sign-On (Digital OnePass)", "category": "public_govtech" },
-  { "pattern": "공공\\s*바우처|복지\\s*포인트\\s*지급|수급\\s*자격\\s*조회", "english": "Public Subsidy Voucher & Welfare Eligibility Verification", "category": "public_govtech" },
-  { "pattern": "자원봉사\\s*매칭|봉사\\s*활동\\s*신청|봉사\\s*시간\\s*인증", "english": "Volunteer Opportunity Matching & Hours Certification (VMS)", "category": "nonprofit_ngo" },
-  { "pattern": "비영리\\s*프로젝트\\s*보고서|수익사업\\s*공시", "english": "NGO Project Transparency Report & Financial Disclosure", "category": "nonprofit_ngo" },
-  { "pattern": "수혜자\\s*선정|구호\\s*물품\\s*배분\\s*관리", "english": "Beneficiary Screening & Relief Supplies Distribution", "category": "nonprofit_ngo" },
-  { "pattern": "폐기물\\s*수거\\s*신청|올바로\\s*시스템|배출량\\s*측정", "english": "Waste Collection Booking & Allbaro Tracking System", "category": "waste_recycling" },
-  { "pattern": "재활용\\s*포인트|무인\\s*회수기|페트병\\s*수거\\s*리워드", "english": "Reverse Vending Machine (RVM) Recycling Rewards", "category": "waste_recycling" },
-  { "pattern": "음식물\\s*쓰레기\\s*RFID|감량기\\s*데이터", "english": "Food Waste RFID Metering & Reduction Analytics", "category": "waste_recycling" },
-  { "pattern": "POS\\s*결제|바코드\\s*스캔|영수증\\s*프린터\\s*출력", "english": "Point of Sale (POS) Checkout & Receipt Printer Integration", "category": "retail_pos" },
-  { "pattern": "매장\\s*시재\\s*마감|일일\\s*매출\\s*정산", "english": "Cash Drawer Reconciliation & End-of-Day Sales Report", "category": "retail_pos" },
-  { "pattern": "바코드\\s*재고\\s*실사|매장\\s*간\\s*재고\\s*이동", "english": "Barcode Inventory Stock-take & Inter-store Transfer", "category": "retail_pos" },
-  { "pattern": "발주서\\s*발행|PO\\s*생성|조달\\s*관리", "english": "Purchase Order (PO) Issuance & Procurement Management", "category": "supply_chain_scm" },
-  { "pattern": "공급업체\\s*포털|납기\\s*관리|입고\\s*검수", "english": "Supplier Collaboration Portal & Delivery Schedule Tracking", "category": "supply_chain_scm" },
-  { "pattern": "안전\\s*재고\\s*산출|재발주\\s*시점\\s*알림", "english": "Safety Stock Optimization & Reorder Point Alert", "category": "supply_chain_scm" },
-  { "pattern": "회의실\\s*예약|스마트\\s*오피스|좌석\\s*예약", "english": "Conference Room Booking & Hot-desking Seat Reservation", "category": "facility_building" },
-  { "pattern": "방문객\\s*사전\\s*등록|출입\\s*게이트\\s*QR", "english": "Visitor Pre-registration & Turnstile QR Access Control", "category": "facility_building" },
-  { "pattern": "공조기\\s*HVAC\\s*제어|빌딩\\s*에너지\\s*BEMS", "english": "Building Energy Management System (BEMS) & HVAC Control", "category": "facility_building" },
-  { "pattern": "낙상\\s*감지|응급\\s*비상벨|독거노인\\s*안심\\s*케어", "english": "Fall Detection & Emergency SOS Alert System", "category": "elderly_silvertech" },
-  { "pattern": "장기요양\\s*급여\\s*청구|요양보호사\\s*방문\\s*일지", "english": "Long-Term Care Insurance Billing & Caregiver Visit Log", "category": "elderly_silvertech" },
-  { "pattern": "치매\\s*예방\\s*인지\\s*훈련|시니어\\s*두뇌\\s*게임", "english": "Cognitive Training & Senior Brain Exercise Module", "category": "elderly_silvertech" },
-  { "pattern": "수유\\s*기록|수면\\s*패턴|기저귀\\s*교체\\s*일지", "english": "Infant Feeding, Sleep & Diaper Tracking Journal", "category": "parenting_baby" },
-  { "pattern": "아이\\s*성장\\s*백분위|키\\s*몸무게\\s*발달\\s*곡선", "english": "Child Growth Percentile & WHO Growth Chart Tracker", "category": "parenting_baby" },
-  { "pattern": "어린이집\\s*알림장|키즈노트|등하원\\s*체크", "english": "Daycare Daily Report & Attendance Arrival Notification", "category": "parenting_baby" },
-  { "pattern": "심리\\s*상담\\s*예약|비대면\\s*상담|익명\\s*채팅\\s*상담", "english": "Tele-counseling Booking & Anonymous Psychological Chat", "category": "mental_health" },
-  { "pattern": "우울증\\s*자가\\s*진단|PHQ-9|감정\\s*일기", "english": "PHQ-9 Depression Screener & Mood Tracking Diary", "category": "mental_health" },
-  { "pattern": "명상\\s*오디오|마음챙김\\s*호흡\\s*가이드", "english": "Mindfulness Audio Session & Guided Breathing Guide", "category": "mental_health" },
-  { "pattern": "치식\\s*차트|치과\\s*전자의무기록|치아\\s*넘버링", "english": "Dental Odontogram Chart & Tooth Numbering Record", "category": "dental_clinic" },
-  { "pattern": "임플란트\\s*보철\\s*기공\\s*의뢰|기공소\\s*연동", "english": "Dental Lab Prosthetics Order & Work Order Tracking", "category": "dental_clinic" },
-  { "pattern": "치과\\s*파노라마\\s*X-ray|3D\\s*구강\\s*스캔\\s*뷰어", "english": "Panoramic Dental X-Ray & 3D Intraoral Scan Viewer", "category": "dental_clinic" },
-  { "pattern": "약국\\s*조제\\s*접수|처방전\\s*바코드\\s*스캔", "english": "Pharmacy Prescription Barcode Dispensing Intake", "category": "pharmacy_medication" },
-  { "pattern": "복약\\s*지도문\\s*출력|약품\\s*효능\\s*안내", "english": "Medication Guide Printout & Drug Information Lookup", "category": "pharmacy_medication" },
-  { "pattern": "의약품\\s*유통\\s*일련번호|의약품\\s*재고\\s*관리", "english": "Pharmaceutical Serialized Tracking & Drug Stock Control", "category": "pharmacy_medication" },
-  { "pattern": "동물병원\\s*차트|수의사\\s*전자차트|체중\\s*기록", "english": "Veterinary Electronic Health Record (Vet EHR)", "category": "veterinary_animal" },
-  { "pattern": "심장사상충\\s*접종\\s*알림|반려동물\\s*혈액검사\\s*결과", "english": "Heartworm Preventive Reminder & Vet Lab Panel Results", "category": "veterinary_animal" },
-  { "pattern": "입원\\s*동물\\s*케이지\\s*CCTV|회복\\s*상태\\s*공유", "english": "Hospitalized Pet Live Cam & Patient Recovery Feed", "category": "veterinary_animal" },
-  { "pattern": "로보어드바이저|투자\\s*성향\\s*분석|자산\\s*배분\\s*모델", "english": "Robo-Advisor Risk Profiling & Strategic Asset Allocation", "category": "wealth_management" },
-  { "pattern": "리밸런싱|목표\\s*수익률|포트폴리오\\s*재조정", "english": "Automated Portfolio Rebalancing & Target Yield Optimization", "category": "wealth_management" },
-  { "pattern": "마이데이터\\s*금융\\s*자산\\s*통합\\s*조회", "english": "MyData Financial Asset Aggregation & Net Worth Tracker", "category": "wealth_management" },
-  { "pattern": "호가창|오더북|지정가\\s*주문|시장가\\s*체결", "english": "Real-Time Order Book & Limit/Market Order Matching", "category": "cryptocurrency_trading" },
-  { "pattern": "암호화폐\\s*입출금|트래블룰\\s*솔루션|지갑\\s*주소\\s*검증", "english": "Crypto Deposit/Withdrawal & Travel Rule Compliance", "category": "cryptocurrency_trading" },
-  { "pattern": "트레이딩뷰\\s*차트|캔들스틱\\s*지표|보조지표", "english": "TradingView Charting Library & Technical Indicators", "category": "cryptocurrency_trading" },
-  { "pattern": "전자세금계산서\\s*국세청\\s*홈택스\\s*스크래핑", "english": "National Tax Service (Hometax) Electronic Invoice Scraping", "category": "tax_accounting" },
-  { "pattern": "복식부기\\s*분개|재무상태표|손익계산서\\s*자동\\s*생성", "english": "Double-entry Bookkeeping Journal & Financial Statements", "category": "tax_accounting" },
-  { "pattern": "부가가치세\\s*신고|원천세\\s*신고서\\s*작성", "english": "VAT & Withholding Tax Return Form Generation", "category": "tax_accounting" },
-  { "pattern": "P2P\\s*투자\\s*모집|크라우드\\s*대출\\s*채권", "english": "P2P Lending Investment Syndicate & Note Issuance", "category": "microfinance_p2p" },
-  { "pattern": "대출\\s*원리금\\s*상환\\s*스케줄|이자\\s*지급\\s*정산", "english": "Loan Principal/Interest Amortization & Repayment Engine", "category": "microfinance_p2p" },
-  { "pattern": "대안\\s*신용평가\\s*CSS|비금융\\s*데이터\\s*스코어링", "english": "Alternative Credit Scoring System (CSS)", "category": "microfinance_p2p" },
-  { "pattern": "무인\\s*키오스크|터치스크린\\s*주문|키오스크\\s*UI", "english": "Self-Service Kiosk Touchscreen Ordering Interface", "category": "point_of_sale_kiosk" },
-  { "pattern": "IC카드\\s*리더기\\s*연동|삼성페이|애플페이\\s*NFC", "english": "EMV Chip Reader & Apple Pay / Samsung Pay NFC Integration", "category": "point_of_sale_kiosk" },
-  { "pattern": "키오스크\\s*장애\\s*원격\\s*모니터링|용지\\s*부족\\s*경고", "english": "Kiosk Health Heartbeat & Low-Paper Alert Telemetry", "category": "point_of_sale_kiosk" },
-  { "pattern": "차량\\s*대여\\s*예약|쏘카\\s*타입|무인\\s*스마트키", "english": "Car Sharing Reservation & In-App Bluetooth Smart Key", "category": "car_sharing_rental" },
-  { "pattern": "주행\\s*거리\\s*요금\\s*후청구|하이패스\\s*정산", "english": "Post-Trip Mileage Surcharge & Toll Fee Settlement", "category": "car_sharing_rental" },
-  { "pattern": "차량\\s*외관\\s*사진\\s*전송|반납\\s*존\\s*위치\\s*인증", "english": "Vehicle Exterior Photo Inspection & Return Zone Verification", "category": "car_sharing_rental" },
-  { "pattern": "차량\\s*번호판\\s*인식|LPR\\s*카메라|차단기\\s*제어", "english": "License Plate Recognition (LPR) & Barrier Gate Control", "category": "parking_management" },
-  { "pattern": "주차\\s*요금\\s*사전\\s*정산|무료\\s*주차\\s*할인\\s*등록", "english": "Pre-Payment Parking Fee & Merchant Discount Coupon Validation", "category": "parking_management" },
-  { "pattern": "주차장\\s*만차\\s*여부|실시간\\s*주차\\s*면\\s*안내", "english": "Parking Lot Occupancy Telemetry & Space Availability Map", "category": "parking_management" },
-  { "pattern": "새벽\\s*배송|당일\\s*배송|도심형\\s*물류\\s*MFC", "english": "Early Morning & Same-Day Micro-Fulfillment Center (MFC)", "category": "last_mile_delivery" },
-  { "pattern": "문앞\\s*배송\\s*완료\\s*사진|공동현관\\s*출입번호", "english": "Proof of Delivery Doorstep Photo & Building Entry PIN", "category": "last_mile_delivery" },
-  { "pattern": "다중\\s*경유지\\s*배달\\s*배차|묶음\\s*배송\\s*최적화", "english": "Multi-stop Delivery Batching & Route Optimization", "category": "last_mile_delivery" },
-  { "pattern": "AGV|AMR\\s*로봇|자율주행\\s*물류\\s*이송", "english": "Automated Guided Vehicle (AGV/AMR) Fleet Management", "category": "warehouse_automation" },
-  { "pattern": "DPS|DAS\\s*피킹\\s*시스템|디지털\\s*피킹", "english": "Digital Picking System (DPS) & Put-to-Light (DAS)", "category": "warehouse_automation" },
-  { "pattern": "자동화\\s*랙|AS/RS\\s*자동창고|로봇\\s*스태커", "english": "Automated Storage and Retrieval System (AS/RS)", "category": "warehouse_automation" },
-  { "pattern": "전자책\\s*뷰어|EPUB|PDF\\s*뷰어|형광펜\\s*하이라이트", "english": "EPUB / PDF eBook Reader & Highlight Annotation Engine", "category": "e_library_reading" },
-  { "pattern": "도서\\s*대출\\s*반납|DRM\\s*복제\\s*방지|대출\\s*기한\\s*만료", "english": "eBook Lending/Return Workflow & DRM License Enforcement", "category": "e_library_reading" },
-  { "pattern": "독서\\s*통계|독서\\s*타이머|완독률\\s*분석", "english": "Reading Time Statistics & Book Completion Analytics", "category": "e_library_reading" },
-  { "pattern": "영어\\s*발음\\s*평가|음소\\s*분석|발음\\s*정확도", "english": "AI Pronunciation Scoring & Phoneme Assessment", "category": "language_learning" },
-  { "pattern": "단어장|단어\\s*암기\\s*카드|망각곡선\\s*복습", "english": "Spaced Repetition (SRS) Vocabulary Flashcard System", "category": "language_learning" },
-  { "pattern": "AI\\s*튜터\\s*회화|영어\\s*롤플레잉\\s*대화", "english": "Conversational AI Language Tutor & Roleplay Practice", "category": "language_learning" },
-  { "pattern": "학사정보\\s*시스템|수강신청\\s*장바구니|성적\\s*조회", "english": "Academic Information System & Grade Management", "category": "school_university_lms" },
-  { "pattern": "전자\\s*출결|블루투스\\s*비콘\\s*출석|비콘\\s*태깅", "english": "Bluetooth Beacon Smart Attendance Verification", "category": "school_university_lms" },
-  { "pattern": "학점\\s*계산기|졸업\\s*요건\\s*이수\\s*진단", "english": "GPA Calculator & Degree Graduation Requirement Audit", "category": "school_university_lms" },
-  { "pattern": "웹\\s*코드\\s*에디터|온라인\\s*IDE|Monaco\\s*에디터", "english": "In-Browser Web IDE & Monaco Editor Sandbox", "category": "coding_education" },
-  { "pattern": "온라인\\s*채점|저지\\s*시스템|코드\\s*실행\\s*샌드박스", "english": "Online Judge & Isolated Code Execution Sandbox", "category": "coding_education" },
-  { "pattern": "테스트케이스\\s*채점|실행\\s*시간\\s*메모리\\s*제한", "english": "Automated Test Case Grading & Resource Profiling", "category": "coding_education" },
-  { "pattern": "웹\\s*오디오\\s*API|파형\\s*시각화|Waveform", "english": "Web Audio API & Real-time Waveform Visualizer", "category": "music_audio_production" },
-  { "pattern": "오디오\\s*믹서|이퀄라이저\\s*EQ|오디오\\s*필터", "english": "Multi-track Audio Mixer & Graphic Equalizer DSP", "category": "music_audio_production" },
-  { "pattern": "음원\\s*스템\\s*분리|보컬\\s*MR\\s*제거|음원\\s*다운로드", "english": "AI Vocal/Stem Track Separation & Audio Export", "category": "music_audio_production" },
-  { "pattern": "사진\\s*크롭|이미지\\s*회전|캔버스\\s*리사이즈", "english": "Image Cropping, Rotation & HTML5 Canvas Resizing", "category": "photo_image_editing" },
-  { "pattern": "누끼\\s*따기|배경\\s*제거|AI\\s*인물\\s*분리", "english": "AI Background Removal & Alpha Mask Segmentation", "category": "photo_image_editing" },
-  { "pattern": "사진\\s*필터|색조\\s*보정|밝기\\s*대비\\s*조절", "english": "Color Grading Filters & Brightness/Contrast Adjustment", "category": "photo_image_editing" },
-  { "pattern": "영상\\s*타임라인\\s*편집|클립\\s*자르기|트림", "english": "Multi-track Video Timeline & Clip Trimming Engine", "category": "video_editing_production" },
-  { "pattern": "자동\\s*자막\\s*생성|음성\\s*자막\\s*싱크|SRT\\s*자막", "english": "Auto-captioning & Speech-to-Subtitle Sync (SRT/VTT)", "category": "video_editing_production" },
-  { "pattern": "클라우드\\s*비디오\\s*렌더링|FFmpeg\\s*인코딩", "english": "Cloud FFmpeg Video Rendering & Export Pipeline", "category": "video_editing_production" },
-  { "pattern": "웹툰\\s*스크롤\\s*뷰어|컷\\s*넘김|화질\\s*최적화", "english": "Infinite Scroll Webtoon Viewer & Image Pre-fetching", "category": "webtoon_webnovel" },
-  { "pattern": "웹소설\\s*글자\\s*크기\\s*조절|줄간격|폰트\\s*변경", "english": "Web Novel Reader Font Customization & Line Spacing", "category": "webtoon_webnovel" },
-  { "pattern": "유료\\s*회차\\s*대여권|기다리면\\s*무료|회차\\s*소장", "english": "Wait-Free Episode Monetization & Chapter Unlock Token", "category": "webtoon_webnovel" },
-  { "pattern": "WebGL|Three.js|3D\\s*모델\\s*렌더링|gltf\\s*로드", "english": "Three.js & WebGL 3D Model (glTF/GLB) Rendering Engine", "category": "vr_ar_metaverse" },
-  { "pattern": "아바타\\s*커스터마이징|3D\\s*의상\\s*장착", "english": "3D Avatar Rigging & Custom Outfit Wardrobe", "category": "vr_ar_metaverse" },
-  { "pattern": "WebXR|공간\\s*인식|AR\\s*마커\\s*추적", "english": "WebXR Device API & Spatial Surface Anchor Tracking", "category": "vr_ar_metaverse" },
-  { "pattern": "스와이프\\s*매칭|프로필\\s*카드|좋아요\\s*보내기", "english": "Swipe Card Profile Discovery & Mutual Match Logic", "category": "social_matching_dating" },
-  { "pattern": "이상형\\s*필터|거리\\s*기반\\s*매칭|관심사\\s*태그", "english": "Geolocation Radius Proximity & Interest Matching Filter", "category": "social_matching_dating" },
-  { "pattern": "프로필\\s*사진\\s*검수|얼굴\\s*인증|비매너\\s*차단", "english": "Face Liveness Verification & Anti-harassment Block", "category": "social_matching_dating" },
-  { "pattern": "중고거래\\s*채팅|동네\\s*위치\\s*인증|GPS\\s*동네\\s*설정", "english": "Local Neighborhood GPS Verification & P2P Trade Chat", "category": "secondhand_marketplace" },
-  { "pattern": "안전거래\\s*에스크로|안전결제|구매확정", "english": "Escrow Secure Payment & Buyer Confirmation Holding", "category": "secondhand_marketplace" },
-  { "pattern": "매너온도|신뢰도\\s*지수|거래\\s*후기", "english": "Seller Trust Reputation Score & Transaction Review", "category": "secondhand_marketplace" },
-  { "pattern": "실시간\\s*호가\\s*입찰|경매\\s*카운트다운|입찰가\\s*갱신", "english": "Real-time Live Auction Bidding Engine & Countdown Timer", "category": "auction_bidding" },
-  { "pattern": "자동\\s*입찰|최고가\\s*낙찰|유찰\\s*처리", "english": "Proxy Bidding Mechanism & Winning Bid Adjudication", "category": "auction_bidding" },
-  { "pattern": "입찰\\s*보증금|낙찰\\s*대금\\s*결제|경매\\s*보증", "english": "Auction Bid Deposit Pre-authorization & Settlement", "category": "auction_bidding" },
-  { "pattern": "공간\\s*대여|파티룸\\s*예약|시간제\\s*스튜디오\\s*예약", "english": "Hourly Space Rental & Studio Booking Calendar", "category": "space_sharing" },
-  { "pattern": "보증금\\s*환급|청소\\s*보증금|이용\\s*수칙\\s*동의", "english": "Cleaning Deposit Hold & Security Refund Processing", "category": "space_sharing" },
-  { "pattern": "도어락\\s*임시\\s*비밀번호\\s*발급|스마트락\\s*연동", "english": "Temporary Door Lock PIN Issuance & Smart Lock API", "category": "space_sharing" },
-  { "pattern": "가사도우미\\s*매칭|정기\\s*청소\\s*예약|방\\s*개수\\s*견적", "english": "Housekeeper Scheduling & Room Count Cleaning Quote", "category": "cleaning_housekeeping" },
-  { "pattern": "청소\\s*체크리스트|전후\\s*사진\\s*보고서", "english": "Cleaning Service Checklist & Before/After Inspection Photo", "category": "cleaning_housekeeping" },
-  { "pattern": "이사청소\\s*입주청소\\s*견적\\s*비교", "english": "Move-In Deep Cleaning Multi-Quote Comparison", "category": "cleaning_housekeeping" },
-  { "pattern": "인테리어\\s*견적서|평당\\s*시공\\s*단가|자재\\s*내역서", "english": "Interior Remodeling Estimate & Material Bill of Quantities", "category": "interior_home_design" },
-  { "pattern": "3D\\s*아파트\\s*도면\\s*가구\\s*배치|홈스타일링", "english": "3D Floorplan Furniture Layout & Room Planner Tool", "category": "interior_home_design" },
-  { "pattern": "공정표\\s*일정|시공\\s*하자\\s*보수\\s*A/S", "english": "Construction Gantt Chart & Warranty Defect Repair Request", "category": "interior_home_design" },
-  { "pattern": "차량\\s*정비\\s*견적|카센터\\s*예약|엔진오일\\s*교환", "english": "Automotive Repair Estimate & Engine Oil Service Booking", "category": "car_maintenance_repair" },
-  { "pattern": "출장\\s*세차\\s*예약|위치\\s*기반\\s*세차\\s*기사", "english": "On-demand Mobile Car Wash Booking & Fleet Dispatch", "category": "car_maintenance_repair" },
-  { "pattern": "타이어\\s*규격\\s*검색|장착점\\s*예약", "english": "Tire Specification Matcher & Installer Scheduling", "category": "car_maintenance_repair" },
-  { "pattern": "모바일\\s*세탁\\s*수거\\s*배달|세탁물\\s*접수", "english": "On-demand Laundry Pickup & Delivery Order Engine", "category": "laundry_drycleaning" },
-  { "pattern": "세탁물\\s*검수\\s*오염\\s*부위\\s*촬영|바코드\\s*태깅", "english": "Garment Stain Inspection Photo & Tag Barcoding", "category": "laundry_drycleaning" },
-  { "pattern": "드라이클리닝\\s*단가표|세탁\\s*완료\\s*알림", "english": "Dry Cleaning Price List & Laundry Done Push Notification", "category": "laundry_drycleaning" },
-  { "pattern": "모바일\\s*청첩장|계좌번호\\s*복사|참석\\s*여부\\s*RSVP", "english": "Mobile Wedding Invitation & Guest RSVP / Gift Account Sync", "category": "wedding_ceremony" },
-  { "pattern": "웨딩홀\\s*견적\\s*스드메\\s*패키지\\s*예약", "english": "Wedding Venue & Bridal Studio / Dress / Makeup Package", "category": "wedding_ceremony" },
-  { "pattern": "축의금\\s*방명록|모바일\\s*화환\\s*보내기", "english": "Digital Guest Book & Virtual Flower Wreath Registry", "category": "wedding_ceremony" },
-  { "pattern": "모바일\\s*부고장|부고\\s*문자\\s*발송|조문\\s*메시지", "english": "Mobile Obituary Notification & Condolence Guestbook", "category": "funeral_memorial" },
-  { "pattern": "사이버\\s*추모관|고인\\s*사진\\s*영상\\s*아카이브", "english": "Online Memorial Hall & Deceased Tribute Archive", "category": "funeral_memorial" },
-  { "pattern": "장례식장\\s*빈소\\s*현황|조의금\\s*송금", "english": "Funeral Home Chapel Status & Direct Condolence Transfer", "category": "funeral_memorial" },
-  { "pattern": "온라인\\s*예배\\s*중계|설교\\s*영상\\s*아카이브", "english": "Live Stream Worship Service & Sermon Video Archive", "category": "religious_organization" },
-  { "pattern": "온라인\\s*헌금|십일조\\s*결제|기부금\\s*영수증", "english": "Online Tithing & Religious Donation Payment", "category": "religious_organization" },
-  { "pattern": "교인\\s*교적\\s*관리|구역\\s*모임\\s*공지", "english": "Church Member Registry & Parish Group Notice Board", "category": "religious_organization" },
-  { "pattern": "기상청\\s*동네예보|초단기\\s*실황\\s*API|강수확률", "english": "Meteorological Agency Forecast API & Precipitation Radar", "category": "weather_meteorology" },
-  { "pattern": "미세먼지\\s*농도|대기질\\s*지수|AQI\\s*경보", "english": "Air Quality Index (AQI) & Particulate Matter (PM2.5) Alert", "category": "weather_meteorology" },
-  { "pattern": "태풍\\s*경로\\s*추적|기상\\s*특보\\s*알림", "english": "Typhoon Path Simulation & Severe Weather Push Warning", "category": "weather_meteorology" },
-  { "pattern": "상하수도\\s*원격\\s*검침|AMI\\s*스마트\\s*미터링", "english": "Advanced Metering Infrastructure (AMI) Smart Water Meter", "category": "water_utilities" },
-  { "pattern": "수도\\s*요금\\s*자동\\s*계산|누수\\s*의심\\s*알람", "english": "Water Utility Billing Calculation & Leak Detection Alert", "category": "water_utilities" },
-  { "pattern": "수질\\s*센서|잔류\\s*염소\\s*농도\\s*모니터링", "english": "Water Quality Sensor & Chlorine Level Telemetry", "category": "water_utilities" },
-  { "pattern": "광물\\s*채굴량|원자재\\s*재고\\s*관제|광산\\s*텔레메트리", "english": "Mining Tonnage Metrics & Raw Materials Inventory Telemetry", "category": "mining_raw_materials" },
-  { "pattern": "국제\\s*원자재\\s*시세|LME\\s*비철금속\\s*선물", "english": "London Metal Exchange (LME) Commodity Spot Price Feeder", "category": "mining_raw_materials" },
-  { "pattern": "광산\\s*가스\\s*농도\\s*감지|갱도\\s*안전\\s*센서", "english": "Underground Mine Toxic Gas Detection & Tunnel Safety Monitoring", "category": "mining_raw_materials" },
-  { "pattern": "MSDS|물질안전보건자료|유해화학물질\\s*DB", "english": "Material Safety Data Sheet (MSDS) Search & Compliance", "category": "chemical_materials" },
-  { "pattern": "화학물질\\s*저장소\\s*온도\\s*모니터링|유출\\s*감지", "english": "Chemical Storage Thermal Monitoring & Spill Leak Sensor", "category": "chemical_materials" },
-  { "pattern": "화학물질\\s*입출고\\s*규제\\s*승인\\s*결재", "english": "Dangerous Goods Hazmat In/Out Regulatory Approval Workflow", "category": "chemical_materials" },
-  { "pattern": "ROS|로봇\\s*운영체제|로봇\\s*노드\\s*통신", "english": "Robot Operating System (ROS 2) Node Telemetry & Control", "category": "robotics_automation" },
-  { "pattern": "PLC\\s*통신|Modbus|OPC-UA\\s*산업용\\s*프로토콜", "english": "PLC Communication (OPC-UA & Modbus TCP/IP Gateway)", "category": "robotics_automation" },
-  { "pattern": "로봇팔\\s*관절\\s*궤적\\s*시뮬레이션|모션\\s*제어", "english": "Robotic Manipulator Kinematics & Trajectory Controller", "category": "robotics_automation" },
-  { "pattern": "드론\\s*GCS|지상관제\\s*시스템|드론\\s*비행\\s*경로", "english": "Ground Control Station (GCS) Drone Waypoint Navigation", "category": "drone_uav" },
-  { "pattern": "드론\\s*실시간\\s*영상\\s*전송|RTSP\\s*스트림", "english": "UAV Aerial Camera Low-latency RTSP Video Feed", "category": "drone_uav" },
-  { "pattern": "비행\\s*금지\\s*구역|지오펜싱|노플라이\\s*존", "english": "No-Fly Zone Geofencing & Airspace Regulatory Verification", "category": "drone_uav" },
-  { "pattern": "eSIM\\s*개통|USIM\\s*다운로드|요금제\\s*변경", "english": "eSIM Profile Provisioning & Mobile Plan Activation", "category": "telecom_network" },
-  { "pattern": "데이터\\s*잔여량|통화\\s*문자\\s*사용량\\s*조회", "english": "Cellular Data Quota Balance & Usage Metering API", "category": "telecom_network" },
-  { "pattern": "기지국\\s*트래픽\\s*모니터링|망\\s*장애\\s*경보", "english": "Cell Tower Traffic Telemetry & Network Outage Alarm", "category": "telecom_network" },
-  { "pattern": "인공위성\\s*궤도\\s*추적|TLE\\s*데이터|지상국\\s*교신", "english": "Satellite TLE Orbit Tracking & Ground Station Uplink", "category": "space_technology" },
-  { "pattern": "위성\\s*원격탐사\\s*영상|SAR\\s*위성\\s*데이터\\s*파싱", "english": "Synthetic Aperture Radar (SAR) Earth Observation Imagery", "category": "space_technology" },
-  { "pattern": "우주\\s*방사선\\s*수치|태양풍\\s*데이터\\s*수신", "english": "Space Weather Telemetry & Solar Flare Monitoring", "category": "space_technology" },
-  { "pattern": "C4I|전술\\s*지휘\\s*통제\\s*체계|상황판", "english": "Tactical Command & Control (C4I) Situation Map", "category": "defense_security" },
-  { "pattern": "망분리|보안\\s*USB\\s*통제|DLP\\s*정보유출\\s*방지", "english": "Network Air-Gap Separation & Data Loss Prevention (DLP)", "category": "defense_security" },
-  { "pattern": "사이버\\s*위협\\s*인텔리전스|CTI|위협\\s*헌팅", "english": "Cyber Threat Intelligence (CTI) & Indicator of Compromise (IoC)", "category": "defense_security" },
-  { "pattern": "양자\\s*회로|큐비트|Qiskit|양자\\s*알고리즘", "english": "Quantum Circuit Simulation & Qiskit Quantum Gate Execution", "category": "quantum_computing" },
-  { "pattern": "양자\\s*암호\\s*키\\s*분배|QKD|양자\\s*내성\\s*암호|PQC", "english": "Post-Quantum Cryptography (PQC) & QKD Secure Key Exchange", "category": "quantum_computing" },
-  { "pattern": "양자\\s*어닐링|양자\\s*최적화\\s*시뮬레이터", "english": "Quantum Annealing & Combinatorial Optimization Simulator", "category": "quantum_computing" }
+  {
+    "pattern": "스켈레톤\\s*(API|보일러플레이트|코드)?",
+    "english": "Skeleton API & Boilerplate Setup",
+    "category": "architecture"
+  },
+  {
+    "pattern": "초기\\s*시스템\\s*구현|시스템\\s*아키텍처",
+    "english": "Initial System Setup & Architecture",
+    "category": "architecture"
+  },
+  {
+    "pattern": "데이터베이스|DB\\s*설계|스키마|마이그레이션",
+    "english": "Database Schema Design & Migration",
+    "category": "architecture"
+  },
+  {
+    "pattern": "인프라\\s*구축|서버\\s*세팅|클라우드\\s*환경",
+    "english": "Infrastructure Setup & Server Configuration",
+    "category": "architecture"
+  },
+  {
+    "pattern": "마이크로서비스|MSA",
+    "english": "Microservices Architecture Implementation",
+    "category": "architecture"
+  },
+  {
+    "pattern": "모노레포|Monorepo",
+    "english": "Monorepo Project Structure",
+    "category": "architecture"
+  },
+  {
+    "pattern": "캐싱|Redis|캐시|인메모리",
+    "english": "Caching Layer Implementation (Redis)",
+    "category": "architecture"
+  },
+  {
+    "pattern": "메시지\\s*큐|Kafka|RabbitMQ|SQS",
+    "english": "Message Queue & Async Processing",
+    "category": "architecture"
+  },
+  {
+    "pattern": "CDN|콘텐츠\\s*전송\\s*네트워크",
+    "english": "CDN Configuration & Static Asset Delivery",
+    "category": "architecture"
+  },
+  {
+    "pattern": "서버리스|Lambda|Cloud\\s*Function",
+    "english": "Serverless Function Deployment",
+    "category": "architecture"
+  },
+  {
+    "pattern": "도커|컨테이너|Docker|Dockerfile",
+    "english": "Docker Containerization & Multi-stage Build",
+    "category": "architecture"
+  },
+  {
+    "pattern": "쿠버네티스|K8s|오케스트레이션",
+    "english": "Kubernetes Cluster & Orchestration Deployment",
+    "category": "architecture"
+  },
+  {
+    "pattern": "로드\\s*밸런서|부하\\s*분산|ALB|Nginx",
+    "english": "Load Balancer & Reverse Proxy Configuration",
+    "category": "architecture"
+  },
+  {
+    "pattern": "수행\\s*제안서|제안서|수행계획서",
+    "english": "Proposal / Statement of Capability",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "SOW|작업\\s*범위\\s*확인서|계약\\s*명세",
+    "english": "Statement of Work (SOW)",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "마일스톤|단계별\\s*목표",
+    "english": "Milestone",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "완료\\s*조건|DoD|검수\\s*기준",
+    "english": "Definition of Done (DoD)",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "발주자|클라이언트|발주사",
+    "english": "Client (Project Owner)",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "개발자|프리랜서|수행자|외주사",
+    "english": "Vendor / Freelancer Developer",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "검수|결과물\\s*검증|수락\\s*검사",
+    "english": "Deliverable Verification",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "승인|최종\\s*확인|검수\\s*승인",
+    "english": "Client Approval",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "수정\\s*요청|재검수|보완\\s*요청",
+    "english": "Revision Request & Re-verification",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "Commit\\s*SHA|커밋\\s*해시|커밋SHA",
+    "english": "Immutable Commit SHA (Verification Anchor)",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "PR|풀\\s*리퀘스트|Pull\\s*Request",
+    "english": "Pull Request",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "인보이스|정산|지급\\s*요청|대금\\s*지급",
+    "english": "Invoice & Payment Settlement",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "모집\\s*기간|지원\\s*마감|공고\\s*기간",
+    "english": "Recruitment Period & Application Deadline",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "통합\\s*증빙|감사\\s*이력|검증\\s*기록",
+    "english": "Integrated Evidence & Audit Trail",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "범위\\s*외\\s*제외\\s*사항|Out\\s*of\\s*Scope|제외\\s*범위",
+    "english": "Out-of-Scope Exclusions",
+    "category": "sow_workflow"
+  },
+  {
+    "pattern": "인증|로그인|회원가입|OAuth|JWT",
+    "english": "Authentication System (OAuth/JWT Login & Signup)",
+    "category": "feature"
+  },
+  {
+    "pattern": "결제|PG|샌드박스|결제\\s*연동",
+    "english": "Payment Gateway Sandbox Integration & Webhook",
+    "category": "feature"
+  },
+  {
+    "pattern": "핵심\\s*기능|결과물\\s*구현",
+    "english": "Core Features & Deliverables Implementation",
+    "category": "feature"
+  },
+  {
+    "pattern": "관리자\\s*페이지|어드민|관리자\\s*대시보드",
+    "english": "Admin Dashboard & Management Portal",
+    "category": "feature"
+  },
+  {
+    "pattern": "검색|필터링|상세\\s*검색",
+    "english": "Advanced Search & Filtering Functionality",
+    "category": "feature"
+  },
+  {
+    "pattern": "푸시\\s*알림|알림\\s*센터|웹푸시",
+    "english": "Real-time Push Notifications System",
+    "category": "feature"
+  },
+  {
+    "pattern": "다국어|번역|i18n|로컬라이제이션",
+    "english": "Internationalization (i18n) & Localization Support",
+    "category": "feature"
+  },
+  {
+    "pattern": "웹훅|Webhook|콜백",
+    "english": "Webhook Endpoint Implementation & Integration",
+    "category": "feature"
+  },
+  {
+    "pattern": "파일\\s*업로드|첨부\\s*파일|이미지\\s*업로드|S3\\s*업로드",
+    "english": "File & Image Upload with S3 Storage",
+    "category": "feature"
+  },
+  {
+    "pattern": "채팅|메시지|DM|실시간\\s*대화",
+    "english": "Real-time Chat & Messaging System",
+    "category": "feature"
+  },
+  {
+    "pattern": "이메일\\s*발송|메일\\s*전송|SMTP|SES",
+    "english": "Transactional Email Delivery (SMTP/SES)",
+    "category": "feature"
+  },
+  {
+    "pattern": "페이지네이션|무한\\s*스크롤|더\\s*보기",
+    "english": "Pagination & Infinite Scroll for Large Data Sets",
+    "category": "feature"
+  },
+  {
+    "pattern": "권한|역할|RBAC|접근\\s*제어",
+    "english": "Role-Based Access Control (RBAC)",
+    "category": "feature"
+  },
+  {
+    "pattern": "소셜\\s*로그인|카카오\\s*로그인|네이버\\s*로그인|구글\\s*로그인",
+    "english": "Social Login Integration (Kakao/Naver/Google OAuth)",
+    "category": "feature"
+  },
+  {
+    "pattern": "북마크|찜|즐겨찾기|저장한\\s*목록",
+    "english": "Bookmarking & Favorites Feature",
+    "category": "feature"
+  },
+  {
+    "pattern": "리뷰|평점|별점|사용자\\s*후기",
+    "english": "User Review & Rating System",
+    "category": "feature"
+  },
+  {
+    "pattern": "지도|위치|GPS|좌표|지도\\s*API",
+    "english": "Map & Geolocation Integration (Google Maps/Kakao Maps)",
+    "category": "feature"
+  },
+  {
+    "pattern": "QR\\s*코드|바코드|스캔",
+    "english": "QR Code / Barcode Generation & Scanning",
+    "category": "feature"
+  },
+  {
+    "pattern": "통계|차트|대시보드\\s*시각화|그래프",
+    "english": "Analytics Dashboard & Data Visualization",
+    "category": "feature"
+  },
+  {
+    "pattern": "공유|링크\\s*복사|SNS\\s*공유|딥링크",
+    "english": "Social Share & Deep Link Functionality",
+    "category": "feature"
+  },
+  {
+    "pattern": "단위\\s*테스트|유닛\\s*테스트|Jest|Vitest",
+    "english": "Unit Test Pass & Coverage",
+    "category": "testing"
+  },
+  {
+    "pattern": "통합\\s*테스트|E2E\\s*테스트|E2E",
+    "english": "End-to-End Integration Test Pass",
+    "category": "testing"
+  },
+  {
+    "pattern": "CI\\s*(통과|연동|빌드|파이프라인)?",
+    "english": "CI Build & Test Pipeline Pass",
+    "category": "testing"
+  },
+  {
+    "pattern": "오류|에러\\s*표시|차단|예외\\s*처리",
+    "english": "Error Handling & User Feedback Validation",
+    "category": "testing"
+  },
+  {
+    "pattern": "대시보드\\s*이동|페이지\\s*리다이렉트|리디렉션",
+    "english": "Post-authentication Redirect & State Management",
+    "category": "testing"
+  },
+  {
+    "pattern": "QA|품질\\s*보증|검수\\s*절차",
+    "english": "Quality Assurance & Final Verification",
+    "category": "testing"
+  },
+  {
+    "pattern": "부하\\s*테스트|스트레스\\s*테스트|k6",
+    "english": "Load & Stress Testing Verification",
+    "category": "testing"
+  },
+  {
+    "pattern": "Playwright|E2E\\s*자동화",
+    "english": "Playwright End-to-End Automated Test",
+    "category": "testing"
+  },
+  {
+    "pattern": "스크린샷|증거\\s*캡처|동영상\\s*녹화",
+    "english": "Visual Evidence Capture (Screenshot / Video)",
+    "category": "testing"
+  },
+  {
+    "pattern": "비활성화|disabled|버튼\\s*잠금",
+    "english": "UI Component Disabled State Assertion",
+    "category": "testing"
+  },
+  {
+    "pattern": "에러\\s*메시지|오류\\s*문구|경고\\s*텍스트|토스트\\s*알림",
+    "english": "Error Message Text Assertion",
+    "category": "testing"
+  },
+  {
+    "pattern": "라우팅\\s*확인|URL\\s*이동|페이지\\s*전환",
+    "english": "Page Routing & URL Navigation Assertion",
+    "category": "testing"
+  },
+  {
+    "pattern": "중복\\s*방지|중복\\s*차단|더블클릭\\s*방지",
+    "english": "Duplicate Submission Prevention Assertion",
+    "category": "testing"
+  },
+  {
+    "pattern": "로딩\\s*상태|스피너|인디케이터",
+    "english": "Loading State & Spinner Display Assertion",
+    "category": "testing"
+  },
+  {
+    "pattern": "문서화|인수인계|가이드|핸드오버",
+    "english": "Documentation & Technical Handover",
+    "category": "documentation"
+  },
+  {
+    "pattern": "PR\\s*머지|GitHub\\s*연동|코드\\s*리뷰",
+    "english": "GitHub Pull Request Review & Merge",
+    "category": "documentation"
+  },
+  {
+    "pattern": "운영|배포|프로덕션\\s*배포",
+    "english": "Deployment Readiness & Environment Configuration",
+    "category": "documentation"
+  },
+  {
+    "pattern": "API\\s*명세서|스웨거|Swagger|Postman",
+    "english": "API Specification & Swagger Documentation",
+    "category": "documentation"
+  },
+  {
+    "pattern": "사용자\\s*매뉴얼|운영\\s*가이드",
+    "english": "End-User Operational Manual",
+    "category": "documentation"
+  },
+  {
+    "pattern": "README|설치\\s*가이드|환경설정\\s*문서",
+    "english": "README & Installation Guide",
+    "category": "documentation"
+  },
+  {
+    "pattern": "ERD|엔티티\\s*관계\\s*다이어그램|데이터베이스\\s*설계서",
+    "english": "Entity-Relationship Diagram (ERD)",
+    "category": "documentation"
+  },
+  {
+    "pattern": "아키텍처\\s*문서|시스템\\s*설계서",
+    "english": "System Architecture Document",
+    "category": "documentation"
+  },
+  {
+    "pattern": "디자인|UI|UX|피그마|Figma",
+    "english": "UI/UX Design Implementation (Figma to Code)",
+    "category": "design"
+  },
+  {
+    "pattern": "반응형|모바일\\s*대응|태블릿\\s*대응",
+    "english": "Responsive Web Design for Mobile & Desktop",
+    "category": "design"
+  },
+  {
+    "pattern": "접근성|A11y|웹\\s*접근성",
+    "english": "Web Accessibility (A11y) Standards Compliance",
+    "category": "design"
+  },
+  {
+    "pattern": "다크\\s*모드|테마\\s*전환|라이트\\s*모드",
+    "english": "Dark Mode & Theme Toggle",
+    "category": "design"
+  },
+  {
+    "pattern": "스켈레톤\\s*UI|로딩\\s*화면|빈\\s*화면",
+    "english": "Skeleton Loading UI & Empty State Design",
+    "category": "design"
+  },
+  {
+    "pattern": "애니메이션|트랜지션|인터랙션|마이크로\\s*인터랙션",
+    "english": "UI Animation & Micro-interaction",
+    "category": "design"
+  },
+  {
+    "pattern": "디자인\\s*시스템|컴포넌트\\s*라이브러리|Storybook",
+    "english": "Design System & Component Library (Storybook)",
+    "category": "design"
+  },
+  {
+    "pattern": "장바구니|카트|담기",
+    "english": "Shopping Cart Management",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "상품\\s*등록|상품\\s*관리|재고|재고\\s*관리",
+    "english": "Product Listing & Inventory Management",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "주문\\s*내역|주문\\s*조회|주문\\s*관리",
+    "english": "Order History & Tracking",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "쿠폰|할인|프로모션|이벤트\\s*할인",
+    "english": "Coupon & Discount Promotion System",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "환불|반품|취소|교환",
+    "english": "Refund & Return Processing",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "배송\\s*추적|배송\\s*상태|택배\\s*연동",
+    "english": "Shipping Status Tracking & Notification",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "위시리스트|관심\\s*상품",
+    "english": "Wishlist & Saved Items Feature",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "정기\\s*결제|구독|빌링키|자동\\s*결제",
+    "english": "Recurring Billing & Subscription Management",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "세금\\s*계산서|영수증|현금영수증",
+    "english": "Tax Invoice & Receipt Generation",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "포인트\\s*적립|마일리지|리워드\\s*지급",
+    "english": "Loyalty Points & Rewards Accumulation",
+    "category": "ecommerce"
+  },
+  {
+    "pattern": "예약\\s*접수|진료\\s*예약|병원\\s*예약",
+    "english": "Appointment Booking & Scheduling System",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "전자\\s*의무기록|EMR|EHR|진료\\s*차트",
+    "english": "Electronic Medical Record (EMR/EHR) Integration",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "처방|처방전|전자\\s*처방",
+    "english": "Prescription Management & Digital Prescription",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "진단|증상|문진|자가\\s*진단",
+    "english": "Symptom Input & Diagnostic Screening Form",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "환자\\s*관리|환자\\s*정보|진료\\s*기록",
+    "english": "Patient Record Management & Medical Chart",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "원격\\s*진료|비대면\\s*진료|화상\\s*진료",
+    "english": "Telemedicine / Remote Consultation Feature",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "건강\\s*검진|검사\\s*결과|수치\\s*추이",
+    "english": "Health Checkup Result Display & History",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "복약\\s*알림|약\\s*알림|복용\\s*체크",
+    "english": "Medication Reminder & Dosage Alert",
+    "category": "healthcare"
+  },
+  {
+    "pattern": "강의|강의\\s*목록|수강|수강\\s*신청|LMS",
+    "english": "Course Listing & Enrollment System (LMS)",
+    "category": "education"
+  },
+  {
+    "pattern": "퀴즈|시험|평가|채점",
+    "english": "Quiz & Assessment Module",
+    "category": "education"
+  },
+  {
+    "pattern": "수료증|이수증|자격증\\s*발급",
+    "english": "Certificate of Completion Issuance",
+    "category": "education"
+  },
+  {
+    "pattern": "학습\\s*진도|진도율|수강\\s*현황",
+    "english": "Learning Progress Tracking & Completion Rate",
+    "category": "education"
+  },
+  {
+    "pattern": "과제\\s*제출|숙제|과제\\s*평가",
+    "english": "Assignment Submission & Grading System",
+    "category": "education"
+  },
+  {
+    "pattern": "라이브\\s*강의|실시간\\s*수업|웨비나",
+    "english": "Live Class & Real-time Video Lecture",
+    "category": "education"
+  },
+  {
+    "pattern": "커리큘럼|교육\\s*과정|강의계획서",
+    "english": "Curriculum & Syllabus Management",
+    "category": "education"
+  },
+  {
+    "pattern": "토론|Q&A|질문\\s*게시판|학습\\s*포럼",
+    "english": "Discussion Board & Q&A Forum",
+    "category": "education"
+  },
+  {
+    "pattern": "계좌\\s*연동|오픈\\s*뱅킹|계좌\\s*조회",
+    "english": "Open Banking Account Integration",
+    "category": "finance"
+  },
+  {
+    "pattern": "이체|송금|출금|입금",
+    "english": "Fund Transfer & Withdrawal Processing",
+    "category": "finance"
+  },
+  {
+    "pattern": "가계부|지출\\s*내역|예산\\s*관리|소비\\s*분석",
+    "english": "Expense Tracking & Budget Management",
+    "category": "finance"
+  },
+  {
+    "pattern": "환전|환율|실시간\\s*환율",
+    "english": "Currency Exchange & Real-time FX Rate Display",
+    "category": "finance"
+  },
+  {
+    "pattern": "대출\\s*심사|한도\\s*조회|신용\\s*평가",
+    "english": "Loan Application & Credit Limit Assessment",
+    "category": "finance"
+  },
+  {
+    "pattern": "투자|포트폴리오|자산\\s*관리|수익률",
+    "english": "Investment Portfolio & Asset Management",
+    "category": "finance"
+  },
+  {
+    "pattern": "세금|납부|신고|원천징수",
+    "english": "Tax Calculation & Filing Integration",
+    "category": "finance"
+  },
+  {
+    "pattern": "보험|보장\\s*분석|보험금\\s*청구",
+    "english": "Insurance Coverage Analysis & Claim Submission",
+    "category": "finance"
+  },
+  {
+    "pattern": "배차|기사\\s*배정|배달원|기사\\s*호출",
+    "english": "Driver Assignment & Dispatch System",
+    "category": "logistics"
+  },
+  {
+    "pattern": "물류\\s*센터|창고|입출고|WMS",
+    "english": "Warehouse & Inventory In/Out Management (WMS)",
+    "category": "logistics"
+  },
+  {
+    "pattern": "운송장|송장|송장\\s*출력",
+    "english": "Shipping Label & Waybill Generation",
+    "category": "logistics"
+  },
+  {
+    "pattern": "경로\\s*최적화|최단\\s*경로|배송\\s*루트",
+    "english": "Route Optimization & Shortest Path Calculation",
+    "category": "logistics"
+  },
+  {
+    "pattern": "실시간\\s*위치|차량\\s*추적|화물\\s*위치",
+    "english": "Real-time Vehicle & Package Tracking",
+    "category": "logistics"
+  },
+  {
+    "pattern": "매물|부동산\\s*목록|리스트|매물\\s*검색",
+    "english": "Property Listing & Real Estate Search",
+    "category": "real_estate"
+  },
+  {
+    "pattern": "임대|월세|전세|임대차\\s*계약",
+    "english": "Rental & Lease Contract Management",
+    "category": "real_estate"
+  },
+  {
+    "pattern": "매매|계약\\s*체결|부동산\\s*매매",
+    "english": "Property Sale & Contract Execution",
+    "category": "real_estate"
+  },
+  {
+    "pattern": "시세|호가|실거래가|국토부\\s*실거래가",
+    "english": "Market Price & Actual Transaction Price Display",
+    "category": "real_estate"
+  },
+  {
+    "pattern": "중개사|부동산\\s*에이전트|공인중개사",
+    "english": "Real Estate Agent Profile & Matching",
+    "category": "real_estate"
+  },
+  {
+    "pattern": "채용|구인|지원서|채용\\s*공고",
+    "english": "Job Posting & Application Submission",
+    "category": "hr"
+  },
+  {
+    "pattern": "이력서|포트폴리오\\s*제출|서류\\s*심사",
+    "english": "Resume & Portfolio Submission",
+    "category": "hr"
+  },
+  {
+    "pattern": "면접\\s*일정|면접\\s*조율|인터뷰\\s*예약",
+    "english": "Interview Scheduling & Coordination",
+    "category": "hr"
+  },
+  {
+    "pattern": "근태|출퇴근|근무\\s*시간|출퇴근\\s*기록",
+    "english": "Attendance & Work Hour Tracking",
+    "category": "hr"
+  },
+  {
+    "pattern": "급여|연봉|페이롤|급여\\s*명세서",
+    "english": "Payroll & Salary Calculation",
+    "category": "hr"
+  },
+  {
+    "pattern": "온보딩|신규\\s*입사|사원\\s*등록",
+    "english": "Employee Onboarding Workflow",
+    "category": "hr"
+  },
+  {
+    "pattern": "연차|휴가\\s*신청|휴가\\s*결재",
+    "english": "Leave Request & Approval System",
+    "category": "hr"
+  },
+  {
+    "pattern": "2FA|이중\\s*인증|OTP|SMS\\s*인증",
+    "english": "Two-Factor Authentication (2FA / OTP)",
+    "category": "security"
+  },
+  {
+    "pattern": "HTTPS|SSL|TLS|보안\\s*인증서",
+    "english": "HTTPS / TLS Secure Communication",
+    "category": "security"
+  },
+  {
+    "pattern": "XSS|CSRF|SQL\\s*인젝션|보안\\s*취약점",
+    "english": "OWASP Top 10 Security Vulnerability Prevention",
+    "category": "security"
+  },
+  {
+    "pattern": "비밀번호\\s*암호화|해싱|bcrypt|Argon2",
+    "english": "Password Hashing & Encryption (bcrypt)",
+    "category": "security"
+  },
+  {
+    "pattern": "Rate\\s*Limit|요청\\s*제한|과요청\\s*차단|DDoS\\s*방어",
+    "english": "Rate Limiting & Brute-force Prevention",
+    "category": "security"
+  },
+  {
+    "pattern": "감사\\s*로그|접근\\s*기록|보안\\s*로그",
+    "english": "Audit Log & Access History Recording",
+    "category": "security"
+  },
+  {
+    "pattern": "개인\\s*정보\\s*처리|GDPR|개인정보\\s*보호|마스킹",
+    "english": "Personal Data Protection & Masking (GDPR)",
+    "category": "security"
+  },
+  {
+    "pattern": "RAG|검색\\s*증강\\s*생성|벡터\\s*검색",
+    "english": "Retrieval-Augmented Generation (RAG) & Vector Search",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "임베딩|벡터\\s*임베딩|유사도\\s*검색|코사인\\s*유사도",
+    "english": "Vector Embedding & Cosine Similarity Retrieval",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "벡터\\s*DB|Vector\\s*DB|Pinecone|Chroma|Qdrant|Milvus|pgvector",
+    "english": "Vector Database Integration (pgvector/Pinecone)",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "파인튜닝|미세조정|Fine-tuning",
+    "english": "LLM Fine-tuning & Parameter-Efficient Adaptation",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "프롬프트|프롬프트\\s*엔지니어링|시스템\\s*프롬프트",
+    "english": "Prompt Engineering & Few-shot Template Optimization",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "데이터\\s*파이프라인|ETL|데이터\\s*수집|배치\\s*처리",
+    "english": "ETL Data Pipeline & Scheduled Batch Processing",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "모델\\s*서빙|추론\\s*API|Inference|GPU\\s*가속",
+    "english": "Model Serving & Low-Latency Inference API",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "AI\\s*에이전트|자율\\s*에이전트|Agent\\s*워크플로우",
+    "english": "AI Agent & Multi-step Autonomous Workflow",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "OCR|문자\\s*인식|광학\\s*문자\\s*인식|문서\\s*파싱",
+    "english": "OCR & Document Text Extraction Pipeline",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "STT|음성\\s*인식|Speech-to-Text|Whisper",
+    "english": "Speech-to-Text (STT) Transcription Pipeline",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "TTS|음성\\s*합성|Text-to-Speech|음성\\s*생성",
+    "english": "Text-to-Speech (TTS) Voice Synthesis",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "추천\\s*알고리즘|추천\\s*시스템|개인화\\s*추천|협업\\s*필터링",
+    "english": "Personalized Recommendation Engine & Collaborative Filtering",
+    "category": "ai_data"
+  },
+  {
+    "pattern": "멀티테넌시|테넌트\\s*격리|Multi-tenant",
+    "english": "Multi-tenant Architecture & Tenant Data Isolation",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "워크스페이스|조직\\s*관리|팀\\s*멤버\\s*초대",
+    "english": "Workspace & Team Member Invitation Management",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "SSO|싱글\\s*사인온|SAML|Okta|Azure\\s*AD",
+    "english": "Enterprise SSO & SAML / Okta Integration",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "사용량\\s*기반\\s*과금|미터링|크레딧\\s*차감",
+    "english": "Usage-based Metered Billing & Credit Consumption",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "엑셀\\s*다운로드|CSV\\s*내보내기|데이터\\s*익스포트",
+    "english": "Data Export & Batch CSV/Excel Download",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "활동\\s*로그|액티비티\\s*로그|유저\\s*행동\\s*추적",
+    "english": "User Activity Log & Event Stream Tracking",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "자동\\s*백업|재해\\s*복구|DR\\s*시나리오",
+    "english": "Automated Backup & Disaster Recovery (DR)",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "API\\s*키\\s*발급|API\\s*토큰\\s*관리|사용량\\s*할당량",
+    "english": "API Key Management & Rate Quota Enforcement",
+    "category": "saas_enterprise"
+  },
+  {
+    "pattern": "동영상\\s*스트리밍|VOD|HLS|비디오\\s*재생",
+    "english": "Video on Demand & HLS Adaptive Bitrate Streaming",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "라이브\\s*스트리밍|실시간\\s*방송|WebRTC",
+    "english": "Live Video Streaming & WebRTC Broadcast",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "미디어\\s*트랜스코딩|인코딩|비디오\\s*변환",
+    "english": "Media Transcoding & Multi-bitrate Video Encoding",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "썸네일\\s*추출|미리보기\\s*생성",
+    "english": "Automated Thumbnail & Video Preview Extraction",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "소셜\\s*피드|타임라인|뉴스피드|인기\\s*게시글",
+    "english": "Social Feed & Activity Timeline Curation",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "에디터|위지윅|WYSIWYG|마크다운\\s*에디터|리치\\s*텍스트",
+    "english": "Rich Text WYSIWYG & Markdown Editor Component",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "음원\\s*스트리밍|플레이리스트|오디오\\s*플레이어",
+    "english": "Audio Streaming & Playlist Management",
+    "category": "media_streaming"
+  },
+  {
+    "pattern": "칸반\\s*보드|드래그\\s*앤\\s*드롭|태스크\\s*카드",
+    "english": "Kanban Board & Drag-and-Drop Task Management",
+    "category": "collaboration_community"
+  },
+  {
+    "pattern": "실시간\\s*협업|동시\\s*편집|WebSocket\\s*동기화|CRDT",
+    "english": "Real-time Collaborative Multi-user Editing",
+    "category": "collaboration_community"
+  },
+  {
+    "pattern": "투표|설문조사|투표\\s*집계|서베이",
+    "english": "Poll & Survey Creation / Real-time Voting System",
+    "category": "collaboration_community"
+  },
+  {
+    "pattern": "신고하기|악성\\s*유저\\s*차단|콘텐츠\\s*검수|모더레이션",
+    "english": "User Reporting & Content Moderation System",
+    "category": "collaboration_community"
+  },
+  {
+    "pattern": "멘션|태그|해시태그|유저\\s*호출",
+    "english": "User Mention & Tagging Notification System",
+    "category": "collaboration_community"
+  },
+  {
+    "pattern": "댓글|대댓글|스레드|답글",
+    "english": "Nested Comments & Threaded Discussion System",
+    "category": "collaboration_community"
+  },
+  {
+    "pattern": "숙박\\s*예약|객실\\s*예약|체크인\\s*체크아웃|예약\\s*캘린더",
+    "english": "Accommodation & Room Booking Calendar System",
+    "category": "mobility_travel"
+  },
+  {
+    "pattern": "길안내|내비게이션|경로\\s*안내|도보\\s*경로",
+    "english": "Turn-by-Turn Navigation & GPS Route Guidance",
+    "category": "mobility_travel"
+  },
+  {
+    "pattern": "차량\\s*호출|택시\\s*호출|승차\\s*매칭|기사\\s*매칭",
+    "english": "Ride Hailing & Real-time Vehicle Dispatch Matching",
+    "category": "mobility_travel"
+  },
+  {
+    "pattern": "요금\\s*계산|거리\\s*비례\\s*요금|야간\\s*할증",
+    "english": "Dynamic Fare Calculation & Distance-based Surcharge",
+    "category": "mobility_travel"
+  },
+  {
+    "pattern": "위치\\s*체크인|방문\\s*인증|장소\\s*저장",
+    "english": "Location-based Photo Check-in & Visit Verification",
+    "category": "mobility_travel"
+  },
+  {
+    "pattern": "랭킹|리더보드|순위\\s*시스템",
+    "english": "Real-time Leaderboard & Ranking System",
+    "category": "gaming_rewards"
+  },
+  {
+    "pattern": "퀘스트|미션\\s*달성|업적\\s*뱃지|도전\\s*과제",
+    "english": "Quest, Mission & Badge Achievement System",
+    "category": "gaming_rewards"
+  },
+  {
+    "pattern": "인벤토리|아이템\\s*보관함|아이템\\s*장착",
+    "english": "Inventory & In-Game Item Management",
+    "category": "gaming_rewards"
+  },
+  {
+    "pattern": "출석체크|연속\\s*출석|출석\\s*보상",
+    "english": "Daily Attendance Check-in & Streak Reward",
+    "category": "gaming_rewards"
+  },
+  {
+    "pattern": "가챠|뽑기|룰렛|랜덤\\s*박스|확률형\\s*보상",
+    "english": "Gacha & Roulette Random Reward System",
+    "category": "gaming_rewards"
+  },
+  {
+    "pattern": "전자서명|서명\\s*날인|전자\\s*서명\\s*패드",
+    "english": "Electronic Signature & Timestamping",
+    "category": "legal_contract"
+  },
+  {
+    "pattern": "계약서\\s*템플릿|계약\\s*조항|표준\\s*계약서",
+    "english": "Contract Template & Clause Customization",
+    "category": "legal_contract"
+  },
+  {
+    "pattern": "본인인증|PASS\\s*인증|휴대폰\\s*본인확인|KYC",
+    "english": "Identity Verification & Mobile KYC (PASS Integration)",
+    "category": "legal_contract"
+  },
+  {
+    "pattern": "약관\\s*동의|이용약관|개인정보\\s*수집\\s*동의",
+    "english": "Terms of Service Consent & Legal Agreement Checkbox",
+    "category": "legal_contract"
+  },
+  {
+    "pattern": "블루투스|BLE|디바이스\\s*페어링|기기\\s*연결",
+    "english": "BLE Device Pairing & Bluetooth Communication",
+    "category": "iot_smart"
+  },
+  {
+    "pattern": "MQTT|센서\\s*데이터|IoT\\s*데이터|텔레메트리",
+    "english": "MQTT Protocol & Real-time Sensor Telemetry",
+    "category": "iot_smart"
+  },
+  {
+    "pattern": "원격\\s*제어|기기\\s*제어|전원\\s*온오프|스마트홈",
+    "english": "Remote Device Control & Smart Home Integration",
+    "category": "iot_smart"
+  },
+  {
+    "pattern": "OTA|펌웨어\\s*업데이트|무선\\s*업데이트",
+    "english": "Firmware Over-the-Air (OTA) Update",
+    "category": "iot_smart"
+  },
+  {
+    "pattern": "이상\\s*감지|센서\\s*경보|임계치\\s*초과",
+    "english": "Sensor Anomaly Detection & Push Alert Trigger",
+    "category": "iot_smart"
+  },
+  {
+    "pattern": "테이블\\s*오더|QR\\s*주문|스마트\\s*오더|자리\\s*주문",
+    "english": "Table QR Smart Ordering System",
+    "category": "food_delivery"
+  },
+  {
+    "pattern": "주방\\s*주문\\s*접수|주방\\s*디스플레이|KDS|주문\\s*큐",
+    "english": "Kitchen Display System (KDS) & Order Processing",
+    "category": "food_delivery"
+  },
+  {
+    "pattern": "메뉴\\s*옵션|토핑\\s*추가|맛\\s*선택|사이즈\\s*선택",
+    "english": "Menu Customization & Option Modifier",
+    "category": "food_delivery"
+  },
+  {
+    "pattern": "라이더\\s*배차|배달원\\s*위치|실시간\\s*배달\\s*현황",
+    "english": "Delivery Rider Dispatch & Real-time Delivery Tracking",
+    "category": "food_delivery"
+  },
+  {
+    "pattern": "포장\\s*주문|픽업\\s*예약|방문\\s*수령",
+    "english": "Takeout & Scheduled Pickup Ordering System",
+    "category": "food_delivery"
+  },
+  {
+    "pattern": "스마트\\s*컨트랙트|Solidity|EVM|스마트\\s*계약",
+    "english": "Smart Contract Execution & EVM Compatibility",
+    "category": "blockchain_web3"
+  },
+  {
+    "pattern": "지갑\\s*연결|메타마스크|Web3\\s*인증|WalletConnect",
+    "english": "Web3 Wallet Connect & Signature Authentication",
+    "category": "blockchain_web3"
+  },
+  {
+    "pattern": "NFT\\s*발행|민팅|토큰\\s*전송|ERC-721",
+    "english": "NFT Minting & Token Transfer Protocol",
+    "category": "blockchain_web3"
+  },
+  {
+    "pattern": "가스비|트랜잭션\\s*서명|블록체인\\s*익스플로러",
+    "english": "Gas Fee Optimization & Transaction Tracking",
+    "category": "blockchain_web3"
+  },
+  {
+    "pattern": "GitHub\\s*Actions|파이프라인\\s*구축|CI/CD\\s*자동화",
+    "english": "GitHub Actions CI/CD Pipeline Automation",
+    "category": "devops_cicd"
+  },
+  {
+    "pattern": "무중단\\s*배포|블루그린|카나리\\s*배포|롤링\\s*업데이트",
+    "english": "Zero-Downtime Blue-Green & Canary Deployment",
+    "category": "devops_cicd"
+  },
+  {
+    "pattern": "Terraform|IaC|인프라\\s*코드화",
+    "english": "Infrastructure as Code (IaC) with Terraform",
+    "category": "devops_cicd"
+  },
+  {
+    "pattern": "시크릿\\s*관리|Vault|환경변수\\s*암호화",
+    "english": "Secrets Management & Environment Encryption",
+    "category": "devops_cicd"
+  },
+  {
+    "pattern": "엘라스틱서치|Elasticsearch|OpenSearch|인덱싱",
+    "english": "Elasticsearch & OpenSearch Full-text Indexing",
+    "category": "search_indexing"
+  },
+  {
+    "pattern": "자동완성|추천\\s*검색어|검색어\\s*제안",
+    "english": "Autocomplete & Search Suggestion Engine",
+    "category": "search_indexing"
+  },
+  {
+    "pattern": "형태소\\s*분석|Nori\\s*토크나이저|한국어\\s*형태소",
+    "english": "Korean Morphological Analysis & Tokenization (Nori)",
+    "category": "search_indexing"
+  },
+  {
+    "pattern": "동의어\\s*사전|불용어\\s*처리|오타\\s*교정",
+    "english": "Synonym Dictionary & Typo Correction",
+    "category": "search_indexing"
+  },
+  {
+    "pattern": "APM|성능\\s*모니터링|Datadog|New\\s*Relic",
+    "english": "Application Performance Monitoring (APM)",
+    "category": "observability_monitoring"
+  },
+  {
+    "pattern": "분산\\s*추적|트레이싱|Jaeger|OpenTelemetry",
+    "english": "Distributed Tracing & OpenTelemetry Instrumentation",
+    "category": "observability_monitoring"
+  },
+  {
+    "pattern": "에러\\s*트래킹|Sentry|센트리\\s*연동",
+    "english": "Real-time Error Tracking & Sentry Alerting",
+    "category": "observability_monitoring"
+  },
+  {
+    "pattern": "프로메테우스|그라파나|Grafana|Prometheus",
+    "english": "Prometheus Metrics & Grafana Dashboard",
+    "category": "observability_monitoring"
+  },
+  {
+    "pattern": "패스키|Passkey|FIDO2|WebAuthn",
+    "english": "FIDO2 & Passkey Passwordless Authentication",
+    "category": "cyber_authentication"
+  },
+  {
+    "pattern": "생체\\s*인증|지문\\s*인식|FaceID|얼굴\\s*인식",
+    "english": "Biometric Authentication (FaceID/Fingerprint)",
+    "category": "cyber_authentication"
+  },
+  {
+    "pattern": "세션\\s*탈취\\s*방지|토큰\\s*블랙리스트|리프레시\\s*토큰\\s*로테이션",
+    "english": "Refresh Token Rotation & Session Revocation",
+    "category": "cyber_authentication"
+  },
+  {
+    "pattern": "광고\\s*입찰|RTB|실시간\\s*경매|DSP|SSP",
+    "english": "Real-Time Bidding (RTB) & DSP/SSP Ad Exchange",
+    "category": "advertising_adtech"
+  },
+  {
+    "pattern": "광고\\s*트래킹|픽셀\\s*추적|어트리뷰션|UTM",
+    "english": "Conversion Tracking Pixel & Ad Attribution",
+    "category": "advertising_adtech"
+  },
+  {
+    "pattern": "배너\\s*광고|전면\\s*광고|네이티브\\s*광고\\s*SDK",
+    "english": "Banner & Native In-App Ad SDK Integration",
+    "category": "advertising_adtech"
+  },
+  {
+    "pattern": "마케팅\\s*자동화|CRM\\s*캠페인|고객\\s*세그먼트",
+    "english": "Marketing Automation & CRM Customer Segmentation",
+    "category": "marketing_automation"
+  },
+  {
+    "pattern": "A/B\\s*테스트|스플릿\\s*테스트|전환율\\s*최적화",
+    "english": "A/B Testing & Conversion Rate Optimization (CRO)",
+    "category": "marketing_automation"
+  },
+  {
+    "pattern": "리타게팅|개인화\\s*메시지|카카오\\s*알림톡\\s*발송",
+    "english": "Personalized Retargeting & Kakao Alimtalk Delivery",
+    "category": "marketing_automation"
+  },
+  {
+    "pattern": "헬프데스크|고객센터|1:1\\s*문의|CS\\s*티켓",
+    "english": "Helpdesk Ticketing & Customer Inquiry Management",
+    "category": "customer_support"
+  },
+  {
+    "pattern": "자주\\s*묻는\\s*질문|FAQ|고객\\s*지원\\s*센터",
+    "english": "FAQ Knowledge Base & Self-Service Portal",
+    "category": "customer_support"
+  },
+  {
+    "pattern": "상담\\s*챗봇|인입\\s*상담원\\s*배정|채널톡",
+    "english": "Live Support Chatbot & Agent Assignment Routing",
+    "category": "customer_support"
+  },
+  {
+    "pattern": "스마트팜|온습도\\s*제어|양액\\s*자동\\s*공급",
+    "english": "Smart Farm Environmental Control & Nutrient Dosing",
+    "category": "agriculture_agtech"
+  },
+  {
+    "pattern": "작물\\s*생육\\s*진단|병충해\\s*인식|수확량\\s*예측",
+    "english": "Crop Growth Monitoring & Disease Image Recognition",
+    "category": "agriculture_agtech"
+  },
+  {
+    "pattern": "토양\\s*센서|일조량\\s*데이터|농업\\s*관측",
+    "english": "Soil Moisture & Sunlight Sensor Analytics",
+    "category": "agriculture_agtech"
+  },
+  {
+    "pattern": "임상\\s*시험|EDC|임상\\s*데이터\\s*관리",
+    "english": "Electronic Data Capture (EDC) for Clinical Trials",
+    "category": "biotech_pharma"
+  },
+  {
+    "pattern": "유전체\\s*분석|DNA\\s*시퀀싱|바이오\\s*마커",
+    "english": "Genomic Sequence Analysis & Biomarker Detection",
+    "category": "biotech_pharma"
+  },
+  {
+    "pattern": "약물\\s*상호작용|DUR\\s*점검|의약품\\s*안전성",
+    "english": "Drug-Drug Interaction (DUR) Safety Screening",
+    "category": "biotech_pharma"
+  },
+  {
+    "pattern": "OBD|차량\\s*진단|CAN\\s*통신|엔진\\s*경고등",
+    "english": "OBD-II Telematics & CAN Bus Vehicle Diagnostics",
+    "category": "automotive_connected"
+  },
+  {
+    "pattern": "원격\\s*시동|차량\\s*도어\\s*제어|디지털\\s*키",
+    "english": "Remote Engine Start & Digital Key Door Control",
+    "category": "automotive_connected"
+  },
+  {
+    "pattern": "배터리\\s*잔량|충전\\s*상태|EV\\s*전기차\\s*충전소",
+    "english": "EV Battery State of Charge (SoC) & Charging Station Locator",
+    "category": "automotive_connected"
+  },
+  {
+    "pattern": "태양광\\s*발전|인버터\\s*모니터링|발전량\\s*예측",
+    "english": "Solar Power Inverter Monitoring & Yield Forecasting",
+    "category": "energy_greentech"
+  },
+  {
+    "pattern": "탄소\\s*배출량|ESG\\s*보고서|온실가스\\s*산정",
+    "english": "Carbon Emission Accounting & ESG Compliance Report",
+    "category": "energy_greentech"
+  },
+  {
+    "pattern": "스마트그리드|전력\\s*수요\\s*반응|DR\\s*시장",
+    "english": "Smart Grid Demand Response & Peak Shaving",
+    "category": "energy_greentech"
+  },
+  {
+    "pattern": "MES|제조\\s*실행\\s*시스템|생산\\s*실적",
+    "english": "Manufacturing Execution System (MES) & Production Tracking",
+    "category": "manufacturing_smartfactory"
+  },
+  {
+    "pattern": "설비\\s*가동률|예지\\s*보전|진동\\s*센서",
+    "english": "Equipment OEE Calculation & Predictive Maintenance",
+    "category": "manufacturing_smartfactory"
+  },
+  {
+    "pattern": "불량\\s*검출|비전\\s*검사|품질\\s*관리\\s*QC",
+    "english": "Automated Optical Inspection (AOI) & Defect Classification",
+    "category": "manufacturing_smartfactory"
+  },
+  {
+    "pattern": "BIM|3D\\s*설계\\s*도면|건축\\s*정보\\s*모델",
+    "english": "Building Information Modeling (BIM) Viewer Integration",
+    "category": "construction_contech"
+  },
+  {
+    "pattern": "현장\\s*출역\\s*관리|공사\\s*일보|안전\\s*점검",
+    "english": "Jobsite Daily Log & Worker Safety Inspection Checklist",
+    "category": "construction_contech"
+  },
+  {
+    "pattern": "위험\\s*구역\\s*접근\\s*경보|스마트\\s*안전모|CCTV\\s*관제",
+    "english": "Hazard Zone Geo-fencing & Smart Helmet Beacon Alert",
+    "category": "construction_contech"
+  },
+  {
+    "pattern": "보험금\\s*청구|서류\\s*촬영\\s*접수|진료비\\s*영수증\\s*OCR",
+    "english": "Mobile Insurance Claim Filing & Receipt OCR",
+    "category": "insurance_insurtech"
+  },
+  {
+    "pattern": "보험\\s*심사|언더라이팅|사고\\s*조사",
+    "english": "Automated Underwriting & Claim Fraud Detection",
+    "category": "insurance_insurtech"
+  },
+  {
+    "pattern": "다이렉트\\s*보험|보험료\\s*산출|맞춤\\s*보장\\s*설계",
+    "english": "Direct Insurance Premium Quoting & Policy Customization",
+    "category": "insurance_insurtech"
+  },
+  {
+    "pattern": "가상\\s*피팅|AR\\s*착용|사이즈\\s*추천",
+    "english": "Virtual AR Fitting & AI Body Size Recommendation",
+    "category": "fashion_beauty"
+  },
+  {
+    "pattern": "피부\\s*진단|퍼스널\\s*컬러|화장품\\s*성분\\s*분석",
+    "english": "Skin Condition Diagnostic & Cosmetic Ingredient Analysis",
+    "category": "fashion_beauty"
+  },
+  {
+    "pattern": "코디\\s*추천|스타일링\\s*북|착장\\s*공유",
+    "english": "Outfit Styling Recommendation & Lookbook Showcase",
+    "category": "fashion_beauty"
+  },
+  {
+    "pattern": "반려동물\\s*등록|반려동물\\s*건강수첩|예방접종\\s*일정",
+    "english": "Pet Profile Registration & Vaccination Schedule Tracker",
+    "category": "petcare"
+  },
+  {
+    "pattern": "펫시터|산책\\s*대행|돌봄\\s*라이브\\s*일지",
+    "english": "Pet Sitter Matching & GPS Walking Route Journal",
+    "category": "petcare"
+  },
+  {
+    "pattern": "사료\\s*성분\\s*분석|맞춤\\s*영양\\s*추천",
+    "english": "Pet Food Ingredient Analysis & Tailored Diet Plan",
+    "category": "petcare"
+  },
+  {
+    "pattern": "운동\\s*기록|칼로리\\s*소모|심박수\\s*연동",
+    "english": "Workout Logging & Wearable Heart Rate Sync",
+    "category": "sports_fitness"
+  },
+  {
+    "pattern": "PT\\s*예약|헬스장\\s*입장\\s*바코드|수강권\\s*차감",
+    "english": "Personal Training Booking & Gym Access Barcode",
+    "category": "sports_fitness"
+  },
+  {
+    "pattern": "자세\\s*교정|모션\\s*인식|홈트레이닝\\s*코칭",
+    "english": "AI Pose Estimation & Home Workout Form Correction",
+    "category": "sports_fitness"
+  },
+  {
+    "pattern": "티켓팅|좌석\\s*선점|예매\\s*대기열",
+    "english": "Concert Ticketing & Real-time Seat Map Reservation",
+    "category": "entertainment_fandom"
+  },
+  {
+    "pattern": "팬클럽\\s*멤버십|팬레터|아티스트\\s*소통",
+    "english": "Fan Club Membership & Exclusive Artist Feed",
+    "category": "entertainment_fandom"
+  },
+  {
+    "pattern": "굿즈\\s*예약\\s*구매|한정판\\s*래플|포토카드",
+    "english": "Merchandise Pre-order & Limited Edition Raffle System",
+    "category": "entertainment_fandom"
+  },
+  {
+    "pattern": "기사\\s*작성\\s*CMS|뉴스\\s*발행|송고\\s*시스템",
+    "english": "Newsroom CMS Editorial & Article Publishing Pipeline",
+    "category": "news_publishing"
+  },
+  {
+    "pattern": "헤드라인\\s*A/B\\s*테스트|속보\\s*알림|기사\\s*스크랩",
+    "english": "Breaking News Push Alert & Article Scraping",
+    "category": "news_publishing"
+  },
+  {
+    "pattern": "저널리즘\\s*구독|페이월|유료\\s*기사",
+    "english": "Digital Journalism Paywall & Subscription Access",
+    "category": "news_publishing"
+  },
+  {
+    "pattern": "헤드헌팅|인재\\s*풀\\s*검색|포지션\\s*제안",
+    "english": "Executive Search Talent Pool & Position Outreach",
+    "category": "recruitment_headhunting"
+  },
+  {
+    "pattern": "이력서\\s*파싱|ATS|채용\\s*파이프라인\\s*관리",
+    "english": "Applicant Tracking System (ATS) & Resume Parsing",
+    "category": "recruitment_headhunting"
+  },
+  {
+    "pattern": "평판\\s*조회|레퍼런스\\s*체크|경력\\s*검증",
+    "english": "Reference Check & Career Verification Workflow",
+    "category": "recruitment_headhunting"
+  },
+  {
+    "pattern": "설문\\s*문항\\s*로직|분기\\s*조건|리커트\\s*척도",
+    "english": "Survey Branching Logic & Likert Scale Questionnaire",
+    "category": "survey_research"
+  },
+  {
+    "pattern": "표본\\s*추출|패널\\s*스크리닝|응답\\s*검증",
+    "english": "Sample Panel Screening & Response Quality Filter",
+    "category": "survey_research"
+  },
+  {
+    "pattern": "교차\\s*분석|통계\\s*리포트\\s*생성|데이터\\s*시각화",
+    "english": "Cross-tabulation & Statistical Survey Analytics",
+    "category": "survey_research"
+  },
+  {
+    "pattern": "웨비나\\s*등록|참가자\\s*체크인|명찰\\s*출력",
+    "english": "Webinar Registration & Onsite Badge Printing Check-in",
+    "category": "event_webinar"
+  },
+  {
+    "pattern": "실시간\\s*Q&A|슬라이도|청중\\s*투표",
+    "english": "Audience Live Q&A & Interactive Slido-style Polling",
+    "category": "event_webinar"
+  },
+  {
+    "pattern": "부스\\s*스탬프\\s*투어|전시회\\s*리드\\s*수집",
+    "english": "Exhibition Booth Stamp Tour & Lead Capture Scanner",
+    "category": "event_webinar"
+  },
+  {
+    "pattern": "펀딩\\s*달성률|목표\\s*금액|후원자\\s*리스트",
+    "english": "Crowdfunding Goal Percentage & Backer Milestone Tracker",
+    "category": "donation_crowdfunding"
+  },
+  {
+    "pattern": "리워드\\s*선택|얼리버드\\s*패키지|배송지\\s*수합",
+    "english": "Early Bird Reward Tier Selection & Backer Shipping Intake",
+    "category": "donation_crowdfunding"
+  },
+  {
+    "pattern": "정기\\s*기부|기부금\\s*영수증\\s*발급|후원금\\s*사용\\s*내역",
+    "english": "Monthly Donation & Tax-Deductible Receipt Generation",
+    "category": "donation_crowdfunding"
+  },
+  {
+    "pattern": "선박\\s*위치|AIS\\s*관제|항로\\s*추적",
+    "english": "Automatic Identification System (AIS) Vessel Tracking",
+    "category": "maritime_shipping"
+  },
+  {
+    "pattern": "선복\\s*예약|부킹\\s*접수|해상\\s*운임",
+    "english": "Ocean Freight Booking & Shipping Rate Estimation",
+    "category": "maritime_shipping"
+  },
+  {
+    "pattern": "컨테이너\\s*추적|항만\\s*터미널\\s*반출입|B/L\\s*선하증권",
+    "english": "Container Terminal Tracking & Bill of Lading (B/L)",
+    "category": "maritime_shipping"
+  },
+  {
+    "pattern": "항공권\\s*예약|PNR\\s*생성|GDS\\s*연동",
+    "english": "Flight Booking & Passenger Name Record (PNR) Integration",
+    "category": "aviation_aerospace"
+  },
+  {
+    "pattern": "모바일\\s*탑승권|체크인|좌석\\s*지정",
+    "english": "Mobile Boarding Pass & Online Seat Selection",
+    "category": "aviation_aerospace"
+  },
+  {
+    "pattern": "운항\\s*상태|지연\\s*결항\\s*알림|수하물\\s*추적",
+    "english": "Flight Status Tracker & Baggage Location Notification",
+    "category": "aviation_aerospace"
+  },
+  {
+    "pattern": "민원\\s*신청|전자\\s*정부\\s*프레임워크|공공\\s*데이터\\s*API",
+    "english": "e-Government Framework & Citizen Petition Portal",
+    "category": "public_govtech"
+  },
+  {
+    "pattern": "디지털\\s*원패스|공공\\s*인증서|모바일\\s*신분증",
+    "english": "Mobile ID & Single Sign-On (Digital OnePass)",
+    "category": "public_govtech"
+  },
+  {
+    "pattern": "공공\\s*바우처|복지\\s*포인트\\s*지급|수급\\s*자격\\s*조회",
+    "english": "Public Subsidy Voucher & Welfare Eligibility Verification",
+    "category": "public_govtech"
+  },
+  {
+    "pattern": "자원봉사\\s*매칭|봉사\\s*활동\\s*신청|봉사\\s*시간\\s*인증",
+    "english": "Volunteer Opportunity Matching & Hours Certification (VMS)",
+    "category": "nonprofit_ngo"
+  },
+  {
+    "pattern": "비영리\\s*프로젝트\\s*보고서|수익사업\\s*공시",
+    "english": "NGO Project Transparency Report & Financial Disclosure",
+    "category": "nonprofit_ngo"
+  },
+  {
+    "pattern": "수혜자\\s*선정|구호\\s*물품\\s*배분\\s*관리",
+    "english": "Beneficiary Screening & Relief Supplies Distribution",
+    "category": "nonprofit_ngo"
+  },
+  {
+    "pattern": "폐기물\\s*수거\\s*신청|올바로\\s*시스템|배출량\\s*측정",
+    "english": "Waste Collection Booking & Allbaro Tracking System",
+    "category": "waste_recycling"
+  },
+  {
+    "pattern": "재활용\\s*포인트|무인\\s*회수기|페트병\\s*수거\\s*리워드",
+    "english": "Reverse Vending Machine (RVM) Recycling Rewards",
+    "category": "waste_recycling"
+  },
+  {
+    "pattern": "음식물\\s*쓰레기\\s*RFID|감량기\\s*데이터",
+    "english": "Food Waste RFID Metering & Reduction Analytics",
+    "category": "waste_recycling"
+  },
+  {
+    "pattern": "POS\\s*결제|바코드\\s*스캔|영수증\\s*프린터\\s*출력",
+    "english": "Point of Sale (POS) Checkout & Receipt Printer Integration",
+    "category": "retail_pos"
+  },
+  {
+    "pattern": "매장\\s*시재\\s*마감|일일\\s*매출\\s*정산",
+    "english": "Cash Drawer Reconciliation & End-of-Day Sales Report",
+    "category": "retail_pos"
+  },
+  {
+    "pattern": "바코드\\s*재고\\s*실사|매장\\s*간\\s*재고\\s*이동",
+    "english": "Barcode Inventory Stock-take & Inter-store Transfer",
+    "category": "retail_pos"
+  },
+  {
+    "pattern": "발주서\\s*발행|PO\\s*생성|조달\\s*관리",
+    "english": "Purchase Order (PO) Issuance & Procurement Management",
+    "category": "supply_chain_scm"
+  },
+  {
+    "pattern": "공급업체\\s*포털|납기\\s*관리|입고\\s*검수",
+    "english": "Supplier Collaboration Portal & Delivery Schedule Tracking",
+    "category": "supply_chain_scm"
+  },
+  {
+    "pattern": "안전\\s*재고\\s*산출|재발주\\s*시점\\s*알림",
+    "english": "Safety Stock Optimization & Reorder Point Alert",
+    "category": "supply_chain_scm"
+  },
+  {
+    "pattern": "회의실\\s*예약|스마트\\s*오피스|좌석\\s*예약",
+    "english": "Conference Room Booking & Hot-desking Seat Reservation",
+    "category": "facility_building"
+  },
+  {
+    "pattern": "방문객\\s*사전\\s*등록|출입\\s*게이트\\s*QR",
+    "english": "Visitor Pre-registration & Turnstile QR Access Control",
+    "category": "facility_building"
+  },
+  {
+    "pattern": "공조기\\s*HVAC\\s*제어|빌딩\\s*에너지\\s*BEMS",
+    "english": "Building Energy Management System (BEMS) & HVAC Control",
+    "category": "facility_building"
+  },
+  {
+    "pattern": "낙상\\s*감지|응급\\s*비상벨|독거노인\\s*안심\\s*케어",
+    "english": "Fall Detection & Emergency SOS Alert System",
+    "category": "elderly_silvertech"
+  },
+  {
+    "pattern": "장기요양\\s*급여\\s*청구|요양보호사\\s*방문\\s*일지",
+    "english": "Long-Term Care Insurance Billing & Caregiver Visit Log",
+    "category": "elderly_silvertech"
+  },
+  {
+    "pattern": "치매\\s*예방\\s*인지\\s*훈련|시니어\\s*두뇌\\s*게임",
+    "english": "Cognitive Training & Senior Brain Exercise Module",
+    "category": "elderly_silvertech"
+  },
+  {
+    "pattern": "수유\\s*기록|수면\\s*패턴|기저귀\\s*교체\\s*일지",
+    "english": "Infant Feeding, Sleep & Diaper Tracking Journal",
+    "category": "parenting_baby"
+  },
+  {
+    "pattern": "아이\\s*성장\\s*백분위|키\\s*몸무게\\s*발달\\s*곡선",
+    "english": "Child Growth Percentile & WHO Growth Chart Tracker",
+    "category": "parenting_baby"
+  },
+  {
+    "pattern": "어린이집\\s*알림장|키즈노트|등하원\\s*체크",
+    "english": "Daycare Daily Report & Attendance Arrival Notification",
+    "category": "parenting_baby"
+  },
+  {
+    "pattern": "심리\\s*상담\\s*예약|비대면\\s*상담|익명\\s*채팅\\s*상담",
+    "english": "Tele-counseling Booking & Anonymous Psychological Chat",
+    "category": "mental_health"
+  },
+  {
+    "pattern": "우울증\\s*자가\\s*진단|PHQ-9|감정\\s*일기",
+    "english": "PHQ-9 Depression Screener & Mood Tracking Diary",
+    "category": "mental_health"
+  },
+  {
+    "pattern": "명상\\s*오디오|마음챙김\\s*호흡\\s*가이드",
+    "english": "Mindfulness Audio Session & Guided Breathing Guide",
+    "category": "mental_health"
+  },
+  {
+    "pattern": "치식\\s*차트|치과\\s*전자의무기록|치아\\s*넘버링",
+    "english": "Dental Odontogram Chart & Tooth Numbering Record",
+    "category": "dental_clinic"
+  },
+  {
+    "pattern": "임플란트\\s*보철\\s*기공\\s*의뢰|기공소\\s*연동",
+    "english": "Dental Lab Prosthetics Order & Work Order Tracking",
+    "category": "dental_clinic"
+  },
+  {
+    "pattern": "치과\\s*파노라마\\s*X-ray|3D\\s*구강\\s*스캔\\s*뷰어",
+    "english": "Panoramic Dental X-Ray & 3D Intraoral Scan Viewer",
+    "category": "dental_clinic"
+  },
+  {
+    "pattern": "약국\\s*조제\\s*접수|처방전\\s*바코드\\s*스캔",
+    "english": "Pharmacy Prescription Barcode Dispensing Intake",
+    "category": "pharmacy_medication"
+  },
+  {
+    "pattern": "복약\\s*지도문\\s*출력|약품\\s*효능\\s*안내",
+    "english": "Medication Guide Printout & Drug Information Lookup",
+    "category": "pharmacy_medication"
+  },
+  {
+    "pattern": "의약품\\s*유통\\s*일련번호|의약품\\s*재고\\s*관리",
+    "english": "Pharmaceutical Serialized Tracking & Drug Stock Control",
+    "category": "pharmacy_medication"
+  },
+  {
+    "pattern": "동물병원\\s*차트|수의사\\s*전자차트|체중\\s*기록",
+    "english": "Veterinary Electronic Health Record (Vet EHR)",
+    "category": "veterinary_animal"
+  },
+  {
+    "pattern": "심장사상충\\s*접종\\s*알림|반려동물\\s*혈액검사\\s*결과",
+    "english": "Heartworm Preventive Reminder & Vet Lab Panel Results",
+    "category": "veterinary_animal"
+  },
+  {
+    "pattern": "입원\\s*동물\\s*케이지\\s*CCTV|회복\\s*상태\\s*공유",
+    "english": "Hospitalized Pet Live Cam & Patient Recovery Feed",
+    "category": "veterinary_animal"
+  },
+  {
+    "pattern": "로보어드바이저|투자\\s*성향\\s*분석|자산\\s*배분\\s*모델",
+    "english": "Robo-Advisor Risk Profiling & Strategic Asset Allocation",
+    "category": "wealth_management"
+  },
+  {
+    "pattern": "리밸런싱|목표\\s*수익률|포트폴리오\\s*재조정",
+    "english": "Automated Portfolio Rebalancing & Target Yield Optimization",
+    "category": "wealth_management"
+  },
+  {
+    "pattern": "마이데이터\\s*금융\\s*자산\\s*통합\\s*조회",
+    "english": "MyData Financial Asset Aggregation & Net Worth Tracker",
+    "category": "wealth_management"
+  },
+  {
+    "pattern": "호가창|오더북|지정가\\s*주문|시장가\\s*체결",
+    "english": "Real-Time Order Book & Limit/Market Order Matching",
+    "category": "cryptocurrency_trading"
+  },
+  {
+    "pattern": "암호화폐\\s*입출금|트래블룰\\s*솔루션|지갑\\s*주소\\s*검증",
+    "english": "Crypto Deposit/Withdrawal & Travel Rule Compliance",
+    "category": "cryptocurrency_trading"
+  },
+  {
+    "pattern": "트레이딩뷰\\s*차트|캔들스틱\\s*지표|보조지표",
+    "english": "TradingView Charting Library & Technical Indicators",
+    "category": "cryptocurrency_trading"
+  },
+  {
+    "pattern": "전자세금계산서\\s*국세청\\s*홈택스\\s*스크래핑",
+    "english": "National Tax Service (Hometax) Electronic Invoice Scraping",
+    "category": "tax_accounting"
+  },
+  {
+    "pattern": "복식부기\\s*분개|재무상태표|손익계산서\\s*자동\\s*생성",
+    "english": "Double-entry Bookkeeping Journal & Financial Statements",
+    "category": "tax_accounting"
+  },
+  {
+    "pattern": "부가가치세\\s*신고|원천세\\s*신고서\\s*작성",
+    "english": "VAT & Withholding Tax Return Form Generation",
+    "category": "tax_accounting"
+  },
+  {
+    "pattern": "P2P\\s*투자\\s*모집|크라우드\\s*대출\\s*채권",
+    "english": "P2P Lending Investment Syndicate & Note Issuance",
+    "category": "microfinance_p2p"
+  },
+  {
+    "pattern": "대출\\s*원리금\\s*상환\\s*스케줄|이자\\s*지급\\s*정산",
+    "english": "Loan Principal/Interest Amortization & Repayment Engine",
+    "category": "microfinance_p2p"
+  },
+  {
+    "pattern": "대안\\s*신용평가\\s*CSS|비금융\\s*데이터\\s*스코어링",
+    "english": "Alternative Credit Scoring System (CSS)",
+    "category": "microfinance_p2p"
+  },
+  {
+    "pattern": "무인\\s*키오스크|터치스크린\\s*주문|키오스크\\s*UI",
+    "english": "Self-Service Kiosk Touchscreen Ordering Interface",
+    "category": "point_of_sale_kiosk"
+  },
+  {
+    "pattern": "IC카드\\s*리더기\\s*연동|삼성페이|애플페이\\s*NFC",
+    "english": "EMV Chip Reader & Apple Pay / Samsung Pay NFC Integration",
+    "category": "point_of_sale_kiosk"
+  },
+  {
+    "pattern": "키오스크\\s*장애\\s*원격\\s*모니터링|용지\\s*부족\\s*경고",
+    "english": "Kiosk Health Heartbeat & Low-Paper Alert Telemetry",
+    "category": "point_of_sale_kiosk"
+  },
+  {
+    "pattern": "차량\\s*대여\\s*예약|쏘카\\s*타입|무인\\s*스마트키",
+    "english": "Car Sharing Reservation & In-App Bluetooth Smart Key",
+    "category": "car_sharing_rental"
+  },
+  {
+    "pattern": "주행\\s*거리\\s*요금\\s*후청구|하이패스\\s*정산",
+    "english": "Post-Trip Mileage Surcharge & Toll Fee Settlement",
+    "category": "car_sharing_rental"
+  },
+  {
+    "pattern": "차량\\s*외관\\s*사진\\s*전송|반납\\s*존\\s*위치\\s*인증",
+    "english": "Vehicle Exterior Photo Inspection & Return Zone Verification",
+    "category": "car_sharing_rental"
+  },
+  {
+    "pattern": "차량\\s*번호판\\s*인식|LPR\\s*카메라|차단기\\s*제어",
+    "english": "License Plate Recognition (LPR) & Barrier Gate Control",
+    "category": "parking_management"
+  },
+  {
+    "pattern": "주차\\s*요금\\s*사전\\s*정산|무료\\s*주차\\s*할인\\s*등록",
+    "english": "Pre-Payment Parking Fee & Merchant Discount Coupon Validation",
+    "category": "parking_management"
+  },
+  {
+    "pattern": "주차장\\s*만차\\s*여부|실시간\\s*주차\\s*면\\s*안내",
+    "english": "Parking Lot Occupancy Telemetry & Space Availability Map",
+    "category": "parking_management"
+  },
+  {
+    "pattern": "새벽\\s*배송|당일\\s*배송|도심형\\s*물류\\s*MFC",
+    "english": "Early Morning & Same-Day Micro-Fulfillment Center (MFC)",
+    "category": "last_mile_delivery"
+  },
+  {
+    "pattern": "문앞\\s*배송\\s*완료\\s*사진|공동현관\\s*출입번호",
+    "english": "Proof of Delivery Doorstep Photo & Building Entry PIN",
+    "category": "last_mile_delivery"
+  },
+  {
+    "pattern": "다중\\s*경유지\\s*배달\\s*배차|묶음\\s*배송\\s*최적화",
+    "english": "Multi-stop Delivery Batching & Route Optimization",
+    "category": "last_mile_delivery"
+  },
+  {
+    "pattern": "AGV|AMR\\s*로봇|자율주행\\s*물류\\s*이송",
+    "english": "Automated Guided Vehicle (AGV/AMR) Fleet Management",
+    "category": "warehouse_automation"
+  },
+  {
+    "pattern": "DPS|DAS\\s*피킹\\s*시스템|디지털\\s*피킹",
+    "english": "Digital Picking System (DPS) & Put-to-Light (DAS)",
+    "category": "warehouse_automation"
+  },
+  {
+    "pattern": "자동화\\s*랙|AS/RS\\s*자동창고|로봇\\s*스태커",
+    "english": "Automated Storage and Retrieval System (AS/RS)",
+    "category": "warehouse_automation"
+  },
+  {
+    "pattern": "전자책\\s*뷰어|EPUB|PDF\\s*뷰어|형광펜\\s*하이라이트",
+    "english": "EPUB / PDF eBook Reader & Highlight Annotation Engine",
+    "category": "e_library_reading"
+  },
+  {
+    "pattern": "도서\\s*대출\\s*반납|DRM\\s*복제\\s*방지|대출\\s*기한\\s*만료",
+    "english": "eBook Lending/Return Workflow & DRM License Enforcement",
+    "category": "e_library_reading"
+  },
+  {
+    "pattern": "독서\\s*통계|독서\\s*타이머|완독률\\s*분석",
+    "english": "Reading Time Statistics & Book Completion Analytics",
+    "category": "e_library_reading"
+  },
+  {
+    "pattern": "영어\\s*발음\\s*평가|음소\\s*분석|발음\\s*정확도",
+    "english": "AI Pronunciation Scoring & Phoneme Assessment",
+    "category": "language_learning"
+  },
+  {
+    "pattern": "단어장|단어\\s*암기\\s*카드|망각곡선\\s*복습",
+    "english": "Spaced Repetition (SRS) Vocabulary Flashcard System",
+    "category": "language_learning"
+  },
+  {
+    "pattern": "AI\\s*튜터\\s*회화|영어\\s*롤플레잉\\s*대화",
+    "english": "Conversational AI Language Tutor & Roleplay Practice",
+    "category": "language_learning"
+  },
+  {
+    "pattern": "학사정보\\s*시스템|수강신청\\s*장바구니|성적\\s*조회",
+    "english": "Academic Information System & Grade Management",
+    "category": "school_university_lms"
+  },
+  {
+    "pattern": "전자\\s*출결|블루투스\\s*비콘\\s*출석|비콘\\s*태깅",
+    "english": "Bluetooth Beacon Smart Attendance Verification",
+    "category": "school_university_lms"
+  },
+  {
+    "pattern": "학점\\s*계산기|졸업\\s*요건\\s*이수\\s*진단",
+    "english": "GPA Calculator & Degree Graduation Requirement Audit",
+    "category": "school_university_lms"
+  },
+  {
+    "pattern": "웹\\s*코드\\s*에디터|온라인\\s*IDE|Monaco\\s*에디터",
+    "english": "In-Browser Web IDE & Monaco Editor Sandbox",
+    "category": "coding_education"
+  },
+  {
+    "pattern": "온라인\\s*채점|저지\\s*시스템|코드\\s*실행\\s*샌드박스",
+    "english": "Online Judge & Isolated Code Execution Sandbox",
+    "category": "coding_education"
+  },
+  {
+    "pattern": "테스트케이스\\s*채점|실행\\s*시간\\s*메모리\\s*제한",
+    "english": "Automated Test Case Grading & Resource Profiling",
+    "category": "coding_education"
+  },
+  {
+    "pattern": "웹\\s*오디오\\s*API|파형\\s*시각화|Waveform",
+    "english": "Web Audio API & Real-time Waveform Visualizer",
+    "category": "music_audio_production"
+  },
+  {
+    "pattern": "오디오\\s*믹서|이퀄라이저\\s*EQ|오디오\\s*필터",
+    "english": "Multi-track Audio Mixer & Graphic Equalizer DSP",
+    "category": "music_audio_production"
+  },
+  {
+    "pattern": "음원\\s*스템\\s*분리|보컬\\s*MR\\s*제거|음원\\s*다운로드",
+    "english": "AI Vocal/Stem Track Separation & Audio Export",
+    "category": "music_audio_production"
+  },
+  {
+    "pattern": "사진\\s*크롭|이미지\\s*회전|캔버스\\s*리사이즈",
+    "english": "Image Cropping, Rotation & HTML5 Canvas Resizing",
+    "category": "photo_image_editing"
+  },
+  {
+    "pattern": "누끼\\s*따기|배경\\s*제거|AI\\s*인물\\s*분리",
+    "english": "AI Background Removal & Alpha Mask Segmentation",
+    "category": "photo_image_editing"
+  },
+  {
+    "pattern": "사진\\s*필터|색조\\s*보정|밝기\\s*대비\\s*조절",
+    "english": "Color Grading Filters & Brightness/Contrast Adjustment",
+    "category": "photo_image_editing"
+  },
+  {
+    "pattern": "영상\\s*타임라인\\s*편집|클립\\s*자르기|트림",
+    "english": "Multi-track Video Timeline & Clip Trimming Engine",
+    "category": "video_editing_production"
+  },
+  {
+    "pattern": "자동\\s*자막\\s*생성|음성\\s*자막\\s*싱크|SRT\\s*자막",
+    "english": "Auto-captioning & Speech-to-Subtitle Sync (SRT/VTT)",
+    "category": "video_editing_production"
+  },
+  {
+    "pattern": "클라우드\\s*비디오\\s*렌더링|FFmpeg\\s*인코딩",
+    "english": "Cloud FFmpeg Video Rendering & Export Pipeline",
+    "category": "video_editing_production"
+  },
+  {
+    "pattern": "웹툰\\s*스크롤\\s*뷰어|컷\\s*넘김|화질\\s*최적화",
+    "english": "Infinite Scroll Webtoon Viewer & Image Pre-fetching",
+    "category": "webtoon_webnovel"
+  },
+  {
+    "pattern": "웹소설\\s*글자\\s*크기\\s*조절|줄간격|폰트\\s*변경",
+    "english": "Web Novel Reader Font Customization & Line Spacing",
+    "category": "webtoon_webnovel"
+  },
+  {
+    "pattern": "유료\\s*회차\\s*대여권|기다리면\\s*무료|회차\\s*소장",
+    "english": "Wait-Free Episode Monetization & Chapter Unlock Token",
+    "category": "webtoon_webnovel"
+  },
+  {
+    "pattern": "WebGL|Three.js|3D\\s*모델\\s*렌더링|gltf\\s*로드",
+    "english": "Three.js & WebGL 3D Model (glTF/GLB) Rendering Engine",
+    "category": "vr_ar_metaverse"
+  },
+  {
+    "pattern": "아바타\\s*커스터마이징|3D\\s*의상\\s*장착",
+    "english": "3D Avatar Rigging & Custom Outfit Wardrobe",
+    "category": "vr_ar_metaverse"
+  },
+  {
+    "pattern": "WebXR|공간\\s*인식|AR\\s*마커\\s*추적",
+    "english": "WebXR Device API & Spatial Surface Anchor Tracking",
+    "category": "vr_ar_metaverse"
+  },
+  {
+    "pattern": "스와이프\\s*매칭|프로필\\s*카드|좋아요\\s*보내기",
+    "english": "Swipe Card Profile Discovery & Mutual Match Logic",
+    "category": "social_matching_dating"
+  },
+  {
+    "pattern": "이상형\\s*필터|거리\\s*기반\\s*매칭|관심사\\s*태그",
+    "english": "Geolocation Radius Proximity & Interest Matching Filter",
+    "category": "social_matching_dating"
+  },
+  {
+    "pattern": "프로필\\s*사진\\s*검수|얼굴\\s*인증|비매너\\s*차단",
+    "english": "Face Liveness Verification & Anti-harassment Block",
+    "category": "social_matching_dating"
+  },
+  {
+    "pattern": "중고거래\\s*채팅|동네\\s*위치\\s*인증|GPS\\s*동네\\s*설정",
+    "english": "Local Neighborhood GPS Verification & P2P Trade Chat",
+    "category": "secondhand_marketplace"
+  },
+  {
+    "pattern": "안전거래\\s*에스크로|안전결제|구매확정",
+    "english": "Escrow Secure Payment & Buyer Confirmation Holding",
+    "category": "secondhand_marketplace"
+  },
+  {
+    "pattern": "매너온도|신뢰도\\s*지수|거래\\s*후기",
+    "english": "Seller Trust Reputation Score & Transaction Review",
+    "category": "secondhand_marketplace"
+  },
+  {
+    "pattern": "실시간\\s*호가\\s*입찰|경매\\s*카운트다운|입찰가\\s*갱신",
+    "english": "Real-time Live Auction Bidding Engine & Countdown Timer",
+    "category": "auction_bidding"
+  },
+  {
+    "pattern": "자동\\s*입찰|최고가\\s*낙찰|유찰\\s*처리",
+    "english": "Proxy Bidding Mechanism & Winning Bid Adjudication",
+    "category": "auction_bidding"
+  },
+  {
+    "pattern": "입찰\\s*보증금|낙찰\\s*대금\\s*결제|경매\\s*보증",
+    "english": "Auction Bid Deposit Pre-authorization & Settlement",
+    "category": "auction_bidding"
+  },
+  {
+    "pattern": "공간\\s*대여|파티룸\\s*예약|시간제\\s*스튜디오\\s*예약",
+    "english": "Hourly Space Rental & Studio Booking Calendar",
+    "category": "space_sharing"
+  },
+  {
+    "pattern": "보증금\\s*환급|청소\\s*보증금|이용\\s*수칙\\s*동의",
+    "english": "Cleaning Deposit Hold & Security Refund Processing",
+    "category": "space_sharing"
+  },
+  {
+    "pattern": "도어락\\s*임시\\s*비밀번호\\s*발급|스마트락\\s*연동",
+    "english": "Temporary Door Lock PIN Issuance & Smart Lock API",
+    "category": "space_sharing"
+  },
+  {
+    "pattern": "가사도우미\\s*매칭|정기\\s*청소\\s*예약|방\\s*개수\\s*견적",
+    "english": "Housekeeper Scheduling & Room Count Cleaning Quote",
+    "category": "cleaning_housekeeping"
+  },
+  {
+    "pattern": "청소\\s*체크리스트|전후\\s*사진\\s*보고서",
+    "english": "Cleaning Service Checklist & Before/After Inspection Photo",
+    "category": "cleaning_housekeeping"
+  },
+  {
+    "pattern": "이사청소\\s*입주청소\\s*견적\\s*비교",
+    "english": "Move-In Deep Cleaning Multi-Quote Comparison",
+    "category": "cleaning_housekeeping"
+  },
+  {
+    "pattern": "인테리어\\s*견적서|평당\\s*시공\\s*단가|자재\\s*내역서",
+    "english": "Interior Remodeling Estimate & Material Bill of Quantities",
+    "category": "interior_home_design"
+  },
+  {
+    "pattern": "3D\\s*아파트\\s*도면\\s*가구\\s*배치|홈스타일링",
+    "english": "3D Floorplan Furniture Layout & Room Planner Tool",
+    "category": "interior_home_design"
+  },
+  {
+    "pattern": "공정표\\s*일정|시공\\s*하자\\s*보수\\s*A/S",
+    "english": "Construction Gantt Chart & Warranty Defect Repair Request",
+    "category": "interior_home_design"
+  },
+  {
+    "pattern": "차량\\s*정비\\s*견적|카센터\\s*예약|엔진오일\\s*교환",
+    "english": "Automotive Repair Estimate & Engine Oil Service Booking",
+    "category": "car_maintenance_repair"
+  },
+  {
+    "pattern": "출장\\s*세차\\s*예약|위치\\s*기반\\s*세차\\s*기사",
+    "english": "On-demand Mobile Car Wash Booking & Fleet Dispatch",
+    "category": "car_maintenance_repair"
+  },
+  {
+    "pattern": "타이어\\s*규격\\s*검색|장착점\\s*예약",
+    "english": "Tire Specification Matcher & Installer Scheduling",
+    "category": "car_maintenance_repair"
+  },
+  {
+    "pattern": "모바일\\s*세탁\\s*수거\\s*배달|세탁물\\s*접수",
+    "english": "On-demand Laundry Pickup & Delivery Order Engine",
+    "category": "laundry_drycleaning"
+  },
+  {
+    "pattern": "세탁물\\s*검수\\s*오염\\s*부위\\s*촬영|바코드\\s*태깅",
+    "english": "Garment Stain Inspection Photo & Tag Barcoding",
+    "category": "laundry_drycleaning"
+  },
+  {
+    "pattern": "드라이클리닝\\s*단가표|세탁\\s*완료\\s*알림",
+    "english": "Dry Cleaning Price List & Laundry Done Push Notification",
+    "category": "laundry_drycleaning"
+  },
+  {
+    "pattern": "모바일\\s*청첩장|계좌번호\\s*복사|참석\\s*여부\\s*RSVP",
+    "english": "Mobile Wedding Invitation & Guest RSVP / Gift Account Sync",
+    "category": "wedding_ceremony"
+  },
+  {
+    "pattern": "웨딩홀\\s*견적\\s*스드메\\s*패키지\\s*예약",
+    "english": "Wedding Venue & Bridal Studio / Dress / Makeup Package",
+    "category": "wedding_ceremony"
+  },
+  {
+    "pattern": "축의금\\s*방명록|모바일\\s*화환\\s*보내기",
+    "english": "Digital Guest Book & Virtual Flower Wreath Registry",
+    "category": "wedding_ceremony"
+  },
+  {
+    "pattern": "모바일\\s*부고장|부고\\s*문자\\s*발송|조문\\s*메시지",
+    "english": "Mobile Obituary Notification & Condolence Guestbook",
+    "category": "funeral_memorial"
+  },
+  {
+    "pattern": "사이버\\s*추모관|고인\\s*사진\\s*영상\\s*아카이브",
+    "english": "Online Memorial Hall & Deceased Tribute Archive",
+    "category": "funeral_memorial"
+  },
+  {
+    "pattern": "장례식장\\s*빈소\\s*현황|조의금\\s*송금",
+    "english": "Funeral Home Chapel Status & Direct Condolence Transfer",
+    "category": "funeral_memorial"
+  },
+  {
+    "pattern": "온라인\\s*예배\\s*중계|설교\\s*영상\\s*아카이브",
+    "english": "Live Stream Worship Service & Sermon Video Archive",
+    "category": "religious_organization"
+  },
+  {
+    "pattern": "온라인\\s*헌금|십일조\\s*결제|기부금\\s*영수증",
+    "english": "Online Tithing & Religious Donation Payment",
+    "category": "religious_organization"
+  },
+  {
+    "pattern": "교인\\s*교적\\s*관리|구역\\s*모임\\s*공지",
+    "english": "Church Member Registry & Parish Group Notice Board",
+    "category": "religious_organization"
+  },
+  {
+    "pattern": "기상청\\s*동네예보|초단기\\s*실황\\s*API|강수확률",
+    "english": "Meteorological Agency Forecast API & Precipitation Radar",
+    "category": "weather_meteorology"
+  },
+  {
+    "pattern": "미세먼지\\s*농도|대기질\\s*지수|AQI\\s*경보",
+    "english": "Air Quality Index (AQI) & Particulate Matter (PM2.5) Alert",
+    "category": "weather_meteorology"
+  },
+  {
+    "pattern": "태풍\\s*경로\\s*추적|기상\\s*특보\\s*알림",
+    "english": "Typhoon Path Simulation & Severe Weather Push Warning",
+    "category": "weather_meteorology"
+  },
+  {
+    "pattern": "상하수도\\s*원격\\s*검침|AMI\\s*스마트\\s*미터링",
+    "english": "Advanced Metering Infrastructure (AMI) Smart Water Meter",
+    "category": "water_utilities"
+  },
+  {
+    "pattern": "수도\\s*요금\\s*자동\\s*계산|누수\\s*의심\\s*알람",
+    "english": "Water Utility Billing Calculation & Leak Detection Alert",
+    "category": "water_utilities"
+  },
+  {
+    "pattern": "수질\\s*센서|잔류\\s*염소\\s*농도\\s*모니터링",
+    "english": "Water Quality Sensor & Chlorine Level Telemetry",
+    "category": "water_utilities"
+  },
+  {
+    "pattern": "광물\\s*채굴량|원자재\\s*재고\\s*관제|광산\\s*텔레메트리",
+    "english": "Mining Tonnage Metrics & Raw Materials Inventory Telemetry",
+    "category": "mining_raw_materials"
+  },
+  {
+    "pattern": "국제\\s*원자재\\s*시세|LME\\s*비철금속\\s*선물",
+    "english": "London Metal Exchange (LME) Commodity Spot Price Feeder",
+    "category": "mining_raw_materials"
+  },
+  {
+    "pattern": "광산\\s*가스\\s*농도\\s*감지|갱도\\s*안전\\s*센서",
+    "english": "Underground Mine Toxic Gas Detection & Tunnel Safety Monitoring",
+    "category": "mining_raw_materials"
+  },
+  {
+    "pattern": "MSDS|물질안전보건자료|유해화학물질\\s*DB",
+    "english": "Material Safety Data Sheet (MSDS) Search & Compliance",
+    "category": "chemical_materials"
+  },
+  {
+    "pattern": "화학물질\\s*저장소\\s*온도\\s*모니터링|유출\\s*감지",
+    "english": "Chemical Storage Thermal Monitoring & Spill Leak Sensor",
+    "category": "chemical_materials"
+  },
+  {
+    "pattern": "화학물질\\s*입출고\\s*규제\\s*승인\\s*결재",
+    "english": "Dangerous Goods Hazmat In/Out Regulatory Approval Workflow",
+    "category": "chemical_materials"
+  },
+  {
+    "pattern": "ROS|로봇\\s*운영체제|로봇\\s*노드\\s*통신",
+    "english": "Robot Operating System (ROS 2) Node Telemetry & Control",
+    "category": "robotics_automation"
+  },
+  {
+    "pattern": "PLC\\s*통신|Modbus|OPC-UA\\s*산업용\\s*프로토콜",
+    "english": "PLC Communication (OPC-UA & Modbus TCP/IP Gateway)",
+    "category": "robotics_automation"
+  },
+  {
+    "pattern": "로봇팔\\s*관절\\s*궤적\\s*시뮬레이션|모션\\s*제어",
+    "english": "Robotic Manipulator Kinematics & Trajectory Controller",
+    "category": "robotics_automation"
+  },
+  {
+    "pattern": "드론\\s*GCS|지상관제\\s*시스템|드론\\s*비행\\s*경로",
+    "english": "Ground Control Station (GCS) Drone Waypoint Navigation",
+    "category": "drone_uav"
+  },
+  {
+    "pattern": "드론\\s*실시간\\s*영상\\s*전송|RTSP\\s*스트림",
+    "english": "UAV Aerial Camera Low-latency RTSP Video Feed",
+    "category": "drone_uav"
+  },
+  {
+    "pattern": "비행\\s*금지\\s*구역|지오펜싱|노플라이\\s*존",
+    "english": "No-Fly Zone Geofencing & Airspace Regulatory Verification",
+    "category": "drone_uav"
+  },
+  {
+    "pattern": "eSIM\\s*개통|USIM\\s*다운로드|요금제\\s*변경",
+    "english": "eSIM Profile Provisioning & Mobile Plan Activation",
+    "category": "telecom_network"
+  },
+  {
+    "pattern": "데이터\\s*잔여량|통화\\s*문자\\s*사용량\\s*조회",
+    "english": "Cellular Data Quota Balance & Usage Metering API",
+    "category": "telecom_network"
+  },
+  {
+    "pattern": "기지국\\s*트래픽\\s*모니터링|망\\s*장애\\s*경보",
+    "english": "Cell Tower Traffic Telemetry & Network Outage Alarm",
+    "category": "telecom_network"
+  },
+  {
+    "pattern": "인공위성\\s*궤도\\s*추적|TLE\\s*데이터|지상국\\s*교신",
+    "english": "Satellite TLE Orbit Tracking & Ground Station Uplink",
+    "category": "space_technology"
+  },
+  {
+    "pattern": "위성\\s*원격탐사\\s*영상|SAR\\s*위성\\s*데이터\\s*파싱",
+    "english": "Synthetic Aperture Radar (SAR) Earth Observation Imagery",
+    "category": "space_technology"
+  },
+  {
+    "pattern": "우주\\s*방사선\\s*수치|태양풍\\s*데이터\\s*수신",
+    "english": "Space Weather Telemetry & Solar Flare Monitoring",
+    "category": "space_technology"
+  },
+  {
+    "pattern": "C4I|전술\\s*지휘\\s*통제\\s*체계|상황판",
+    "english": "Tactical Command & Control (C4I) Situation Map",
+    "category": "defense_security"
+  },
+  {
+    "pattern": "망분리|보안\\s*USB\\s*통제|DLP\\s*정보유출\\s*방지",
+    "english": "Network Air-Gap Separation & Data Loss Prevention (DLP)",
+    "category": "defense_security"
+  },
+  {
+    "pattern": "사이버\\s*위협\\s*인텔리전스|CTI|위협\\s*헌팅",
+    "english": "Cyber Threat Intelligence (CTI) & Indicator of Compromise (IoC)",
+    "category": "defense_security"
+  },
+  {
+    "pattern": "양자\\s*회로|큐비트|Qiskit|양자\\s*알고리즘",
+    "english": "Quantum Circuit Simulation & Qiskit Quantum Gate Execution",
+    "category": "quantum_computing"
+  },
+  {
+    "pattern": "양자\\s*암호\\s*키\\s*분배|QKD|양자\\s*내성\\s*암호|PQC",
+    "english": "Post-Quantum Cryptography (PQC) & QKD Secure Key Exchange",
+    "category": "quantum_computing"
+  },
+  {
+    "pattern": "양자\\s*어닐링|양자\\s*최적화\\s*시뮬레이터",
+    "english": "Quantum Annealing & Combinatorial Optimization Simulator",
+    "category": "quantum_computing"
+  },
+  {
+    "pattern": "토스\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Toss, a Korean fintech app known for a simple, intuitive, mobile-first user experience; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "카카오(톡)?\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Kakao/KakaoTalk, a widely used Korean mobile ecosystem known for familiar, approachable interactions and messaging UX; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "당근(마켓)?\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Karrot (Daangn), a Korean neighborhood marketplace centered on local discovery, trust, and direct user-to-user communication; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "(배달의민족|배민)\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Baemin, a Korean food-delivery app known for mobile-first browsing, clear order status, and a distinctive friendly tone; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "쿠팡\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Coupang, a Korean e-commerce service known for streamlined product discovery, checkout, delivery tracking, and repeat purchasing; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "오늘의집\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Ohouse (Today's House), a Korean home-and-lifestyle platform combining inspirational content, product discovery, and commerce; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "무신사\\s*(처럼|같은|스타일)",
+    "english": "Product reference: MUSINSA, a Korean fashion platform combining editorial content, brand discovery, community, and commerce; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "직방\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Zigbang, a Korean real-estate platform known for map-based property discovery, filters, and listing detail comparison; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "네이버\\s*지도\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Naver Map, a Korean map service centered on local search, place details, directions, and map-based discovery; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  },
+  {
+    "pattern": "야놀자\\s*(처럼|같은|스타일)",
+    "english": "Product reference: Yanolja, a Korean travel and accommodation platform known for search, date-based availability, booking, and reservation management; use as inspiration, not as a complete requirement",
+    "category": "korean_product_reference"
+  }
 ]

@@ -184,6 +184,12 @@ function distributeAmounts(preset: SowPreset, budget?: string | number): string[
     return preset.milestones.map((milestone) => String(milestone.amount));
   }
 
+  // 시연용 소액 예산은 기존 가중치를 적용하면 0 USDC 마일스톤이 생길 수 있다.
+  // 총예산이 마일스톤 수와 같으면 각 마일스톤을 정확히 1 USDC로 고정한다.
+  if (target === preset.milestones.length) {
+    return preset.milestones.map(() => "1");
+  }
+
   const amounts = presetAmounts.map((amount) => Math.floor((target * amount) / presetTotal));
   const assigned = amounts.reduce((sum, amount) => sum + amount, 0);
   amounts[amounts.length - 1] += target - assigned;

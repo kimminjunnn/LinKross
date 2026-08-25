@@ -185,12 +185,20 @@ function SowDraftWorkspace({
   const [validatingDodKeys, setValidatingDodKeys] = useState<string[]>([]);
   const [expandedPane, setExpandedPane] = useState<"none" | "korean" | "english">("none");
   const milestonesRef = useRef(milestones);
+  const shouldScrollToTopAfterEnglishGenerationRef = useRef(false);
   const validationFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingValidationKeysRef = useRef(new Set<string>());
   const isValidatingSpecsRef = useRef(false);
   useEffect(() => {
     milestonesRef.current = milestones;
   }, [milestones]);
+
+  useEffect(() => {
+    if (!englishSow || !shouldScrollToTopAfterEnglishGenerationRef.current) return;
+
+    shouldScrollToTopAfterEnglishGenerationRef.current = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [englishSow]);
 
   const runVerificationDesignAnalysis = async (
     initialMilestones: MilestoneInput[],
@@ -521,6 +529,7 @@ function SowDraftWorkspace({
 
     try {
       const result = await generateEnglishSowWithLLM({ projectTitle: context.title, assigneeName: context.assigneeName, workDetail: textToAnalyze, startDate: context.startDate, endDate: context.endDate, milestones });
+      shouldScrollToTopAfterEnglishGenerationRef.current = true;
       setEnglishSow(result);
       if (isRevisionMode) {
         setHasRegeneratedRevisionSow(true);

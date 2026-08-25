@@ -128,6 +128,11 @@ test("마일스톤 금액은 프로젝트 예산에 맞춰 비율대로 나뉜�
   assert.ok(new Set(milestones.map((milestone) => milestone.amount)).size > 1);
 });
 
+test("총예산이 마일스톤 수와 같으면 각 마일스톤을 1 USDC로 나눈다", () => {
+  const milestones = toPresetMilestoneInputs(assetRental, { budget: "3" });
+  assert.deepEqual(milestones.map((milestone) => milestone.amount), ["1", "1", "1"]);
+});
+
 test("마일스톤 기간은 프로젝트 기간 안에서 이어진다", () => {
   const milestones = toPresetMilestoneInputs(assetRental, {
     startDate: "2026-09-01",
