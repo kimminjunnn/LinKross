@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Save, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert, Save, ShieldCheck } from "lucide-react";
 
 import { getOpportunityAction, submitProposalAction } from "@/app/actions/projects";
 
@@ -176,9 +176,9 @@ export default function FreelancerApplicationEditorPage() {
           </label>
 
           {errorMessage && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-xs text-red-700 rounded-xl flex items-center gap-2">
-              <span className="shrink-0 size-1.5 rounded-full bg-red-500 animate-ping" />
-              <span>{errorMessage}</span>
+            <div className="mt-4 flex items-start gap-2 rounded-control border border-app-border bg-app-surface-subtle p-3 text-xs text-app-foreground">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-danger" />
+              <span><strong>Error:</strong> {errorMessage}</span>
             </div>
           )}
 

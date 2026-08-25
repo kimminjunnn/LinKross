@@ -38,7 +38,7 @@ export function ProjectSummaryModal({
       <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-card bg-app-surface p-6 shadow-xl sm:p-8">
         <div className="flex items-start justify-between gap-4 border-b border-app-border pb-4">
           <div>
-            <h2 className="text-lg font-semibold text-app-foreground">등록 전 최종 확인</h2>
+            <h2 className="text-xl font-semibold text-app-foreground">등록 전 최종 확인</h2>
             <p className="mt-1 text-sm text-app-muted">
               아래 내용으로 프로젝트 공고가 등록됩니다. 등록 후 요구사항 수정은 별도 화면에서 진행합니다.
             </p>
@@ -108,7 +108,7 @@ function SummaryRow({
 }) {
   return (
     <div>
-      <dt className="text-xs font-semibold tracking-wide text-app-muted uppercase">{label}</dt>
+      <dt className="text-xs font-semibold text-app-muted">{label}</dt>
       <dd
         className={`mt-1 text-app-foreground ${multiline ? "whitespace-pre-wrap leading-6" : ""}`}
       >

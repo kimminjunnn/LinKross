@@ -241,8 +241,8 @@ export default function ApprovalPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
-                {isReadOnly ? "Approved SOW" : "PO approval"}
+              <p className="text-sm font-semibold text-brand-700">
+                {isReadOnly ? "승인 완료" : "발주자 승인"}
               </p>
               <span className="text-xs text-app-muted">승인 기준 문서 {documentVersion}</span>
             </div>
@@ -378,7 +378,7 @@ export default function ApprovalPage() {
             <div>
               <div className="flex items-center gap-2 text-brand-700">
                 <FileText aria-hidden="true" className="size-5" />
-                <p className="text-xs font-semibold tracking-[0.1em] uppercase">
+                <p className="text-sm font-semibold">
                   승인 기준 문서 {documentVersion}
                 </p>
               </div>
@@ -423,7 +423,7 @@ export default function ApprovalPage() {
       </section>
 
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-              <h2 className="text-lg font-semibold text-app-foreground">마일스톤 검증 정보</h2>
+              <h2 className="text-xl font-semibold text-app-foreground">마일스톤 검증 정보</h2>
               <p className="mt-2 text-sm leading-6 text-app-muted">
                 승인 후 동일한 완료조건과 검수 방식을 마일스톤 검수 기준으로 사용합니다.
               </p>
@@ -499,7 +499,7 @@ export default function ApprovalPage() {
       </section>
 
       {!isReadOnly && !isCompanyApproved ? (
-        <section className="sticky bottom-4 z-30 mx-4 flex flex-col gap-4 rounded-card border border-brand-200 bg-app-surface/95 p-4 shadow-floating backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <section className="sticky bottom-4 z-30 mx-4 flex flex-col gap-4 rounded-card border border-brand-200 bg-app-surface p-4 shadow-floating sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-app-foreground">업무 명세서 {documentVersion} 승인</p>
             <p className="mt-1 text-xs leading-5 text-app-muted">
@@ -531,11 +531,9 @@ export default function ApprovalPage() {
         >
           <div className="w-full max-w-md rounded-card border border-app-border bg-app-surface p-5 shadow-floating sm:p-6">
             <div className="flex items-start gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-700">
-                <LockKeyhole aria-hidden="true" className="size-5" />
-              </span>
+              <LockKeyhole aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
               <div>
-                <h2 id="final-approval-title" className="text-lg font-semibold text-app-foreground">
+                <h2 id="final-approval-title" className="text-xl font-semibold text-app-foreground">
                   최종 승인을 완료 하시겠습니까
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-app-muted">
@@ -575,14 +573,9 @@ export default function ApprovalPage() {
           <div className="w-full max-w-lg rounded-card border border-app-border bg-app-surface p-5 shadow-floating sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-700">
-                  <MessageSquareText aria-hidden="true" className="size-5" />
-                </span>
+                <MessageSquareText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
                 <div>
-                  <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
-                    SOW Revision
-                  </p>
-                  <h2 id="revision-requests-title" className="mt-1 text-lg font-semibold text-app-foreground">
+                  <h2 id="revision-requests-title" className="text-xl font-semibold text-app-foreground">
                     수정 요청 확인
                   </h2>
                 </div>

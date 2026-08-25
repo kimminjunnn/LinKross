@@ -19,7 +19,7 @@ export default async function ProjectsPage() {
         actions={
           <Link
             href="/company/projects/new"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-xs hover:shadow-md transition-all duration-200"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-control bg-brand-500 px-4 text-xs font-semibold text-white transition-colors hover:bg-brand-600 sm:text-sm"
           >
             <Plus className="size-4" />새 프로젝트
           </Link>
@@ -32,10 +32,8 @@ export default async function ProjectsPage() {
           <p className="text-sm">{result.error.message}</p>
         </div>
       ) : activeProjects.length === 0 ? (
-        <div className="mt-7 rounded-xl border border-dashed border-app-border-strong p-16 text-center bg-white shadow-xs max-w-2xl mx-auto space-y-4">
-          <div className="size-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
-            <FolderKanban className="size-6" />
-          </div>
+        <div className="mx-auto mt-7 max-w-2xl space-y-4 rounded-card border border-dashed border-app-border-strong bg-app-surface p-16 text-center">
+          <FolderKanban className="mx-auto size-7 text-app-muted" />
           <div className="space-y-1">
             <p className="text-base text-app-foreground">아직 프로젝트가 없습니다.</p>
             <p className="text-xs sm:text-sm text-app-muted max-w-sm mx-auto leading-relaxed">
@@ -44,7 +42,7 @@ export default async function ProjectsPage() {
           </div>
           <Link
             href="/company/projects/new"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-4 text-xs font-semibold text-white transition-all shadow-xs"
+            className="inline-flex h-9 items-center gap-1.5 rounded-control bg-brand-500 px-4 text-xs font-semibold text-white transition-colors hover:bg-brand-600"
           >
             <Plus className="size-4" /> 첫 프로젝트 만들기
           </Link>

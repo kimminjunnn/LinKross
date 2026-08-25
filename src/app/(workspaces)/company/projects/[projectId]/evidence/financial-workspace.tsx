@@ -20,8 +20,7 @@ export function CompanyFinancialWorkspace({ workspace }: { workspace: ProjectFin
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">Human approval required</p>
-          <h2 className="mt-2 text-xl font-semibold text-app-foreground">승인, 인보이스 및 지급 상태</h2>
+          <h2 className="text-xl font-semibold text-app-foreground">승인, 인보이스 및 지급 상태</h2>
         </div>
         <SimplifiedLedgerButton milestones={workspace.milestones} counterparty={workspace.projectTitle} perspective="expense" projectTitle={workspace.projectTitle} />
       </div>
@@ -75,7 +74,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
     <article className="rounded-control border border-app-border bg-app-surface-subtle p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-app-foreground">{milestone.code} · {milestone.title}</h3><span className="rounded-full bg-app-surface px-2.5 py-1 text-xs font-semibold text-app-muted">{milestone.status.replaceAll("_", " ")}</span></div>
+          <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-app-foreground">{milestone.code} · {milestone.title}</h3><span className="rounded-control bg-app-surface px-2.5 py-1 text-xs font-semibold text-app-muted">{milestone.status.replaceAll("_", " ")}</span></div>
           <p className="mt-2 text-sm text-app-muted">SOW 금액 {milestone.amount.toLocaleString()} {milestone.currency}</p>
         </div>
         {milestone.approvedAt ? <StatusBadge tone="success">검수 완료</StatusBadge> : <span className="inline-flex items-center gap-1 text-xs font-semibold text-app-muted"><Clock3 className="size-4" />승인 대기</span>}
@@ -87,7 +86,7 @@ function MilestoneFinanceCard({ projectId, freelancerWalletAddress, milestone, p
         <div className="mt-4 rounded-control bg-app-surface p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-app-foreground"><FileText className="size-4" />{milestone.invoice.invoiceNumber}</p>
-            <span className="rounded-full bg-app-surface-subtle px-2.5 py-1 text-xs text-app-muted">{milestone.invoice.status}</span>
+            <span className="rounded-control bg-app-surface-subtle px-2.5 py-1 text-xs text-app-muted">{milestone.invoice.status}</span>
           </div>
           <p className="mt-1 text-xs text-app-muted">공급가액 {milestone.invoice.amount.toLocaleString()} {milestone.invoice.currency}{milestone.invoice.vatAmount > 0 && ` · 부가세 ${milestone.invoice.vatAmount.toLocaleString()} ${milestone.invoice.currency}`}</p>
           {milestone.invoice.status === "submitted" && (

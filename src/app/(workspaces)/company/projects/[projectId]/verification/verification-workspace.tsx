@@ -17,13 +17,11 @@ import {
   Square,
   ShieldCheck,
   UserRound,
-  Sparkles,
   Check,
   Clock,
   UserCheck,
   X,
   XCircle,
-  ArrowRight,
 } from "lucide-react";
 
 import {
@@ -96,11 +94,11 @@ function VerificationLoadingOverlay({
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40"
       onClick={onDismiss}
     >
       <div
-        className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl"
+        className="flex flex-col items-center gap-4 rounded-card bg-white p-10 shadow-floating"
         onClick={(event) => event.stopPropagation()}
       >
         <LinKrossMark className="size-14 animate-lk-mark-flow" />
@@ -150,15 +148,15 @@ function ProjectTimeline({
 
   return (
     <div className="mb-6 rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-      <h3 className="text-xs font-semibold tracking-[0.1em] text-app-muted uppercase mb-4">
+      <h3 className="mb-4 text-xl font-semibold text-app-foreground">
         프로젝트 마일스톤 진행상황도
       </h3>
       <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-start md:gap-4">
         {/* 연결 선 (가로) - MD 이상에서만 보임 */}
         <div className="absolute left-6 right-6 top-6 hidden h-0.5 bg-slate-200 md:block">
           <div 
-            className="h-full bg-success-500 transition-all duration-500" 
-            style={{ width: `${progressPercent}%` }} 
+            className="h-full bg-success-500 transition-[width] duration-500"
+            style={{ width: `${progressPercent}%` }}
           />
         </div>
 
@@ -175,16 +173,16 @@ function ProjectTimeline({
           let icon = <span className="text-xs">{milestone.code}</span>;
 
           if (isApproved) {
-            stepBg = "bg-success-500 border-success-600 text-white shadow-sm shadow-success-500/25";
+            stepBg = "bg-success-500 border-success-600 text-white";
             icon = <Check className="size-4 stroke-[3]" />;
           } else if (isRevisionRequired) {
-            stepBg = "bg-amber-500 border-amber-600 text-white shadow-sm shadow-amber-500/25";
+            stepBg = "bg-warning border-warning text-white";
             icon = <RotateCcw className="size-4" />;
           } else if (isRunning) {
-            stepBg = "bg-brand-500 border-brand-600 text-white animate-pulse shadow-md shadow-brand-500/30";
+            stepBg = "bg-brand-500 border-brand-600 text-white";
             icon = <Play className="size-4 fill-white text-white" />;
           } else if (isSelected) {
-            stepBg = "bg-app-surface border-brand-500 text-brand-600 ring-4 ring-brand-500/10 shadow-xs";
+            stepBg = "bg-app-surface border-brand-500 text-brand-600";
             icon = <span className="text-xs font-black">{milestone.code}</span>;
           }
 
@@ -196,7 +194,7 @@ function ProjectTimeline({
               className="group relative z-10 flex flex-1 cursor-pointer flex-col items-center text-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600"
             >
               {/* 스텝 서클 */}
-              <div className={`grid size-12 place-items-center rounded-pill border-2 transition-all duration-300 group-hover:scale-105 ${stepBg}`}>
+              <div className={`grid size-12 place-items-center rounded-full border-2 transition-colors ${stepBg}`}>
                 {icon}
               </div>
 
@@ -209,7 +207,7 @@ function ProjectTimeline({
                   {milestone.amount.toLocaleString()} {milestone.currency}
                 </p>
                 <div className="mt-1">
-                  <span className={`inline-flex items-center rounded-pill px-1.5 py-0.5 text-xs font-semibold ${
+                  <span className={`inline-flex items-center rounded-control px-1.5 py-0.5 text-xs font-semibold ${
                     isApproved ? "bg-success-50 text-success-700" :
                     isRevisionRequired ? "bg-warning-50 text-warning-700" :
                     isRunning ? "bg-brand-50 text-brand-700" : "bg-app-surface-subtle text-app-muted"
@@ -337,27 +335,19 @@ export function CompanyVerificationWorkspace({
       <button
         type="button"
         onClick={handleDismissWelcome}
-        className="group mx-auto my-12 block w-full max-w-4xl cursor-pointer rounded-card border border-brand-100 bg-gradient-to-br from-brand-50 via-indigo-50/50 to-violet-50/30 p-8 text-left shadow-sm transition-all duration-300 hover:border-brand-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600 sm:p-10"
+        className="mx-auto my-12 block w-full max-w-4xl cursor-pointer rounded-card border border-app-border bg-app-surface p-8 text-left transition-colors hover:border-brand-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600 sm:p-10"
       >
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-          <span className="grid size-16 shrink-0 place-items-center rounded-pill bg-brand-100 text-brand-700 shadow-inner group-hover:scale-110 transition-transform">
-            <Sparkles className="size-8 text-brand-600 animate-pulse" />
-          </span>
-          <div className="flex-1">
-            <div className="inline-flex items-center gap-1.5 rounded-pill bg-brand-100/70 px-3 py-1 text-xs font-semibold text-brand-800 uppercase tracking-wider mb-2">
-              🎉 Kickoff Ready
-            </div>
-            <h2 className="text-2xl font-bold text-app-foreground flex items-center gap-2">
-              최종 업무명세서(SOW {sowVersion}) 확정 완료!
+        <div>
+          <div>
+            <p className="text-sm font-semibold text-brand-700">검수 준비 완료</p>
+            <h2 className="mt-2 text-2xl font-bold text-app-foreground">
+              최종 업무명세서(SOW {sowVersion}) 확정 완료
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-app-muted">
               발주자님과 프리랜서님의 상호 합의 하에 최종 SOW가 공식 승인되었습니다.<br />
-              이 카드를 클릭하시면 <strong>업무명세서 확인 및 마일스톤 검수 대시보드</strong>로 이동합니다. 먼저 <strong>GitHub 저장소</strong>를 연결해 프로젝트를 시작해 보세요!
+              이 영역을 선택하면 업무명세서 확인 및 마일스톤 검수 대시보드로 이동합니다. 먼저 GitHub 저장소를 연결해 주세요.
             </p>
-            <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-brand-700 group-hover:translate-x-1.5 transition-transform duration-300">
-              대시보드로 진입하여 시작하기
-              <ArrowRight className="size-4" />
-            </div>
+            <p className="mt-5 text-sm font-semibold text-brand-700">검수 대시보드 열기</p>
           </div>
         </div>
       </button>
@@ -475,9 +465,7 @@ function RepositorySummary({
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
-                Project repository
-              </p>
+              <p className="text-sm font-semibold text-app-foreground">프로젝트 저장소</p>
               <StatusBadge tone={repository ? "success" : "neutral"}>
                 {repository ? "연결 완료" : "연결 대기"}
               </StatusBadge>
@@ -494,10 +482,7 @@ function RepositorySummary({
               </a>
             ) : (
               <>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="inline-flex items-center rounded-pill bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
-                    Step 1
-                  </span>
+                <div className="mt-2 flex items-center gap-2">
                   <h2 className="truncate text-lg font-semibold text-app-foreground">저장소 연결하기</h2>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-app-muted">
@@ -549,7 +534,6 @@ function RepositorySummary({
                   ? "bg-green-50 text-green-700 border border-green-200" 
                   : "bg-slate-50 text-slate-500 border border-slate-200/50"
               }`}>
-                <span className={`size-1.5 rounded-full ${repository.companyConfirmedAt ? "bg-green-500" : "bg-slate-450"}`} />
                 {repository.companyConfirmedAt ? "발주자 확인 완료" : "확인 대기"}
               </span>
             ) : (
@@ -597,9 +581,7 @@ function RepositorySummary({
           </form>
 
           <div className="rounded-control border border-app-border bg-app-surface-subtle p-4">
-            <h4 className="text-xs font-semibold text-app-foreground flex items-center gap-1.5">
-              💡 비개발자 PO님을 위한 팁
-            </h4>
+            <h4 className="text-xs font-semibold text-app-foreground">GitHub 저장소 안내</h4>
             <p className="mt-1 text-xs leading-relaxed text-app-muted">
               GitHub 저장소는 결과물 코드를 보관하고 검수할 대상을 정하는 공간입니다. 위에서
               GitHub App을 설치한 뒤, 설치 대상으로 선택한 저장소 주소를 입력해 주세요.
@@ -818,7 +800,7 @@ function MilestoneDetail({
               </div>
             ) : (
               <div className="mt-6 text-center py-4">
-                <Clock className="size-8 mx-auto text-app-muted/60 animate-pulse" />
+                <Clock className="mx-auto size-8 text-app-muted/60" />
                 <p className="mt-3 text-xs text-app-foreground">프리랜서가 작업을 진행 중입니다</p>
                 <p className="mt-1 text-xs text-app-muted">
                   개발자가 PR을 제출하고 검수를 요청하면 이곳에 제출 상태와 구현 의견이 자동으로 업데이트됩니다.

@@ -44,7 +44,7 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
       </p>
 
       <div className="mt-4 rounded-control border border-app-border-strong bg-app-surface-subtle p-4">
-        <p className="text-xs font-semibold tracking-wide text-app-muted uppercase">현재 구독 중인 상품</p>
+        <p className="text-sm font-semibold text-app-foreground">현재 구독 중인 상품</p>
         {subscription && currentTier ? (
           <>
             <p className="mt-1 text-lg font-semibold text-app-foreground">
@@ -68,11 +68,11 @@ export function SubscriptionForm({ overview }: { overview: CompanySubscriptionOv
             <div
               key={tier.id}
               className={`flex flex-col rounded-control border p-5 ${
-                isRecommended ? "border-brand-500 ring-1 ring-brand-500" : "border-app-border-strong"
+                isRecommended ? "border-brand-500" : "border-app-border-strong"
               } bg-app-surface`}
             >
               {isRecommended ? (
-                <span className="mb-2 inline-flex w-fit items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700">
+                <span className="mb-2 text-xs font-semibold text-brand-700">
                   이번 달 검수 {monthlyVerificationRunCount}회 기준 추천
                 </span>
               ) : null}

@@ -20,9 +20,9 @@ export default async function VerificationPage({
 
   if (!result.ok) {
     return (
-      <div className="flex gap-3 rounded-card border border-red-200 bg-red-50 p-5 text-sm text-red-800">
-        <AlertCircle className="size-5 shrink-0" />
-        {result.error.message}
+      <div className="flex gap-3 rounded-card border border-app-border bg-app-surface p-5 text-sm text-app-foreground">
+        <AlertCircle className="size-5 shrink-0 text-danger" />
+        오류: {result.error.message}
       </div>
     );
   }

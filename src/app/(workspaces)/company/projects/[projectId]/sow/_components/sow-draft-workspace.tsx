@@ -55,14 +55,6 @@ export function SowWorkspace({
   return <SowDraftWorkspace context={context} isRevisionMode={isRevisionMode} />;
 }
 
-function formatDateForForm(isoDate: string): string {
-  return isoDate ? isoDate.replaceAll("-", ".") : "";
-}
-
-function formatBudgetForForm(amount: number): string {
-  return amount > 0 ? amount.toLocaleString() : "";
-}
-
 function toEditableMilestones(draft: SowWorkspaceDraft | null): MilestoneInput[] {
   if (!draft?.milestones.length) return INITIAL_MILESTONES;
 
@@ -160,16 +152,6 @@ function SowDraftWorkspace({
   const revisionDraft = isRevisionMode ? context.latestSowDraft : null;
 
   const [workDetail, setWorkDetail] = useState(() => revisionDraft?.workDetail ?? "");
-  // 공고 등록 시 입력한 일정·예산을 기본값으로 미리 채운다. 필요하면 그대로 수정할 수 있다.
-  const [startDate, setStartDate] = useState(() =>
-    revisionDraft?.startDate ? revisionDraft.startDate : formatDateForForm(context.startDate),
-  );
-  const [endDate, setEndDate] = useState(() =>
-    revisionDraft?.endDate ? revisionDraft.endDate : formatDateForForm(context.endDate),
-  );
-  const [budget, setBudget] = useState(() =>
-    revisionDraft?.budget ? revisionDraft.budget : formatBudgetForForm(context.budgetAmount),
-  );
   const [milestones, setMilestones] =
     useState<MilestoneInput[]>(() => toEditableMilestones(revisionDraft));
   const [englishSow, setEnglishSow] = useState<EnglishSOWResult | null>(() =>
@@ -229,8 +211,8 @@ function SowDraftWorkspace({
     // 어느 경로로 왔는지가 아니라 완료조건 몇 개가 어디까지 진행됐는지다.
     setStatusMessage(
       hasSettledDesigns
-        ? `🧪 DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`
-        : `🔎 DoD 자동화 가능성을 분석하고 있습니다 · 0/${totalDodCount}`,
+        ? `DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`
+        : `DoD 자동화 가능성을 분석하고 있습니다 · 0/${totalDodCount}`,
     );
 
     try {
@@ -243,7 +225,7 @@ function SowDraftWorkspace({
         }
 
         analyzedMilestones = mergeDodAnalysisResults(initialMilestones, dodAnalysis);
-        setStatusMessage(`🧪 DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`);
+        setStatusMessage(`DoD 자동화 가능성 분석 완료 · ${totalDodCount}/${totalDodCount} · 실제 테스트 스펙을 검증하고 있습니다...`);
       }
 
       // 이 단계에서는 고정된 Playwright atom 스펙까지 검증한다. 사용자가 분석 중
@@ -276,12 +258,12 @@ function SowDraftWorkspace({
       const summary = summarizeDesigns(specValidation.data.verificationDesigns.map((item) => item.design));
       setStatusMessage(
         summary.humanReviewRequired > 0 && summary.humanReviewUnaccepted === 0 && summary.clarificationRequired === 0
-          ? `✅ 자동 테스트 ${summary.automationReady}개 준비 완료 · Preview에서 직접 확인할 항목 ${summary.humanReviewRequired}개`
+          ? `자동 테스트 ${summary.automationReady}개 준비 완료 · Preview에서 직접 확인할 항목 ${summary.humanReviewRequired}개`
           : summary.clarificationRequired > 0
           ? `AI 검수 설계 완료: 답변이 필요한 DoD ${summary.clarificationRequired}개 · 자동 테스트 ${summary.automationReady}개 준비 완료`
           : summary.humanReviewUnaccepted > 0
             ? `AI 검수 설계 완료: 자동 테스트 ${summary.automationReady}개 · 직접 확인이 필요한 DoD ${summary.humanReviewUnaccepted}개`
-            : `✅ 자동 테스트 ${summary.automationReady}개 준비 완료`,
+            : `자동 테스트 ${summary.automationReady}개 준비 완료`,
       );
     } catch (verificationError) {
       console.error(verificationError);
@@ -315,7 +297,7 @@ function SowDraftWorkspace({
     }
 
     setIsAnalyzing(true);
-    setStatusMessage("✨ AI(LLM)가 문맥을 분석하여 최적의 마일스톤을 설계하고 있습니다...");
+    setStatusMessage("AI가 문맥을 분석하여 마일스톤을 설계하고 있습니다...");
 
     try {
       const analysis = await analyzeWorkDetailWithLLM(combinedDetail, context.startDate, context.endDate);
@@ -332,7 +314,7 @@ function SowDraftWorkspace({
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : "알 수 없는 오류";
-      setStatusMessage(`❌ 분석 실패: ${message}`);
+      setStatusMessage(`분석 실패: ${message}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -387,7 +369,7 @@ function SowDraftWorkspace({
     } catch (error) {
       console.error(error);
       setIsError(true);
-      setStatusMessage(`❌ 자동 테스트 스펙 검증 실패: ${error instanceof Error ? error.message : "저장을 완료하지 못했습니다."}`);
+      setStatusMessage(`자동 테스트 스펙 검증 실패: ${error instanceof Error ? error.message : "저장을 완료하지 못했습니다."}`);
     } finally {
       isValidatingSpecsRef.current = false;
       setValidatingDodKeys([]);
@@ -481,7 +463,7 @@ function SowDraftWorkspace({
       clearDodPending(dialogueKey);
       setIsError(true);
       setStatusMessage(
-        `❌ DoD 구체화 실패: ${error instanceof Error ? error.message : "AI 호출을 완료하지 못했습니다."}`,
+        `DoD 구체화 실패: ${error instanceof Error ? error.message : "AI 호출을 완료하지 못했습니다."}`,
       );
       return false;
     }
@@ -542,7 +524,7 @@ function SowDraftWorkspace({
     setIsGenerating(true);
     setIsError(false);
     setStatusMessage(
-      "🔍 AI 번역 엔진이 문맥을 분석하여 영문 SOW를 실시간 생성 중입니다...",
+      "AI 번역 엔진이 문맥을 분석하여 영문 SOW를 생성 중입니다...",
     );
 
     try {
@@ -566,7 +548,7 @@ function SowDraftWorkspace({
       console.error(e);
       setIsError(true);
       setStatusMessage(
-        `❌ 영문 SOW 생성 실패: ${e instanceof Error ? e.message : "AI 호출을 완료하지 못했습니다."}`,
+        `영문 SOW 생성 실패: ${e instanceof Error ? e.message : "AI 호출을 완료하지 못했습니다."}`,
       );
     } finally {
       setIsGenerating(false);
@@ -577,7 +559,7 @@ function SowDraftWorkspace({
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
     setIsError(false);
-    setStatusMessage("💾 SOW 작성 내용을 저장하는 중입니다...");
+    setStatusMessage("SOW 작성 내용을 저장하는 중입니다...");
 
     const result = await saveSowDraftAction({
       projectId,
@@ -599,7 +581,7 @@ function SowDraftWorkspace({
     setIsSavingDraft(false);
     if (!result.ok) {
       setIsError(true);
-      setStatusMessage(`❌ 임시 저장에 실패했습니다: ${result.error.message}`);
+      setStatusMessage(`임시 저장에 실패했습니다: ${result.error.message}`);
       setTimeout(() => setStatusMessage(null), 4000);
       return;
     }
@@ -608,8 +590,8 @@ function SowDraftWorkspace({
     const saveSummary = summarizeDesigns(result.data.verificationDesigns.map((item) => item.design));
     setStatusMessage(
       saveSummary.humanReviewUnaccepted > 0
-        ? `💾 임시 저장 완료 (v${result.data.versionNumber}) · 자동 테스트 ${saveSummary.automationReady}개 · 직접 확인 필요 ${saveSummary.humanReviewUnaccepted}개`
-        : `💾 임시 저장 완료 (v${result.data.versionNumber}) · 자동 테스트 ${saveSummary.automationReady}개 준비 완료`,
+        ? `임시 저장 완료 (v${result.data.versionNumber}) · 자동 테스트 ${saveSummary.automationReady}개 · 직접 확인 필요 ${saveSummary.humanReviewUnaccepted}개`
+        : `임시 저장 완료 (v${result.data.versionNumber}) · 자동 테스트 ${saveSummary.automationReady}개 준비 완료`,
     );
     setTimeout(() => setStatusMessage(null), 3000);
   };
@@ -640,7 +622,7 @@ function SowDraftWorkspace({
     if (!preflight.ok) {
       setIsSubmitting(false);
       setIsError(true);
-      setStatusMessage(`❌ 검수 설계에 실패했습니다: ${preflight.error.message}`);
+      setStatusMessage(`검수 설계에 실패했습니다: ${preflight.error.message}`);
       return;
     }
 
@@ -690,12 +672,12 @@ function SowDraftWorkspace({
     setIsSubmitting(false);
     if (!result.ok) {
       setIsError(true);
-      setStatusMessage(`❌ 검토 요청 저장에 실패했습니다: ${result.error.message}`);
+      setStatusMessage(`검토 요청 저장에 실패했습니다: ${result.error.message}`);
       setTimeout(() => setStatusMessage(null), 5000);
       return;
     }
 
-    setStatusMessage("✅ 업무 명세서 검토 요청이 저장되었고, 승인 탭으로 전달했습니다.");
+    setStatusMessage("업무 명세서 검토 요청이 저장되었고, 승인 탭으로 전달했습니다.");
     router.push(`/company/projects/${projectId}/approval`);
   };
 
@@ -703,10 +685,10 @@ function SowDraftWorkspace({
     <div className="flex flex-col gap-6 relative">
       {/* 로딩 오버레이 (화면 정중앙) */}
       {(isGenerating || isAnalyzing) && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40">
           <div
             aria-live="polite"
-            className="flex flex-col items-center gap-4 rounded-3xl bg-white p-10 shadow-2xl"
+            className="flex flex-col items-center gap-4 rounded-card bg-white p-10 shadow-floating"
             role="status"
           >
             <LinkrossLoadingMark className="size-14 animate-lk-mark-flow" />
@@ -721,11 +703,11 @@ function SowDraftWorkspace({
       )}
 
       {isEnglishCompletionModalOpen ? (
-        <div className="fixed inset-0 z-[130] grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[130] grid place-items-center bg-slate-950/50 p-4">
           <section
             aria-labelledby="english-sow-complete-title"
             aria-modal="true"
-            className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-2xl sm:p-8"
+            className="relative w-full max-w-md rounded-card border border-slate-200 bg-white p-6 text-center shadow-floating sm:p-8"
             role="dialog"
           >
             <button
@@ -736,9 +718,7 @@ function SowDraftWorkspace({
             >
               <X className="size-5" aria-hidden="true" />
             </button>
-            <span className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-              <CheckCircle2 className="size-8" aria-hidden="true" />
-            </span>
+            <CheckCircle2 className="mx-auto size-8 text-success" aria-hidden="true" />
             <h2 id="english-sow-complete-title" className="mt-5 text-xl font-bold text-slate-950">
               영문 업무 명세서 생성 완료
             </h2>
@@ -763,15 +743,7 @@ function SowDraftWorkspace({
           className="pointer-events-none fixed inset-x-0 top-6 z-[120] flex justify-center px-4"
           role="status"
         >
-          <div
-            className={`pointer-events-auto flex w-full max-w-xl items-start gap-3 rounded-control border px-4 py-3 text-sm shadow-xl animate-fade-in ${
-              isError
-                ? "border-red-200 bg-red-50 text-red-800"
-                : isSubmitting || isAnalyzing || isGenerating || isSavingDraft || isDesigningVerification
-                  ? "border-brand-200 bg-brand-50 text-brand-900"
-                  : "border-emerald-200 bg-emerald-50 text-emerald-900"
-            }`}
-          >
+          <div className="pointer-events-auto flex w-full max-w-xl animate-fade-in items-start gap-3 rounded-control border border-app-border bg-app-surface px-4 py-3 text-sm text-app-foreground shadow-floating">
             {isError ? (
               <CircleAlert className="mt-0.5 size-4 shrink-0 text-red-600" aria-hidden="true" />
             ) : isSubmitting || isAnalyzing || isGenerating || isSavingDraft || isDesigningVerification ? (
@@ -794,10 +766,7 @@ function SowDraftWorkspace({
 
       {isRevisionMode ? (
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
-          <p className="text-xs font-semibold tracking-[0.1em] text-[#F95803] uppercase">
-            SOW Revision
-          </p>
-          <h1 className="mt-2 text-2xl font-bold text-app-foreground">업무명세서 수정</h1>
+          <h1 className="text-2xl font-bold text-app-foreground">업무명세서 수정</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-app-muted">
             프리랜서 수정 요청을 반영해 기존 업무명세서를 수정하고, 영어 SOW를 다시 생성한 뒤 수정본 승인 요청을 보냅니다.
           </p>
@@ -811,10 +780,7 @@ function SowDraftWorkspace({
               <MessageSquareText className="size-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold tracking-[0.1em] text-[#F95803] uppercase">
-                Revision Mode
-              </p>
-              <h2 className="mt-1 text-lg font-semibold text-app-foreground">프리랜서 수정 요청</h2>
+              <h2 className="text-xl font-semibold text-app-foreground">프리랜서 수정 요청</h2>
               <p className="mt-2 text-sm leading-6 text-app-muted">
                 아래 한국어 업무명세서를 수정한 뒤 영어 SOW를 다시 생성하고 수정본 승인 요청을 보내세요.
               </p>

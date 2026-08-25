@@ -1,3 +1,5 @@
+import { CircleAlert } from "lucide-react";
+
 import { getSowWorkspaceContext } from "@/lib/backend";
 
 import { SowWorkspace } from "./_components/sow-draft-workspace";
@@ -16,8 +18,9 @@ export default async function SowPage({
 
   if (!result.ok) {
     return (
-      <div className="rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-        {result.error.message}
+      <div className="flex gap-3 rounded-card border border-app-border bg-app-surface p-4 text-sm text-app-foreground">
+        <CircleAlert className="size-5 shrink-0 text-danger" />
+        오류: {result.error.message}
       </div>
     );
   }

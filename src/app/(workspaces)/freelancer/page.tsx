@@ -35,14 +35,11 @@ export default async function FreelancerHomePage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl pb-16">
-      <p className="text-xs font-black tracking-[0.12em] text-brand-700 uppercase">Freelancer workspace</p>
-      <h1 className="mt-2 text-3xl font-black text-app-foreground flex items-center gap-2">
-        <span>Welcome back, {display?.name ?? "Freelancer"}</span>
-        <span className="text-2xl animate-bounce">👋</span>
+      <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+        Welcome back, {display?.name ?? "Freelancer"}
       </h1>
-      <p className="mt-2 text-sm text-app-muted flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-brand-500 shrink-0" />
-        Your actual proposals, selected projects, and invoice records are summarized here.
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-app-muted">
+        Review your proposals, selected projects, invoices, and outstanding commission.
       </p>
 
       {overdueCharges.length > 0 ? (
@@ -61,63 +58,48 @@ export default async function FreelancerHomePage() {
         </div>
       ) : null}
 
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-8 grid gap-px border-y border-app-border bg-app-border md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link 
               key={stat.label} 
               href={stat.href} 
-              className="relative overflow-hidden rounded-card border border-app-border bg-app-surface p-5 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-brand-500/60 group"
+              className="bg-app-canvas px-1 py-6 transition-colors duration-150 hover:bg-app-surface-subtle md:px-5"
             >
-              {/* Top orange brand border point */}
-              <div className="absolute top-0 left-0 h-[3px] w-full bg-brand-500" />
-
-              {/* Styled Icon Box */}
-              <div className="flex size-9 items-center justify-center rounded-lg border border-brand-100 bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-500 group-hover:text-white group-hover:border-brand-600">
-                <Icon className="size-4.5" />
+              <div className="flex items-center gap-2 text-sm font-semibold text-app-muted">
+                <Icon className="size-4 text-brand-600" />
+                <span>{stat.label}</span>
               </div>
-
-              <p className="mt-4 text-xs font-bold text-app-muted uppercase tracking-wider">{stat.label}</p>
-              <p className="mt-1.5 text-3xl font-black text-app-foreground tracking-tight">{stat.value}</p>
-              
-              {/* Badge-style detail label */}
-              <div className="mt-2.5">
-                <span className="inline-flex items-center rounded-full bg-slate-50 border border-slate-200/50 px-2.5 py-0.5 text-[10px] font-bold text-slate-500">
-                  {stat.detail}
-                </span>
-              </div>
+              <p className="mt-3 text-3xl font-black tracking-tight text-app-foreground">{stat.value}</p>
+              <p className="mt-1 text-xs leading-5 text-app-muted">{stat.detail}</p>
             </Link>
           );
         })}
       </section>
 
-      <section className="mt-6 rounded-card border border-app-border bg-app-surface p-6 shadow-card">
-        <h2 className="font-black text-app-foreground">Next actions</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <section className="mt-10">
+        <h2 className="text-xl font-black tracking-tight text-app-foreground">Next actions</h2>
+        <div className="mt-4 divide-y divide-app-border border-y border-app-border">
           <Link 
             href="/opportunities" 
-            className="group flex items-center justify-between rounded-control border border-app-border bg-app-surface p-4 text-sm font-bold text-app-foreground transition-all hover:border-brand-500/80 hover:bg-brand-50/10"
+            className="flex items-center justify-between px-1 py-4 text-sm font-bold text-app-foreground transition-colors duration-150 hover:bg-app-surface-subtle"
           >
             <span className="inline-flex items-center gap-2.5">
-              <span className="flex size-7 items-center justify-center rounded-md border border-brand-100 bg-brand-50 text-brand-600">
-                <Search className="size-3.5" />
-              </span>
+              <Search className="size-4 text-brand-600" />
               Find a project
             </span>
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1 duration-300" />
+            <ArrowRight className="size-4 text-app-muted" />
           </Link>
           <Link 
             href="/freelancer/projects" 
-            className="group flex items-center justify-between rounded-control border border-app-border bg-app-surface p-4 text-sm font-bold text-app-foreground transition-all hover:border-brand-500/80 hover:bg-brand-50/10"
+            className="flex items-center justify-between px-1 py-4 text-sm font-bold text-app-foreground transition-colors duration-150 hover:bg-app-surface-subtle"
           >
             <span className="inline-flex items-center gap-2.5">
-              <span className="flex size-7 items-center justify-center rounded-md border border-brand-100 bg-brand-50 text-brand-600">
-                <FolderKanban className="size-3.5" />
-              </span>
+              <FolderKanban className="size-4 text-brand-600" />
               Continue selected work
             </span>
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1 duration-300" />
+            <ArrowRight className="size-4 text-app-muted" />
           </Link>
         </div>
       </section>

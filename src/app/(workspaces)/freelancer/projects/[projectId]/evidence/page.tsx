@@ -48,7 +48,7 @@ export default async function FreelancerProjectEvidencePage({
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
         <div className="flex items-center gap-2">
           <FileArchive aria-hidden="true" className="size-5 text-brand-600" />
-          <h2 className="text-lg font-semibold text-app-foreground">Evidence bundles</h2>
+          <h2 className="text-xl font-semibold text-app-foreground">Evidence bundles</h2>
         </div>
         {workspace.evidenceBundles.length === 0 ? (
           <p className="mt-4 rounded-control border border-dashed border-app-border-strong p-4 text-sm text-app-muted">

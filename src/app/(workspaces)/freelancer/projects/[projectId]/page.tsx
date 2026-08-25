@@ -37,7 +37,7 @@ export default async function FreelancerProjectPage({
       <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
         <div className="flex items-center gap-2">
           <Handshake aria-hidden="true" className="size-5 text-brand-600" />
-          <h2 className="text-lg font-semibold text-app-foreground">Project overview</h2>
+          <h2 className="text-xl font-semibold text-app-foreground">Project overview</h2>
         </div>
 
         <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -91,7 +91,7 @@ export default async function FreelancerProjectPage({
         <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2">
             <FileText aria-hidden="true" className="size-5 text-brand-600" />
-            <h2 className="text-lg font-semibold text-app-foreground">Statement of Work</h2>
+            <h2 className="text-xl font-semibold text-app-foreground">Statement of Work</h2>
           </div>
 
           {!sow ? (
@@ -143,7 +143,7 @@ export default async function FreelancerProjectPage({
         <aside className="h-fit rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center gap-2">
             <Handshake aria-hidden="true" className="size-5 text-accent-600" />
-            <h2 className="text-lg font-semibold text-app-foreground">Dual approval</h2>
+            <h2 className="text-xl font-semibold text-app-foreground">Dual approval</h2>
           </div>
           {sow ? (
             <FreelancerSowApprovalPanel initialState={sow} />

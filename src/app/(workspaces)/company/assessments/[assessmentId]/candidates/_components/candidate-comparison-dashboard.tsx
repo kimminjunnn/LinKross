@@ -76,11 +76,11 @@ export function CandidateComparisonDashboard({
         />
       </div>
 
-      <section className="mt-6 rounded-card border border-app-border bg-app-surface shadow-xs transition-all duration-300">
+      <section className="mt-6 rounded-card border border-app-border bg-app-surface">
         <button
           type="button"
           onClick={() => setIsReqExpanded(!isReqExpanded)}
-          className="flex w-full items-center justify-between p-5 text-left font-black text-app-foreground hover:bg-slate-50/50 transition-colors rounded-card cursor-pointer"
+          className="flex w-full cursor-pointer items-center justify-between p-5 text-left font-black text-app-foreground transition-colors hover:bg-app-surface-subtle"
         >
           <span className="text-sm font-black text-app-foreground">
             등록 요구사항
@@ -117,7 +117,7 @@ export function CandidateComparisonDashboard({
           {candidates.map((proposal) => {
             const isSelected = proposal.id === selectedProposalId || proposal.isSelected;
             return (
-              <article key={proposal.id} className={`rounded-card border bg-app-surface p-5 shadow-card transition-all duration-300 ${isSelected ? "border-success/50 bg-green-50/5 ring-1 ring-success/10" : "border-app-border"}`}>
+              <article key={proposal.id} className={`rounded-card border bg-app-surface p-5 ${isSelected ? "border-success/60" : "border-app-border"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-black text-app-foreground">{proposal.freelancer.displayName ?? "이름 미등록 지원자"}</h2>
@@ -144,7 +144,7 @@ export function CandidateComparisonDashboard({
                 ) : null}
 
                 <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-4">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-app-muted">제출 원문</h3>
+                  <h3 className="text-sm font-semibold text-app-foreground">제출 원문</h3>
                   <div className="mt-3 max-h-48 overflow-y-auto pr-1 whitespace-pre-wrap text-sm leading-6 text-app-foreground custom-scrollbar">
                     {proposal.content}
                   </div>
@@ -171,9 +171,9 @@ export function CandidateComparisonDashboard({
                       <button
                         type="button"
                         disabled
-                        className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-green-200 bg-green-50 px-4 text-sm font-bold text-green-700 cursor-not-allowed"
+                        className="mt-5 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-control border border-app-border bg-app-surface-subtle px-4 text-sm font-bold text-app-muted"
                       >
-                        <Check className="size-4" />
+                        <Check className="size-4 text-success" />
                         선정 완료
                       </button>
                     );
@@ -197,7 +197,7 @@ export function CandidateComparisonDashboard({
                       type="button"
                       disabled={isPending}
                       onClick={() => chooseCandidate(proposal.id)}
-                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600 active:scale-[0.99] transition-all cursor-pointer shadow-xs disabled:cursor-not-allowed disabled:opacity-50"
+                      className="mt-5 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control bg-brand-500 px-4 text-sm font-bold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <UserCheck className="size-4" />
                       {isPending ? "선정 저장 중..." : "이 프리랜서 선정"}

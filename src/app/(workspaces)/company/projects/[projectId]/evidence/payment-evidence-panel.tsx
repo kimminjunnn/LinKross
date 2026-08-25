@@ -26,9 +26,9 @@ export function PaymentEvidencePanel({
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <div className="flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-control bg-brand-50 text-brand-700"><FileArchive className="size-5" /></span>
+        <FileArchive className="size-5 text-brand-700" />
         <div>
-          <h2 className="text-lg font-black text-app-foreground">지급 증빙</h2>
+          <h2 className="text-xl font-semibold text-app-foreground">지급 증빙</h2>
           <p className="mt-1 text-xs text-app-muted">마일스톤별 지급 명세서</p>
         </div>
       </div>
@@ -102,7 +102,7 @@ function PaymentEvidenceCard({ milestone, platformCommission }: {
       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
         <EvidenceField label="합의 금액" value={`${milestone.amount.toLocaleString()} ${milestone.currency}`} />
         <EvidenceField label="실제 지급 금액" value={`${payment.amount.toLocaleString()} ${payment.currency}`} />
-        <EvidenceField label="대조 결과" value={matchesAgreedAmount ? "일치" : "⚠️ 차액 발생"} />
+        <EvidenceField label="대조 결과" value={matchesAgreedAmount ? "일치" : "차액 발생"} />
         <EvidenceField label="지급 수단" value={paymentMethodLabel[payment.method]} />
         {payment.completedAt && (
           <EvidenceField

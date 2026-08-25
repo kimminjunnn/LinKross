@@ -52,8 +52,8 @@ export function ProjectListTabs({ projects }: { projects: FreelancerProjectSumma
             <article key={project.projectId} className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">{project.organizationName}</p>
-                  <h2 className="mt-2 text-xl font-semibold text-app-foreground">{project.title}</h2>
+                  <p className="text-sm font-semibold text-app-muted">{project.organizationName}</p>
+                  <h2 className="mt-1 text-xl font-semibold text-app-foreground">{project.title}</h2>
                   <p className="mt-2 text-sm text-app-muted">
                     {project.approvedMilestoneCount}/{project.milestoneCount} milestones approved · {project.lifecycleStage.replaceAll("_", " ")}
                   </p>

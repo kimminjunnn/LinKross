@@ -30,11 +30,11 @@ export function ProjectDashboard({
     return true;
   });
 
-  const stats: Array<{ key: FilterKey; label: string; value: string; desc: string; icon: LucideIcon; color: string }> = [
-    { key: "all", label: "전체 프로젝트", value: `${totalCount}건`, desc: "등록 및 진행 중인 전체 수", icon: FolderKanban, color: "text-slate-700 bg-slate-100 border-slate-200" },
-    { key: "in_progress", label: "진행 중인 업무", value: `${inProgressCount}건`, desc: "실시간 빌드 검수 및 실행 중", icon: Clock, color: "text-brand-600 bg-brand-50 border-brand-100" },
-    { key: "preparing", label: "착수 준비 중", value: `${preparingCount}건`, desc: "요구사항 및 SOW 합의 대기", icon: FileText, color: "text-amber-600 bg-amber-50 border-amber-100" },
-    { key: "with_proposals", label: "제출된 수행 제안서", value: `${submittedProposals.length}건`, desc: "지원자가 보낸 프로젝트 수행서", icon: Users2, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
+  const stats: Array<{ key: FilterKey; label: string; value: string; desc: string; icon: LucideIcon }> = [
+    { key: "all", label: "전체 프로젝트", value: `${totalCount}건`, desc: "등록 및 진행 중인 전체 수", icon: FolderKanban },
+    { key: "in_progress", label: "진행 중인 업무", value: `${inProgressCount}건`, desc: "실시간 빌드 검수 및 실행 중", icon: Clock },
+    { key: "preparing", label: "착수 준비 중", value: `${preparingCount}건`, desc: "요구사항 및 SOW 합의 대기", icon: FileText },
+    { key: "with_proposals", label: "제출된 수행 제안서", value: `${submittedProposals.length}건`, desc: "지원자가 보낸 프로젝트 수행서", icon: Users2 },
   ];
 
   const emptyMessage = filter === "all"
@@ -44,7 +44,7 @@ export function ProjectDashboard({
   return (
     <>
       {totalCount > 0 && (
-        <section role="radiogroup" aria-label="프로젝트 필터" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section role="radiogroup" aria-label="프로젝트 필터" className="grid grid-cols-1 overflow-hidden rounded-card border border-app-border bg-app-border sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
             const isActive = filter === stat.key;
@@ -55,10 +55,10 @@ export function ProjectDashboard({
                 role="radio"
                 aria-checked={isActive}
                 onClick={() => setFilter(stat.key)}
-                className={`flex items-center justify-between gap-4 rounded-xl border p-5 text-left shadow-xs transition-all ${
+                className={`flex items-center justify-between gap-4 p-5 text-left transition-colors ${
                   isActive
-                    ? "border-brand-500 bg-brand-50/60 ring-1 ring-brand-500"
-                    : "border-app-border bg-app-surface hover:border-slate-300 hover:bg-app-surface-subtle"
+                    ? "bg-brand-50 text-brand-800"
+                    : "bg-app-surface hover:bg-app-surface-subtle"
                 }`}
               >
                 <div className="space-y-1">
@@ -66,9 +66,7 @@ export function ProjectDashboard({
                   <p className="text-xl leading-none font-semibold text-app-foreground sm:text-2xl">{stat.value}</p>
                   <p className="text-xs text-app-muted/80">{stat.desc}</p>
                 </div>
-                <div className={`shrink-0 rounded-xl border p-3 ${stat.color}`}>
-                  <Icon className="size-5" />
-                </div>
+                <Icon className={`size-5 shrink-0 ${isActive ? "text-brand-700" : "text-app-muted"}`} />
               </button>
             );
           })}
@@ -104,7 +102,7 @@ function ProposalList({ proposals }: { proposals: CompanyProposalSummary[] }) {
 
   if (proposals.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-app-border-strong bg-app-surface p-10 text-center text-sm text-app-muted">
+      <p className="rounded-card border border-dashed border-app-border-strong bg-app-surface p-10 text-center text-sm text-app-muted">
         아직 제출된 수행 제안서가 없습니다.
       </p>
     );
@@ -128,7 +126,7 @@ function ProposalList({ proposals }: { proposals: CompanyProposalSummary[] }) {
   return (
     <div className="space-y-3">
       {openGroups.length === 0 && (
-        <p className="rounded-xl border border-dashed border-app-border-strong bg-app-surface p-10 text-center text-sm text-app-muted">
+        <p className="rounded-card border border-dashed border-app-border-strong bg-app-surface p-10 text-center text-sm text-app-muted">
           아직 선정하지 않은 프로젝트의 제안서가 없습니다.
         </p>
       )}
@@ -166,7 +164,7 @@ function ProposalGroupCard({ projectId, group, isOpen, onToggle }: {
   onToggle: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xs">
+    <div className="overflow-hidden rounded-card border border-app-border bg-app-surface">
       <button
         type="button"
         onClick={onToggle}
@@ -177,12 +175,12 @@ function ProposalGroupCard({ projectId, group, isOpen, onToggle }: {
           <ChevronRight className={`size-4 shrink-0 text-app-muted transition-transform ${isOpen ? "rotate-90" : ""}`} />
           <h3 className="truncate text-base font-semibold text-app-foreground">{group.projectTitle}</h3>
           {group.isProjectSelected && (
-            <span className="shrink-0 rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-[11px] font-semibold text-accent-700">
+            <span className="shrink-0 rounded-control border border-accent-200 bg-accent-50 px-2 py-0.5 text-[11px] font-semibold text-accent-700">
               선정 완료
             </span>
           )}
         </div>
-        <span className="shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-600">
+        <span className="shrink-0 text-xs font-semibold text-app-muted">
           제안서 {group.items.length}건
         </span>
       </button>

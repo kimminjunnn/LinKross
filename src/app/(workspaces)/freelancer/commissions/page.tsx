@@ -11,7 +11,6 @@ export default async function FreelancerCommissionsPage() {
   return (
     <div className="mx-auto w-full max-w-6xl pb-16">
       <PageHeader
-        eyebrow="Financial records"
         title="Platform commission"
         description="LinKross charges a 7% platform commission on each completed milestone payment. Pay it via your own means, then report it here."
       />

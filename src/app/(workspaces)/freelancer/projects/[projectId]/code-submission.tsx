@@ -58,7 +58,7 @@ export function FreelancerCodeSubmission({ initialWorkspace }: { initialWorkspac
       <div className="flex items-start gap-3">
         <GitPullRequest aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-600" />
         <div>
-          <h2 className="text-lg font-semibold text-app-foreground">Code submission and verification</h2>
+          <h2 className="text-xl font-semibold text-app-foreground">Code submission and verification</h2>
           <p className="mt-1 text-sm leading-6 text-app-muted">
             Submit an open PR from the official project repository. LinKross locks the immutable head Commit SHA. The client starts milestone verification from their review screen.
           </p>

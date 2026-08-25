@@ -15,7 +15,6 @@ import {
   Info,
   Paperclip,
   Plus,
-  Rocket,
   Save,
   Users,
 } from "lucide-react";
@@ -174,11 +173,7 @@ export function NewProjectForm({
 
         <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-pill bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
-              <Rocket aria-hidden="true" className="size-3.5" />
-              프로젝트 등록
-            </div>
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-app-foreground sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-app-foreground sm:text-3xl">
               새 프로젝트 만들기
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-app-muted">
@@ -211,9 +206,9 @@ export function NewProjectForm({
       </header>
 
       {Object.keys(draft).length > 0 ? (
-        <div className="mt-6 flex items-start gap-3 rounded-card border border-accent-200 bg-accent-50 p-4">
-          <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-accent-700" />
-          <p className="text-sm text-accent-800">
+        <div className="mt-6 flex items-start gap-3 rounded-card border border-app-border bg-app-surface p-4">
+          <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
+          <p className="text-sm text-app-foreground">
             임시 저장된 내용을 불러왔습니다. 이어서 작성해주세요.
           </p>
         </div>
@@ -221,7 +216,7 @@ export function NewProjectForm({
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <aside className="rounded-card border border-app-border bg-app-surface p-4 shadow-card lg:sticky lg:top-[calc(var(--app-header-height)+2rem)]">
-          <p className="px-2 text-xs font-semibold tracking-[0.12em] text-app-muted uppercase">
+          <p className="px-2 text-sm font-semibold text-app-foreground">
             작성 순서
           </p>
           <ol className="mt-4 space-y-1">
@@ -230,15 +225,13 @@ export function NewProjectForm({
               return (
                 <li
                   key={step.label}
-                  className={`flex gap-3 rounded-xl p-3 ${
-                    isComplete ? "bg-emerald-50" : ""
-                  }`}
+                  className="flex gap-3 rounded-control p-3"
                 >
                   <span
-                    className={`grid size-7 shrink-0 place-items-center rounded-full text-xs ${
+                    className={`grid size-7 shrink-0 place-items-center rounded-control border text-xs ${
                       isComplete
-                        ? "bg-emerald-500 text-white"
-                        : "bg-app-surface-subtle text-app-muted"
+                        ? "border-success text-success"
+                        : "border-app-border bg-app-surface-subtle text-app-muted"
                     }`}
                   >
                     {isComplete ? <Check aria-hidden="true" className="size-3.5" /> : index + 1}
@@ -256,12 +249,12 @@ export function NewProjectForm({
             })}
           </ol>
 
-          <div className="mt-5 rounded-xl border border-accent-200 bg-accent-50 p-3.5">
-            <p className="flex items-center gap-2 text-xs text-accent-800">
+          <div className="mt-5 rounded-control border border-app-border bg-app-surface-subtle p-3.5">
+            <p className="flex items-center gap-2 text-xs text-app-foreground">
               <Info aria-hidden="true" className="size-4" />
               등록 후 진행
             </p>
-            <p className="mt-2 text-xs leading-5 text-accent-800/80">
+            <p className="mt-2 text-xs leading-5 text-app-muted">
               프로젝트는 먼저 모집 상태로 생성됩니다. 프리랜서 선정과 SOW 양측
               승인이 완료되면 진행 프로젝트로 전환됩니다.
             </p>
@@ -276,17 +269,15 @@ export function NewProjectForm({
           className="space-y-6"
         >
           {state.status === "error" && state.error ? (
-            <div className="flex items-start gap-3 rounded-card border border-red-200 bg-red-50 p-4">
-              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600" />
-              <p className="text-sm text-red-800">{state.error}</p>
+            <div className="flex items-start gap-3 rounded-card border border-app-border bg-app-surface p-4">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-danger" />
+              <p className="text-sm text-app-foreground">오류: {state.error}</p>
             </div>
           ) : null}
 
           <section className="rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8">
             <div className="flex items-start gap-3 border-b border-app-border pb-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                <FileText aria-hidden="true" className="size-5" />
-              </span>
+              <FileText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
               <div>
                 <h2 className={sectionTitleClassName}>1. 프로젝트 기본 정보</h2>
                 <p className="mt-1 text-sm text-app-muted">
@@ -353,9 +344,7 @@ export function NewProjectForm({
 
           <section className="rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8">
             <div className="flex items-start gap-3 border-b border-app-border pb-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                <CheckCircle2 aria-hidden="true" className="size-5" />
-              </span>
+              <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
               <div>
                 <h2 className={sectionTitleClassName}>2. 요구사항과 작업 범위</h2>
                 <p className="mt-1 text-sm text-app-muted">
@@ -410,7 +399,7 @@ export function NewProjectForm({
 
               <label className="block text-sm text-app-foreground">
                 참고자료 파일
-                <span className="mt-2 flex min-h-28 flex-col items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center">
+                <span className="mt-2 flex min-h-28 flex-col items-center justify-center rounded-control border border-dashed border-app-border-strong bg-app-surface-subtle px-4 text-center">
                   <Paperclip aria-hidden="true" className="size-5 text-brand-600" />
                   <span className="mt-2 text-sm text-app-foreground">
                     요구사항 문서나 화면 자료 첨부
@@ -431,9 +420,7 @@ export function NewProjectForm({
 
           <section className="rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8">
             <div className="flex items-start gap-3 border-b border-app-border pb-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                <CircleDollarSign aria-hidden="true" className="size-5" />
-              </span>
+              <CircleDollarSign aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
               <div>
                 <h2 className={sectionTitleClassName}>3. 일정과 예산</h2>
                 <p className="mt-1 text-sm text-app-muted">
@@ -487,9 +474,7 @@ export function NewProjectForm({
 
           <section className="rounded-card border border-app-border bg-app-surface p-6 shadow-card sm:p-8">
             <div className="flex items-start gap-3 border-b border-app-border pb-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                <Users aria-hidden="true" className="size-5" />
-              </span>
+              <Users aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-700" />
               <div>
                 <h2 className={sectionTitleClassName}>4. 프리랜서 모집 설정</h2>
                 <p className="mt-1 text-sm text-app-muted">

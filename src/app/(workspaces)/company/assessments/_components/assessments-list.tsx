@@ -87,9 +87,9 @@ export function AssessmentsList({
       </header>
 
       {!result.ok ? (
-        <div className="flex items-start gap-3 rounded-card border border-red-200 bg-red-50 p-4">
-          <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600" />
-          <p className="text-sm font-bold text-red-800">{result.error.message}</p>
+        <div className="flex items-start gap-3 rounded-card border border-app-border bg-app-surface p-4">
+          <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-danger" />
+          <p className="text-sm font-semibold text-app-foreground">오류: {result.error.message}</p>
         </div>
       ) : sortedProjects.length === 0 ? (
         <div className="rounded-card border border-dashed border-app-border-strong bg-app-surface-subtle p-10 text-center">
@@ -115,23 +115,20 @@ export function AssessmentsList({
             return (
               <article
                 key={project.id}
-                className="group rounded-xl border border-app-border bg-app-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-slate-350 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                className="group flex flex-col justify-between gap-6 rounded-card border border-app-border bg-app-surface p-5 transition-colors hover:border-app-border-strong md:flex-row md:items-center sm:p-6"
               >
                 <div className="space-y-4 flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                    <span className={`inline-flex items-center rounded-control border px-2.5 py-0.5 text-xs font-bold ${
                       project.status === "recruiting"
                         ? "bg-accent-50 text-accent-700 border-accent-200"
                         : "bg-brand-50 text-brand-700 border-brand-100"
                     }`}>
-                      <span className={`size-1.5 rounded-full ${
-                        project.status === "recruiting" ? "bg-accent-500 animate-pulse" : "bg-brand-500"
-                      }`} />
                       {statusMeta.label}
                     </span>
                     
                     {ddayLabel && (
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                      <span className={`inline-flex items-center rounded-control border px-2.5 py-0.5 text-xs font-bold ${
                         isUrgent
                           ? "bg-red-50 text-red-700 border-red-200"
                           : ddayLabel === "마감됨"
@@ -152,17 +149,17 @@ export function AssessmentsList({
                   </h2>
 
                   <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-app-muted">
-                    <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-md text-slate-600">
+                    <span className="inline-flex items-center gap-1.5 text-app-muted">
                       <Users2 className="size-3.5 text-slate-400" />
                       제출 인원: <strong className="text-app-foreground font-extrabold ml-1">{project.proposalCount}명</strong>
                     </span>
                     {project.recruitmentEndAt && (
-                      <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-md text-slate-600">
+                      <span className="inline-flex items-center gap-1.5 text-app-muted">
                         <CalendarDays className="size-3.5 text-slate-400" />
-                        마감일: <strong className="text-app-foreground font-bold font-mono ml-1">{formatDate(project.recruitmentEndAt)}</strong>
+                        마감일: <strong className="ml-1 font-bold text-app-foreground">{formatDate(project.recruitmentEndAt)}</strong>
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-md text-slate-600">
+                    <span className="inline-flex items-center gap-1.5 text-app-muted">
                       <Wallet className="size-3.5 text-slate-400" />
                       예산: <strong className="text-app-foreground font-semibold ml-1">{formatBudget(project)}</strong>
                     </span>
@@ -172,7 +169,7 @@ export function AssessmentsList({
                 <div className="shrink-0 flex items-center gap-3 border-t md:border-t-0 border-app-border pt-4 md:pt-0">
                   <Link
                     href={`/company/assessments/${project.id}/candidates`}
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 px-5 text-xs sm:text-sm font-bold text-white transition-all duration-200 group shadow-xs hover:shadow-md active:scale-[0.98]"
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-control bg-brand-500 px-5 text-xs font-bold text-white transition-colors hover:bg-brand-600 sm:text-sm"
                   >
                     지원자 현황 보기
                     <Eye className="size-4 transition-transform group-hover:translate-x-0.5" />

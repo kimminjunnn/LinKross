@@ -25,7 +25,7 @@ export function FreelancerInvoicePanel({
   return (
     <section className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-2"><FileText className="size-5 text-brand-600" /><h2 className="text-lg font-semibold text-app-foreground">Milestone invoices</h2></div>
+        <div className="flex items-center gap-2"><FileText className="size-5 text-brand-600" /><h2 className="text-xl font-semibold text-app-foreground">Milestone invoices</h2></div>
         <SimplifiedLedgerButton milestones={workspace.milestones} counterparty={workspace.projectTitle} perspective="income" projectTitle={workspace.projectTitle} />
       </div>
       <p className="mt-1 text-sm text-app-muted">The agreed SOW amount and currency are copied from the approved milestone on the server. Invoices here are progress-confirmation records, not a formal tax invoice — issue that separately through your own accounting tools.</p>

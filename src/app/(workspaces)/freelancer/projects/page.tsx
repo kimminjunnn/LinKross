@@ -11,7 +11,6 @@ export default async function FreelancerProjectsListPage() {
   return (
     <div className="mx-auto w-full max-w-6xl pb-16">
       <PageHeader
-        eyebrow="Developer Workspace"
         title="My Projects"
         description="Only projects where your proposal was selected are shown here."
       />

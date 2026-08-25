@@ -16,7 +16,6 @@ export default async function FreelancerApplicationsPage() {
   return (
     <div className="mx-auto w-full max-w-6xl pb-16">
       <PageHeader
-        eyebrow="Proposal history"
         title="My Proposals"
         description="Submitted proposal text and selection status are read from the immutable project records."
         actions={

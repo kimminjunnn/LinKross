@@ -9,7 +9,6 @@ export default async function FreelancerInvoicesPage() {
   return (
     <div className="mx-auto w-full max-w-6xl pb-16">
       <PageHeader
-        eyebrow="Financial records"
         title="Invoices & payment evidence"
         description="Invoices are linked to approved milestones. Payment status is recorded after the client processes it through their external payment method."
       />
