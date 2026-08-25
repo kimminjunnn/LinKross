@@ -952,7 +952,7 @@ begin
     new.preview_expires_at := null;
   elsif new.preview_url is distinct from old.preview_url
     or new.completed_at is distinct from old.completed_at then
-    new.preview_expires_at := coalesce(new.completed_at, now()) + interval '5 minutes';
+    new.preview_expires_at := coalesce(new.completed_at, now()) + interval '10 minutes';
   end if;
   return new;
 end;

@@ -11,12 +11,11 @@ import {
   Link2,
   Loader2,
   LockKeyhole,
+  MonitorUp,
   Play,
   RotateCcw,
-  Settings2,
   Square,
   ShieldCheck,
-  TestTube2,
   UserRound,
   Sparkles,
   Check,
@@ -24,7 +23,6 @@ import {
   UserCheck,
   X,
   XCircle,
-  CreditCard,
   ArrowRight,
 } from "lucide-react";
 
@@ -49,10 +47,7 @@ import type {
   VerificationRunRecord,
   VerificationWorkspace,
 } from "@/lib/backend";
-import {
-  formatVerificationPreviewRemaining,
-  getVerificationPreviewRemainingMs,
-} from "@/lib/verification-preview";
+import { getVerificationPreviewRemainingMs } from "@/lib/verification-preview";
 
 type StatusTone = "neutral" | "brand" | "accent" | "success" | "warning" | "danger";
 
@@ -512,14 +507,6 @@ function RepositorySummary({
             )}
           </div>
         </div>
-        <button
-          type="button"
-          disabled
-          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-control border border-app-border-strong bg-app-surface px-3 text-sm font-semibold text-app-foreground opacity-60"
-        >
-          <Settings2 aria-hidden="true" className="size-4" />
-          연결 관리
-        </button>
       </div>
 
       <dl className="mt-5 grid gap-3 border-t border-app-border pt-4 sm:grid-cols-3">
@@ -633,40 +620,32 @@ function VerificationSummary({ milestone }: { milestone: VerificationMilestoneRe
   const statusMeta = resolveMilestoneStatus(milestone);
 
   return (
-    <article className="rounded-card border border-brand-200 bg-brand-50 p-5 shadow-card sm:p-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.1em] text-brand-700 uppercase">
-          Verification summary
-        </p>
-        <TestTube2 aria-hidden="true" className="size-5 text-brand-700" />
+    <article className="rounded-card border border-app-border bg-app-surface p-5 shadow-card sm:p-6">
+      <p className="text-xs font-medium text-app-muted">마일스톤 현황</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <h2 className="text-lg font-semibold text-app-foreground">{milestone.code}</h2>
+        <StatusBadge tone={statusMeta.tone}>{statusMeta.label}</StatusBadge>
       </div>
-      <h2 className="mt-3 text-xl font-semibold text-app-foreground">
-        {milestone.code} {statusMeta.label}
-      </h2>
-      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-        <SummaryMetric
-          label="완료조건"
-          value={String(milestone.checklist.length)}
-          tone="text-app-foreground"
-          icon={<Clock className="size-7 stroke-[1]" />}
-        />
-        <SummaryMetric
-          label="제출"
-          value={String(submittedCount)}
-          tone={submittedCount ? "text-brand-600" : "text-app-muted"}
-          icon={<ExternalLink className="size-7 stroke-[1]" />}
-        />
-        <SummaryMetric
-          label="검수"
-          value={String(verifiedCount)}
-          tone={verifiedCount ? "text-accent-600" : "text-app-muted"}
-          icon={<ShieldCheck className="size-7 stroke-[1]" />}
-        />
-      </div>
-      <p className="mt-4 text-xs leading-5 text-brand-700">
+      <dl className="mt-5 grid grid-cols-3 divide-x divide-app-border border-y border-app-border py-4 text-center">
+        <div>
+          <dt className="text-xs text-app-muted">완료조건</dt>
+          <dd className="mt-1 text-xl font-semibold text-app-foreground">
+            {milestone.checklist.length}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-app-muted">제출</dt>
+          <dd className="mt-1 text-xl font-semibold text-app-foreground">{submittedCount}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-app-muted">검수</dt>
+          <dd className="mt-1 text-xl font-semibold text-app-foreground">{verifiedCount}</dd>
+        </div>
+      </dl>
+      <p className="mt-4 text-xs leading-5 text-app-muted">
         {latestSubmission
-          ? `PR #${latestSubmission.pullRequestNumber}의 Commit SHA를 기준으로 결과를 확인합니다.`
-          : "PR이 제출되면 최신 전체 Commit SHA가 고정됩니다. 검수는 발주자가 시작합니다."}
+          ? `PR #${latestSubmission.pullRequestNumber} 기준 검수 현황입니다.`
+          : "PR이 제출되면 검수를 시작할 수 있습니다."}
       </p>
     </article>
   );
@@ -1069,6 +1048,13 @@ function MilestoneDetail({
 
         {latestSubmission && (
           <div className="mt-5 space-y-5 border-t border-app-border pt-5">
+            {latestSubmission.runs.length > 0 ? (
+              <RunPreviewAccess
+                key={latestSubmission.runs[0].id}
+                run={latestSubmission.runs[0]}
+              />
+            ) : null}
+
             {latestSubmission.runs.length > 0 && (
               <section aria-label="검수 실행 결과" className="space-y-3">
                 <h3 className="text-sm font-semibold text-app-foreground">검수 실행 결과</h3>
@@ -1077,34 +1063,6 @@ function MilestoneDetail({
                 ))}
               </section>
             )}
-
-            {/* 지급 및 정산 프로세스 가이드 카드 */}
-            <div className="rounded-control border border-accent-100 bg-gradient-to-r from-accent-50/50 to-indigo-50/20 p-4">
-              <div className="flex items-start gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-accent-100 text-accent-700">
-                  <CreditCard className="size-4" />
-                </span>
-                <div className="text-xs">
-                  <h4 className="font-semibold text-accent-950">대금 정산 및 지급 예정 안내</h4>
-                  <p className="mt-1 text-app-muted leading-relaxed">
-                    이 마일스톤의 최종 승인 예정 금액은 <strong>{milestone.amount.toLocaleString()} {milestone.currency}</strong> 입니다.
-                  </p>
-                  <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded bg-app-surface border border-app-border px-1.5 py-0.5 text-app-muted">
-                      1. 마일스톤 검수 완료
-                    </span>
-                    <ArrowRight className="size-3 text-app-muted" />
-                    <span className="rounded bg-brand-50 border border-brand-200 px-1.5 py-0.5 text-brand-700">
-                      2. 최종 승인 후 프리랜서가 인보이스 제출
-                    </span>
-                    <ArrowRight className="size-3 text-app-muted" />
-                    <span className="rounded bg-success-50 border border-success-200 px-1.5 py-0.5 text-success-700">
-                      3. 지급 기록과 통합 증빙 연결
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <form
               action={decide}
@@ -1219,47 +1177,58 @@ function RunResult({ run }: { run: VerificationRunRecord }) {
         </p>
       )}
       {run.errorSummary && <p className="mt-2 text-sm text-red-700">{run.errorSummary}</p>}
-      <RunPreviewAccess run={run} />
     </div>
   );
 }
 
 function RunPreviewAccess({ run }: { run: VerificationRunRecord }) {
-  const [nowMs, setNowMs] = useState<number | null>(null);
+  const previewKey = run.previewUrl && run.previewExpiresAt
+    ? `${run.previewUrl}:${run.previewExpiresAt}`
+    : null;
+  const [isAvailable, setIsAvailable] = useState(false);
 
   useEffect(() => {
-    if (!run.previewUrl || !run.previewExpiresAt) return;
+    if (!previewKey || !run.previewExpiresAt) return;
 
-    const updateNow = () => setNowMs(Date.now());
-    updateNow();
-    const timer = window.setInterval(updateNow, 1_000);
-    return () => window.clearInterval(timer);
-  }, [run.previewExpiresAt, run.previewUrl]);
+    const remainingMs = getVerificationPreviewRemainingMs(run.previewExpiresAt, Date.now());
+    if (remainingMs <= 0) return;
 
-  if (!run.previewUrl) return null;
-  if (!run.previewExpiresAt) {
-    return <p className="mt-2 text-sm text-app-muted">Preview 이용 시간이 종료되었습니다.</p>;
-  }
-  if (nowMs === null) {
-    return <p className="mt-2 text-sm text-app-muted">Preview 이용 시간을 확인하고 있습니다...</p>;
-  }
+    const animationFrame = window.requestAnimationFrame(() => setIsAvailable(true));
+    const timer = window.setTimeout(() => {
+      setIsAvailable(false);
+    }, remainingMs);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(timer);
+    };
+  }, [previewKey, run.previewExpiresAt]);
 
-  const remainingMs = getVerificationPreviewRemainingMs(run.previewExpiresAt, nowMs);
-  if (remainingMs <= 0) {
-    return <p className="mt-2 text-sm text-app-muted">Preview 이용 시간이 종료되었습니다.</p>;
-  }
+  if (!run.previewUrl || !previewKey || !isAvailable) return null;
 
   return (
-    <a
-      href={run.previewUrl}
-      target="_blank"
-      rel="noreferrer"
-      className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
-      aria-label={`실제 화면 확인, ${formatVerificationPreviewRemaining(remainingMs)} 남음`}
-    >
-      실제 화면 확인 · {formatVerificationPreviewRemaining(remainingMs)} 남음
-      <ExternalLink aria-hidden="true" className="size-3.5" />
-    </a>
+    <div className="flex flex-col gap-4 rounded-control border border-brand-200 bg-brand-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-control bg-app-surface text-brand-700 shadow-sm">
+          <MonitorUp aria-hidden="true" className="size-5" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-app-foreground">직접 확인 화면 준비 완료</p>
+          <p className="mt-1 text-xs leading-5 text-app-muted">
+            새 창에서 제출된 기능을 직접 조작하며 완료조건을 확인할 수 있습니다.
+          </p>
+        </div>
+      </div>
+      <a
+        href={run.previewUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-control bg-brand-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-600"
+        aria-label="실행 화면 새 창에서 열기"
+      >
+        실행 화면 열기
+        <ExternalLink aria-hidden="true" className="size-4" />
+      </a>
+    </div>
   );
 }
 
@@ -1422,30 +1391,6 @@ function RepositoryField({
         {label}
       </dt>
       <dd className="mt-1.5 text-sm text-app-foreground">{value}</dd>
-    </div>
-  );
-}
-
-function SummaryMetric({
-  label,
-  value,
-  tone,
-  icon,
-}: {
-  label: string;
-  value: string;
-  tone: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-control border border-brand-200 bg-app-surface/80 px-2 py-3">
-      {icon && (
-        <span aria-hidden="true" className="absolute right-2 top-2 text-app-border-strong">
-          {icon}
-        </span>
-      )}
-      <p className={`text-2xl font-bold ${tone}`}>{value}</p>
-      <p className="mt-1 text-xs text-app-muted">{label}</p>
     </div>
   );
 }
